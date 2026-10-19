@@ -1,0 +1,322 @@
+'use strict';
+/* ============================================================
+   ONE MORE — bootstrap: canvas, input, loop, wiring
+   ============================================================ */
+
+(function () {
+  const canvas = document.getElementById('game');
+  /* opaque canvas — the sheet always fills the frame, and the
+     compositor gets to skip the alpha pass entirely */
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const stage = document.getElementById('stage');
+
+  /* ---------------- adaptive resolution ----------------
+     holds 60fps on modest hardware: if the frame pace sags,
+     the sheet is drawn at a slightly softer internal scale,
+     invisibly, before anything stutters. */
+  const ADAPT = {
+    scale: 1,
+    ema: 60,          // smoothed fps
+    downCool: 0,      // s before the next step down
+    upHold: 0,        // s of healthy pace before a step up
+    on: true,
+  };
+  try { ADAPT.on = new URLSearchParams(location.search).get('nores') === null; } catch (e) {}
+
+  /* ---------------- sizing ---------------- */
+  function resize() {
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const dpr = Math.min(2, window.devicePixelRatio || 1) * ADAPT.scale;
+    canvas.width = Math.max(2, Math.round(w * dpr));
+    canvas.height = Math.max(2, Math.round(h * dpr));
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    G.S.W = w; G.S.H = h; G.S.dpr = dpr;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  G.S.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- input ---------------- */
+  const keys = Object.create(null);
+
+  function vec() {
+    let x = 0, y = 0;
+    if (keys.KeyW || keys.ArrowUp) y -= 1;
+    if (keys.KeyS || keys.ArrowDown) y += 1;
+    if (keys.KeyA || keys.ArrowLeft) x -= 1;
+    if (keys.KeyD || keys.ArrowRight) x += 1;
+    const j = G.S.joy;
+    if (j) {
+      const l = Math.hypot(j.dx, j.dy);
+      if (l > 6) { x = j.dx / 52; y = j.dy / 52; }
+    }
+    const m = Math.hypot(x, y);
+    if (m > 1) { x /= m; y /= m; }
+    G.S.inputVec.x = x; G.S.inputVec.y = y;
+  }
+
+  function pause() {
+    if (G.mode !== 'playing') return;
+    G.mode = 'paused';
+    UI.show('pause');
+  }
+
+  function resume() {
+    if (G.mode !== 'paused') return;
+    G.mode = 'playing';
+    UI.show(null);
+  }
+
+  let lastMode = 'journey';
+  function start(mode) {
+    SFX.ensure();
+    R.resetStains(); /* a fresh sheet */
+    G.startRun(mode || lastMode);
+    lastMode = mode || lastMode;
+  }
+
+  function goMenu() {
+    SFX.ensure();
+    R.resetStains();
+    G.abandon();
+  }
+
+  function toggleMute() {
+    SFX.ensure();
+    UI.muteVisual(SFX.toggle());
+  }
+
+  /* ---------------- fps meter (F toggles it, ?fps=1 pins it) ---------------- */
+  let fpsOn = false;
+  try { fpsOn = new URLSearchParams(location.search).get('fps') === '1'; } catch (e) {}
+  const fpsBox = { ms: 16.7, fps: 60, t: 0 };
+
+  window.addEventListener('keydown', e => {
+    const k = e.code;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(k)) e.preventDefault();
+    SFX.ensure();
+    if (G.mode === 'intro') { INTRO.skip(); return; }  /* any key leaves the opening */
+    if (G.mode === 'cutscene') {                       /* any key leaves a cutscene */
+      if (k === 'KeyM') { toggleMute(); return; }
+      CUT.skip(); return;
+    }
+    if (e.repeat) { keys[k] = true; return; }
+    if (k === 'KeyM') { toggleMute(); return; }
+    if (k === 'KeyF') { fpsOn = !fpsOn; return; }
+    const m = G.mode;
+    if (k === 'KeyP' || k === 'Escape') {
+      if (m === 'playing') pause();
+      else if (m === 'paused') resume();
+      return;
+    }
+    if (k === 'Enter') {
+      if (m === 'title' || m === 'over') start();
+      else if (m === 'upgrade') G.deploy();
+      else if (m === 'paused') resume();
+      return;
+    }
+    if (m === 'upgrade' && /^Digit[123]$/.test(k)) {
+      G.pickAt(Number(k.slice(5)) - 1);
+      return;
+    }
+    keys[k] = true;
+    vec();
+  });
+
+  window.addEventListener('keyup', e => {
+    keys[e.code] = false;
+    vec();
+  });
+
+  /* touch joystick */
+  canvas.addEventListener('pointerdown', e => {
+    SFX.ensure();
+    if (G.mode === 'intro') { INTRO.skip(); return; }
+    if (e.pointerType === 'mouse') return;
+    if (G.mode !== 'playing') return;
+    G.S.joy = { id: e.pointerId, ax: e.clientX, ay: e.clientY, dx: 0, dy: 0 };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    const j = G.S.joy;
+    if (!j || e.pointerId !== j.id) return;
+    let dx = e.clientX - j.ax, dy = e.clientY - j.ay;
+    const l = Math.hypot(dx, dy);
+    if (l > 52) { dx = (dx / l) * 52; dy = (dy / l) * 52; }
+    j.dx = dx; j.dy = dy;
+    vec();
+  });
+  const endJoy = e => {
+    if (G.S.joy && e.pointerId === G.S.joy.id) {
+      G.S.joy = null;
+      G.S.inputVec.x = 0; G.S.inputVec.y = 0;
+    }
+  };
+  canvas.addEventListener('pointerup', endJoy);
+  canvas.addEventListener('pointercancel', endJoy);
+
+  /* a mouse click anywhere also leaves the opening or a cutscene */
+  window.addEventListener('pointerdown', () => {
+    if (G.mode === 'intro') INTRO.skip();
+    else if (G.mode === 'cutscene') CUT.skip();
+  });
+
+  /* the title paper leans toward the hand (mice only) */
+  window.addEventListener('pointermove', e => {
+    if (G.mode !== 'title') return;
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    if (!G.S.titlePar) G.S.titlePar = { x: 0, y: 0 };
+    G.S.titlePar.x = (e.clientX / Math.max(1, G.S.W)) * 2 - 1;
+    G.S.titlePar.y = (e.clientY / Math.max(1, G.S.H)) * 2 - 1;
+  });
+
+  /* ---------------- the opening & the title ---------------- */
+  const introSkip = document.getElementById('introSkip');
+
+  function setSkipPrompt(v) {
+    if (introSkip) introSkip.classList.toggle('hidden', !v);
+  }
+
+  function enterTitle() {
+    document.body.classList.remove('intro-live');
+    setSkipPrompt(false);
+    G.S.titlePar = { x: 0, y: 0 };
+    G.initAttract();
+    R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
+    UI.show('title');
+    G.mode = 'title';
+  }
+
+  function playIntro() {
+    SFX.ensure();
+    UI.show(null);
+    UI.hud(false);
+    document.body.classList.add('intro-live');
+    setSkipPrompt(true);
+    INTRO.start();
+    G.mode = 'intro';
+  }
+
+  INTRO.onEnd = enterTitle;
+
+  /* ---------------- buttons ---------------- */
+  document.getElementById('playBtn').addEventListener('click', () => start('journey'));
+  document.getElementById('endlessBtn').addEventListener('click', () => start('endless'));
+  document.getElementById('openingBtn').addEventListener('click', playIntro);
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    SFX.ensure();
+    /* the same sheet keeps its stains — no fresh paper here */
+    G.continueEndless();
+  });
+  document.getElementById('againBtn').addEventListener('click', () => start());
+  document.getElementById('menuBtn').addEventListener('click', goMenu);
+  document.getElementById('resumeBtn').addEventListener('click', resume);
+  document.getElementById('pauseMenuBtn').addEventListener('click', goMenu);
+  document.getElementById('deployBtn').addEventListener('click', () => G.deploy());
+  document.getElementById('muteBtn').addEventListener('click', toggleMute);
+
+  window.addEventListener('blur', pause);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+  /* ---------------- init ---------------- */
+  /* the wordmark pressed in letter by letter, like wet type */
+  (function wrapLetters() {
+    const w = document.querySelector('.title-word');
+    if (!w) return;
+    let i = 0;
+    w.innerHTML = w.textContent.split('').map(ch =>
+      (ch === ' ' || ch === '\u00A0')
+        ? '<span class="tspace">&nbsp;</span>'
+        : `<span class="tl" style="--i:${i++}">${ch}</span>`
+    ).join('');
+  })();
+  UI.buildBrushes(G.getBrush());
+  UI.muteVisual(SFX.muted);
+  UI.setRunNo(G.getRuns() + 1);
+  UI.setBest(G.getBest());
+  if (G.S.reduced) {
+    enterTitle();          /* the opening is a film — stillness goes straight to the title */
+  } else {
+    playIntro();
+  }
+
+  /* ---------------- main loop ---------------- */
+  let last = performance.now();
+  let prevM = '';
+  function frame(now) {
+    requestAnimationFrame(frame);
+    let dt = (now - last) / 1000;
+    last = now;
+    const rawDt = dt;
+    if (dt > 0.05) dt = 0.05;
+
+    /* pacekeeping: a smoothed clock of how the frames truly land */
+    if (rawDt > 0.0005) {
+      const inst = 1 / rawDt;
+      fpsBox.fps += (Math.min(inst, 240) - fpsBox.fps) * 0.05;
+      fpsBox.ms += (rawDt * 1000 - fpsBox.ms) * 0.05;
+    }
+    if (ADAPT.on) {
+      ADAPT.downCool -= rawDt; ADAPT.upHold += rawDt;
+      if (G.mode === 'playing' && ADAPT.downCool <= 0 && rawDt > 0.0005 && rawDt < 0.5) {
+        if (fpsBox.fps < 52 && ADAPT.scale > 0.58) {
+          ADAPT.scale = Math.max(0.58, ADAPT.scale - 0.14);
+          ADAPT.downCool = 2.5; ADAPT.upHold = 0;
+          resize();
+        } else if (fpsBox.fps > 58.5 && ADAPT.scale < 1 && ADAPT.upHold > 7) {
+          ADAPT.scale = Math.min(1, ADAPT.scale + 0.12);
+          ADAPT.downCool = 3; ADAPT.upHold = 0;
+          resize();
+        }
+      }
+    }
+
+    vec();
+    /* hit-stop: the paper holds its breath on the heavy strokes */
+    let gameDt = dt;
+    if (G.S.hitstop > 0) {
+      G.S.hitstop -= dt;
+      gameDt = dt * 0.06;
+    }
+    const m = G.mode;
+    if (m !== prevM) {
+      prevM = m;
+      setSkipPrompt(m === 'intro' || m === 'cutscene');   /* films can be left */
+    }
+    if (m === 'intro') INTRO.update(dt);
+    else if (m === 'playing') {
+      /* substep when a frame runs long: physics stays true to the
+         stroke even if the sheet was shown at a humble pace */
+      const steps = dt > 0.0251 ? 2 : 1;
+      for (let i = 0; i < steps && G.mode === 'playing'; i++) G.update(gameDt / steps);
+    }
+    else if (m === 'dying') G.updateDying(dt);
+    else if (m === 'cutscene') CUT.update(dt);
+    else if (m === 'title' || m === 'over') G.updateIdle(dt);
+
+    ctx.setTransform(G.S.dpr, 0, 0, G.S.dpr, 0, 0);
+    if (m === 'intro') INTRO.draw(ctx, now / 1000);
+    else {
+      R.draw(ctx, now / 1000);
+      if (m === 'cutscene') CUT.draw(ctx, now / 1000);
+    }
+
+    /* the pacekeeper's mark, bottom-left, quiet */
+    if (fpsOn) {
+      ctx.setTransform(G.S.dpr, 0, 0, G.S.dpr, 0, 0);
+      let label = `${fpsBox.fps.toFixed(0)} FPS · ${fpsBox.ms.toFixed(1)} ms`;
+      if (ADAPT.scale < 1) label += ` · ${(ADAPT.scale * 100) | 0}%`;
+      ctx.font = '10px ui-monospace, Menlo, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      const w = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(15,13,11,0.62)';
+      ctx.fillRect(8, G.S.H - 8 - 15, w + 12, 17);
+      ctx.fillStyle = '#ede7d9';
+      ctx.fillText(label, 14, G.S.H - 9);
+    }
+  }
+  requestAnimationFrame(frame);
+})();

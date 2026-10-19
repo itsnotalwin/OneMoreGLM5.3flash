@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ONE MORE — An Ink-Born Survival</title>
+<meta name="description" content="An endless sheet of washi. Five scrolls of ten waves, five named Guardians, then the paper never ends. A monochrome survival painted in living ink." />
+<meta name="theme-color" content="#ede7d9" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='6'%20y='6'%20width='52'%20height='52'%20rx='7'%20fill='%23B23A2B'/%3E%3Ctext%20x='32'%20y='45'%20font-size='38'%20text-anchor='middle'%20fill='%23ede7d9'%20font-family='serif'%20font-weight='bold'%3E%E4%B8%80%3C/text%3E%3C/svg%3E" />
+<meta property="og:title" content="ONE MORE — An Ink-Born Survival" />
+<meta property="og:description" content="No walls. No arena. Five scrolls of ten waves on an endless sheet of washi, five named Guardians, and the ink you gather makes you stronger. How long can the brush last?" />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Antique&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+<!-- hand-wobble filter: gives every ink border a brushed edge -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="inkrough" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5"/>
+    </filter>
+    <filter id="inkrough-soft" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="12" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <!-- ============ IN-RUN HUD ============ -->
+  <div id="hud" class="hidden">
+    <div class="hud-tl">
+      <div class="wave-chip"><span class="wave-kanji" id="hudWave">一</span></div>
+      <div class="hud-wave-meta">
+        <div class="hud-area" id="hudArea">
+          <span class="hud-area-kanji" id="hudAreaKanji">一</span>
+          <span class="hud-area-name" id="hudAreaName">FIRST WASH</span>
+          <span class="hud-area-count" id="hudWaveTotal">一 / 十</span>
+        </div>
+        <div class="wave-progress"><div class="wave-fill" id="waveFill"></div></div>
+      </div>
+      <span class="hud-mode" id="hudMode">THE JOURNEY</span>
+    </div>
+    <div class="hud-tr">
+      <div class="hp-row" id="hudHp"></div>
+      <div class="hud-score" id="hudScore">0000000</div>
+      <div class="combo-chip hidden" id="hudCombo"></div>
+    </div>
+    <div class="hud-bl">
+      <div class="hud-loadout" id="hudLoadout"></div>
+      <span class="hud-time" id="hudTime">00:00</span>
+    </div>
+    <div class="hud-bc">
+      <div class="hud-xp">
+        <span class="xp-label">墨</span>
+        <div class="xp-track"><div class="xp-fill" id="hudXpFill"></div></div>
+        <span class="xp-lv" id="hudXpLv">一</span>
+      </div>
+    </div>
+    <div class="boss-bar hidden" id="hudBoss">
+      <span class="boss-kicker">守 GUARDIAN</span>
+      <span class="boss-name" id="hudBossName">THE STAIN</span>
+      <div class="boss-track"><div class="boss-fill" id="hudBossFill"></div></div>
+    </div>
+    <div class="hud-br">
+      <button id="muteBtn" class="icon-btn" aria-label="Toggle sound" title="Toggle sound (M)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.6a4.8 4.8 0 0 1 0 6.8"/><path d="M18.2 6a8.6 8.6 0 0 1 0 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ WAVE BANNER ============ -->
+  <div id="waveBanner" class="wave-banner" aria-hidden="true">
+    <div class="banner-core">
+      <svg class="banner-stroke" viewBox="0 0 420 64" aria-hidden="true">
+        <path d="M14 36 C 92 20, 214 15, 406 27 C 302 40, 152 47, 42 44 C 27 43.3, 17 40, 14 36 Z" fill="currentColor"/>
+        <circle cx="404" cy="29" r="2.6" fill="currentColor"/>
+      </svg>
+      <span class="banner-kicker" id="bannerKicker">INCOMING</span>
+      <span class="banner-title" id="bannerTitle"><span class="ban-kanji">一</span><span class="ban-lat">WAVE 01</span></span>
+    </div>
+  </div>
+
+  <!-- ============ TITLE SCREEN ============ -->
+  <section id="screenTitle" class="screen screen-title">
+    <!-- the great brush circle, painted live by the brush each visit -->
+    <div class="enso-wrap" id="ensoWrap" aria-hidden="true">
+      <canvas id="ensoBake" class="enso-bake"></canvas>
+      <canvas id="ensoFront" class="enso-front"></canvas>
+    </div>
+
+    <div class="title-main">
+      <div class="title-chip">A MONOCHROME SURVIVAL</div>
+      <h1 class="title-word">ONE&nbsp;MORE</h1>
+      <p class="title-sub">One brush. Five scrolls. The paper never ends.</p>
+      <div class="brush-row" id="brushRow" aria-label="Choose your brush"></div>
+      <div class="mode-row">
+        <button id="playBtn" class="play-btn">
+          <span class="play-seal" aria-hidden="true">一</span>
+          <span class="play-label">THE JOURNEY<span class="run-seg">&nbsp;—&nbsp;<span id="runNo">RUN 001</span></span></span>
+        </button>
+        <button id="endlessBtn" class="endless-btn" title="Endless waves across turning sheets">
+          <span class="endless-kanji" aria-hidden="true">無</span>
+          <span class="play-label">THE ENDLESS SCROLL</span>
+        </button>
+      </div>
+      <p class="best-line hidden" id="bestLine"></p>
+    </div>
+
+    <div class="title-foot">
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND</div>
+    </div>
+
+    <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
+      <span class="opening-kanji" aria-hidden="true">序</span>
+      <span class="opening-label">OPENING</span>
+    </button>
+  </section>
+
+  <!-- ============ UPGRADE SCREEN ============ -->
+  <section id="screenUpgrade" class="screen screen-upgrade hidden">
+    <span class="wm wm-up" aria-hidden="true">選</span>
+    <div class="panel">
+      <div class="panel-banner">
+        <div class="pb-left">
+          <span class="pb-kicker" id="upKicker">WAVE 一 — CLEARED</span>
+          <span class="pb-title">CHOOSE ONE MORE</span>
+        </div>
+        <div class="pb-right">
+          <span class="pb-step-label">NEXT</span>
+          <span class="pb-step-value" id="upNext">二</span>
+        </div>
+      </div>
+      <div class="upgrade-grid" id="upgradeGrid"></div>
+      <button id="deployBtn" class="deploy-btn is-disabled" disabled>DEPLOY</button>
+      <div class="panel-hint">PRESS 1 · 2 · 3 TO SELECT — AGAIN OR ENTER TO DEPLOY</div>
+    </div>
+  </section>
+
+  <!-- ============ PAUSE SCREEN ============ -->
+  <section id="screenPause" class="screen screen-pause hidden">
+    <span class="wm wm-pause" aria-hidden="true">休</span>
+    <div class="pause-box">
+      <div class="pause-chip">REST</div>
+      <p class="pause-note">The ink waits. For now.</p>
+      <div class="pause-actions">
+        <button id="resumeBtn" class="block-btn">RESUME</button>
+        <button id="pauseMenuBtn" class="ghost-btn">ABANDON RUN</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME OVER SCREEN ============ -->
+  <section id="screenOver" class="screen screen-over hidden">
+    <span class="wm wm-over" aria-hidden="true">終</span>
+    <div class="over-panel">
+      <div class="best-badge hidden" id="newBestBadge">NEW BEST</div>
+      <p class="over-kicker" id="overKicker">RUN 001 — THE INK CLAIMS ANOTHER</p>
+      <h2 class="over-title" id="overTitle">THE INK DRIES.</h2>
+      <p class="over-sub" id="overSub">The paper keeps every stroke. Even this one.</p>
+      <div class="over-body">
+        <div class="rank-block">
+          <div class="rank-value" id="overRank">D</div>
+          <span class="rank-label">SEAL</span>
+        </div>
+        <div class="over-stats">
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">WAVES SURVIVED</span><span class="stat-dots"></span><span class="stat-value" id="statWaves">0</span></div>
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">BLOTS CLEANED</span><span class="stat-dots"></span><span class="stat-value" id="statKills">0</span></div>
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">TIME IN ARENA</span><span class="stat-dots"></span><span class="stat-value" id="statTime">00:00</span></div>
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
+        </div>
+      </div>
+      <div class="over-actions">
+        <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
+        <button id="againBtn" class="block-btn big">ONE MORE</button>
+        <button id="menuBtn" class="ghost-btn">MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="flash" aria-hidden="true"></div>
+
+  <!-- ============ OPENING SCENE SKIP ============ -->
+  <div id="introSkip" class="intro-skip hidden" role="button" tabindex="-1" aria-label="Skip the opening">
+    <span class="skip-key">PRESS ANY KEY —</span><span class="skip-tap">TAP —</span><span>SKIP</span><span class="skip-arrow" aria-hidden="true">▸</span>
+  </div>
+</div>
+
+<script src="./js/config.js"></script>
+<script src="./js/audio.js"></script>
+<script src="./js/ui.js"></script>
+<script src="./js/cutscene.js"></script>
+<script src="./js/game.js"></script>
+<script src="./js/render.js"></script>
+<script src="./js/intro.js"></script>
+<script src="./js/main.js"></script>
+</body>
+</html>
