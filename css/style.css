@@ -21,6 +21,20 @@
   --rough-soft: url(#inkrough-soft);
 }
 
+/* the night scroll: every DOM ink flips to pale so the HUD, the
+   banners and the sheets keep their contrast on dark paper */
+body[data-theme="dark"]{
+  --paper: #17130f;
+  --paper-92: rgba(23, 19, 15, 0.94);
+  --paper-80: rgba(23, 19, 15, 0.82);
+  --paper-55: rgba(23, 19, 15, 0.6);
+  --ink: #e9e2d2;
+  --ink-70: rgba(233, 226, 210, 0.7);
+  --ink-45: rgba(233, 226, 210, 0.45);
+  --ink-25: rgba(233, 226, 210, 0.25);
+  --ink-12: rgba(233, 226, 210, 0.12);
+}
+
 *, *::before, *::after{ box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body{ height: 100%; }
@@ -191,14 +205,17 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 
 /* ============================================================
-   TITLE — the enso, the name, one choice of brush, two doors
+   TITLE — the title leaf of a handscroll: the scribe paints his
+   circle and keeps it, tanzaku slips hang from a beam, two doors
+   below, vertical colophons at the sheet's edges
    ============================================================ */
 .screen-title{
-  align-items: center; justify-content: center; padding: 0 0 56px;
+  align-items: center; justify-content: center; padding: 0 0 40px;
+  /* the canvas below already paints the washi — the overlay only
+     breathes a little light and warmth over it, never veils it */
   background:
-    radial-gradient(ellipse at 22% 14%, rgba(255,252,242,.42), transparent 55%),
-    radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.1), transparent 60%),
-    var(--paper-80);
+    radial-gradient(ellipse at 22% 14%, rgba(255,252,242,.4), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.08), transparent 60%);
 }
 
 /* ---- entrance choreography: each element settles like wet ink ---- */
@@ -209,12 +226,12 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   from{ opacity: 0; }
 }
 
-/* ---- the great brush circle, painted live on two canvases ---- */
+/* ---- the great brush circle behind the name ---- */
 .enso-wrap{
   position: absolute;
-  left: 50%; top: 50%;
-  width: min(92vh, 800px); height: min(92vh, 800px);
-  transform: translate(-50%, -55%) rotate(-6deg);
+  left: 50%; top: 31%;
+  width: min(64vh, 520px); height: min(64vh, 520px);
+  transform: translate(-50%, -50%) rotate(-4deg);
   pointer-events: none;
   z-index: 0;
 }
@@ -223,28 +240,60 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   width: 100%; height: 100%;
 }
 
+/* ---- colophons: vertical inscriptions, as on a mounted scroll ---- */
+.side-ins{
+  position: absolute; top: 50%;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+.side-r{ right: clamp(16px, 4.5vw, 76px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.45s backwards; }
+.side-l{ left: clamp(16px, 4.5vw, 76px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.62s backwards; }
+.ins-col{
+  writing-mode: vertical-rl;
+  font-family: var(--display);
+  font-size: 20px; line-height: 1;
+  letter-spacing: .38em;
+  color: var(--ink);
+}
+.ins-col-pale{ color: var(--ink-70); font-size: 15px; letter-spacing: .3em; }
+.ins-seal{
+  width: 23px; height: 23px;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 13px; line-height: 1;
+  color: var(--paper); background: var(--red);
+  transform: rotate(-3deg);
+  box-shadow: 1.5px 1.5px 0 rgba(26,23,20,.18);
+}
+.ins-seal-ghost{
+  color: var(--red); background: transparent;
+  border: 1px solid rgba(178,58,43,.5);
+  box-shadow: none;
+}
+
 .title-main{
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
-  margin-top: 1vh;
+  margin-top: -2vh;
   position: relative; z-index: 1;
 }
 .title-chip{
   font-size: 10px; letter-spacing: .52em; text-indent: .52em;
   color: var(--ink-70);
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 12px;
   animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 1.9s backwards;
 }
 .title-chip::before, .title-chip::after{
-  content: ''; width: 44px; height: 1px; background: var(--ink-25);
+  content: ''; width: 30px; height: 1px; background: var(--ink-25);
 }
 .title-word{
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(64px, 12.5vw, 148px);
+  font-size: clamp(56px, 11vw, 124px);
   line-height: 1.04;
   letter-spacing: .02em;
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--ink);
   text-shadow: 5px 5px 0 rgba(26,23,20,.08);
   --tilt: -1.2deg;
@@ -260,8 +309,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   from{ opacity: 0; transform: translateY(.16em) scale(1.14); filter: blur(8px); }
 }
 .title-sub{
-  margin-top: 18px;
-  font-size: 11.5px; letter-spacing: .18em; text-indent: .18em;
+  margin-top: 14px;
+  font-size: 11px; letter-spacing: .18em; text-indent: .18em;
   color: var(--ink-70);
   animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 2.6s backwards;
 }
@@ -279,6 +328,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   box-shadow: 4px 4px 0 rgba(26,23,20,.22);
   transition: transform .14s ease, box-shadow .14s ease;
 }
+.play-btn .play-seal, .play-btn .play-label{ position: relative; z-index: 1; }
+.endless-btn .play-label, .endless-btn .endless-kanji{ position: relative; z-index: 1; }
+.sheet-btn .sheet-kanji{ position: relative; z-index: 1; }
 .play-btn::before{
   content: '';
   position: absolute; inset: 0;
@@ -300,10 +352,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transition: transform .18s ease;
 }
 .best-line{
-  margin-top: 18px;
+  margin-top: 16px;
   font-size: 10px; letter-spacing: .3em;
   color: var(--ink-70);
-  animation: riseIn .6s ease 3.15s backwards;
+  padding: 7px 18px 6px;
+  border-top: 1px solid var(--ink-12);
+  border-bottom: 1px solid var(--ink-12);
+  animation: riseIn .6s ease 3.6s backwards;
 }
 .best-line .kanji-inline{ font-size: 13px; color: var(--red); }
 
@@ -313,7 +368,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   display: flex; flex-direction: column; align-items: center;
   padding: 0 20px;
   z-index: 1;
-  animation: riseIn .7s ease 3.25s backwards;
+  animation: riseIn .7s ease 3.75s backwards;
 }
 .controls-line{
   font-size: 9px; letter-spacing: .3em;
@@ -655,10 +710,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .hud-mode.endless{ color: var(--red); border-color: rgba(178,58,43,.45); }
 
 .mode-row{
-  margin-top: 30px;
+  margin-top: 26px;
   display: flex; gap: 14px; align-items: stretch; justify-content: center;
   flex-wrap: wrap;
-  animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 2.95s backwards;
+  animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.35s backwards;
 }
 .mode-row .play-btn{ margin-top: 0; animation: none; }
 .endless-btn{
@@ -674,6 +729,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   box-shadow: 4px 4px 0 rgba(26,23,20,.13);
   transition: transform .14s ease, box-shadow .14s ease;
 }
+.endless-btn .play-label{ color: var(--ink); position: relative; z-index: 1; }
 .endless-btn::before{
   content: '';
   position: absolute; inset: 0;
@@ -684,6 +740,37 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .endless-btn:hover{ transform: rotate(.5deg) translate(-2px, -2px); box-shadow: 7px 7px 0 rgba(26,23,20,.2); }
 .endless-btn:hover .endless-kanji{ transform: rotate(-4deg) scale(1.06); }
+
+/* the paper remembers — resume the journey from the furthest sheet */
+.sheet-btn{
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 14px;
+  padding: 10px 22px;
+  font-family: inherit;
+  font-size: 11px; font-weight: 600; letter-spacing: .22em; text-indent: .1em;
+  color: var(--ink);
+  background: none; border: none; cursor: pointer;
+  transform: rotate(-.4deg);
+  transition: transform .14s ease, box-shadow .14s ease;
+  animation: riseIn .6s ease 3.5s backwards;
+}
+.sheet-btn::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1px dashed var(--ink);
+  background: transparent;
+  filter: var(--rough-soft);
+  pointer-events: none;
+  opacity: .75;
+}
+.sheet-btn:hover{ transform: rotate(0deg) translate(-1px, -1px); }
+.sheet-btn .sheet-kanji{
+  font-size: 15px; font-weight: 700; letter-spacing: 0; text-indent: 0;
+  transform: rotate(-3deg);
+  color: var(--red);
+}
+.sheet-btn.hidden{ display: none; }
 .endless-btn:active{ transform: rotate(.5deg) translate(1px, 1px); box-shadow: 2px 2px 0 rgba(26,23,20,.22); }
 .endless-kanji{
   width: 32px; height: 32px;
@@ -750,7 +837,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   color: var(--ink-70);
   transform: rotate(-.4deg);
   transition: color .15s ease;
-  animation: fadeIn .8s ease 3.4s backwards;
+  animation: fadeIn .8s ease 3.9s backwards;
 }
 .opening-btn::before{
   content: '';
@@ -775,7 +862,6 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    RESPONSIVE
    ============================================================ */
 @media (max-width: 720px){
-  .enso-wrap{ width: min(130vw, 620px); height: min(130vw, 620px); top: 47%; }
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
   .title-foot{ bottom: 66px; }
   .upgrade-grid{ grid-template-columns: 1fr; }
@@ -797,12 +883,19 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .controls-line{ font-size: 8px; letter-spacing: .2em; }
   .run-seg{ display: none; }
   .play-btn, .endless-btn{ letter-spacing: .24em; }
+  .brush-card{ min-width: 96px; }
+}
+
+@media (max-height: 620px){
+  .title-sub{ display: none; }
+  .brush-row{ margin-top: 12px; }
+  .brush-card{ min-height: 150px; padding-bottom: 9px; }
+  .brush-desc{ display: none; }
 }
 
 @media (max-height: 560px){
-  .title-sub{ display: none; }
   .title-foot{ display: none; }
-  .enso-wrap{ width: 70vh; height: 70vh; }
+  .title-chip{ margin-top: 10px; }
 }
 
 /* ============================================================
@@ -812,7 +905,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .wave-banner.show{ animation-duration: .8s; }
   .play-btn, .endless-btn, .up-card, .block-btn, .deploy-btn{ transition: none; }
   .title-chip, .title-word .tl, .title-sub, .play-btn, .best-line,
-  .title-foot, .mode-row, .brush-row, .opening-btn{ animation: none; }
+  .title-foot, .mode-row, .brush-row, .opening-btn, .side-ins,
+  .sheet-btn{ animation: none; }
 }
 
 /* ============================================================
@@ -919,60 +1013,324 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   to{ transform: rotate(-1.2deg) scale(1); }
 }
 
-/* --- the three brushes on the title sheet --- */
+/* --- the three brushes, hung as tanzaku poem slips from a beam --- */
 .brush-row{
-  display: flex; justify-content: center; gap: 12px;
-  margin: 20px 0 4px;
+  position: relative;
+  display: flex; justify-content: center; align-items: flex-start; gap: 18px;
+  margin: 22px 0 0;
+  padding-top: 20px;
   flex-wrap: wrap;
-  animation: riseIn .6s cubic-bezier(.22,.7,.25,1) 2.78s backwards;
+  animation: riseIn .6s cubic-bezier(.22,.7,.25,1) 2.95s backwards;
+}
+/* the inked beam they hang from */
+.brush-row::before{
+  content: '';
+  position: absolute; top: 0; left: 4%; right: 4%;
+  height: 2px;
+  background: var(--ink-45);
+  filter: var(--rough-soft);
 }
 .brush-card{
   font-family: var(--mono);
-  width: 168px;
-  padding: 13px 13px 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  background: var(--paper-80);
-  border: 1.6px solid var(--ink-45);
-  cursor: pointer;
   position: relative;
+  width: 150px;
+  min-height: 194px;
+  padding: 14px 11px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  background: var(--paper-92);
+  border: 1.4px solid var(--ink);
+  box-shadow: 3px 4px 0 rgba(26,23,20,.14);
+  cursor: pointer;
   transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   text-align: center;
+  --tilt: 0deg;
+  transform: rotate(var(--tilt));
 }
-.brush-card:hover{ transform: translateY(-2px) rotate(-.5deg); border-color: var(--ink); }
+/* each slip hangs at its own length and tilt, like real tanzaku */
+.brush-card:nth-child(1){ --tilt: -1.4deg; min-height: 188px; }
+.brush-card:nth-child(2){ --tilt: .8deg;  min-height: 202px; margin-top: -6px; }
+.brush-card:nth-child(3){ --tilt: -.6deg; min-height: 184px; }
+/* the thread from the beam to each slip */
+.brush-card::before{
+  content: '';
+  position: absolute; top: -20px; left: 50%;
+  width: 1px; height: 20px;
+  background: var(--ink-45);
+}
+.brush-card:hover{ transform: translateY(-3px) rotate(var(--tilt)); box-shadow: 5px 7px 0 rgba(26,23,20,.18); }
 .brush-card.selected{
-  border-color: var(--ink);
-  box-shadow: 4px 4px 0 rgba(26,23,20,.22);
-  transform: rotate(-.6deg);
+  background: var(--paper);
+  box-shadow: 4px 5px 0 rgba(26,23,20,.2);
 }
-.brush-card.selected::after{
-  content: '選';
-  position: absolute; top: 5px; right: 7px;
+/* the red seal pins the chosen slip */
+.brush-card .brush-pin{
+  position: absolute; top: -8px; left: 50%;
+  width: 16px; height: 16px;
+  background: var(--red);
+  transform: translateX(-50%) rotate(-8deg) scale(0);
+  transition: transform .18s cubic-bezier(.3,1.6,.4,1);
+  box-shadow: 1px 1px 0 rgba(26,23,20,.25);
+}
+.brush-card.selected .brush-pin{ transform: translateX(-50%) rotate(-8deg) scale(1); }
+.brush-kanji{
   font-family: var(--display);
-  font-size: 11px;
-  color: var(--red);
+  font-size: 30px; line-height: 1;
+  color: var(--ink);
+  margin-top: 2px;
 }
 .brush-art{
   display: block;
   width: 118px; height: 40px;
-  margin: -3px 0 -2px;
+  margin: 0 0 -2px;
 }
 .brush-name{
-  font-size: 10px; letter-spacing: .3em; font-weight: 600;
+  font-size: 10px; letter-spacing: .3em; text-indent: .3em; font-weight: 600;
   color: var(--ink);
 }
 .brush-desc{
-  font-size: 9px; line-height: 1.5;
+  font-size: 9px; line-height: 1.55;
   color: var(--ink-70);
   letter-spacing: .02em;
 }
 
 @media (max-width: 720px){
-  .brush-row{ gap: 8px; }
-  .brush-card{ width: 46%; min-width: 128px; padding: 10px 9px 9px; }
-  .brush-art{ width: 96px; height: 34px; }
+  .side-ins{ display: none; }
+  .enso-wrap{ width: min(50vh, 118vw, 400px); height: min(50vh, 118vw, 400px); top: 26%; }
+  .title-word{ font-size: clamp(52px, 15vw, 96px); }
+  .title-foot{ bottom: 66px; }
+  .brush-row{ gap: 9px; padding-top: 16px; margin-top: 14px; }
+  .brush-row::before{ left: 2%; right: 2%; }
+  .brush-card{ width: 30%; min-width: 104px; min-height: 0; padding: 10px 7px 9px; gap: 5px; }
+  .brush-card:nth-child(1), .brush-card:nth-child(2), .brush-card:nth-child(3){ margin-top: 0; }
+  .brush-card:nth-child(2){ margin-top: -4px; }
+  .brush-card::before{ top: -16px; height: 16px; }
+  .brush-kanji{ font-size: 24px; }
+  .brush-art{ width: 92px; height: 32px; }
   .brush-desc{ display: none; }
+  .mode-row{ margin-top: 18px; }
   .xp-track{ width: 40vw; }
   .boss-bar{ width: 62vw; top: 64px; }
   .intro-skip{ right: 12px; bottom: 12px; }
   .opening-btn{ right: 12px; bottom: 12px; }
+}
+
+/* ============================================================
+   THE SHELF OF SCROLLS — five tanzaku strips hang from a beam,
+   one per sheet. Unrolled strips may be entered; sealed strips
+   wait until the scroll before them lies finished: ten levels,
+   ten waves each, its Guardian felled.
+   ============================================================ */
+.screen-scrolls{
+  align-items: center; justify-content: flex-start;
+  padding: clamp(20px, 4.5vh, 44px) 20px 22px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 22% 14%, rgba(255,252,242,.4), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.08), transparent 60%);
+}
+.wm-scrolls{ right: 3%; top: 4%; transform: rotate(-2deg); opacity: .04; }
+
+.scrolls-head{ text-align: center; z-index: 1; animation: riseIn .6s cubic-bezier(.22,.7,.25,1) .05s backwards; }
+.scrolls-kicker{
+  font-size: 9.5px; letter-spacing: .5em; text-indent: .5em; color: var(--ink-70);
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.scrolls-kicker::before, .scrolls-kicker::after{ content: ''; width: 30px; height: 1px; background: var(--ink-25); }
+.scrolls-title{
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(34px, 6vw, 58px); line-height: 1.05;
+  margin-top: 6px; color: var(--ink);
+  text-shadow: 4px 4px 0 rgba(26,23,20,.07);
+  transform: rotate(-.8deg);
+}
+.scrolls-sub{
+  margin-top: 8px; font-size: 10px; letter-spacing: .2em; text-indent: .2em;
+  color: var(--ink-70);
+}
+
+/* the inked beam the strips hang from */
+.scroll-beam{
+  width: min(94%, 1120px); height: 2px;
+  margin-top: clamp(14px, 2.6vh, 26px);
+  background: var(--ink-45);
+  filter: var(--rough-soft);
+  animation: fadeIn .6s ease .18s backwards;
+}
+
+.scroll-strip-row{
+  display: flex; justify-content: center; align-items: stretch;
+  gap: clamp(10px, 1.8vw, 22px);
+  padding: 26px 4px 6px;
+  flex-wrap: wrap;
+  max-width: 1240px;
+  flex: 1 0 auto;
+  align-content: center;
+}
+
+.scroll-strip{
+  font-family: var(--mono);
+  position: relative;
+  width: clamp(148px, 16.5vw, 178px);
+  min-height: 318px;
+  padding: 13px 10px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--paper-92);
+  cursor: pointer;
+  text-align: center;
+  --tilt: 0deg;
+  transform: rotate(var(--tilt));
+  box-shadow: 3px 4px 0 rgba(26,23,20,.14);
+  transition: transform .15s ease, box-shadow .15s ease;
+  animation: riseIn .6s cubic-bezier(.22,.7,.25,1) calc(.22s + var(--i, 0) * 70ms) backwards;
+}
+.scroll-strip:nth-child(1){ --i: 0; --tilt: -1.1deg; }
+.scroll-strip:nth-child(2){ --i: 1; --tilt: .7deg; margin-top: 7px; }
+.scroll-strip:nth-child(3){ --i: 2; --tilt: -.5deg; margin-top: -4px; }
+.scroll-strip:nth-child(4){ --i: 3; --tilt: .9deg; margin-top: 5px; }
+.scroll-strip:nth-child(5){ --i: 4; --tilt: -.8deg; }
+/* the brushed edge, on a filter layer so text stays crisp */
+.scroll-strip::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  filter: var(--rough-soft);
+  pointer-events: none;
+}
+/* the thread from the beam to each strip */
+.scroll-strip .strip-string{
+  position: absolute; top: -26px; left: 50%;
+  width: 1px; height: 26px;
+  background: var(--ink-45);
+}
+.scroll-strip:hover{ transform: translateY(-4px) rotate(var(--tilt)); box-shadow: 5px 8px 0 rgba(26,23,20,.18); }
+
+.strip-no{ font-size: 8.5px; letter-spacing: .34em; text-indent: .34em; color: var(--ink-45); }
+.strip-kanji{
+  font-family: var(--display);
+  font-size: clamp(44px, 6.4vh, 62px); line-height: 1.04;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.strip-name{ font-size: 10px; letter-spacing: .24em; text-indent: .24em; font-weight: 600; color: var(--ink); }
+.strip-ink{ font-size: 8.5px; letter-spacing: .14em; color: var(--ink-45); }
+
+/* the sheet's ladder — ten levels, the tenth bears the Guardian */
+.strip-dots{
+  display: flex; gap: 4px; align-items: center;
+  margin: 8px 0 2px;
+}
+.ldot{
+  width: 9px; height: 9px;
+  border: 1px solid var(--ink-25);
+  background: transparent;
+  transform: rotate(0deg);
+}
+.ldot.on{ background: var(--ink); border-color: var(--ink); }
+.ldot.guardian{ border-color: rgba(178,58,43,.55); border-style: dashed; }
+.ldot.guardian.on{ background: var(--red); border-color: var(--red); border-style: solid; }
+
+.strip-prog{
+  font-size: 8.5px; letter-spacing: .22em; text-indent: .22em;
+  color: var(--ink-45);
+  margin: 0 0 2px;
+}
+.strip-state{
+  margin-top: auto;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 7.5px; letter-spacing: .18em; text-indent: .06em;
+  color: var(--ink-45);
+  padding-top: 8px;
+  border-top: 1px solid var(--ink-12);
+  width: 100%; justify-content: center;
+}
+.strip-lock, .strip-seal, .strip-wait{
+  font-family: var(--display);
+  font-size: 12px; line-height: 1;
+  width: 19px; height: 19px;
+  display: grid; place-items: center;
+  transform: rotate(-4deg);
+  flex: 0 0 auto;
+}
+.strip-lock{ color: var(--ink-45); border: 1px dashed var(--ink-25); }
+.strip-seal{ color: var(--paper); background: var(--red); box-shadow: 1px 1px 0 rgba(26,23,20,.2); }
+.strip-wait{ color: var(--paper); background: var(--ink); }
+
+/* the scroll that waits for the brush: pinned, raised, loud */
+.scroll-strip.is-current::before{ border-width: 2.2px; }
+.scroll-strip.is-current{ background: var(--paper); box-shadow: 4px 6px 0 rgba(26,23,20,.2); }
+.scroll-strip.is-current .strip-state{ color: var(--ink); }
+.scroll-strip.is-current .strip-kanji{ color: var(--ink); }
+.scroll-strip.is-current::after{
+  content: '';
+  position: absolute; top: -8px; left: 50%;
+  width: 15px; height: 15px;
+  background: var(--red);
+  transform: translateX(-50%) rotate(-8deg);
+  box-shadow: 1px 1px 0 rgba(26,23,20,.25);
+}
+/* a finished scroll rests, sealed in vermilion */
+.scroll-strip.is-cleared .strip-kanji{ color: var(--ink-70); }
+.scroll-strip.is-cleared .strip-state{ color: var(--red); }
+/* a sealed scroll is pale and refuse to rise */
+.scroll-strip.is-locked{ cursor: pointer; }
+.scroll-strip.is-locked::before{ border: 1.5px dashed var(--ink-25); }
+.scroll-strip.is-locked .strip-kanji{ color: var(--ink-25); }
+.scroll-strip.is-locked .strip-name,
+.scroll-strip.is-locked .strip-no{ color: var(--ink-25); }
+.scroll-strip.is-locked .strip-ink{ color: var(--ink-12); }
+.scroll-strip.is-locked .strip-state{ color: var(--ink-45); }
+.scroll-strip.is-locked:hover{ transform: rotate(var(--tilt)); box-shadow: 3px 4px 0 rgba(26,23,20,.14); }
+.scroll-strip.is-locked .ldot{ opacity: .35; }
+
+/* a hand pulls at a sealed strip — the paper refuses */
+@keyframes refuseShake{
+  0%, 100%{ transform: rotate(var(--tilt)); }
+  20%{ transform: translateX(-5px) rotate(var(--tilt)); }
+  45%{ transform: translateX(4px) rotate(var(--tilt)); }
+  70%{ transform: translateX(-3px) rotate(var(--tilt)); }
+}
+.scroll-strip.refuse{ animation: refuseShake .38s ease; }
+
+.scrolls-foot{
+  margin-top: clamp(14px, 3vh, 26px);
+  display: flex; flex-direction: column; align-items: center; gap: 13px;
+  z-index: 1;
+  animation: fadeIn .7s ease .5s backwards;
+}
+.scrolls-hint{
+  font-size: 9px; letter-spacing: .26em; text-indent: .26em;
+  color: var(--ink-45);
+  text-align: center;
+  padding: 6px 16px;
+  border-top: 1px solid var(--ink-12);
+  border-bottom: 1px solid var(--ink-12);
+  max-width: 720px;
+}
+@keyframes hintNudge{
+  0%, 100%{ color: var(--ink-45); }
+  25%, 60%{ color: var(--red); }
+}
+.scrolls-hint.nudge{ animation: hintNudge 1s ease; }
+
+/* the unlock cry rides above every screen */
+.wave-banner.front{ z-index: 45; }
+
+@media (max-width: 740px){
+  .screen-scrolls{ padding-left: 12px; padding-right: 12px; }
+  .scroll-strip-row{ padding-left: 0; padding-right: 0; }
+  .scroll-strip{ width: min(44vw, 200px); min-height: 236px; padding: 10px 8px 9px; gap: 4px; }
+  .scroll-strip .strip-string{ top: -18px; height: 18px; }
+  .strip-kanji{ font-size: 38px; }
+  .strip-dots{ gap: 3px; margin: 5px 0 1px; }
+  .ldot{ width: 7px; height: 7px; }
+  .strip-state{ font-size: 6.5px; letter-spacing: .12em; }
+  .strip-no{ font-size: 7.5px; }
+  .strip-name{ font-size: 8.5px; letter-spacing: .16em; text-indent: .16em; }
+  .scrolls-sub{ font-size: 8.5px; letter-spacing: .14em; text-indent: .14em; }
+}
+@media (prefers-reduced-motion: reduce){
+  .screen-scrolls .scrolls-head, .screen-scrolls .scroll-beam,
+  .screen-scrolls .scroll-strip, .screen-scrolls .scrolls-foot{ animation: none; }
+  .scroll-strip.refuse, .scrolls-hint.nudge{ animation: none; }
 }

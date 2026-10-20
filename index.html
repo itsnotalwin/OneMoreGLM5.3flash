@@ -89,11 +89,21 @@
 
   <!-- ============ TITLE SCREEN ============ -->
   <section id="screenTitle" class="screen screen-title">
-    <!-- the great brush circle, painted live by the brush each visit -->
+    <!-- the great brush circle, painted live by the scribe each visit -->
     <div class="enso-wrap" id="ensoWrap" aria-hidden="true">
       <canvas id="ensoBake" class="enso-bake"></canvas>
       <canvas id="ensoFront" class="enso-front"></canvas>
     </div>
+
+    <!-- the colophons: vertical inscriptions, as on a real scroll -->
+    <aside class="side-ins side-r" aria-hidden="true">
+      <span class="ins-col">一筆入魂</span>
+      <span class="ins-seal">一</span>
+    </aside>
+    <aside class="side-ins side-l" aria-hidden="true">
+      <span class="ins-seal ins-seal-ghost">墨</span>
+      <span class="ins-col ins-col-pale">五巻五十景</span>
+    </aside>
 
     <div class="title-main">
       <div class="title-chip">A MONOCHROME SURVIVAL</div>
@@ -110,6 +120,7 @@
           <span class="play-label">THE ENDLESS SCROLL</span>
         </button>
       </div>
+      <button id="sheetBtn" class="sheet-btn hidden" type="button" title="Resume the journey from the furthest sheet"></button>
       <p class="best-line hidden" id="bestLine"></p>
     </div>
 
@@ -121,6 +132,22 @@
       <span class="opening-kanji" aria-hidden="true">序</span>
       <span class="opening-label">OPENING</span>
     </button>
+  </section>
+
+  <!-- ============ THE SHELF OF SCROLLS ============ -->
+  <section id="screenScrolls" class="screen screen-scrolls hidden">
+    <span class="wm wm-scrolls" aria-hidden="true">巻</span>
+    <div class="scrolls-head">
+      <div class="scrolls-kicker">THE JOURNEY — 五巻五十景</div>
+      <h2 class="scrolls-title">FIVE SCROLLS</h2>
+      <p class="scrolls-sub">Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.</p>
+    </div>
+    <div class="scroll-beam" aria-hidden="true"></div>
+    <div class="scroll-strip-row" id="scrollRow"></div>
+    <div class="scrolls-foot">
+      <p class="scrolls-hint" id="scrollsHint">TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT</p>
+      <button id="scrollsBackBtn" class="ghost-btn">RETURN — 戻</button>
+    </div>
   </section>
 
   <!-- ============ UPGRADE SCREEN ============ -->

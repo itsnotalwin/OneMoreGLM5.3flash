@@ -117,6 +117,11 @@ const SFX = (() => {
       const scale = [587.3, 698.5, 784, 880];
       tone({ f: scale[step % 4], type: 'triangle', dur: 0.09, vol: 0.07 });
     },
+    /* a sealed strip refuses the hand — a dull wooden knock */
+    thud() {
+      tone({ f: 118, f2: 52, type: 'sine', dur: 0.16, vol: 0.2 });
+      noise({ dur: 0.05, vol: 0.07, lp: 500 });
+    },
     deploy() {
       tone({ f: 587.3, type: 'triangle', dur: 0.1, vol: 0.1 });
       tone({ f: 880, type: 'triangle', dur: 0.14, vol: 0.1, delay: 0.08 });
@@ -242,6 +247,16 @@ const SFX = (() => {
     /* the gate turns a frontal stroke */
     ping() {
       tone({ f: 1980, f2: 1400, type: 'square', dur: 0.035, vol: 0.03 });
+    },
+    /* the scribe arrives — a wet drop settles into the paper */
+    arrive() {
+      splat(1.15);
+      tone({ f: 620, f2: 230, type: 'triangle', dur: 0.1, vol: 0.05, delay: 0.02 });
+    },
+    /* the sheet's name is pressed — a soft knock, not the seal */
+    namestamp() {
+      tone({ f: 150, f2: 58, type: 'sine', dur: 0.16, vol: 0.15 });
+      noise({ dur: 0.05, vol: 0.06, lp: 900, q: 1.2 });
     },
   };
 })();

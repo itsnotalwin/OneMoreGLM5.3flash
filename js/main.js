@@ -70,10 +70,10 @@
   }
 
   let lastMode = 'journey';
-  function start(mode) {
+  function start(mode, opts) {
     SFX.ensure();
     R.resetStains(); /* a fresh sheet */
-    G.startRun(mode || lastMode);
+    G.startRun(mode || lastMode, opts);
     lastMode = mode || lastMode;
   }
 
@@ -82,6 +82,27 @@
     R.resetStains();
     G.abandon();
   }
+
+  /* the shelf of scrolls: opened from the title, answered by a run */
+  function openScrolls() {
+    SFX.ensure();
+    UI.buildScrolls();
+    UI.show('scrolls');
+  }
+
+  function closeScrolls() {
+    UI.show('title');
+  }
+
+  const scrollsOpen = () => {
+    const s = document.getElementById('screenScrolls');
+    return s && !s.classList.contains('hidden');
+  };
+
+  /* the journey answers the shelf: enter the chosen scroll — the
+     shelf only ever offers what is unrolled, and the run clamps too */
+  UI.onScrollPick = n => start('journey', { sheet: n });
+  UI.onScrollsBack = closeScrolls;
 
   function toggleMute() {
     SFX.ensure();
@@ -107,12 +128,18 @@
     if (k === 'KeyF') { fpsOn = !fpsOn; return; }
     const m = G.mode;
     if (k === 'KeyP' || k === 'Escape') {
+      if (scrollsOpen()) { closeScrolls(); return; }
       if (m === 'playing') pause();
       else if (m === 'paused') resume();
       return;
     }
+    if (scrollsOpen()) {
+      if (k === 'Enter') { closeScrolls(); }
+      return;
+    }
     if (k === 'Enter') {
-      if (m === 'title' || m === 'over') start();
+      if (m === 'title') start('journey', { sheet: G.getFurthest() });
+      else if (m === 'over') start();
       else if (m === 'upgrade') G.deploy();
       else if (m === 'paused') resume();
       return;
@@ -185,6 +212,7 @@
     G.S.titlePar = { x: 0, y: 0 };
     G.initAttract();
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
+    UI.setSheetContinue(G.getFurthest());
     UI.show('title');
     G.mode = 'title';
   }
@@ -202,8 +230,10 @@
   INTRO.onEnd = enterTitle;
 
   /* ---------------- buttons ---------------- */
-  document.getElementById('playBtn').addEventListener('click', () => start('journey'));
+  document.getElementById('playBtn').addEventListener('click', openScrolls);
+  document.getElementById('scrollsBackBtn').addEventListener('click', closeScrolls);
   document.getElementById('endlessBtn').addEventListener('click', () => start('endless'));
+  document.getElementById('sheetBtn').addEventListener('click', () => start('journey', { sheet: G.getFurthest() }));
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {
     SFX.ensure();
@@ -236,6 +266,7 @@
   UI.muteVisual(SFX.muted);
   UI.setRunNo(G.getRuns() + 1);
   UI.setBest(G.getBest());
+  UI.setSheetContinue(G.getFurthest());
   if (G.S.reduced) {
     enterTitle();          /* the opening is a film — stillness goes straight to the title */
   } else {

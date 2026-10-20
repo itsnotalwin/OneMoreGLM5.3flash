@@ -13,7 +13,7 @@ const UI = (() => {
     hudWaveTotal: $('hudWaveTotal'), hudMode: $('hudMode'),
     banner: $('waveBanner'), bannerKicker: $('bannerKicker'), bannerTitle: $('bannerTitle'),
     screens: {
-      title: $('screenTitle'), upgrade: $('screenUpgrade'),
+      title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       pause: $('screenPause'), over: $('screenOver'),
     },
     runNo: $('runNo'), bestLine: $('bestLine'),
@@ -41,14 +41,18 @@ const UI = (() => {
   const fmtScore = n => n.toLocaleString('en-US').padStart(7, '0');
   const fmtTime = s => pad2(Math.floor(s / 60)) + ':' + pad2(Math.floor(s % 60));
 
-  /* kanji numerals — the calligraphic count of waves */
+  /* kanji numerals — the calligraphic count of waves and levels */
   function toKanji(n) {
     if (n <= 0) return '〇';
-    if (n > 99) return String(n);
+    if (n > 999) return String(n);
     const D = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
     if (n < 10) return D[n];
-    const t = Math.floor(n / 10), o = n % 10;
-    return (t > 1 ? D[t] : '') + '十' + (o ? D[o] : '');
+    if (n < 100) {
+      const t = Math.floor(n / 10), o = n % 10;
+      return (t > 1 ? D[t] : '') + '十' + (o ? D[o] : '');
+    }
+    const h = Math.floor(n / 100), r = n % 100;
+    return D[h] + '百' + (r ? toKanji(r) : '');
   }
 
   /* hand-brushed upgrade glyphs */
@@ -85,8 +89,8 @@ const UI = (() => {
 
   const HP_DROP = '<svg viewBox="0 0 20 26" aria-hidden="true"><path class="hp-shape" d="M10 2.2c2.6 6 4.6 9.6 4.6 13.2 0 4.6-2 7.8-4.6 7.8s-4.6-3.2-4.6-7.8C5.4 11.8 7.4 8.2 10 2.2z"/></svg>';
 
-  /* the three brushes, worn on the title screen — each card
-     carries the tool itself, painted across its own kanji */
+  /* the three brushes, hung on the title sheet as tanzaku poem
+     slips — each carries its kanji, the tool itself, and its word */
   function buildBrushes(current) {
     if (!el.brushRow) return;
     el.brushRow.innerHTML = '';
@@ -97,9 +101,11 @@ const UI = (() => {
       card.type = 'button';
       card.className = 'brush-card' + (id === current ? ' selected' : '');
       card.innerHTML =
+        `<span class="brush-kanji" aria-hidden="true">${b.kanji || ''}</span>` +
         `<canvas class="brush-art" width="128" height="44" aria-hidden="true"></canvas>` +
         `<span class="brush-name">${b.name}</span>` +
-        `<span class="brush-desc">${b.desc}</span>`;
+        `<span class="brush-desc">${b.desc}</span>` +
+        `<span class="brush-pin" aria-hidden="true"></span>`;
       card.addEventListener('click', () => {
         G.setBrush(id);
         UI.buildBrushes(id);
@@ -132,11 +138,14 @@ const UI = (() => {
     }
   }
 
-  function setArea(area, waveInArea, isElite) {
+  /* the sheet's crest, and where the run stands within it:
+     第X景 · wave X of ten — 守 marks the Guardian's level */
+  function setArea(area, level, waveInLevel, isLevelEnd) {
     if (!el.hudArea) return;
     el.hudAreaKanji.textContent = area.kanji;
     el.hudAreaName.textContent = area.name;
-    el.hudWaveTotal.textContent = `${toKanji(waveInArea)} / ${toKanji(CFG.wave.wavesPerArea)}${isElite ? ' · 守' : ''}`;
+    el.hudWaveTotal.textContent =
+      `${toKanji(level)}景 · ${toKanji(waveInLevel)}/${toKanji(CFG.wave.wavesPerLevel)}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' · 守' : ''}`;
   }
 
   function setWave(n) { el.hudWave.textContent = toKanji(n); }
@@ -160,17 +169,34 @@ const UI = (() => {
     if (t !== lastTimeStr) { lastTimeStr = t; el.hudTime.textContent = t; }
   }
 
-  function banner(n, surge, isElite) {
-    el.bannerKicker.textContent = isElite ? 'THE GUARDIAN WAKES' : surge ? 'THE SURGE' : 'INCOMING';
+  function banner(n, surge, kind) {
+    el.bannerKicker.textContent =
+      kind === 'guardian' ? 'THE GUARDIAN WAKES'
+      : kind === 'seal' ? 'THE SEAL WAVE'
+      : surge ? 'THE SURGE' : 'INCOMING';
     el.bannerTitle.innerHTML =
-      `<span class="ban-kanji">${toKanji(n)}</span><span class="ban-lat">WAVE ${pad2(n)}${isElite ? ' — GUARDIAN' : ''}</span>`;
-    el.banner.classList.toggle('surge', !!surge || !!isElite);
+      `<span class="ban-kanji">${toKanji(n)}</span><span class="ban-lat">WAVE ${pad2(n)}${kind === 'guardian' ? ' — GUARDIAN' : kind === 'seal' ? ' — SEAL' : ''}</span>`;
+    el.banner.classList.toggle('surge', !!surge || kind === 'guardian' || kind === 'seal');
     el.banner.classList.toggle('area', false);
     el.banner.classList.remove('show');
     void el.banner.offsetWidth; /* restart animation */
     el.banner.classList.add('show');
     clearTimeout(bannerTimer);
     bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 1500);
+  }
+
+  /* a new scene grows on the same page — one level begins */
+  function levelBanner(area, level, name) {
+    el.bannerKicker.textContent = `THE PAGE GROWS — LEVEL ${toKanji(level)} OF ${toKanji(CFG.wave.levelsPerArea)}`;
+    el.bannerTitle.innerHTML =
+      `<span class="ban-kanji">${area.kanji}</span><span class="ban-lat">第${toKanji(level)}景${name ? ' — ' + name : ''}</span>`;
+    el.banner.classList.toggle('area', true);
+    el.banner.classList.toggle('surge', false);
+    el.banner.classList.remove('show');
+    void el.banner.offsetWidth;
+    el.banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 1900);
   }
 
   /* a new sheet unrolls: the scroll turns */
@@ -264,6 +290,123 @@ const UI = (() => {
 
   function setRunNo(n) { el.runNo.textContent = 'RUN ' + pad3(n); }
 
+  /* the paper remembers the furthest sheet — offer the journey from there */
+  function setSheetContinue(n) {
+    const btn = document.getElementById('sheetBtn');
+    if (!btn) return;
+    if (n && n >= 2) {
+      btn.classList.remove('hidden');
+      const area = AREAS[Math.min(AREAS.length, n) - 1];
+      btn.innerHTML =
+        `<span class="sheet-kanji" aria-hidden="true">續</span>FROM SCROLL <span class="kanji-inline">${area ? area.kanji : toKanji(n)}</span>`;
+    } else {
+      btn.classList.add('hidden');
+    }
+  }
+
+  /* ---------------- the shelf of scrolls ----------------
+     five tanzaku strips hang from a beam: one per sheet. A strip
+     unrolled may be entered; a strip sealed waits until the scroll
+     before it lies finished — ten levels, ten waves each. */
+  let onScrollPick = null;      /* main.js answers with a journey run */
+  let onScrollsBack = null;     /* main.js answers with the title */
+
+  function buildScrolls() {
+    const row = document.getElementById('scrollRow');
+    if (!row) return;
+    const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
+    const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
+    const prog = (typeof G !== 'undefined' && G.getProg) ? G.getProg() : {};
+    const done = cleared >= AREAS.length;
+    row.innerHTML = '';
+    AREAS.forEach((a, i) => {
+      const n = i + 1;
+      const isCleared = n <= cleared;
+      const isLocked = n > unlocked;
+      const isCurrent = !isCleared && !isLocked;
+      const reached = Math.min(CFG.wave.levelsPerArea, prog[n] || 0);
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'scroll-strip' +
+        (isCleared ? ' is-cleared' : '') +
+        (isLocked ? ' is-locked' : '') +
+        (isCurrent ? ' is-current' : '');
+      card.style.setProperty('--tilt', ((i % 2 ? 1 : -1) * (0.5 + i * 0.22)).toFixed(2) + 'deg');
+      /* ten level dots — the sheet's own ladder, filled to the deepest walk */
+      let dots = '';
+      for (let d = 1; d <= CFG.wave.levelsPerArea; d++) {
+        const filled = isCleared || d <= reached;
+        dots += `<i class="ldot${filled ? ' on' : ''}${d === CFG.wave.levelsPerArea ? ' guardian' : ''}"></i>`;
+      }
+      const state = isLocked
+        ? '<span class="strip-state"><span class="strip-lock">鍵</span>SEALED</span>'
+        : isCleared
+        ? '<span class="strip-state is-done"><span class="strip-seal">落</span>CLEARED</span>'
+        : '<span class="strip-state is-wait"><span class="strip-wait">筆</span>IN PROGRESS</span>';
+      const progLine = (!isLocked && !isCleared)
+        ? `<span class="strip-prog">${toKanji(reached)} / ${toKanji(CFG.wave.levelsPerArea)}景</span>`
+        : '';
+      card.innerHTML =
+        `<span class="strip-string" aria-hidden="true"></span>` +
+        `<span class="strip-no">SCROLL ${['I', 'II', 'III', 'IV', 'V'][i]}</span>` +
+        `<span class="strip-kanji" aria-hidden="true">${a.kanji}</span>` +
+        `<span class="strip-name">${a.name}</span>` +
+        `<span class="strip-ink">${a.ink} · 十景</span>` +
+        `<span class="strip-dots" aria-hidden="true">${dots}</span>` +
+        progLine + state;
+      card.setAttribute('aria-label',
+        `Scroll ${a.name} — ${isLocked ? 'sealed' : isCleared ? 'cleared' : 'unrolled'}`);
+      card.addEventListener('click', () => {
+        if (isLocked) {
+          card.classList.remove('refuse');
+          void card.offsetWidth;
+          card.classList.add('refuse');
+          setScrollsHint(`THE PAPER IS SEALED — BREAK SCROLL ${(AREAS[i - 1] || a).kanji}'S GUARDIAN FIRST`);
+          SFX.thud();
+          return;
+        }
+        SFX.pick(1);
+        if (onScrollPick) onScrollPick(n);
+      });
+      row.appendChild(card);
+    });
+    const hint = document.getElementById('scrollsHint');
+    if (hint) {
+      hint.textContent = done
+        ? 'EVERY SCROLL LIES FINISHED — THE ENDLESS SCROLL 無 STILL ASKS FOR MORE'
+        : 'TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT';
+    }
+  }
+
+  function setScrollsHint(txt) {
+    const hint = document.getElementById('scrollsHint');
+    if (!hint) return;
+    hint.textContent = txt;
+    hint.classList.remove('nudge');
+    void hint.offsetWidth;
+    hint.classList.add('nudge');
+  }
+
+  /* the guardian's fall unrolls the next scroll — cried across the sheet */
+  function unlockBanner(area, nextArea, isLast) {
+    el.bannerKicker.textContent = isLast
+      ? `THE FIFTH GUARDIAN FALLS — SCROLL ${area.kanji} IS PAINTED`
+      : `SCROLL ${area.kanji} ${area.name} — CLEARED IN FULL`;
+    el.bannerTitle.innerHTML = isLast
+      ? `<span class="ban-kanji">終</span><span class="ban-lat">THE JOURNEY IS COMPLETE</span>`
+      : `<span class="ban-kanji">${nextArea.kanji}</span><span class="ban-lat">${nextArea.name} — UNROLLED</span>`;
+    el.banner.classList.toggle('area', true);
+    el.banner.classList.toggle('surge', true);
+    el.banner.classList.toggle('front', true);
+    el.banner.classList.remove('show');
+    void el.banner.offsetWidth;
+    el.banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => {
+      el.banner.classList.remove('show', 'front');
+    }, 3400);
+  }
+
   function setBest(b) {
     if (b && b.score > 0) {
       el.bestLine.classList.remove('hidden');
@@ -302,7 +445,7 @@ const UI = (() => {
     });
   }
 
-  function setDeploy(on, nextArea, waveInArea, cycle, kind) {
+  function setDeploy(on, nextArea, level, cycle, kind) {
     el.deployBtn.classList.toggle('is-disabled', !on);
     el.deployBtn.disabled = !on;
     if (kind === 'level') {
@@ -316,16 +459,16 @@ const UI = (() => {
     el.deployBtn.innerHTML = on
       ? (nextArea
         ? `UNROLL — <span class="kanji-inline">${nextArea.kanji}</span> ${nextArea.name}`
-        : `DEPLOY — WAVE <span class="kanji-inline">${toKanji(waveInArea)}</span>`)
+        : `DEPLOY — LEVEL <span class="kanji-inline">${toKanji(level)}</span>`)
       : (nextArea
         ? `NEXT — SCROLL <span class="kanji-inline">${nextArea.kanji}</span> ${nextArea.name}`
-        : `DEPLOY — WAVE <span class="kanji-inline">${toKanji(waveInArea)}</span>`);
+        : `DEPLOY — LEVEL <span class="kanji-inline">${toKanji(level)}</span>`);
   }
 
-  function setUpgradeHeader(waveInArea, area, globalNext, kind, level) {
+  function setUpgradeHeader(waveInLevel, level, area, kind, xpLevel) {
     if (kind === 'level') {
       el.upKicker.innerHTML =
-        `THE INK RISES — LEVEL <span class="kanji-inline">${toKanji(level)}</span>`;
+        `THE INK RISES — LEVEL <span class="kanji-inline">${toKanji(xpLevel)}</span>`;
       el.upNext.innerHTML = '<span class="kanji-inline">墨</span>';
       return;
     }
@@ -335,12 +478,13 @@ const UI = (() => {
       el.upNext.innerHTML = '<span class="kanji-inline">宝</span>';
       return;
     }
-    const lastWave = waveInArea >= CFG.wave.wavesPerArea;
+    /* a level's seal was just broken */
+    const lastLevel = level >= CFG.wave.levelsPerArea;
     el.upKicker.innerHTML =
-      `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — WAVE <span class="kanji-inline">${toKanji(waveInArea)}</span> CLEARED`;
-    el.upNext.innerHTML = lastWave
+      `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — LEVEL <span class="kanji-inline">${toKanji(level)}</span> SEALED`;
+    el.upNext.innerHTML = lastLevel
       ? '<span class="kanji-inline">?</span>'
-      : '<span class="kanji-inline">' + toKanji(waveInArea + 1) + '</span>';
+      : '<span class="kanji-inline">' + toKanji(level + 1) + '</span>';
   }
 
   function showOver(d) {
@@ -378,9 +522,14 @@ const UI = (() => {
   }
 
   return {
-    show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, flash,
-    setRunNo, setBest, buildBrushes, fillUpgrades, markSelected,
+    show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
+    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, guardianBanner, guardianFalls, el, toKanji,
+    buildScrolls, setScrollsHint, unlockBanner,
+    get onScrollPick() { return onScrollPick; },
+    set onScrollPick(fn) { onScrollPick = fn; },
+    get onScrollsBack() { return onScrollsBack; },
+    set onScrollsBack(fn) { onScrollsBack = fn; },
   };
 })();
