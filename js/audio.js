@@ -77,6 +77,21 @@ const SFX = (() => {
     tone({ f: 170 - 40 * size, f2: 52, type: 'sine', dur: 0.1 + 0.06 * size, vol: 0.09 + 0.07 * size, delay });
   }
 
+  /* the flood guard: a hundred beasts bursting in a breath must not
+     become a hundred audio nodes — each listed sound answers at most
+     once per its window, and the soundscape loses nothing (the
+     skipped voices are all sub-100 ms chatter buried in the chorus) */
+  const lastPlay = Object.create(null);
+  function rate(key, ms, fn) {
+    return (...args) => {
+      if (!ctx || muted) return;
+      const now = ctx.currentTime * 1000;
+      if (now - (lastPlay[key] || -1e9) < ms) return;
+      lastPlay[key] = now;
+      fn(...args);
+    };
+  }
+
   return {
     get muted() { return muted; },
     ensure,
@@ -87,14 +102,14 @@ const SFX = (() => {
     },
 
     /* brush flicks a droplet */
-    shoot() {
+    shoot: rate('shoot', 55, () => {
       tone({ f: 1350, f2: 780, type: 'triangle', dur: 0.035, vol: 0.026 });
       noise({ dur: 0.025, vol: 0.014, hp: 2600 });
-    },
+    }),
     /* droplet breaks on a blot */
-    hit() { noise({ dur: 0.03, vol: 0.05, lp: 1800, q: 1.2 }); },
+    hit: rate('hit', 45, () => { noise({ dur: 0.03, vol: 0.05, lp: 1800, q: 1.2 }); }),
     /* a creature bursts into stain */
-    kill() { splat(1); tone({ f: 520, f2: 240, type: 'triangle', dur: 0.06, vol: 0.045, delay: 0.015 }); },
+    kill: rate('kill', 50, () => { splat(1); tone({ f: 520, f2: 240, type: 'triangle', dur: 0.06, vol: 0.045, delay: 0.015 }); }),
     /* big creature dies */
     bigKill() { splat(2.1); tone({ f: 96, f2: 38, type: 'sine', dur: 0.3, vol: 0.2 }); },
     /* the player bleeds ink */
@@ -129,12 +144,12 @@ const SFX = (() => {
     },
     tick() { tone({ f: 1250, type: 'square', dur: 0.03, vol: 0.035 }); },
     /* spear creature winds up */
-    wind() { tone({ f: 220, f2: 440, type: 'sawtooth', dur: 0.16, vol: 0.028 }); },
+    wind: rate('wind', 120, () => { tone({ f: 220, f2: 440, type: 'sawtooth', dur: 0.16, vol: 0.028 }); }),
     /* the spitter lobs a glob */
-    glob() {
+    glob: rate('glob', 90, () => {
       tone({ f: 340, f2: 150, type: 'triangle', dur: 0.07, vol: 0.05 });
       noise({ dur: 0.04, vol: 0.03, lp: 1200, q: 1.2 });
-    },
+    }),
     /* black tide breathes outward */
     nova() {
       noise({ dur: 0.3, vol: 0.1, lp: 520, q: 1.1 });
@@ -147,10 +162,10 @@ const SFX = (() => {
       noise({ dur: 0.06, vol: 0.05, hp: 1400, delay: 0.01 });
     },
     /* the shade blinks */
-    blink() {
+    blink: rate('blink', 90, () => {
       noise({ dur: 0.09, vol: 0.05, hp: 900, lp: 3200, q: 1.4 });
       tone({ f: 520, f2: 1240, type: 'sine', dur: 0.07, vol: 0.035 });
-    },
+    }),
     /* the scroll turns — a low bronze gong with a breath of shimmer */
     gong() {
       tone({ f: 138, f2: 128, type: 'sine', dur: 1.3, vol: 0.3 });
@@ -159,15 +174,15 @@ const SFX = (() => {
       noise({ dur: 0.5, vol: 0.05, hp: 1800, q: 1.2, delay: 0.02 });
     },
     /* the folded fan snaps open */
-    fan() {
+    fan: rate('fan', 140, () => {
       noise({ dur: 0.07, vol: 0.06, hp: 1400, lp: 5200, q: 1.6 });
       tone({ f: 740, f2: 1180, type: 'triangle', dur: 0.05, vol: 0.04 });
-    },
+    }),
     /* the spirit scribes wake */
-    spirit() {
+    spirit: rate('spirit', 140, () => {
       tone({ f: 880, f2: 1320, type: 'sine', dur: 0.12, vol: 0.045 });
       tone({ f: 1174, type: 'triangle', dur: 0.08, vol: 0.03, delay: 0.07 });
-    },
+    }),
     /* the crimson hanko falls — a stamp, a knock, a thud */
     hanko() {
       tone({ f: 96, f2: 36, type: 'sine', dur: 0.28, vol: 0.3 });
@@ -175,10 +190,10 @@ const SFX = (() => {
       tone({ f: 1650, type: 'square', dur: 0.03, vol: 0.05, delay: 0.015 });
     },
     /* the sniper fires its needle */
-    needle() {
+    needle: rate('needle', 90, () => {
       tone({ f: 1900, f2: 900, type: 'square', dur: 0.045, vol: 0.04 });
       noise({ dur: 0.035, vol: 0.035, hp: 2200 });
-    },
+    }),
     /* a guardian enters the sheet */
     elite() {
       tone({ f: 82, f2: 34, type: 'sine', dur: 0.7, vol: 0.32 });
@@ -199,9 +214,9 @@ const SFX = (() => {
 
     /* ---- v4: the five scrolls ---- */
     /* a mote of ink finds the brush */
-    pickup() {
+    pickup: rate('pickup', 40, () => {
       tone({ f: 1560, f2: 2100, type: 'sine', dur: 0.045, vol: 0.022 });
-    },
+    }),
     /* the paper mends / the pot is drunk */
     heal() {
       tone({ f: 660, f2: 880, type: 'sine', dur: 0.12, vol: 0.07 });
@@ -230,10 +245,10 @@ const SFX = (() => {
       tone({ f: 88, f2: 34, type: 'sine', dur: 0.55, vol: 0.16, delay: 0.03 });
     },
     /* the sumi arc leaps */
-    arc() {
+    arc: rate('arc', 90, () => {
       tone({ f: 1750, f2: 420, type: 'sawtooth', dur: 0.07, vol: 0.045 });
       noise({ dur: 0.05, vol: 0.04, hp: 2000 });
-    },
+    }),
     /* the returning stroke whips out */
     boomer() {
       noise({ dur: 0.12, vol: 0.05, hp: 700, lp: 2800, q: 2 });
@@ -245,9 +260,9 @@ const SFX = (() => {
       noise({ dur: 0.5, vol: 0.07, lp: 700, q: 1.6 });
     },
     /* the gate turns a frontal stroke */
-    ping() {
+    ping: rate('ping', 90, () => {
       tone({ f: 1980, f2: 1400, type: 'square', dur: 0.035, vol: 0.03 });
-    },
+    }),
     /* the scribe arrives — a wet drop settles into the paper */
     arrive() {
       splat(1.15);

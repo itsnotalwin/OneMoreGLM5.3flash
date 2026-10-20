@@ -41,7 +41,8 @@ const CFG = {
      ten levels, ten waves each, its Guardian felled. The pressure
      climbs twice — wave by wave inside a level, and level by level
      inside the sheet, so the tenth level of a sheet always bites
-     far harder than its first.
+     far harder than its first — and the sheets themselves climb,
+     so the fifth paper is a storm no first-paper hand survives.
      Each wave of the ten has a shape:
        1 opening   — a light trickle to read the page
        2 press     — the ordinary weight of the sheet
@@ -57,25 +58,25 @@ const CFG = {
   wave: {
     wavesPerLevel: 10,
     levelsPerArea: 10,                             // ten levels a sheet
-    budget: (w, depth) => 4.2 + w * 2.7 + depth * 0.8,   // depth = level + 10*(sheet-1), 0-based
-    levelBudget: lv => 1 + 0.06 * (lv - 1),        // the climb INSIDE a sheet: L10 spends ~1.54× L1
-    levelHp:     lv => 1 + 0.045 * (lv - 1),       // and its beasts stand ~1.4× taller
+    budget: (w, depth) => 4.6 + w * 3.2 + depth * 1.12, // depth = level + 10*(sheet-1), 0-based
+    levelBudget: lv => 1 + 0.09 * (lv - 1),        // the climb INSIDE a sheet: L10 spends ~1.81× L1
+    levelHp:     lv => 1 + 0.07 * (lv - 1),        // and its beasts stand ~1.63× taller
     surgeWaves: [5, 9],                            // the surge waves of a level
-    surgeMult: 1.5,                                // + a little per depth (game.js)
-    groupInterval: w => Math.max(0.26, 1.3 - w * 0.06),
-    groupSize: (w, depth) => 3 + Math.floor(w / 3) + Math.floor(depth / 3),
-    concurrentCap: (w, depth) => Math.min(120, 12 + w * 1.7 + depth * 2.9),
-    hpScale: (base, w, intro) => Math.max(1, Math.round(base * (1 + 0.035 * (w - intro)))),
-    spScale: (w, intro) => Math.min(1.35, 1 + 0.005 * (w - intro)),
-    eliteHpMult: 5.5,
+    surgeMult: 1.75,                               // + a little per depth (game.js)
+    groupInterval: w => Math.max(0.18, 1.12 - w * 0.07),
+    groupSize: (w, depth) => Math.min(16, 3 + Math.floor(w / 2.5) + Math.floor(depth / 2.6)),
+    concurrentCap: (w, depth) => Math.min(150, 13 + w * 2.0 + depth * 3.3),
+    hpScale: (base, w, intro) => Math.max(1, Math.round(base * (1 + 0.05 * (w - intro)))),
+    spScale: (w, intro) => Math.min(1.5, 1 + 0.007 * (w - intro)),
+    eliteHpMult: 6.5,
     eliteR: 1.62,
-    sealBudget: 1.25,                              // honor-guard fodder on seal waves
-    elitesAt: depth => 1 + Math.min(3, Math.floor(depth / 13)),   // seals grow heavier
+    sealBudget: 1.4,                               // honor-guard fodder on seal waves
+    elitesAt: depth => 1 + Math.min(4, Math.floor(depth / 9)),   // seals grow heavier, sooner
   },
 
   /* ---- ink motes & level-ups: the survivors' loop ---- */
   xp: {
-    req: lv => Math.round(6 + 5 * lv + 0.18 * lv * lv), // ink needed for level lv→lv+1
+    req: lv => Math.round(7 + 5.4 * lv + 0.2 * lv * lv), // ink needed for level lv→lv+1
     moteLife: 26,      // s before a mote dries into the paper
     pickupR: 68,       // base collection radius (magnet passive extends it)
     magnetPulse: 3.2,  // s the magnet talisman vacuums everything
@@ -90,8 +91,8 @@ const CFG = {
     showAt: 8,         // chain count before the chip appears
   },
 
-  /* the endless paper keeps growing teeth */
-  endless: { hpGrowth: 1.15, spGrowth: 1.012, budgetGrowth: 1.18 },
+  /* the endless paper keeps growing teeth — and the teeth grow fangs */
+  endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32 },
 
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
@@ -143,6 +144,8 @@ const ENEMIES = {
   palecrane: { name: 'PALE CRANE', trait: 'SWOOPER',  cost: 2, intro: 61,  hp: 2,  r: 11, speed: 225, score: 28, shape: 'crane'   },
   slab:      { name: 'BRUTE',      trait: 'BRUISER',  cost: 3, intro: 71,  hp: 8,  r: 17, speed: 42,  score: 30, shape: 'square'  },
   wraith:    { name: 'WISP',       trait: 'WEAVER',   cost: 2, intro: 81,  hp: 2,  r: 11, speed: 105, score: 20, shape: 'ring'    },
+  gnat:      { name: 'GNAT',       trait: 'SWARM',    cost: 1, intro: 16,  hp: 1,  r: 5,  speed: 138, score: 8,  shape: 'gnat'    },
+  blotter:   { name: 'BLOTTER',    trait: 'SPONGE',   cost: 2, intro: 36,  hp: 3,  r: 11, speed: 66,  score: 25, shape: 'blotter' },
 
   /* ---- SHEET II · NIGHT SCROLL — lamp-black ink on dark paper ---- */
   spit:      { name: 'SPIT',       trait: 'GUNNER',   cost: 3, intro: 101, hp: 2,  r: 11, speed: 74,  score: 25, shape: 'spit'    },
@@ -154,6 +157,8 @@ const ENEMIES = {
   gloom:     { name: 'GLOOM',      trait: 'BREATH',   cost: 3, intro: 156, hp: 4,  r: 16, speed: 72,  score: 45, shape: 'gloom'   },
   warden:    { name: 'WARDEN',     trait: 'HERALD',   cost: 3, intro: 171, hp: 3,  r: 12, speed: 70,  score: 45, shape: 'warden'  },
   titan:     { name: 'TITAN',      trait: 'MOTHER',   cost: 5, intro: 181, hp: 18, r: 28, speed: 24,  score: 90, shape: 'titan'   },
+  owl:       { name: 'OWL',        trait: 'WATCHER',  cost: 3, intro: 131, hp: 2,  r: 12, speed: 58,  score: 45, shape: 'owl'     },
+  smother:   { name: 'SMOTHER',    trait: 'CREEP',    cost: 2, intro: 156, hp: 4,  r: 13, speed: 54,  score: 40, shape: 'smother' },
 
   /* ---- SHEET III · CINNABAR FIELD — vermillion-stained ink ---- */
   oni:       { name: 'ONI',        trait: 'CHARGER',  cost: 4, intro: 201, hp: 10, r: 18, speed: 44,  score: 60, shape: 'oni'     },
@@ -161,26 +166,32 @@ const ENEMIES = {
   crane:     { name: 'CRANE',      trait: 'SWOOPER',  cost: 2, intro: 211, hp: 2,  r: 11, speed: 205, score: 25, shape: 'crane'   },
   sealbearer:{ name: 'SEALBEARER', trait: 'SEALED',   cost: 4, intro: 216, hp: 9,  r: 15, speed: 40,  score: 65, shape: 'sealbearer' },
   gate:      { name: 'GATE',       trait: 'SHIELDED', cost: 4, intro: 221, hp: 8,  r: 15, speed: 38,  score: 55, shape: 'gate'    },
+  ashigaru:  { name: 'ASHIGARU',   trait: 'RANK',     cost: 2, intro: 211, hp: 4,  r: 11, speed: 76,  score: 40, shape: 'ashigaru' },
+  stamper:   { name: 'STAMPER',    trait: 'SEALSMITH',cost: 4, intro: 241, hp: 8,  r: 15, speed: 34,  score: 70, shape: 'stamper' },
 
   /* ---- SHEET IV · STORM SHEET — rain-grey ink ---- */
   raindrake: { name: 'RAINDRAKE',  trait: 'CALLER',   cost: 3, intro: 301, hp: 3,  r: 12, speed: 88,  score: 48, shape: 'raindrake' },
   gale:      { name: 'GALE',       trait: 'GUST',     cost: 2, intro: 306, hp: 1,  r: 10, speed: 120, score: 32, shape: 'gale'    },
   koi:       { name: 'KOI',        trait: 'SINEW',    cost: 2, intro: 311, hp: 2,  r: 10, speed: 195, score: 30, shape: 'koi'     },
+  surge:     { name: 'SURGE',      trait: 'BREAKER',  cost: 3, intro: 316, hp: 6,  r: 16, speed: 48,  score: 55, shape: 'surge'   },
+  maelstrom: { name: 'MAELSTROM',  trait: 'UNDERTOW', cost: 4, intro: 351, hp: 7,  r: 14, speed: 26,  score: 60, shape: 'maelstrom' },
 
   /* ---- SHEET V · GILT SCROLL — gold-dusted ink ---- */
   gildling:  { name: 'GILDLING',   trait: 'GILDED',   cost: 3, intro: 401, hp: 6,  r: 13, speed: 52,  score: 50, shape: 'gildling' },
   phoenix:   { name: 'PHOENIX',    trait: 'DIVING',   cost: 3, intro: 406, hp: 3,  r: 12, speed: 235, score: 55, shape: 'phoenix' },
   golem:     { name: 'GOLEM',      trait: 'COLOSSUS', cost: 5, intro: 411, hp: 26, r: 24, speed: 30,  score: 110, shape: 'golem'   },
+  mirror:    { name: 'MIRROR',     trait: 'REFLECT',  cost: 4, intro: 421, hp: 6,  r: 13, speed: 30,  score: 75, shape: 'mirror'  },
+  koban:     { name: 'KOBAN',      trait: 'GREED',    cost: 2, intro: 436, hp: 3,  r: 10, speed: 148, score: 80, shape: 'koban'   },
 
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
   /* ---- the five Guardians, one per sheet, on its tenth level ---- */
-  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 240,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
-  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 400,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
-  b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 620,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
-  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 780,  r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
-  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 900,  r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 320,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
+  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 540,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
+  b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 880,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
+  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 1150, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
+  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 1450, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -191,6 +202,9 @@ const ENEMY_WEIGHTS = {
   /* the paper's own specials */
   washling: 2.2, palecrane: 1.6, nightshade: 1.6, gloom: 1.2, ember: 1.8,
   sealbearer: 1.1, raindrake: 1.4, gale: 1.9, gildling: 1.1, phoenix: 1.4,
+  /* the second breed of each paper */
+  gnat: 2.6, blotter: 1.6, owl: 1.4, smother: 1.5, ashigaru: 1.9,
+  stamper: 1.0, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85,
 };
 
 /* ------------------------------------------------------------
@@ -206,7 +220,7 @@ const AREAS = [
     ink: '淡墨',                                     // pale warm wash
     desc: 'Fresh washi. The first strokes land soft.',
     mult: { hp: 1, sp: 1, budget: 1 },
-    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith'],
+    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter'],
     order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith'],
     names: ['初描', '新樹', '遠山', '淡游', '霧起', '垂露', '鶴舞', '古松', '暮色', '落款'],
     elite: 'slab', boss: 'b_wheel',
@@ -215,8 +229,8 @@ const AREAS = [
     id: 'II', name: 'NIGHT SCROLL', kanji: '夜', theme: 'dark',
     ink: '濃墨',                                     // lamp-black, heavy
     desc: 'The ink deepens. Things move inside it.',
-    mult: { hp: 1.55, sp: 1.05, budget: 1.35 },
-    roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan'],
+    mult: { hp: 1.7, sp: 1.06, budget: 1.45 },
+    roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother'],
     order: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan'],
     names: ['入夜', '遠浦', '梟鳴', '夜影', '高軒', '蓮池', '墨霧', '旌旗', '母胎', '落款'],
     elite: 'shade', boss: 'b_mother',
@@ -225,8 +239,8 @@ const AREAS = [
     id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',
     ink: '朱墨',                                     // vermillion-stained
     desc: 'A vermillion wash dries underfoot. The last stroke is heaviest.',
-    mult: { hp: 2.35, sp: 1.1, budget: 1.75 },
-    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
+    mult: { hp: 2.7, sp: 1.1, budget: 2.0 },
+    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper'],
     order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
     elite: 'oni', boss: 'b_warlord',
@@ -235,8 +249,8 @@ const AREAS = [
     id: 'IV', name: 'STORM SHEET', kanji: '嵐', theme: 'storm',
     ink: '雨墨',                                     // rain-grey
     desc: 'Rain hammers the paper. The ink runs like rivers.',
-    mult: { hp: 3.4, sp: 1.15, budget: 2.25 },
-    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
+    mult: { hp: 4.2, sp: 1.16, budget: 2.7 },
+    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom'],
     order: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
     elite: 'stilt', boss: 'b_tempest',
@@ -245,8 +259,8 @@ const AREAS = [
     id: 'V', name: 'GILT SCROLL', kanji: '金', theme: 'gilt',
     ink: '金墨',                                     // gold-dusted
     desc: 'Old gold leaf underfoot. The last sheet is the heaviest.',
-    mult: { hp: 5.0, sp: 1.2, budget: 2.75 },
-    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
+    mult: { hp: 6.6, sp: 1.22, budget: 3.4 },
+    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban'],
     order: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin',

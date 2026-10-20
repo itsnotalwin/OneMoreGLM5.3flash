@@ -100,8 +100,10 @@
   };
 
   /* the journey answers the shelf: enter the chosen scroll — the
-     shelf only ever offers what is unrolled, and the run clamps too */
+     shelf only ever offers what is unrolled, and the run clamps too.
+     The title's strip of seals asks the same question. */
   UI.onScrollPick = n => start('journey', { sheet: n });
+  UI.onJourneyPick = UI.onScrollPick;
   UI.onScrollsBack = closeScrolls;
 
   function toggleMute() {
@@ -184,16 +186,25 @@
   canvas.addEventListener('pointerup', endJoy);
   canvas.addEventListener('pointercancel', endJoy);
 
-  /* a mouse click anywhere also leaves the opening or a cutscene */
-  window.addEventListener('pointerdown', () => {
+  /* a mouse click anywhere also leaves the opening or a cutscene —
+     and on the title it presses a splash of ink into the sheet */
+  window.addEventListener('pointerdown', e => {
     if (G.mode === 'intro') INTRO.skip();
     else if (G.mode === 'cutscene') CUT.skip();
+    else if (G.mode === 'title' && R.titleInkSplash) {
+      const tg = e.target;
+      if (!(tg && tg.closest && tg.closest('button, a, input, textarea'))) {
+        R.titleInkSplash(e.clientX, e.clientY);
+      }
+    }
   });
 
-  /* the title paper leans toward the hand (mice only) */
+  /* the title paper leans toward the hand (mice only) — and the
+     hand paints: the title sheet takes wet strokes as it passes */
   window.addEventListener('pointermove', e => {
     if (G.mode !== 'title') return;
-    if (e.pointerType && e.pointerType !== 'mouse') return;
+    if (R.titleInkMove) R.titleInkMove(e.clientX, e.clientY);
+    if (e.pointerType && e.pointerType !== 'mouse') return;   /* only the mouse leans the paper */
     if (!G.S.titlePar) G.S.titlePar = { x: 0, y: 0 };
     G.S.titlePar.x = (e.clientX / Math.max(1, G.S.W)) * 2 - 1;
     G.S.titlePar.y = (e.clientY / Math.max(1, G.S.H)) * 2 - 1;
@@ -213,6 +224,7 @@
     G.initAttract();
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
     UI.setSheetContinue(G.getFurthest());
+    UI.buildJourney();                              /* the seals restamped */
     UI.show('title');
     G.mode = 'title';
   }
@@ -267,6 +279,7 @@
   UI.setRunNo(G.getRuns() + 1);
   UI.setBest(G.getBest());
   UI.setSheetContinue(G.getFurthest());
+  UI.buildJourney();
   if (G.S.reduced) {
     enterTitle();          /* the opening is a film — stillness goes straight to the title */
   } else {

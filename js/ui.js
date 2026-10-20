@@ -25,6 +25,7 @@ const UI = (() => {
     continueBtn: $('continueBtn'),
     statWaves: $('statWaves'), statKills: $('statKills'), statTime: $('statTime'), statScore: $('statScore'),
     newBestBadge: $('newBestBadge'), flash: $('flash'),
+    journeyBand: $('journeyBand'),
   };
 
   let bannerTimer = null;
@@ -125,6 +126,105 @@ const UI = (() => {
     }
   }
 
+  /* each sheet's ink, ground for the DOM: every seal chip in the
+     band is a small sheet of its own paper, carrying its own ink —
+     淡 pale warm, 濃 lamp-black, 朱 vermillion, 雨 rain-grey,
+     金 gold-dust — so the journey reads as five hung sheets */
+  const BAND_TONES = {
+    pale:  { ink: '#4a3d28', rgba: '74,61,40',    paper: '#ede7d9' },
+    dark:  { ink: '#e9e2d2', rgba: '233,226,210', paper: '#17130f' },
+    red:   { ink: '#a2321f', rgba: '162,50,31',   paper: '#eadbc4' },
+    storm: { ink: '#31485a', rgba: '49,72,90',    paper: '#c7cdc9' },
+    gilt:  { ink: '#8a6420', rgba: '138,100,32',  paper: '#e7d6ad' },
+  };
+  const toneOf = a => BAND_TONES[a.theme] || BAND_TONES.pale;
+  /* tones must read on the page they hang on: a band that survived
+     the night scroll lies on dark paper, and its pale warm inks
+     would drown — so each tone is pulled a little toward the
+     page's own ink before it touches the air */
+  const hex2rgb = h => { const p = parseInt(h.slice(1), 16); return [p >> 16 & 255, p >> 8 & 255, p & 255]; };
+  const mixRGB = (a, b, k) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * k));
+  function pageAdjusted(tone) {
+    const pageDark = document.body && document.body.dataset && document.body.dataset.theme === 'dark';
+    const page = pageDark ? [233, 226, 210] : [26, 23, 20];
+    const k = pageDark ? 0.5 : 0.12;
+    const adj = mixRGB(hex2rgb(tone.ink), page, k);
+    return {
+      rgb: `rgb(${adj[0]},${adj[1]},${adj[2]})`,
+      soft: `rgba(${adj[0]},${adj[1]},${adj[2]},${pageDark ? 0.5 : 0.34})`,
+      faint: `rgba(${adj[0]},${adj[1]},${adj[2]},0.15)`,
+      ring: `rgba(${mixRGB(hex2rgb(tone.ink), page, pageDark ? 0.62 : 0.15).join(',')},0.30)`,
+    };
+  }
+
+  /* the five scrolls as a strip of seals: red where the Guardian
+     lies felled, ink where the sheet is unrolled, ghost where the
+     paper is still sealed. Each seal wears its sheet's own paper
+     and ink; the links between them flow in the two inks they
+     join; hovering a seal breathes its ink into the title air. */
+  function buildJourney() {
+    const band = el.journeyBand;
+    if (!band || typeof AREAS === 'undefined') return;
+    const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
+    const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
+    const wash = document.getElementById('toneWash');
+    if (wash) wash.classList.remove('on');
+    band.innerHTML = '';
+    AREAS.forEach((a, i) => {
+      const n = i + 1;
+      const isCleared = n <= cleared;
+      const isOpen = n <= unlocked;
+      const frontier = isOpen && !isCleared && n === unlocked;
+      const node = document.createElement('button');
+      node.type = 'button';
+      node.className = 'j-node tone-' + a.theme + ' ' +
+        (isCleared ? 'is-cleared' : isOpen ? 'is-open' : 'is-sealed') + (frontier ? ' is-frontier' : '');
+      const tone = toneOf(a);
+      const adj = pageAdjusted(tone);
+      node.style.setProperty('--pt', tone.ink);
+      node.style.setProperty('--pt-paper', tone.paper);
+      node.style.setProperty('--pt-name', adj.rgb);
+      node.style.setProperty('--pt-soft', adj.soft);
+      node.style.setProperty('--pt-ring', adj.ring);
+      node.innerHTML =
+        `<span class="j-kanji" aria-hidden="true">${a.kanji}</span>` +
+        `<span class="j-name">${a.name}</span>` +
+        `<span class="j-ink" aria-hidden="true">${a.ink}</span>`;
+      node.title = `${a.name} — ${a.ink}` +
+        (isCleared ? ' · 守 felled' : isOpen ? ' · unrolled — enter' : ' · the paper is sealed');
+      if (wash) {
+        node.addEventListener('mouseenter', () => {
+          wash.style.background =
+            `radial-gradient(ellipse 44% 32% at 50% 70%, ${adj.faint.replace('0.15', '0.18')}, transparent 70%)`;
+          wash.classList.add('on');
+        });
+        node.addEventListener('mouseleave', () => wash.classList.remove('on'));
+      }
+      if (isOpen) {
+        node.setAttribute('aria-label', `Enter ${a.name}`);
+        node.addEventListener('click', () => { if (UI.onJourneyPick) UI.onJourneyPick(n); });
+      } else {
+        node.setAttribute('aria-label', `${a.name} is still sealed`);
+        node.addEventListener('click', () => {
+          node.classList.remove('deny'); void node.offsetWidth; node.classList.add('deny');
+        });
+      }
+      band.appendChild(node);
+      if (i < AREAS.length - 1) {
+        const right = toneOf(AREAS[i + 1]);
+        const adjR = pageAdjusted(right);
+        const link = document.createElement('span');
+        link.className = 'j-link' + (n < unlocked ? ' flowed' : '');
+        link.style.setProperty('--pt-a', adj.rgb);
+        link.style.setProperty('--pt-b', adjR.rgb);
+        link.style.setProperty('--pt-a-soft', adj.faint);
+        link.style.setProperty('--pt-b-soft', adjR.faint);
+        link.setAttribute('aria-hidden', 'true');
+        band.appendChild(link);
+      }
+    });
+  }
+
   function show(name) {
     for (const k in el.screens) el.screens[k].classList.toggle('hidden', k !== name);
   }
@@ -162,7 +262,12 @@ const UI = (() => {
       `<span class="hp-cell${i < cur ? ' on' : ''}">${HP_DROP}</span>`).join('');
   }
 
-  function setScore(n) { el.hudScore.textContent = fmtScore(n); }
+  let lastScore = -1;
+  function setScore(n) {
+    if (n === lastScore) return;   /* a flood of kills must not flood the DOM */
+    lastScore = n;
+    el.hudScore.textContent = fmtScore(n);
+  }
 
   function setTime(s) {
     const t = fmtTime(s);
@@ -250,8 +355,12 @@ const UI = (() => {
   }
 
   /* the kill chain, worn under the score */
+  let lastCombo = { n: -1, m: -1 };
   function setCombo(n, mult) {
     if (!el.hudCombo) return;
+    const m = Math.round(mult * 100);
+    if (n === lastCombo.n && m === lastCombo.m) return;   /* same chain, same pixels */
+    lastCombo.n = n; lastCombo.m = m;
     if (n >= CFG.combo.showAt) {
       el.hudCombo.classList.remove('hidden');
       el.hudCombo.innerHTML = `<b>×${mult.toFixed(2)}</b><i>${n} 折</i>`;
@@ -523,7 +632,7 @@ const UI = (() => {
 
   return {
     show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
-    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected,
+    setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, guardianBanner, guardianFalls, el, toKanji,
     buildScrolls, setScrollsHint, unlockBanner,

@@ -89,6 +89,9 @@
 
   <!-- ============ TITLE SCREEN ============ -->
   <section id="screenTitle" class="screen screen-title">
+    <!-- a hovered seal breathes its sheet's ink into the title air -->
+    <div id="toneWash" aria-hidden="true"></div>
+
     <!-- the great brush circle, painted live by the scribe each visit -->
     <div class="enso-wrap" id="ensoWrap" aria-hidden="true">
       <canvas id="ensoBake" class="enso-bake"></canvas>
@@ -123,6 +126,11 @@
       <button id="sheetBtn" class="sheet-btn hidden" type="button" title="Resume the journey from the furthest sheet"></button>
       <p class="best-line hidden" id="bestLine"></p>
     </div>
+
+    <!-- the five scrolls as a strip of seals: red where a Guardian
+         lies felled, ink where the sheet is unrolled, ghost where
+         the paper is still sealed — the journey, readable at a glance -->
+    <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
       <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND</div>

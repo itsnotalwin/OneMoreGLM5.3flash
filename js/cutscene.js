@@ -42,6 +42,7 @@ const CUT = (() => {
 
   /* ---------------- timeline ---------------- */
   const SCROLL_DUR = 5.0;
+  const UNROLL_DUR = 3.9;
   const FINALE_DUR = 17.6;
 
   let T = 0, live = false, ended = false, skipping = false, skipT = 0;
@@ -126,6 +127,7 @@ const CUT = (() => {
     } catch (e) {}
     if (kind === 'scroll') SFX.gong();
     else if (kind === 'finale') SFX.gong();
+    else if (kind === 'unroll') SFX.thud();   /* the roll's first knock */
   }
 
   function skip() {
@@ -155,11 +157,14 @@ const CUT = (() => {
     if (kind === 'scroll') {
       if (crossed(1.12)) SFX.pick(0);
       if (crossed(3.1)) SFX.hanko();
+    } else if (kind === 'unroll') {
+      if (crossed(1.12)) SFX.pick(4);           /* the crest lands */
+      if (crossed(2.5)) SFX.hanko();            /* the red seal presses */
     } else if (kind === 'finale') {
       for (const m of sheetMarks) if (crossed(m.t0)) SFX.pick((m.t0 * 3) | 0);
       if (crossed(12.9)) SFX.hanko();
     }
-    const dur = kind === 'scroll' ? SCROLL_DUR : FINALE_DUR;
+    const dur = kind === 'scroll' ? SCROLL_DUR : kind === 'unroll' ? UNROLL_DUR : FINALE_DUR;
     if (T >= dur) finish();
   }
 
@@ -498,6 +503,228 @@ const CUT = (() => {
     }
   }
 
+  /* ================= THE SCROLL UNROLLS =================
+     A Guardian has fallen. Across the living field — beneath
+     the beasts still dying, the motes still hanging — the next
+     sheet unrolls itself, left to right, a wet edge racing on
+     ahead. It announces its crest, wears its red seal, and is
+     gone. Short, bright, skippable; the run resumes where it
+     stood. An overlay film: the world stays visible around it. */
+  function drawUnroll(c) {
+    const area = data.area;             /* the sheet just cleared */
+    const nxt = data.next;              /* the sheet being unrolled */
+    const th = SHEET[nxt.theme] || SHEET.pale;
+    const ink = th.ink, paper = th.paper;
+    /* the skip veil is a vanish, not a wash — the world waits beneath */
+    const fade = skipping ? 1 - clamp01(skipT / 0.32) : 1;
+    if (fade <= 0) return;
+
+    /* the band: centered, sized to the frame, in the NEW sheet's paper */
+    const bw = Math.min(W * 0.8, 940 * u);
+    const bh = Math.min(H * 0.44, 330 * u);
+    const x0 = (W - bw) / 2;
+    const cy = H * 0.46;
+    const y0 = cy - bh / 2;
+    const fu = Math.max(0.8, u);
+
+    /* everything rides a slow lift away at the end */
+    const lift = clamp01((T - (UNROLL_DUR - 0.75)) / 0.7);
+    const liftY = -easeIO(lift) * 26 * u;
+    const life = 1 - lift;
+    const ga = a => { c.globalAlpha = Math.max(0, Math.min(1, a * fade)); };
+
+    /* the world dims a touch so the unrolling paper owns the eye */
+    const dim = 0.34 * clamp01(T / 0.4) * life;
+    if (dim > 0) {
+      c.globalAlpha = dim;
+      c.fillStyle = '#14110e';
+      c.fillRect(0, 0, W, H);
+      c.globalAlpha = 1;
+    }
+
+    /* ---- beat 1: the unroll (0 → 0.85) ---- */
+    const rollP = easeIO(clamp01(T / 0.85));
+    const rollR = 24 * u;
+    const edgeX = x0 - rollR * 2 + rollP * (bw + rollR * 2 + 2 * u);
+    const revealR = Math.min(x0 + bw, edgeX);
+
+    /* droplets race ahead of the wet edge, haloed for any sheet beneath */
+    if (rollP < 1) {
+      for (const f of flicks) {
+        const fp = clamp01(rollP * 1.3 - f.s * 0.1);
+        if (fp <= 0 || fp >= 1) continue;
+        const fx = edgeX + f.d * easeOut(fp) * 0.5;
+        const fy = cy + (f.y - 0.5) * bh * 0.9 + liftY;
+        ga((1 - fp) * 0.5);
+        c.fillStyle = paper;
+        c.beginPath();
+        c.arc(fx, fy, f.r * 2.1 * (1 - fp * 0.3), 0, TAU);
+        c.fill();
+        ga((1 - fp) * 0.85);
+        c.fillStyle = '#1a1714';
+        c.beginPath();
+        c.arc(fx, fy, f.r * (1 - fp * 0.4), 0, TAU);
+        c.fill();
+      }
+      /* a dry shadow cast ahead of the roll, onto the world */
+      const shW = 60 * u;
+      const g = c.createLinearGradient(revealR, 0, revealR + shW, 0);
+      g.addColorStop(0, 'rgba(10,8,6,0.34)');
+      g.addColorStop(1, 'rgba(10,8,6,0)');
+      c.globalAlpha = fade;
+      c.fillStyle = g;
+      c.fillRect(revealR, y0 - 20, shW, bh + 40);
+      c.globalAlpha = 1;
+    }
+
+    /* the revealed paper, its right edge the traveling roll */
+    if (rollP > 0.001 && life > 0) {
+      c.save();
+      c.translate(0, liftY);
+      c.beginPath();
+      c.moveTo(x0, y0 - 10);
+      c.lineTo(revealR + rollEdge[0], y0 - 10);
+      for (let i = 1; i <= 48; i++) {
+        const yy = y0 - 10 + (bh + 20) * (i / 48);
+        c.lineTo(revealR + rollEdge[i], yy);
+      }
+      c.lineTo(x0, y0 + bh + 10);
+      c.closePath();
+      c.globalAlpha = life;
+      c.fillStyle = paper;
+      c.fill();
+      /* the roll cylinder hugging the traveling edge */
+      if (rollP < 1) {
+        const bandW = rollR * 2.4;
+        const g = c.createLinearGradient(revealR - bandW, 0, revealR + bandW * 0.4, 0);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(0,0,0,0.16)');
+        c.fillStyle = g;
+        c.fillRect(revealR - bandW, y0 - 10, bandW, bh + 20);
+        c.strokeStyle = ink;
+        c.lineWidth = 4 * u;
+        c.lineCap = 'round';
+        c.beginPath();
+        for (let i = 0; i <= 48; i++) {
+          const yy = y0 - 10 + (bh + 20) * (i / 48);
+          const px = revealR + rollEdge[i];
+          if (i === 0) c.moveTo(px, yy); else c.lineTo(px, yy);
+        }
+        c.stroke();
+        /* the spiral of the roll, hinted — one tight turn at the lip */
+        c.globalAlpha = life * 0.34;
+        c.lineWidth = 2 * u;
+        c.beginPath();
+        c.arc(revealR + 3 * u, cy, rollR * 0.62, 0.5, 5.2);
+        c.stroke();
+      }
+      /* the left rod, from which the sheet unrolls */
+      c.globalAlpha = life;
+      c.fillStyle = ink;
+      c.fillRect(x0 - 7 * u, y0 - 16 * u, 5.5 * u, bh + 32 * u);
+      c.fillStyle = 'rgba(237,231,217,0.28)';
+      c.fillRect(x0 - 6 * u, y0 - 14 * u, 1.4 * u, bh + 28 * u);
+      /* the right rod arrives as the roll reaches home */
+      const rodA = clamp01((rollP - 0.9) / 0.1);
+      if (rodA > 0) {
+        c.globalAlpha = life * rodA;
+        c.fillStyle = ink;
+        c.fillRect(x0 + bw + 1.5 * u, y0 - 16 * u, 5.5 * u, bh + 32 * u);
+        c.fillStyle = 'rgba(237,231,217,0.28)';
+        c.fillRect(x0 + bw + 2.5 * u, y0 - 14 * u, 1.4 * u, bh + 28 * u);
+      }
+      c.restore();
+    }
+
+    /* ---- beat 2: the announcements (0.95 → 2.9) ---- */
+    const tS = T - 0.95;
+    if (tS > 0 && life > 0) {
+      c.save();
+      c.translate(0, liftY);
+      /* the cleared scroll's epitaph */
+      const kickA = clamp01(tS / 0.4);
+      if (kickA > 0) {
+        c.font = `600 ${Math.round(12 * fu)}px "IBM Plex Mono", monospace`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        ga(kickA * 0.72 * life);
+        c.fillStyle = ink;
+        c.fillText(
+          `SCROLL ${area.kanji} ${area.name} — CLEARED IN FULL`.split('').join('\u200a'),
+          W / 2, y0 + bh * 0.16);
+        c.globalAlpha = 1;
+      }
+      /* the great kanji of the new sheet, stamped like a seal block */
+      const kA = clamp01((tS - 0.17) / 0.5);
+      if (kA > 0) {
+        const pop = easeBack(kA);
+        const ksz = bh * 0.46 * (0.9 + 0.1 * pop);
+        const kx = W / 2, ky = cy + bh * 0.06;
+        ga(0.09 * life);
+        c.fillStyle = ink;
+        c.beginPath();
+        c.arc(kx, ky, ksz * 0.6, 0, TAU);
+        c.fill();
+        c.globalAlpha = 1;
+        stampGlyph(c, nxt.kanji, kx, ky, ksz, ink, 0.94 * life * fade, -0.015, 77);
+        const land = clamp01((tS - 0.35) / 0.25);
+        if (land > 0 && land < 1) {
+          for (const s of splats) {
+            const px = kx + Math.cos(s.a) * ksz * s.d;
+            const py = ky + Math.sin(s.a) * ksz * s.d;
+            splatPaint(c, px, py, s.r * (0.7 + land * 0.3), s.seed, 0.5 * life * fade, ink);
+          }
+        }
+      }
+      /* the name, pressed in by an underline stroke */
+      const nA = clamp01((tS - 0.62) / 0.45);
+      if (nA > 0) {
+        c.font = `600 ${Math.round(26 * fu)}px "IBM Plex Mono", monospace`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        ga(nA * 0.95 * life);
+        c.fillStyle = ink;
+        c.fillText(`${nxt.name} · ${nxt.ink}`, W / 2, y0 + bh * 0.80);
+        c.globalAlpha = 1;
+        const up = clamp01((tS - 0.72) / 0.4);
+        if (up > 0) {
+          const uw = Math.min(bw * 0.56, 430 * u);
+          const uy = y0 + bh * 0.80 + 21 * fu;
+          const rr = mulberry(911);
+          const steps = Math.floor(56 * up);
+          c.fillStyle = ink;
+          for (let i = 0; i <= steps; i++) {
+            const q = i / 56;
+            const press = q < 0.12 ? 0.5 + q * 4 : q > 0.8 ? Math.max(0.12, (1 - q) * 2.4) : 1;
+            const px = W / 2 - uw / 2 + uw * q;
+            const py = uy + (rr() - 0.5) * 2 * u + Math.sin(q * 5.2) * 1.4 * u;
+            ga(0.82 * life);
+            c.beginPath();
+            c.arc(px, py, 4.2 * u * press + 0.4, 0, TAU);
+            c.fill();
+          }
+          c.globalAlpha = 1;
+        }
+      }
+      /* the red hanko of the new sheet, pressed beside the crest */
+      const sA = clamp01((tS - 1.55) / 0.18);
+      if (sA > 0) {
+        const pop = 0.6 + 0.4 * easeOut(sA);
+        const sx = W / 2 + bh * 0.40, sy = cy - bh * 0.12;
+        drawSeal(c, sx, sy, bh * 0.17, nxt.kanji, pop * life * fade, 55);
+        if (sA < 1) {
+          for (const s of sealSplats) {
+            splatPaint(c, sx + Math.cos(s.a) * bh * 0.09 * s.d, sy + Math.sin(s.a) * bh * 0.09 * s.d,
+              s.r, s.seed, 0.7 * (1 - sA) * life * fade, RED);
+          }
+        }
+      }
+      c.restore();
+    }
+
+    /* the skip veil is the film's own alpha — already applied */
+  }
+
   /* ================= THE JOURNEY'S END ================= */
   /* the ink stills, the five keepers bow, the brush closes the circle */
   function drawFinale(c) {
@@ -737,6 +964,7 @@ const CUT = (() => {
     const S = G.S;
     W = S.W; H = S.H; u = Math.min(W, H) / 800;
     if (kind === 'scroll') drawScroll(ctx);
+    else if (kind === 'unroll') drawUnroll(ctx);
     else if (kind === 'finale') drawFinale(ctx);
   }
 
@@ -745,8 +973,9 @@ const CUT = (() => {
     isLive: () => live,
     kindName: () => kind,
     /* true once a scroll film's sheet fully covers the world
-       (render keeps the OLD sheet's theme beneath the roll) */
-    covered: () => kind === 'finale' || T >= 1.12,
+       (render keeps the OLD sheet's theme beneath the roll) —
+       the unroll film is an overlay and never claims the sheet */
+    covered: () => kind === 'finale' || (kind === 'scroll' && T >= 1.12),
     get lastKind() { return lastKind; },
     set onEnd(fn) { onEnd = fn; },
   };

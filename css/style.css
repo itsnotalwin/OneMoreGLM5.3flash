@@ -863,7 +863,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    ============================================================ */
 @media (max-width: 720px){
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
-  .title-foot{ bottom: 66px; }
+  /* touch hands need no key hints — and the band owns the bottom air */
+  .title-foot{ display: none; }
   .upgrade-grid{ grid-template-columns: 1fr; }
   .up-card{ min-height: 0; }
   .over-body{ flex-direction: column; align-items: flex-start; gap: 30px; }
@@ -1333,4 +1334,121 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .screen-scrolls .scrolls-head, .screen-scrolls .scroll-beam,
   .screen-scrolls .scroll-strip, .screen-scrolls .scrolls-foot{ animation: none; }
   .scroll-strip.refuse, .scrolls-hint.nudge{ animation: none; }
+}
+
+/* ============================================================
+   THE JOURNEY BAND — five seals under the title, each hung as
+   a small sheet of its own paper in its own ink: 淡 pale warm,
+   濃 lamp-black, 朱 vermillion, 雨 rain-grey, 金 gold-dust.
+   Red where a Guardian lies felled, ghost where the paper is
+   still sealed; the links flow in the two inks they join.
+   ============================================================ */
+#toneWash{
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .5s ease;
+}
+#toneWash.on{ opacity: 1; }
+.journey-band{
+  position: absolute; bottom: 46px; left: 0; right: 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+  animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.35s backwards;
+}
+.j-node{
+  pointer-events: auto;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: 0; margin: 0; padding: 0 2px;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.j-kanji{
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 17px; line-height: 1;
+  color: var(--pt, var(--paper)); background: var(--pt-paper, var(--ink));
+  box-shadow: inset 0 0 0 1px var(--pt-soft, transparent), 1.5px 1.5px 0 rgba(26,23,20,.18);
+  transform: rotate(-2deg);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.j-name{
+  font-size: 7.5px; letter-spacing: .22em; text-indent: .22em;
+  color: var(--ink-45); white-space: nowrap;
+  transition: color .16s ease;
+}
+.j-ink{
+  font-size: 6.5px; letter-spacing: .2em; text-indent: .2em;
+  color: var(--pt, var(--ink-45));
+  background: var(--pt-paper, transparent);
+  box-shadow: inset 0 0 0 1px var(--pt-soft, transparent);
+  padding: 2px 4px 1px;
+  white-space: nowrap;
+  transition: opacity .16s ease, box-shadow .16s ease;
+}
+.j-node.is-sealed .j-ink{
+  background: transparent; color: var(--pt-soft, var(--ink-25));
+  box-shadow: inset 0 0 0 1px var(--pt-soft, var(--ink-12));
+}
+.j-node:hover .j-kanji,
+.j-node:focus-visible .j-kanji{ transform: rotate(2deg) translate(-1px, -1px); box-shadow: inset 0 0 0 1px var(--pt-soft, transparent), 3px 3px 0 rgba(26,23,20,.22); }
+.j-node:hover .j-name,
+.j-node:focus-visible .j-name{ color: var(--pt-name, var(--ink-70)); }
+.j-node:hover .j-ink,
+.j-node:focus-visible .j-ink{ box-shadow: inset 0 0 0 1px var(--pt, transparent); }
+.j-node.is-open .j-kanji{ /* the unrolled sheet wears its own paper and ink */ }
+.j-node.is-cleared .j-kanji{
+  background: var(--red); color: var(--paper);
+  box-shadow: inset 0 0 0 1px rgba(26,23,20,.14), 1.5px 1.5px 0 rgba(26,23,20,.18);
+}
+.j-node.is-sealed{ cursor: default; }
+.j-node.is-sealed .j-kanji{
+  background: transparent; color: var(--pt-soft, var(--ink-25)); opacity: .9;
+  box-shadow: inset 0 0 0 1px var(--pt-soft, var(--ink-12)), 1.5px 1.5px 0 rgba(26,23,20,.06);
+  transition: none;
+}
+.j-node.is-sealed:hover .j-name{ color: var(--ink-25); }
+.j-node.is-frontier .j-kanji{ animation: frontierPulse 2.6s ease-in-out infinite; }
+@keyframes frontierPulse{
+  0%, 100%{ box-shadow: inset 0 0 0 1px var(--pt-soft, transparent), 1.5px 1.5px 0 rgba(26,23,20,.18), 0 0 0 0 var(--pt-ring, rgba(178,58,43,.30)); }
+  50%{ box-shadow: inset 0 0 0 1px var(--pt-soft, transparent), 1.5px 1.5px 0 rgba(26,23,20,.18), 0 0 0 7px transparent; }
+}
+.j-link{
+  width: clamp(16px, 4vw, 44px); height: 1.5px;
+  background: linear-gradient(90deg,
+    var(--pt-a-soft, rgba(26,23,20,.12)),
+    var(--pt-b-soft, rgba(26,23,20,.12)));
+  margin-top: 15px;
+  flex: none;
+}
+.j-link.flowed{
+  height: 2px;
+  background: linear-gradient(90deg, var(--pt-a, var(--ink-45)), var(--pt-b, var(--ink-45)));
+}
+.j-node.deny .j-kanji{ animation: jDeny .3s ease; }
+@keyframes jDeny{
+  0%, 100%{ transform: rotate(-2deg) translateX(0); }
+  30%{ transform: rotate(-2deg) translateX(-2.5px); }
+  60%{ transform: rotate(-2deg) translateX(2.5px); }
+}
+
+@media (max-width: 720px){
+  .journey-band{ bottom: 56px; }   /* clears the opening button's corner */
+  .j-name{ display: none; }
+  .j-ink{ display: none; }
+}
+@media (max-height: 700px) and (min-width: 721px){
+  .journey-band{ bottom: 12px; }
+  .j-name{ display: none; }
+  .j-ink{ display: none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .journey-band{ animation: none; }
+  .j-node.is-frontier .j-kanji{ animation: none; }
+  .j-node.deny .j-kanji{ animation: none; }
+  .j-kanji{ transition: none; }
+  #toneWash{ transition: none; }
 }

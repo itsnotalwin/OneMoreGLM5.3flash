@@ -46,6 +46,7 @@ const G = (() => {
     inklings: [],                    // small brush accents laid down at each wave
 
     invulnT: 0, adrenT: 0, shake: 0, dyingT: 0, novaT: 0, clockT: 0,
+    playerSlowT: 0,               /* the smother's grip: the brush wades slow */
     arrived: false, washStamp: false,
     fanT: 2.2, spiritT: 1.6, hankoT: 4.0, trailT: 0,
     arcT: 2.0, boomerT: 1.5, vortexT: 3.0,
@@ -254,6 +255,9 @@ const G = (() => {
   }
 
   function killEnemy(e) {
+    if (e.dead && e._killed) return;   /* one death, one harvest */
+    e.dead = true;
+    e._killed = true;
     const def = ENEMIES[e.type];
     const isBoss = !!def.boss;
     const mult = 1 + 0.15 * Math.max(0, S.stats.wave - 1);
@@ -291,19 +295,35 @@ const G = (() => {
       for (let i = 0; i < 14; i++) dropMote(e.x + rand(-30, 30), e.y + rand(-30, 30), moteValue(4), 2);
       dropPickup('pot', e.x + rand(-24, 24), e.y + rand(-24, 24));
       dropPickup('chest', e.x, e.y);
-      UI.guardianFalls(def.name);
       /* the sheet's seal breaks: the scroll is finished, and the next
-         scroll unrolls on the shelf — ten levels, ten waves, paid in full */
+         scroll unrolls — on film when motion is welcome (the run holds
+         its breath while the sheet announces itself), by banner cry
+         when the hand asks for stillness */
+      let unroll = null;
       if (S.runMode === 'journey') {
         const per = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea;
         const sheet = Math.floor((S.stats.wave - 1) / per) + 1;
-        if (sheet > getCleared()) {
+        const asNow = areaStateFor(S.stats.wave);
+        /* only a Guardian's own wave may press the seal — a boss
+           death anywhere else never credits a sheet */
+        if (asNow.isGuardianWave && sheet > getCleared()) {
           setCleared(sheet);
-          const asNow = areaStateFor(S.stats.wave);
           const next = AREAS[sheet] || null;   /* sheet is 1-based; AREAS[sheet] is the next */
-          if (next) { setUnlocked(sheet + 1); UI.unlockBanner(asNow.area, next, false); }
+          if (next) {
+            setUnlocked(sheet + 1);
+            if (!S.reduced) unroll = { area: asNow.area, next };
+            else UI.unlockBanner(asNow.area, next, false);
+          }
           else UI.unlockBanner(asNow.area, null, true);
         }
+      }
+      if (unroll) {
+        S.mode = 'cutscene';
+        UI.hud(false);
+        UI.show(null);
+        CUT.start('unroll', unroll);
+      } else {
+        UI.guardianFalls(def.name);
       }
     } else if (e.elite) {
       for (let i = 0; i < 7; i++) dropMote(e.x + rand(-20, 20), e.y + rand(-20, 20), moteValue(3), 2);
@@ -352,6 +372,51 @@ const G = (() => {
           ang: a, age: 0, life: 0.8,
         });
       }
+    }
+    if (e.type === 'blotter' && (e.soak || 0) > 0) {
+      /* even in death the sponge gives back what it drank */
+      const n = 2 + Math.min(3, e.soak) * 2;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU + rand(-0.25, 0.25);
+        S.ebullets.push({
+          kind: 'needle',
+          x: e.x + Math.cos(a) * (e.r + 3), y: e.y + Math.sin(a) * (e.r + 3),
+          vx: Math.cos(a) * CFG.needle.speed * 0.65, vy: Math.sin(a) * CFG.needle.speed * 0.65,
+          ang: a, age: 0, life: 0.7,
+        });
+      }
+      SFX.needle();
+    }
+    if (e.type === 'surge') {
+      /* the wave's last wash breaks where it fell */
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * TAU + rand(-0.3, 0.3);
+        S.ebullets.push({
+          kind: 'glob',
+          x: e.x + Math.cos(a) * (e.r + 3), y: e.y + Math.sin(a) * (e.r + 3),
+          vx: Math.cos(a) * 150, vy: Math.sin(a) * 150,
+          ang: a, age: 0, life: 1.2,
+        });
+      }
+      S.rings.push({ x: e.x, y: e.y, max: 66, life: 0.35, maxLife: 0.35 });
+    }
+    if (e.type === 'mirror') {
+      /* the glass shatters — two bright shards fly */
+      for (const s of [-1, 1]) {
+        const a = e.ang + s * 1.2;
+        S.ebullets.push({
+          kind: 'needle',
+          x: e.x + Math.cos(a) * (e.r + 3), y: e.y + Math.sin(a) * (e.r + 3),
+          vx: Math.cos(a) * CFG.needle.speed * 0.6, vy: Math.sin(a) * CFG.needle.speed * 0.6,
+          ang: a, age: 0, life: 0.6,
+        });
+      }
+    }
+    if (e.type === 'koban') {
+      /* the coin spills its worth — a chase well paid */
+      for (let i = 0; i < 6; i++) dropMote(e.x + rand(-18, 18), e.y + rand(-18, 18), moteValue(3), 2);
+      if (Math.random() < 0.22) dropPickup('pot', e.x, e.y);
+      S.rings.push({ x: e.x, y: e.y, max: 62, life: 0.4, maxLife: 0.4, red: true });
     }
     if (e.type === 'nightshade' || e.type === 'gale') SFX.blink();
     if (e.type === 'titan') {
@@ -465,10 +530,19 @@ const G = (() => {
     let budget = CFG.wave.budget(as.waveInLevel, as.depth) * as.budget;
     if (as.isSurge) budget *= CFG.wave.surgeMult + 0.012 * as.depth;
     if (as.isLevelEnd) budget *= CFG.wave.sealBudget;
-    /* the level's own beast leads the third wave, haunts the rest */
-    const featured = as.area.order ? as.area.order[as.level - 1] : null;
+    /* the level's own beast leads the third wave, haunts the rest;
+       a beast's TRUE debut — the first wave it may walk — outranks
+       the calendar, so every new ink-born gets its walk-on wave */
+    let featured = as.area.order ? as.area.order[as.level - 1] : null;
+    for (const k of as.area.roster) {
+      if (ENEMIES[k].intro === n && ENEMIES[k].cost > 0) { featured = k; break; }
+    }
     S.queue = buildQueue(Math.round(budget), n, as.area.roster,
       (as.waveInLevel === 3 || as.waveInLevel === 6) ? featured : null);
+    /* a true-debut wave: the new ink-born walks in force, not by chance */
+    if (featured && ENEMIES[featured].intro === n) {
+      S.queue.push(featured, featured, featured);
+    }
     let elites = 0;
     if (as.isGuardianWave) {
       /* the Guardian of the sheet enters — a beast with a name */
@@ -578,7 +652,7 @@ const G = (() => {
     S.invulnT = 0; S.adrenT = 0; S.shake = 0; S.dyingT = 0; S.novaT = 0;
     S.fanT = 2.2; S.spiritT = 1.6; S.hankoT = 4.0; S.trailT = 0;
     S.arcT = 2.0; S.boomerT = 1.5; S.vortexT = 3.0;
-    S.combo = 0; S.comboT = 0; S.hitstop = 0; S.magnetT = 0;
+    S.combo = 0; S.comboT = 0; S.hitstop = 0; S.magnetT = 0; S.playerSlowT = 0;
     S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
     S.arrived = S.reduced; S.washStamp = S.reduced;   // reduced motion: no entrance rite
     S.choices = []; S.selected = null; S.idle = [];
@@ -650,12 +724,13 @@ const G = (() => {
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = []; S.queue = [];
     S.puddles = []; S.spirits = []; S.stamps = [];
     S.motes = []; S.pickups = []; S.arcs = []; S.vortices = []; S.bolts = [];
-    S.pendingSeal = false; S.pendingLevels = 0; S.pendingChests = 0;
+    S.pendingSeal = false; S.pendingLevels = 0; S.pendingChests = 0; S.playerSlowT = 0;
     UI.hud(false);
     UI.show('title');
     UI.setBest(getBest());
     UI.setRunNo(getRuns() + 1);
     UI.setSheetContinue(getFurthest());
+    UI.buildJourney();
     initAttract();
   }
 
@@ -688,8 +763,12 @@ const G = (() => {
       });
       return;
     }
+    /* 'level' and 'chest' resume the wave where it stood — a pick
+       taken mid-wave must not advance the count nor loose its beasts
+       across a boundary (a leaked Guardian would credit its kill to
+       the wrong sheet); the wave ends on its own terms */
+    if (kind !== 'wave' && S.waveActive) return;
     startWave(S.stats.wave + 1);
-    /* 'level' and 'chest' resume the wave where it stood */
   }
 
   function pickAt(i) {
@@ -945,7 +1024,8 @@ const G = (() => {
     let ix = S.inputVec.x, iy = S.inputVec.y;
     const m = Math.hypot(ix, iy);
     if (m > 1) { ix /= m; iy /= m; }
-    const sp = CFG.player.speed * st.moveMult * (S.adrenT > 0 ? CFG.adrenaline.mult : 1);
+    const sp = CFG.player.speed * st.moveMult * (S.adrenT > 0 ? CFG.adrenaline.mult : 1)
+      * (S.playerSlowT > 0 ? 0.62 : 1);   /* the smother's wet weight */
     /* the brush glides: velocity eases toward the hand's intent,
        quick to take up, quicker to let go — never a hard stop */
     const rate = m > 0.01 ? 13.5 : 17.5;
@@ -956,13 +1036,23 @@ const G = (() => {
     p.y += p.vy * dt;
     /* the sheet is endless — nothing clamps the brush */
 
-    /* the storm eye drags everything toward its center */
+    /* the storm eye drags everything toward its center;
+       the maelstrom's undertow is smaller, and only near */
     for (const e of S.enemies) {
       if (e.type === 'b_tempest') {
         const dx = e.x - p.x, dy = e.y - p.y;
         const d = Math.hypot(dx, dy) || 1;
         p.x += (dx / d) * 52 * dt;
         p.y += (dy / d) * 52 * dt;
+      } else if (e.type === 'maelstrom') {
+        const dx = e.x - p.x, dy = e.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 250 * 250) {
+          const d = Math.sqrt(d2) || 1;
+          const f = 44 * (1 - d / 250);
+          p.x += (dx / d) * f * dt;
+          p.y += (dy / d) * f * dt;
+        }
       }
     }
 
@@ -976,6 +1066,7 @@ const G = (() => {
 
     if (S.adrenT > 0) S.adrenT -= dt;
     if (S.invulnT > 0) S.invulnT -= dt;
+    if (S.playerSlowT > 0) S.playerSlowT -= dt;
     if (st.wardCd > 0) st.wardCd -= dt;
     if (p.recoil > 0) p.recoil -= dt * 14;
 
@@ -1174,17 +1265,64 @@ const G = (() => {
     }
   }
 
-  function damageEnemy(e, idx, dmg, knock, ang, proj) {
+  function damageEnemy(e, idx, dmg, knock, ang, proj, refl) {
     const st = S.stats;
+    /* a corpse cannot die twice — grid-referenced bodies stay
+       visible to strokes that were cast in the same breath */
+    if (e.dead) return false;
     /* the koi swims beneath the sheet — strokes pass over it */
     if (e.diving) return false;
-    /* the gate's shield and the sealbearer's red seal drink frontal strikes */
+    /* the blotter drinks frontal strokes — three, and it bursts */
+    if (e.type === 'blotter' && proj && !e.bloat) {
+      e.soak = (e.soak || 0) + 1;
+      e.r = Math.min(19, e.r + 1.2);
+      S.popups.push({ x: e.x, y: e.y - e.r - 5, txt: '飲', life: 0.45, max: 0.45 });
+      SFX.ping();
+      if (e.soak >= 3) {
+        e.bloat = true;
+        /* it cannot hold the drink — the sponge sprays */
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * TAU + rand(-0.2, 0.2);
+          S.ebullets.push({
+            kind: 'needle',
+            x: e.x + Math.cos(a) * (e.r + 3), y: e.y + Math.sin(a) * (e.r + 3),
+            vx: Math.cos(a) * CFG.needle.speed * 0.7, vy: Math.sin(a) * CFG.needle.speed * 0.7,
+            ang: a, age: 0, life: 0.75,
+          });
+        }
+        SFX.needle();
+      }
+      return false;
+    }
+    /* the gate's shield and the sealbearer's red seal drink frontal strikes.
+       Frontal = the stroke travels against the beast's facing (it came
+       from where the beast looks), so the test is on the REVERSED
+       heading — the old raw-diff test never once blocked a bullet. */
     if ((e.type === 'gate' || e.type === 'sealbearer') && proj) {
-      let diff = ang - e.ang;
+      let diff = ang - e.ang + Math.PI;
       while (diff > Math.PI) diff -= TAU;
       while (diff < -Math.PI) diff += TAU;
       if (Math.abs(diff) < 1.15) {
         S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: '掠', life: 0.4, max: 0.4 });
+        SFX.ping();
+        return false;
+      }
+    }
+    /* the gilt mirror turns a frontal stroke back at the horde —
+       a returned stroke is never returned again */
+    if (e.type === 'mirror' && proj && !refl) {
+      let diff = ang - e.ang + Math.PI;
+      while (diff > Math.PI) diff -= TAU;
+      while (diff < -Math.PI) diff += TAU;
+      if (Math.abs(diff) < 1.15) {
+        const ra = ang + Math.PI;
+        S.bullets.push({
+          x: e.x + Math.cos(ra) * (e.r + 5), y: e.y + Math.sin(ra) * (e.r + 5),
+          vx: Math.cos(ra) * CFG.player.bulletSpeed * 0.9, vy: Math.sin(ra) * CFG.player.bulletSpeed * 0.9,
+          ang: ra, dmg: 1, hits: 1, age: 0, life: 0.8,
+          kind: 'drop', brush: 'needle', seed: 100000 + ((Math.random() * 899999) | 0), refl: true,
+        });
+        S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: '返', life: 0.4, max: 0.4 });
         SFX.ping();
         return false;
       }
@@ -1205,11 +1343,42 @@ const G = (() => {
       e.kby += Math.sin(ang) * 240 * kf;
     }
     if (e.hp <= 0) {
-      S.enemies.splice(idx, 1);
+      /* the index a caller carried may be stale by now — resolve
+         it fresh, so a splice never takes the wrong beast */
+      e.dead = true;
+      const i = S.enemies.indexOf(e);
+      if (i >= 0) S.enemies.splice(i, 1);
       killEnemy(e);
       return true;
     }
     return false;
+  }
+
+  /* ---------------- the hit grid ----------------
+     One uniform hash per substep, shared by every stroke that
+     seeks flesh: bullets query three-by-three cells around their
+     own cell instead of walking the whole horde. Cell 96 px
+     covers the widest beast plus the fastest projectile. */
+  const HIT = 96;
+  const hitGrid = new Map();
+  const hitPool = [];
+  let hitPoolN = 0;
+  const hitKey = (gx, gy) => (gx + 16384) * 33554432 + (gy + 16384);
+  function buildHitGrid() {
+    hitPoolN = 0;
+    hitGrid.clear();
+    const list = S.enemies;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const key = hitKey(Math.floor(e.x / HIT), Math.floor(e.y / HIT));
+      let arr = hitGrid.get(key);
+      if (!arr) {
+        if (hitPoolN < hitPool.length) arr = hitPool[hitPoolN++];
+        else { arr = []; hitPool.push(arr); hitPoolN++; }
+        hitGrid.set(key, arr);
+      }
+      arr.push(e);
+    }
   }
 
   function updateBullets(dt) {
@@ -1217,21 +1386,28 @@ const G = (() => {
     for (let i = S.bullets.length - 1; i >= 0; i--) {
       const b = S.bullets[i];
       const br = b.kind === 'boomer' ? 13 : b.kind === 'blade' ? 4 : 3;
-      for (let j = S.enemies.length - 1; j >= 0; j--) {
-        const e = S.enemies[j];
-        const dx = e.x - b.x, dy = e.y - b.y;
-        const rr = e.r + br;
-        if (dx * dx + dy * dy <= rr * rr) {
-          const ang = Math.atan2(b.vy, b.vx);
-          SFX.hit();
-          b.hits--;
-          const dead = damageEnemy(e, j, b.dmg, true, ang, true);
-          if (b.hits <= 0) {
-            if (b.kind === 'blade') burst(b.x, b.y, 3, false);
-            S.bullets.splice(i, 1);
+      const gx = Math.floor(b.x / HIT), gy = Math.floor(b.y / HIT);
+      for (let ox = -1; ox <= 1; ox++) {
+        for (let oy = -1; oy <= 1; oy++) {
+          const arr = hitGrid.get(hitKey(gx + ox, gy + oy));
+          if (!arr) continue;
+          for (let m = 0; m < arr.length; m++) {
+            const e = arr[m];
+            if (e.dead) continue;
+            const dx = e.x - b.x, dy = e.y - b.y;
+            const rr = e.r + br;
+            if (dx * dx + dy * dy <= rr * rr) {
+              const ang = Math.atan2(b.vy, b.vx);
+              SFX.hit();
+              b.hits--;
+              damageEnemy(e, -1, b.dmg, true, ang, true, !!b.refl);
+              if (b.hits <= 0) {
+                if (b.kind === 'blade') burst(b.x, b.y, 3, false);
+                S.bullets.splice(i, 1);
+                ox = 2; oy = 2; break;   /* this droplet is spent */
+              }
+            }
           }
-          if (dead) j--;
-          if (b.hits <= 0) break;
         }
       }
     }
@@ -1383,8 +1559,8 @@ const G = (() => {
           bo.struck = true;
           bo.life = 0.16;
           S.shake = Math.max(S.shake, 7);
-          S.rings.push({ x: bo.x, y: bo.y, max: bo.r * 1.5, life: 0.3, maxLife: 0.3 });
-          S.stainQueue.push({ x: bo.x, y: bo.y, r: bo.r * 0.4, alpha: 0.4 });
+          S.rings.push({ x: bo.x, y: bo.y, max: bo.r * 1.5, life: 0.3, maxLife: 0.3, red: !!bo.red });
+          S.stainQueue.push({ x: bo.x, y: bo.y, r: bo.r * 0.4, alpha: 0.4, red: !!bo.red });
           const dx = p.x - bo.x, dy = p.y - bo.y;
           if (dx * dx + dy * dy < bo.r * bo.r) takeHit();
           SFX.thunder();
@@ -1464,9 +1640,21 @@ const G = (() => {
 
   function updateEnemies(dt) {
     const p = S.player;
+    /* the true depth of the run, computed once — the brood-mothers
+       used to read the sheet index as depth and capped their young
+       far too early on the deeper sheets */
+    const asNow = areaStateFor(S.stats.wave);
+    const broodCap = CFG.wave.concurrentCap(asNow.waveInLevel, asNow.depth);
     /* wardens are few — gather them once instead of scanning per beast */
     let wardens = null;
     for (const w of S.enemies) if (w.type === 'warden') (wardens || (wardens = [])).push(w);
+    /* the swarm's heart: one centroid pass feeds every gnat */
+    let gnatCx = 0, gnatCy = 0, gnatN = 0;
+    for (const w of S.enemies) if (w.type === 'gnat') { gnatCx += w.x; gnatCy += w.y; gnatN++; }
+    if (gnatN > 1) { gnatCx /= gnatN; gnatCy /= gnatN; }
+    /* the rank: ashigaru are few — gather them once */
+    let ashigaru = null;
+    for (const w of S.enemies) if (w.type === 'ashigaru') (ashigaru || (ashigaru = [])).push(w);
     for (const e of S.enemies) {
       e.t += dt;
       if (e.hitFlash > 0) e.hitFlash -= dt;
@@ -1502,7 +1690,7 @@ const G = (() => {
             /* the mother sheds her brood */
             if (e.type === 'titan') {
               e.spawnT -= dt;
-              if (e.spawnT <= 0 && S.enemies.length < CFG.wave.concurrentCap(S.stats.wave, S.areaIdx)) {
+              if (e.spawnT <= 0 && S.enemies.length < broodCap) {
                 e.spawnT = 4.2;
                 for (let i = 0; i < 2; i++) {
                   const a = rand(0, 6.28);
@@ -1945,6 +2133,165 @@ const G = (() => {
             }
             break;
           }
+          case 'gnat': { /* the swarm: each gnat seeks you, but the swarm holds together */
+            const wob = Math.sin(e.t * 9 + e.seed) * 0.8;
+            let sx = ux, sy = uy;
+            if (gnatN > 1) {
+              const cd = Math.hypot(gnatCx - e.x, gnatCy - e.y) || 1;
+              sx += ((gnatCx - e.x) / cd) * 0.55;
+              sy += ((gnatCy - e.y) / cd) * 0.55;
+            }
+            const sl = Math.hypot(sx, sy) || 1;
+            vx = (sx / sl - uy * wob * 0.35) * e.speed * sm;
+            vy = (sy / sl + ux * wob * 0.35) * e.speed * sm;
+            e.ang = Math.atan2(vy, vx);
+            break;
+          }
+          case 'blotter': { /* the sponge walks slow; bloated, slower still */
+            const bm = e.bloat ? 0.5 : 0.85;
+            vx = ux * e.speed * bm * sm; vy = uy * e.speed * bm * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          }
+          case 'owl': { /* the watcher: marks where you stand, then the needles fall there */
+            e.ang = Math.atan2(uy, ux);
+            if (e.state === 'cruise') {
+              if (d < 330) { vx = -ux * e.speed * sm; vy = -uy * e.speed * sm; }
+              else if (d > 470) { vx = ux * e.speed * sm; vy = uy * e.speed * sm; }
+              else {
+                const sdir = Math.sin(e.seed + e.t * 0.5) > 0 ? 1 : -1;
+                vx = -uy * e.speed * 0.8 * sm * sdir;
+                vy = ux * e.speed * 0.8 * sm * sdir;
+              }
+              e.stateT += dt;
+              if (d < 560 && e.stateT > 1.9) {
+                e.state = 'mark'; e.stateT = 0; e.px = p.x; e.py = p.y;
+                S.rings.push({ x: p.x, y: p.y, max: 44, life: 1.05, maxLife: 1.05 });
+                SFX.wind();
+              }
+            } else if (e.state === 'mark') {
+              e.stateT += dt;
+              if (e.stateT > 1.05) {
+                e.state = 'fire'; e.stateT = 0;
+                const fa = Math.atan2(e.py - e.y, e.px - e.x);
+                for (let i = -1; i <= 1; i++) {
+                  const a = fa + i * 0.14;
+                  S.ebullets.push({
+                    kind: 'needle',
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * CFG.needle.speed, vy: Math.sin(a) * CFG.needle.speed,
+                    ang: a, age: 0, life: CFG.needle.life,
+                  });
+                }
+                SFX.needle();
+              }
+            } else if (e.state === 'fire') {
+              e.stateT += dt;
+              if (e.stateT > 0.3) { e.state = 'rest'; e.stateT = 0; }
+            } else {
+              e.stateT += dt;
+              if (e.stateT > 0.9) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
+          case 'smother': { /* a low stain that crawls — its touch weighs the brush down */
+            const wob = Math.sin(e.t * 2.2 + e.seed) * 0.35;
+            vx = (ux - uy * wob) * e.speed * sm;
+            vy = (uy + ux * wob) * e.speed * sm;
+            e.ang = Math.atan2(vy, vx);
+            break;
+          }
+          case 'ashigaru': { /* marches in rank — shields to shoulder, quicker together */
+            let rank = 0;
+            if (ashigaru && ashigaru.length > 1) {
+              for (const o of ashigaru) {
+                if (o === e) continue;
+                const ox2 = e.x - o.x, oy2 = e.y - o.y;
+                if (ox2 * ox2 + oy2 * oy2 < 96 * 96 && ++rank >= 3) break;
+              }
+            }
+            const rm = 1 + Math.min(3, rank) * 0.16;
+            vx = ux * e.speed * rm * sm; vy = uy * e.speed * rm * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          }
+          case 'stamper': { /* the seal-carrier presses a red stamp onto the paper where you stood */
+            e.ang = Math.atan2(uy, ux);
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.stateT += dt;
+            if (e.state === 'cruise' && d < 430 && e.stateT > 2.2) {
+              e.state = 'raise'; e.stateT = 0; e.px = p.x; e.py = p.y; SFX.wind();
+            } else if (e.state === 'raise' && e.stateT > 0.55) {
+              e.state = 'cruise'; e.stateT = rand(0, 0.4);
+              S.bolts.push({ x: e.px, y: e.py, t: 0.5, r: 46, struck: false, life: 0, red: true });
+            }
+            break;
+          }
+          case 'surge': { /* a wave that builds, curls, and breaks where you stood */
+            if (e.state === 'cruise') {
+              vx = ux * e.speed * 0.42 * sm; vy = uy * e.speed * 0.42 * sm;
+              e.ang = Math.atan2(uy, ux);
+              e.stateT += dt;
+              if (d < 420 && e.stateT > 1.7) { e.state = 'rise'; e.stateT = 0; }
+            } else if (e.state === 'rise') {
+              e.stateT += dt;
+              vx = -uy * e.speed * 0.4 * sm; vy = ux * e.speed * 0.4 * sm;   /* the crest curls */
+              if (e.stateT > 0.5) {
+                e.ang = Math.atan2(p.y - e.y, p.x - e.x);
+                e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
+                e.state = 'break'; e.stateT = 0; SFX.wind();
+              }
+            } else if (e.state === 'break') {
+              e.stateT += dt;
+              vx = e.px * e.speed * 2.9 * sm; vy = e.py * e.speed * 2.9 * sm;
+              if (e.stateT > 0.6) {
+                e.state = 'wash'; e.stateT = 0;
+                for (let i = 0; i < 4; i++) {
+                  const a = (i / 4) * TAU + rand(-0.2, 0.2);
+                  S.ebullets.push({
+                    kind: 'glob',
+                    x: e.x + Math.cos(a) * (e.r + 4), y: e.y + Math.sin(a) * (e.r + 4),
+                    vx: Math.cos(a) * 165, vy: Math.sin(a) * 165,
+                    ang: a, age: 0, life: 1.5,
+                  });
+                }
+                S.rings.push({ x: e.x, y: e.y, max: 74, life: 0.35, maxLife: 0.35 });
+                SFX.glob();
+              }
+            } else {
+              e.stateT += dt;
+              if (e.stateT > 0.7) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
+          case 'maelstrom': { /* the undertow — it barely moves, and that is the danger */
+            const wob = Math.sin(e.t * 1.1 + e.seed) * 0.5;
+            vx = (ux - uy * wob) * e.speed * sm;
+            vy = (uy + ux * wob) * e.speed * sm;
+            e.ang = e.t * 0.8;
+            break;
+          }
+          case 'mirror': { /* the gilt glass — it faces you, and your strokes answer to it */
+            const want = Math.atan2(uy, ux);
+            let diff = want - e.ang;
+            while (diff > Math.PI) diff -= TAU;
+            while (diff < -Math.PI) diff += TAU;
+            e.ang += clamp(diff, -0.8 * dt, 0.8 * dt);
+            vx = Math.cos(e.ang) * e.speed * sm;
+            vy = Math.sin(e.ang) * e.speed * sm;
+            break;
+          }
+          case 'koban': { /* the coin-spirit does not fight — it runs, and it is worth the chase */
+            const flee = Math.atan2(-uy, -ux);
+            let diff = flee - e.ang;
+            while (diff > Math.PI) diff -= TAU;
+            while (diff < -Math.PI) diff += TAU;
+            e.ang += clamp(diff, -3.4 * dt, 3.4 * dt);
+            if ((e.dirT -= dt) <= 0) { e.dirT = rand(0.4, 0.9); e.ang = flee + rand(-0.9, 0.9); }
+            vx = Math.cos(e.ang) * e.speed * sm;
+            vy = Math.sin(e.ang) * e.speed * sm;
+            break;
+          }
 
           /* ================= THE GUARDIANS ================= */
           case 'b_wheel': { /* THE STAIN — swells, then slams a ring of ink */
@@ -2000,7 +2347,7 @@ const G = (() => {
                 }
                 SFX.needle();
                 e.sheds = (e.sheds || 0) + 1;
-                if (e.sheds % 2 === 0 && S.enemies.length < CFG.wave.concurrentCap(S.stats.wave, S.areaIdx) + 8) {
+                if (e.sheds % 2 === 0 && S.enemies.length < broodCap + 8) {
                   for (const s of [-1, 1]) {
                     const c = spawnEnemy('shade', e.x + s * 40, e.y + rand(-30, 30));
                     c.kbx = s * 160; c.kby = rand(-80, 80);
@@ -2113,7 +2460,7 @@ const G = (() => {
             e.sT = (e.sT || 0) + dt;
             if (e.sT > 7.5) {
               e.sT = 0;
-              if (S.enemies.length < CFG.wave.concurrentCap(S.stats.wave, S.areaIdx) + 8) {
+              if (S.enemies.length < broodCap + 8) {
                 for (const s of [-1, 1]) {
                   const c = spawnEnemy(phase === 2 ? 'oni' : 'slab', e.x + s * 55, e.y + rand(-40, 40));
                   c.kbx = s * 140; c.kby = rand(-70, 70);
@@ -2147,18 +2494,40 @@ const G = (() => {
       e.kbx *= decay; e.kby *= decay;
     }
 
-    /* soft separation so enemies don't stack */
-    for (let i = 0; i < S.enemies.length; i++) {
-      for (let j = i + 1; j < S.enemies.length; j++) {
-        const a = S.enemies[i], b = S.enemies[j];
-        const dx = b.x - a.x, dy = b.y - a.y;
-        const min = (a.r + b.r) * 0.8;
-        const d2 = dx * dx + dy * dy;
-        if (d2 > 0.01 && d2 < min * min) {
-          const d = Math.sqrt(d2);
-          const push = ((min - d) / d) * 0.35;
-          a.x -= dx * push; a.y -= dy * push;
-          b.x += dx * push; b.y += dy * push;
+    /* soft separation so enemies don't stack — a uniform spatial
+       hash keeps it near O(n): at a flood's 150-beast ceiling the
+       old all-pairs scan cost ~11k pair checks per substep, twice
+       a frame. Same pushes, same strengths, same behavior. */
+    const SEP = 84;   /* >= the widest beast's diameter */
+    const grid = new Map();
+    const list = S.enemies;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      e._si = i;
+      const key = (Math.floor(e.x / SEP) + 16384) * 33554432 + (Math.floor(e.y / SEP) + 16384);
+      const arr = grid.get(key);
+      if (arr) arr.push(e); else grid.set(key, [e]);
+    }
+    for (let i = 0; i < list.length; i++) {
+      const a = list[i];
+      const gx = Math.floor(a.x / SEP), gy = Math.floor(a.y / SEP);
+      for (let ox = -1; ox <= 1; ox++) {
+        for (let oy = -1; oy <= 1; oy++) {
+          const arr = grid.get((gx + ox + 16384) * 33554432 + (gy + oy + 16384));
+          if (!arr) continue;
+          for (let m = 0; m < arr.length; m++) {
+            const b = arr[m];
+            if (b._si <= a._si) continue;   /* each pair once, array order kept */
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const min = (a.r + b.r) * 0.8;
+            const d2 = dx * dx + dy * dy;
+            if (d2 > 0.01 && d2 < min * min) {
+              const d = Math.sqrt(d2);
+              const push = ((min - d) / d) * 0.35;
+              a.x -= dx * push; a.y -= dy * push;
+              b.x += dx * push; b.y += dy * push;
+            }
+          }
         }
       }
     }
@@ -2168,7 +2537,14 @@ const G = (() => {
       for (const e of S.enemies) {
         const dx = e.x - p.x, dy = e.y - p.y;
         const rr = e.r + p.r - 2;
-        if (dx * dx + dy * dy < rr * rr) { takeHit(); break; }
+        if (dx * dx + dy * dy < rr * rr) {
+          /* the smother's grip: its touch weighs the brush down */
+          if (e.type === 'smother' && S.playerSlowT <= 0.35) {
+            S.playerSlowT = 1.2;
+            S.popups.push({ x: p.x, y: p.y - 20, txt: '纏', life: 0.7, max: 0.7 });
+          }
+          takeHit(); break;
+        }
       }
     }
   }
@@ -2299,6 +2675,7 @@ const G = (() => {
     }
 
     updatePlayer(dt);
+    buildHitGrid();   /* one hash per substep; every seeking stroke reads it */
     updateBullets(dt);
     updateEbullets(dt);
     updateEnemies(dt);

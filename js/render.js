@@ -1833,6 +1833,236 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.1, 12);
         break;
       }
+      case 'gnat': { /* GNAT — a fleck of ink with two flickering wings */
+        const fy = Math.sin(t * 38 + e.seed) * r * 0.5;
+        blobPath(c, 0, 0, r, sd, 0.3, 7);
+        c.fill();
+        c.globalAlpha = 0.45;
+        c.lineWidth = 1;
+        c.beginPath(); c.moveTo(-r * 0.3, -r * 0.4); c.lineTo(-r * 1.7, -r * 1.1 - fy); c.stroke();
+        c.beginPath(); c.moveTo(-r * 0.3, r * 0.4); c.lineTo(-r * 1.7, r * 1.1 + fy); c.stroke();
+        c.globalAlpha = 1;
+        silhouette = () => blobPath(c, 0, 0, r * 1.2, sd, 0.3, 7);
+        break;
+      }
+      case 'blotter': { /* BLOTTER — a thirsty sponge, rippling where it drank */
+        const bl = e.bloat ? 1.22 : 1;
+        const soakk = Math.min(1, (e.soak || 0) / 3);
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        c.save();
+        c.scale(bl * (1 + soakk * 0.2), bl * (1 + soakk * 0.2));
+        c.globalAlpha = 0.72;
+        blobPath(c, 0, 0, r, sd, 0.26, 11);
+        c.fill();
+        /* wet ripples where each stroke went in */
+        c.globalAlpha = 0.55;
+        c.strokeStyle = PAPER;
+        c.lineWidth = 1.1;
+        const rip = mulberry(sd >> 1);
+        for (let i = 0; i < (e.soak || 0); i++) {
+          c.beginPath();
+          c.arc((rip() - 0.5) * r, (rip() - 0.5) * r, 2.2 + rip() * 1.8, 0, TAU);
+          c.stroke();
+        }
+        c.restore();
+        c.globalAlpha = 1;
+        eyeSlits(c, ang, r * bl, 0.5);
+        silhouette = () => blobPath(c, 0, 0, r * bl * 1.12, sd, 0.26, 11);
+        break;
+      }
+      case 'owl': { /* OWL — a horned watcher, eyes like paper moons */
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        c.rotate(ang);
+        c.save();
+        c.scale(0.92, 1.18);
+        blobPath(c, 0, 0, r, sd, 0.14, 10);
+        c.fill();
+        c.globalAlpha = 0.35; c.fillStyle = patHatch; c.fill();
+        c.restore();
+        c.fillStyle = INK;
+        /* horn tufts */
+        inkStroke(c, [{ x: -r * 0.3, y: -r * 0.6 }, { x: -r * 0.55, y: -r * 1.3 }], 2.2, { alpha: 0.9, seed: sd });
+        inkStroke(c, [{ x: r * 0.3, y: -r * 0.6 }, { x: r * 0.55, y: -r * 1.3 }], 2.2, { alpha: 0.9, seed: sd + 1 });
+        /* the eyes: two pale moons that sometimes close */
+        const blinkK = Math.sin(t * 1.7 + e.seed) > 0.97 ? 0.18 : 1;
+        c.fillStyle = PAPER;
+        c.globalAlpha = 0.95;
+        c.beginPath(); c.arc(-r * 0.32, -r * 0.12, r * 0.3 * blinkK, 0, TAU); c.fill();
+        c.beginPath(); c.arc(r * 0.32, -r * 0.12, r * 0.3 * blinkK, 0, TAU); c.fill();
+        c.globalAlpha = 1;
+        c.fillStyle = INK;
+        c.beginPath(); c.arc(0, -r * 0.12, r * 0.11, 0, TAU); c.fill();
+        silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.14, 10);
+        break;
+      }
+      case 'smother': { /* SMOTHER — a flat stain that crawls, trailing damp */
+        c.globalAlpha = 0.85;
+        c.save();
+        c.scale(1.5, 0.6);
+        blobPath(c, 0, 0, r, sd, 0.3, 12);
+        c.fill();
+        c.restore();
+        /* drips dragging behind its crawl */
+        const drips = mulberry(sd >> 2);
+        for (let i = 0; i < 4; i++) {
+          const dx = (drips() - 0.5) * r * 2.2;
+          const len = r * (0.3 + drips() * 0.5) * (1 + Math.sin(t * 2 + i * 1.7) * 0.3);
+          inkStroke(c, [
+            { x: dx, y: r * 0.35 },
+            { x: dx + (drips() - 0.5) * 3, y: r * 0.35 + len },
+          ], 2.4, { alpha: 0.5 });
+        }
+        c.globalAlpha = 1;
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang, r * 0.9, 0.5);
+        silhouette = () => { c.save(); c.scale(1.5, 0.6); blobPath(c, 0, 0, r * 1.1, sd, 0.3, 12); c.restore(); };
+        break;
+      }
+      case 'ashigaru': { /* ASHIGARU — a footsoldier of ink, spear leveled */
+        c.rotate(e.ang);
+        /* the spear: a long thin stroke ahead of the body */
+        inkStroke(c, [
+          { x: r * 0.2, y: -r * 0.5 },
+          { x: r * 2.5, y: -r * 0.95 },
+        ], 1.5, { alpha: 0.85, taper: 1.3, seed: sd });
+        c.beginPath(); c.arc(r * 2.55, -r * 0.96, 1.4, 0, TAU); c.fill();
+        /* the body */
+        blobPath(c, 0, 0, r * 0.78, sd, 0.16, 9);
+        c.fill();
+        /* the jingasa: a shallow cone hat */
+        c.beginPath();
+        c.moveTo(-r * 0.75, -r * 0.5);
+        c.quadraticCurveTo(0, -r * 1.4, r * 0.75, -r * 0.5);
+        c.closePath();
+        c.fill();
+        silhouette = () => blobPath(c, 0, 0, r * 0.92, sd, 0.16, 9);
+        break;
+      }
+      case 'stamper': { /* STAMPER — an ink block raising a red seal to press */
+        const raising = e.state === 'raise';
+        const lift = raising ? Math.min(1, e.stateT / 0.55) : 0;
+        c.save();
+        c.translate(0, -lift * 7);
+        c.rotate(Math.sin(e.t * 1.4 + e.seed) * 0.05 + (raising ? Math.sin(e.stateT * 22) * 0.045 : 0));
+        /* the block: a chunky seven-sided slab */
+        c.beginPath();
+        const spq = mulberry(sd >> 3);
+        for (let i = 0; i < 7; i++) {
+          const a = (i / 7) * TAU + 0.2;
+          const rr = r * (0.86 + spq() * 0.3);
+          const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+          i ? c.lineTo(px, py) : c.moveTo(px, py);
+        }
+        c.closePath();
+        c.fill();
+        c.save(); c.globalAlpha = 0.4; c.fillStyle = patHatch; c.fill(); c.restore();
+        c.lineWidth = 2.4;
+        c.stroke();
+        /* the seal face it carries beneath — red, square, carved 印 */
+        c.globalAlpha = raising ? 0.95 : 0.7;
+        c.fillStyle = RED;
+        c.fillRect(-r * 0.34, r * 0.5, r * 0.68, r * 0.68);
+        c.fillStyle = PAPER;
+        c.font = Math.round(r * 0.46) + 'px "Zen Antique", serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('印', 0, r * 0.5 + r * 0.34 + 1);
+        c.restore();
+        silhouette = () => blobPath(c, 0, 0, r * 1.06, sd, 0.2, 12);
+        break;
+      }
+      case 'surge': { /* SURGE — a wave that curls as it builds, and breaks */
+        const crest = e.state === 'break' ? 1.22 : e.state === 'rise' ? 1.08 : 0.95;
+        c.rotate(e.ang);
+        c.save();
+        c.scale(crest * 1.35, crest * 0.75);
+        teardrop(c, r);
+        c.fill();
+        c.restore();
+        /* the curl hooking off the crest */
+        const cy = e.state === 'cruise' ? -r * 0.35 : -r * 0.75;
+        inkStroke(c, [
+          { x: r * 0.9, y: -r * 0.1 },
+          { x: r * 1.15, y: cy * 0.6 },
+          { x: r * 0.8, y: cy },
+        ], 2.6, { alpha: 0.75, seed: sd });
+        /* spray while it breaks */
+        if (e.state === 'break') {
+          const spray = mulberry(sd >> 2);
+          c.globalAlpha = 0.6;
+          for (let i = 0; i < 4; i++) {
+            c.save();
+            c.translate(r * (0.9 + spray() * 0.8), -r * (0.4 + spray() * 0.9));
+            c.rotate(spray() * TAU);
+            teardrop(c, r * 0.14);
+            c.fill();
+            c.restore();
+          }
+          c.globalAlpha = 1;
+        }
+        silhouette = () => { c.save(); c.scale(crest * 1.4, crest * 0.8); teardrop(c, r * 1.08); c.restore(); };
+        break;
+      }
+      case 'maelstrom': { /* MAELSTROM — a slow spiral that draws all things in */
+        const spin = e.t * 1.7;
+        c.globalAlpha = 0.9;
+        c.lineWidth = 2.6;
+        for (let i = 0; i < 3; i++) {
+          const a0 = spin + i * 2.09;
+          c.beginPath();
+          c.arc(0, 0, r * (0.4 + i * 0.3), a0, a0 + 2.4);
+          c.stroke();
+        }
+        /* the reach of the undertow: faint strokes drifting inward */
+        c.globalAlpha = 0.1;
+        c.lineWidth = 1.1;
+        for (let i = 0; i < 8; i++) {
+          const a = spin * 0.5 + (i / 8) * TAU;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * 250, Math.sin(a) * 250);
+          c.lineTo(Math.cos(a + 0.14) * 198, Math.sin(a + 0.14) * 198);
+          c.stroke();
+        }
+        c.globalAlpha = 1;
+        silhouette = () => blobPath(c, 0, 0, r * 0.62, sd, 0.3, 9);
+        break;
+      }
+      case 'mirror': { /* MIRROR — a gilt frame holding a sheet of pale glass */
+        c.rotate(e.ang);
+        blobPath(c, 0, 0, r, sd, 0.14, 10);
+        c.fill();
+        /* the glass: a tall pale rectangle, a shine across it */
+        c.save();
+        c.globalAlpha = 0.42;
+        c.fillStyle = PAPER;
+        c.fillRect(-r * 0.5, -r * 0.95, r, r * 1.9);
+        c.restore();
+        c.lineWidth = 1.6;
+        c.strokeRect(-r * 0.5, -r * 0.95, r, r * 1.9);
+        inkStroke(c, [
+          { x: -r * 0.28, y: -r * 0.6 },
+          { x: r * 0.3, y: r * 0.1 },
+        ], 1.4, { alpha: 0.5, color: PAPER });
+        silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.14, 10);
+        break;
+      }
+      case 'koban': { /* KOBAN — a coin of pressed ink that flees the hand */
+        c.rotate(e.ang);
+        c.save();
+        c.scale(1.28, 0.8);
+        blobPath(c, 0, 0, r, sd, 0.12, 10);
+        c.fill();
+        c.restore();
+        /* the gilt rim — this sheet's ink carries gold */
+        c.globalAlpha = 0.7;
+        c.lineWidth = 1.4;
+        c.beginPath(); c.arc(0, 0, r * 0.42, 0, TAU); c.stroke();
+        c.globalAlpha = 1;
+        silhouette = () => { c.save(); c.scale(1.3, 0.85); blobPath(c, 0, 0, r * 1.1, sd, 0.12, 10); c.restore(); };
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang, r * 0.8, 0.55);
+        break;
+      }
       case 'b_wheel': { /* THE STAIN — a rolling sea of ink */
         const st2 = e.state;
         const swell = st2 === 'windup' ? 1 + Math.min(1, e.stateT / 0.7) * 0.24 : 1;
@@ -2226,7 +2456,9 @@ const R = (() => {
   function drawPlayer(c, t) {
     const S = G.S;
     const p = S.player;
-    const blink = S.invulnT > 0 && Math.floor(t * 18) % 2 === 0;
+    /* the hurt-flicker: the scribe shivers, he never vanishes —
+       the old 18 Hz dip to 0.25 read as the figure leaving the sheet */
+    const blink = S.invulnT > 0 && Math.floor(t * 11) % 2 === 0;
     /* the arrival: the scribe rises out of the ink pool the opening
        wash leaves behind — growing with a back-out settle */
     const ap = S.arrived ? 1 : Math.max(0, Math.min(1, (1.42 - S.beginT) / 0.5));
@@ -2256,11 +2488,11 @@ const R = (() => {
         { x: x0, y: y0 },
         { x: x0 + Math.cos(a) * len * 0.55 - Math.sin(a) * sway, y: y0 + Math.sin(a) * len * 0.55 + Math.cos(a) * sway },
         { x: x0 + Math.cos(a) * len, y: y0 + Math.sin(a) * len },
-      ], 7, { alpha: blink ? 0.2 : 0.85, taper: 1.1, seed: sd });
+      ], 7, { alpha: blink ? 0.5 : 0.85, taper: 1.1, seed: sd });
     }
 
     c.save();
-    c.globalAlpha = blink ? 0.25 : 1;
+    c.globalAlpha = blink ? 0.55 : 1;
     const back = rc * 2.4;
     c.translate(p.x - Math.cos(p.aim) * back, p.y - Math.sin(p.aim) * back);
     if (ap < 1) {
@@ -2300,7 +2532,7 @@ const R = (() => {
     /* a soft ink shadow grounds the figure on the sheet */
     c.save();
     c.scale(1, 0.4);
-    c.globalAlpha = (blink ? 0.2 : 1) * 0.15;
+    c.globalAlpha = (blink ? 0.5 : 1) * 0.15;
     blobPath(c, 0, rr * 1.6, rr * 0.95, sd ^ 3, 0.2, 9);
     c.fillStyle = INK;
     c.fill();
@@ -2310,7 +2542,7 @@ const R = (() => {
     c.save();
     c.rotate(Math.sin(t * 7.3) * 0.06 * (0.3 + mv));
     c.fillStyle = INK;
-    c.globalAlpha = blink ? 0.25 : 1;
+    c.globalAlpha = blink ? 0.55 : 1;
     c.beginPath();
     c.moveTo(-rr * 0.52, -rr * 0.72);
     c.quadraticCurveTo(-rr * 0.78, rr * 0.3, -rr * 0.92, rr * 1.02);
@@ -2325,7 +2557,7 @@ const R = (() => {
     c.closePath();
     c.fill();
     /* dry creases down the robe */
-    c.globalAlpha = (blink ? 0.25 : 1) * 0.28;
+    c.globalAlpha = (blink ? 0.55 : 1) * 0.28;
     c.strokeStyle = PAPER;
     c.lineWidth = 1.1;
     c.lineCap = 'round';
@@ -2338,19 +2570,19 @@ const R = (() => {
     c.quadraticCurveTo(rr * 0.5, rr * 0.42, rr * 0.42, rr * 0.95);
     c.stroke();
     /* the obi — a pale sash at the waist, knot at the back */
-    c.globalAlpha = (blink ? 0.25 : 1) * 0.8;
+    c.globalAlpha = (blink ? 0.55 : 1) * 0.8;
     c.lineWidth = 2.6;
     c.beginPath();
     c.moveTo(-rr * 0.55, rr * 0.22);
     c.quadraticCurveTo(0, rr * 0.38, rr * 0.55, rr * 0.22);
     c.stroke();
-    c.globalAlpha = blink ? 0.25 : 1;
+    c.globalAlpha = blink ? 0.55 : 1;
     c.fillStyle = INK;
     c.beginPath(); c.arc(-rr * 0.3, rr * 0.32, 2.1, 0, TAU); c.fill();
     c.restore();
 
     /* the head */
-    c.globalAlpha = blink ? 0.25 : 1;
+    c.globalAlpha = blink ? 0.55 : 1;
     c.fillStyle = INK;
     c.beginPath();
     c.arc(0, -rr * 1.06, rr * 0.5, 0, TAU);
@@ -2363,13 +2595,13 @@ const R = (() => {
     c.beginPath();
     c.ellipse(0, 0, rr * 1.06, rr * 0.4, 0, 0, TAU);
     c.fill();
-    c.globalAlpha = (blink ? 0.25 : 1) * 0.45;
+    c.globalAlpha = (blink ? 0.55 : 1) * 0.45;
     c.strokeStyle = PAPER;
     c.lineWidth = 0.9;
     c.beginPath();
     c.ellipse(0, -rr * 0.06, rr * 0.6, rr * 0.19, 0, Math.PI * 1.08, Math.PI * 1.92);
     c.stroke();
-    c.globalAlpha = blink ? 0.25 : 1;
+    c.globalAlpha = blink ? 0.55 : 1;
     c.fillStyle = INK;
     c.beginPath();
     c.arc(0, -rr * 0.36, 1.7, 0, TAU);
@@ -2381,7 +2613,7 @@ const R = (() => {
       const el2 = rc > 0.4 ? 3.1 : 2.4;
       const exOff = Math.cos(p.aim) * rr * 0.18;
       const eyY = -rr * 0.9 + Math.sin(p.aim) * rr * 0.08;
-      c.globalAlpha = (blink ? 0.25 : 1) * 0.95;
+      c.globalAlpha = (blink ? 0.55 : 1) * 0.95;
       c.strokeStyle = PAPER;
       c.lineCap = 'round';
       c.lineWidth = 1.5;
@@ -2402,21 +2634,21 @@ const R = (() => {
     c.rotate(p.aim - (1 - ap) * 5.2);
     const kick = -rc * 3.4;
     c.translate(rr * 1.02 + kick, -rr * 0.42);
-    c.globalAlpha = (blink ? 0.3 : 1) * 0.88;
+    c.globalAlpha = (blink ? 0.6 : 1) * 0.88;
     inkStroke(c, [
       { x: -rr * 1.05, y: -rr * 0.18 },
       { x: -rr * 0.55, y: -rr * 0.05 },
       { x: -4.5, y: 0.2 },
     ], 5, { alpha: 1, taper: 0.45, seed: sd });
-    drawBrushTool(c, type, { len: 1.02, wet: rc > 0.4 ? 0.9 : 0.22, seed: sd, alpha: blink ? 0.4 : 1 });
+    drawBrushTool(c, type, { len: 1.02, wet: rc > 0.4 ? 0.9 : 0.22, seed: sd, alpha: blink ? 0.65 : 1 });
     /* the grip hand over the shaft */
-    c.globalAlpha = (blink ? 0.3 : 1) * 0.95;
+    c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
     c.fillStyle = INK;
     blobPath(c, -7.2, -0.4, 3.1, sd ^ 7, 0.25, 8);
     c.fill();
     /* the flick: wet ink thrown from the tip right after the stroke */
     if (rc > 0.5 && !S.reduced) {
-      c.globalAlpha = Math.min(1, (rc - 0.5) * 2.6) * (blink ? 0.4 : 1);
+      c.globalAlpha = Math.min(1, (rc - 0.5) * 2.6) * (blink ? 0.65 : 1);
       c.fillStyle = INK;
       c.save();
       c.translate(12.5, -0.5);
@@ -2428,11 +2660,11 @@ const R = (() => {
     c.restore();
 
     if (S.invulnT > 0) {
-      c.globalAlpha = (blink ? 0.25 : 1) * 0.5;
+      c.globalAlpha = (blink ? 0.55 : 1) * 0.5;
       c.strokeStyle = INK;
       c.lineWidth = 1.2;
       c.beginPath(); c.arc(0, 0, p.r + 4.5, 0, TAU); c.stroke();
-      c.globalAlpha = blink ? 0.25 : 1;
+      c.globalAlpha = blink ? 0.55 : 1;
     }
 
     const st = S.stats;
@@ -2442,7 +2674,7 @@ const R = (() => {
       const orbR = CFG.orbit.radius(st.orb);
       const base = S.clockT || t;
       c.save();
-      c.globalAlpha = (blink ? 0.2 : 1) * 0.1;
+      c.globalAlpha = (blink ? 0.5 : 1) * 0.1;
       c.strokeStyle = INK;
       c.lineWidth = 1;
       c.beginPath(); c.arc(0, 0, orbR, 0, TAU); c.stroke();
@@ -2453,11 +2685,11 @@ const R = (() => {
         c.save();
         c.translate(ox, oy);
         c.rotate(a + Math.PI / 2);
-        c.globalAlpha = (blink ? 0.3 : 1) * 0.95;
+        c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
         c.fillStyle = INK;
         teardrop(c, 3.6);
         c.fill();
-        c.globalAlpha = (blink ? 0.15 : 1) * 0.3;
+        c.globalAlpha = (blink ? 0.5 : 1) * 0.3;
         inkStroke(c, [{ x: -6, y: 0 }, { x: -13, y: 0.4 }], 1.8, { alpha: 1 });
         c.restore();
       }
@@ -2470,7 +2702,7 @@ const R = (() => {
       c.save();
       c.translate(Math.cos(wa) * (p.r + 12), Math.sin(wa) * (p.r + 12) - 2);
       c.rotate(Math.sin(t * 1.7) * 0.14 - 0.35);
-      c.globalAlpha = (blink ? 0.3 : 1) * (ready ? 0.9 : 0.2);
+      c.globalAlpha = (blink ? 0.6 : 1) * (ready ? 0.9 : 0.2);
       c.strokeStyle = INK;
       c.lineWidth = 1.4;
       c.strokeRect(-4, -6.5, 8, 13);
@@ -2780,23 +3012,24 @@ const R = (() => {
 
   /* the storm eye's bolts — a filling ring, then a jagged column */
   function drawBolt(c, bo) {
+    const bc = bo.red ? RED : INK;
     c.save();
     c.translate(bo.x, bo.y);
     if (!bo.struck) {
       const pr = 1 - Math.max(0, bo.t) / 1.45;
       c.globalAlpha = 0.55;
-      c.strokeStyle = INK;
+      c.strokeStyle = bc;
       c.lineWidth = 1.6;
       blobPath(c, 0, 0, bo.r, (bo.x * 7 + bo.y * 13) | 0, 0.1, 12);
       c.stroke();
       c.globalAlpha = 0.14 + 0.24 * Math.min(1, Math.max(0, pr));
-      c.fillStyle = INK;
+      c.fillStyle = bc;
       blobPath(c, 0, 0, bo.r * Math.min(1, Math.max(0, pr)), (bo.x * 3 + bo.y * 5) | 0, 0.12, 12);
       c.fill();
     } else {
       const a = Math.min(1, bo.life / 0.16);
       const rnd = mulberry((bo.x * 31 + bo.y * 17) | 0);
-      c.strokeStyle = INK;
+      c.strokeStyle = bc;
       c.lineCap = 'round';
       c.beginPath();
       let x = (rnd() - 0.5) * 10;
@@ -2946,6 +3179,93 @@ const R = (() => {
       teardrop(c, 2.6);
       c.fill();
       c.restore();
+    }
+  }
+
+  /* ---------------- the visitor's ink ----------------
+     the title sheet can be painted: the hand lays wet strokes
+     that dry, lift and vanish; a press bursts a small splash
+     and sometimes leaves a faint ghost in the paper's world. */
+  const PI = { strokes: [], fx: [] };
+
+  function titleInkMove(x, y) {
+    const S = G.S;
+    if (S.mode !== 'title' || S.reduced) return;
+    const now = performance.now() / 1000;
+    let st = PI.strokes[PI.strokes.length - 1];
+    if (st && now - st.pts[st.pts.length - 1].t > 0.28) st = null;   /* the hand lifted */
+    if (!st) {
+      st = { pts: [] };
+      PI.strokes.push(st);
+      if (PI.strokes.length > 7) PI.strokes.shift();
+    }
+    const lp = st.pts[st.pts.length - 1];
+    if (lp) {
+      if (Math.hypot(x - lp.x, y - lp.y) < 4.5) return;
+      if (st.pts.length > 110) st.pts.shift();
+    }
+    st.pts.push({ x, y, t: now });
+  }
+
+  function titleInkSplash(x, y) {
+    const S = G.S;
+    if (S.mode !== 'title' || S.reduced) return;
+    const drops = [];
+    const n = 6 + ((Math.random() * 4) | 0);
+    for (let i = 0; i < n; i++) {
+      drops.push({ a: Math.random() * TAU, d: 13 + Math.random() * 44, r: 1.2 + Math.random() * 2.5 });
+    }
+    PI.fx.push({ x, y, t0: performance.now() / 1000, drops, seed: (Math.random() * 1e9) | 0 });
+    if (PI.fx.length > 5) PI.fx.shift();
+    /* a faint ghost of the visit stays in the paper's world */
+    if (Math.random() < 0.5 && S.stainQueue.length < 60) {
+      S.stainQueue.push({ x: x - S.W / 2, y: y - S.H / 2, r: 2.2 + Math.random() * 3.2, alpha: 0.09 + Math.random() * 0.08 });
+    }
+    try { SFX.arrive(); } catch (e) {}
+  }
+
+  function drawPaint(c, t) {
+    const S = G.S;
+    if (S.mode !== 'title') {
+      if (PI.strokes.length || PI.fx.length) { PI.strokes.length = 0; PI.fx.length = 0; }
+      return;
+    }
+    for (let i = PI.strokes.length - 1; i >= 0; i--) {
+      const st = PI.strokes[i];
+      if (st.pts.length < 2) {
+        if (t - st.pts[st.pts.length - 1].t > 0.3) PI.strokes.splice(i, 1);
+        continue;
+      }
+      const age = t - st.pts[st.pts.length - 1].t;
+      const life = 5.4;
+      if (age > life) { PI.strokes.splice(i, 1); continue; }
+      const dry = Math.min(1, age / 2.1);
+      const lift = 1 - age / life;
+      const a = (0.42 - 0.2 * dry) * lift;
+      if (a <= 0.012) continue;
+      inkStroke(c, st.pts, 4.6 - dry * 1.6, { alpha: a, taper: 0.85, seed: 40, jit: 0.34 });
+    }
+    for (let i = PI.fx.length - 1; i >= 0; i--) {
+      const f = PI.fx[i];
+      const age = t - f.t0;
+      if (age > 2.4) { PI.fx.splice(i, 1); continue; }
+      const k = Math.min(1, age / 0.42);
+      c.strokeStyle = INK;
+      c.globalAlpha = (1 - k) * 0.38;
+      c.lineWidth = 1.6;
+      c.beginPath(); c.arc(f.x, f.y, 4 + k * 30, 0, TAU); c.stroke();
+      c.fillStyle = INK;
+      for (const d of f.drops) {
+        const dk = 1 - Math.pow(1 - Math.min(1, age / 0.32), 3);
+        c.globalAlpha = Math.max(0, 0.55 * (1 - age / 2.4));
+        c.beginPath();
+        c.arc(f.x + Math.cos(d.a) * d.d * dk, f.y + Math.sin(d.a) * d.d * dk, Math.max(0.3, d.r * (1 - age * 0.16)), 0, TAU);
+        c.fill();
+      }
+      c.globalAlpha = Math.max(0, 0.55 * (1 - age / 1.4));
+      blobPath(c, f.x, f.y, 6.5, f.seed, 0.42, 9);
+      c.fill();
+      c.globalAlpha = 1;
     }
   }
 
@@ -3664,26 +3984,273 @@ const R = (() => {
     c.restore();
   }
 
-  /* ---------------- the title's distant range ----------------
-     Two pale broken-ink washes rest on the sheet behind the ring —
-     the valley where the wandering spirits keep to themselves. */
-  function drawTitleRange(c, t) {
+  /* ============================================================
+     THE LIVING TITLE — the sheet the visitor lands on is itself
+     a handscroll: a sumi-e range in three washes that leans with
+     the hand, mist drifting between the ridges, crane flocks
+     passing, the night paper's own moon. Every layer is painted
+     once into an offscreen sheet and only composited per frame.
+     ============================================================ */
+  const TP = {
+    key: '', w: 0, h: 0,
+    layers: [],            // far, mid, near
+    moon: null, mist: null,
+    bands: [],
+    cranes: [], nextFlock: 7,
+    px: 0, py: 0,          // smoothed lean
+  };
+
+  /* INK arrives as '#1a1714' or 'rgb(r,g,b)' — both must parse */
+  function tpInkRGB() {
+    let r = 26, g = 23, b = 20;
+    if (INK[0] === '#') {
+      const v = parseInt(INK.slice(1), 16);
+      r = v >> 16 & 255; g = v >> 8 & 255; b = v & 255;
+    } else {
+      const m = INK.match(/[\d.]+/g);
+      if (m) { r = +m[0] | 0; g = +m[1] | 0; b = +m[2] | 0; }
+    }
+    return { r, g, b };
+  }
+
+  /* one ridge: gaussian peaks under three octaves of wander, a
+     wash body that fades as it falls, a crest brushed twice, dry
+     streaks, and — on the nearer sheets — sparse pines */
+  function tpRidge(w, h, o) {
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(2, Math.round(w));
+    cv.height = Math.max(2, Math.round(h));
+    const c = cv.getContext('2d');
+    const { r, g, b } = o.rgb;
+    const dim = o.dim || 1;                 /* pale ink on dark paper must whisper */
+    const ink = a => `rgba(${r},${g},${b},${a * dim})`;
+    const rnd = mulberry(o.seed);
+    const peaks = [];
+    for (let k = 0; k < o.nPeaks; k++) {
+      peaks.push({ x: rnd() * w, s: w * (0.09 + rnd() * 0.15), a: o.peak * (0.55 + rnd() * 0.85) });
+    }
+    const pts = [];
+    const seg = Math.max(24, Math.round(w / 42));
+    for (let i = 0; i <= seg; i++) {
+      const x = (w * i) / seg;
+      const u = i / seg;
+      let y = o.base
+        + Math.sin(u * o.f1 + o.s1) * o.a1
+        + Math.sin(u * o.f2 + o.s2) * o.a2
+        + (rnd() - 0.5) * o.a3;
+      for (const p of peaks) {
+        const dx = (x - p.x) / p.s;
+        y -= p.a * Math.exp(-dx * dx);
+      }
+      pts.push({ x, y: Math.max(6, y) });
+    }
+    /* the wash body */
+    const body = c.createLinearGradient(0, Math.max(0, o.base - o.peak * 1.4), 0, h);
+    body.addColorStop(0, ink(o.crest));
+    body.addColorStop(0.55, ink(o.crest * 0.55));
+    body.addColorStop(1, ink(0));
+    c.beginPath();
+    c.moveTo(-4, h + 4);
+    for (const p of pts) c.lineTo(p.x, p.y);
+    c.lineTo(w + 4, h + 4);
+    c.closePath();
+    c.fillStyle = body;
+    c.fill();
+    /* the crest edge, brushed twice — a wet line and its dry echo */
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    for (const [lw, a, dy] of [[2.4, o.edge, 0], [1.1, o.edge * 0.55, 2.2]]) {
+      c.strokeStyle = ink(a);
+      c.lineWidth = lw;
+      c.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const x = pts[i].x, y = pts[i].y + dy + (rnd() - 0.5) * 1.6;
+        i ? c.lineTo(x, y) : c.moveTo(x, y);
+      }
+      c.stroke();
+    }
+    /* dry streaks inside the body */
+    for (let k = 0; k < o.streaks; k++) {
+      const sy = o.base + rnd() * Math.max(8, (h - o.base) * 0.7);
+      const sx = rnd() * w, sw = w * (0.1 + rnd() * 0.22);
+      c.fillStyle = ink(0.05);
+      c.beginPath();
+      c.ellipse(sx, sy, sw * 0.5, 3 + rnd() * 5, 0, 0, TAU);
+      c.fill();
+    }
+    /* sparse pines on the crest */
+    for (let k = 0; k < o.pines; k++) {
+      const p = pts[2 + Math.floor(rnd() * Math.max(1, pts.length - 4))];
+      const s = 0.7 + rnd() * 0.7;
+      c.save();
+      c.translate(p.x, p.y + 1);
+      c.scale(s, s);
+      c.strokeStyle = ink(Math.min(0.5, o.edge * 1.5));
+      c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -9); c.stroke();
+      c.lineWidth = 1;
+      for (let n2 = 0; n2 < 3; n2++) {
+        const ny = -3 - n2 * 2.6, nw = 6.5 - n2 * 1.7;
+        c.beginPath();
+        c.moveTo(-nw, ny); c.lineTo(0, ny - 2.2); c.lineTo(nw, ny);
+        c.stroke();
+      }
+      c.restore();
+    }
+    return cv;
+  }
+
+  function tpBuild() {
     const S = G.S;
-    const breath = Math.sin(t * 0.12) * 4;
-    const a1 = washReady('cliff');
-    const a2 = washReady('shu2');
+    const th = THEMES[themeKey];
+    TP.key = themeKey; TP.w = S.W; TP.h = S.H;
+    const rgb = tpInkRGB();
+    const dim = themeKey === 'dark' ? 0.4 : 1;
+    const w = S.W + 72;                     /* bleed so the lean never shows an edge */
+    const H = S.H;
+    TP.layers = [
+      tpRidge(w, Math.round(H * 0.56), {
+        rgb, dim, seed: 11, base: H * 0.30, peak: H * 0.16, nPeaks: 3,
+        f1: 5.1, f2: 12.7, s1: 0.7, s2: 2.3, a1: H * 0.02, a2: H * 0.009, a3: 2,
+        crest: 0.10, edge: 0.13, streaks: 3, pines: 0,
+      }),
+      tpRidge(w, Math.round(H * 0.68), {
+        rgb, dim, seed: 47, base: H * 0.44, peak: H * 0.13, nPeaks: 4,
+        f1: 6.3, f2: 15.1, s1: 1.9, s2: 4.4, a1: H * 0.016, a2: H * 0.008, a3: 2,
+        crest: 0.14, edge: 0.19, streaks: 4, pines: 3,
+      }),
+      tpRidge(w, Math.round(H * 0.84), {
+        rgb, dim, seed: 83, base: H * 0.62, peak: H * 0.085, nPeaks: 5,
+        f1: 7.9, f2: 17.3, s1: 3.2, s2: 5.8, a1: H * 0.012, a2: H * 0.007, a3: 2,
+        crest: 0.17, edge: 0.22, streaks: 0, pines: 2,
+      }),
+    ];
+    /* the night paper keeps its moon — a breath of pale ink, not a lamp */
+    TP.moon = themeKey === 'dark' ? { x: w * 0.79, y: H * 0.14, r: Math.min(w, H) * 0.041 } : null;
+    if (TP.moon) {
+      const c = TP.layers[0].getContext('2d');
+      const ink = a => `rgba(${rgb.r},${rgb.g},${rgb.b},${a * 0.5})`;
+      c.save();
+      const halo = c.createRadialGradient(TP.moon.x, TP.moon.y, TP.moon.r * 0.4, TP.moon.x, TP.moon.y, TP.moon.r * 2.6);
+      halo.addColorStop(0, ink(0.10));
+      halo.addColorStop(1, ink(0));
+      c.fillStyle = halo;
+      c.beginPath(); c.arc(TP.moon.x, TP.moon.y, TP.moon.r * 2.6, 0, TAU); c.fill();
+      c.fillStyle = ink(0.30);
+      c.beginPath(); c.arc(TP.moon.x, TP.moon.y, TP.moon.r, 0, TAU); c.fill();
+      c.strokeStyle = ink(0.36);
+      c.lineWidth = 1;
+      c.beginPath(); c.arc(TP.moon.x, TP.moon.y, TP.moon.r, 0, TAU); c.stroke();
+      c.restore();
+    }
+    /* one soft mist sprite, tinted by the paper's own ink */
+    const mc = document.createElement('canvas');
+    mc.width = 180; mc.height = 70;
+    const m = mc.getContext('2d');
+    const mg = m.createRadialGradient(90, 35, 4, 90, 35, 88);
+    mg.addColorStop(0, `rgba(${th.wash},0.34)`);
+    mg.addColorStop(0.65, `rgba(${th.wash},0.13)`);
+    mg.addColorStop(1, `rgba(${th.wash},0)`);
+    m.fillStyle = mg;
+    m.save(); m.translate(90, 35); m.scale(1, 0.42); m.translate(-90, -35);
+    m.beginPath(); m.arc(90, 35, 88, 0, TAU); m.fill();
+    m.restore();
+    TP.mist = mc;
+    TP.bands = [];
+    if (!S.reduced) {
+      for (let i = 0; i < 5; i++) {
+        TP.bands.push({
+          x: Math.random() * w,
+          y: H * (0.34 + (i % 2) * 0.16) + (Math.random() - 0.5) * H * 0.05,
+          v: (5 + Math.random() * 9) * (Math.random() < 0.5 ? 1 : -1),
+          s: 1.3 + Math.random() * 1.7,
+          a: 0.5 + Math.random() * 0.5,
+        });
+      }
+    }
+  }
+
+  function tpMists(c, tier, dt) {
+    const S = G.S;
+    for (let i = 0; i < TP.bands.length; i++) {
+      if ((i % 2) !== tier) continue;
+      const bd = TP.bands[i];
+      if (!S.reduced) {
+        bd.x += bd.v * dt;
+        if (bd.x > TP.w + 150) bd.x = -150; else if (bd.x < -150) bd.x = TP.w + 150;
+      }
+      c.globalAlpha = bd.a;
+      c.drawImage(TP.mist, bd.x - TP.w / 2 - 36 - 90 * bd.s, bd.y - S.H / 2 - 35 * bd.s, 180 * bd.s, 70 * bd.s);
+    }
+    c.globalAlpha = 1;
+  }
+
+  /* distant cranes: every so often a small flock crosses the sky */
+  function tpCrane(c, cr, t, S) {
+    const flap = Math.sin(t * 5 + cr.ph);
     c.save();
-    if (a1) {
-      const h = S.H * 0.42, w = h * (a1.naturalWidth / a1.naturalHeight);
-      c.globalAlpha = 0.12;
-      c.drawImage(a1, -S.W * 0.50 + breath, -S.H * 0.36, w, h);
-    }
-    if (a2) {
-      const h = S.H * 0.24, w = h * (a2.naturalWidth / a2.naturalHeight);
-      c.globalAlpha = 0.085;
-      c.drawImage(a2, -S.W * 0.06 - breath * 0.7, -S.H * 0.27, w, h);
-    }
+    c.translate(cr.x - S.W / 2, cr.y - S.H / 2 + Math.sin(t * 1.3 + cr.ph) * 5);
+    c.scale(cr.s * (cr.vx < 0 ? -1 : 1), cr.s);
+    c.strokeStyle = INK;
+    c.globalAlpha = 0.5;
+    c.lineCap = 'round';
+    c.lineWidth = 1.7;
+    c.beginPath();
+    c.moveTo(-11, -6 - flap * 6);
+    c.quadraticCurveTo(-5, -flap * 3, 0, 0);
+    c.quadraticCurveTo(5, -flap * 3, 11, -6 - flap * 6);
+    c.stroke();
+    c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(-4, 1.5); c.lineTo(7, -0.5); c.stroke();
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(7, -0.5); c.lineTo(12.5, -3); c.stroke();
     c.restore();
+  }
+
+  function tpCranes(c, t, dt) {
+    const S = G.S;
+    if (S.reduced) { TP.cranes.length = 0; TP.nextFlock = t + 9; return; }
+    if (!TP.cranes.length && t > TP.nextFlock) {
+      const n = 1 + ((Math.random() * 2.4) | 0);
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const y0 = S.H * (0.12 + Math.random() * 0.17);
+      const sp = 34 + Math.random() * 24;
+      for (let i = 0; i < n; i++) {
+        TP.cranes.push({
+          x: dir > 0 ? -70 - i * 52 : S.W + 70 + i * 52,
+          y: y0 + (Math.random() - 0.5) * 46,
+          vx: dir * (sp + Math.random() * 12),
+          ph: Math.random() * TAU,
+          s: 0.75 + Math.random() * 0.55,
+        });
+      }
+    }
+    let alive = false;
+    for (const cr of TP.cranes) {
+      cr.x += cr.vx * dt;
+      if (cr.x > -80 && cr.x < S.W + 80) { alive = true; tpCrane(c, cr, t, S); }
+    }
+    if (!alive && TP.cranes.length) {
+      TP.cranes.length = 0;
+      TP.nextFlock = t + 12 + Math.random() * 16;
+    }
+  }
+
+  function drawTitlePanorama(c, t, dt) {
+    const S = G.S;
+    if (TP.key !== themeKey || TP.w !== S.W || TP.h !== S.H) tpBuild();
+    const par = S.reduced ? { x: 0, y: 0 } : (S.titlePar || { x: 0, y: 0 });
+    const k = Math.min(1, dt * 3);
+    TP.px += (par.x - TP.px) * k;
+    TP.py += (par.y - TP.py) * k;
+    const breath = Math.sin(t * 0.11) * 3;
+    const ox = -S.W / 2 - 36, oy = -S.H / 2;
+    const L = TP.layers;
+    c.drawImage(L[0], ox - TP.px * 6 + breath, oy - TP.py * 3);
+    tpMists(c, 0, dt);
+    c.drawImage(L[1], ox - TP.px * 13 + breath * 0.6, oy - TP.py * 6);
+    tpMists(c, 1, dt);
+    c.drawImage(L[2], ox - TP.px * 22 + breath * 0.3, oy - TP.py * 10);
+    tpCranes(c, t, dt);
   }
 
   function draw(ctx, t) {
@@ -3720,7 +4287,10 @@ const R = (() => {
     const tile = tiles[themeKey] || tiles.pale;
     for (let ty = Math.floor(vy0 / TILE); ty <= Math.floor(vy1 / TILE); ty++) {
       for (let tx = Math.floor(vx0 / TILE); tx <= Math.floor(vx1 / TILE); tx++) {
-        ctx.drawImage(tile, tx * TILE, ty * TILE, TILE, TILE);
+        /* one pixel of overlap: under a fractional camera and a
+           fractional dpr the tile rims used to antialias apart and
+           print a phantom grid of hairline seams across the sheet */
+        ctx.drawImage(tile, tx * TILE, ty * TILE, TILE + 1, TILE + 1);
       }
     }
 
@@ -3730,8 +4300,8 @@ const R = (() => {
     /* the painting itself — grown wave by wave across the sheet */
     drawLandscape(ctx, vx0, vy0, vx1, vy1, t);
 
-    /* on the title the sheet rests: a distant range behind the ring */
-    if (S.mode === 'title') drawTitleRange(ctx, t);
+    /* on the title the sheet rests: a living handscroll panorama */
+    if (S.mode === 'title') drawTitlePanorama(ctx, t, dt);
 
     /* dried ink from every fight before this moment */
     const cullM = 80;
@@ -3771,9 +4341,10 @@ const R = (() => {
     for (const p of S.particles) drawParticle(ctx, p);
     for (const p of S.popups) drawPopup(ctx, p);
 
-    /* the ambient rain lives in screen space */
+    /* the ambient rain and the visitor's ink live in screen space */
     ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
     drawAmbient(ctx);
+    drawPaint(ctx, t);
 
     ctx.restore();
 
@@ -3842,5 +4413,5 @@ const R = (() => {
     c.restore();
   }
 
-  return { draw, resetStains, startTitleRitual: rtStart, drawBrushPreview };
+  return { draw, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash };
 })();
