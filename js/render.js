@@ -774,64 +774,64 @@ const R = (() => {
 
   const LAND = {
     pale: [   /* FIRST WASH — a morning plain fills with its first scenery */
-      [el('pineYoung', 0.30, 0.8, 1.2, 0.72), el('reeds', 0.22, 0.8, 1.2, 0.58)],
-      [wash('shu', 760, 980, 0.13, 0.19, '遠山')],
-      [el('bamboo', 0.30, 0.85, 1.25, 0.70, '竹林'), el('rockS', 0.24, 0.8, 1.1, 0.62)],
-      [el('pineOld', 0.26, 0.9, 1.3, 0.80, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.68, '燈籠')],
-      [mist(0.16)],
-      [wash('guo2', 900, 1150, 0.14, 0.20, '山居')],
-      [el('crane', 0.30, 0.9, 1.2, 0.66), el('pineYoung', 0.22, 0.9, 1.2, 0.66)],
-      [wash('kuan', 950, 1250, 0.12, 0.17, '層巒')],
-      [el('rockS', 0.30, 1, 1.4, 0.68), el('reeds', 0.26, 0.9, 1.3, 0.56), el('deadTree', 0.15, 0.9, 1.1, 0.62, '古木')],
-      [seal(), mist(0.10), el('crane', 0.32, 1, 1.3, 0.55)],
+      [el('pineYoung', 0.30, 0.8, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.62)],
+      [wash('shu', 840, 1080, 0.20, 0.28, '遠山')],
+      [el('bamboo', 0.30, 0.85, 1.25, 0.74, '竹林'), el('rockS', 0.24, 0.8, 1.1, 0.66)],
+      [el('pineOld', 0.26, 0.9, 1.3, 0.86, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.74, '燈籠')],
+      [mist(0.18)],
+      [wash('guo2', 990, 1270, 0.21, 0.30, '山居')],
+      [el('crane', 0.30, 0.9, 1.2, 0.72), el('pineYoung', 0.22, 0.9, 1.2, 0.70)],
+      [wash('kuan', 1050, 1380, 0.18, 0.26, '層巒')],
+      [el('rockS', 0.30, 1, 1.4, 0.72), el('reeds', 0.26, 0.9, 1.3, 0.60), el('deadTree', 0.15, 0.9, 1.1, 0.68, '古木')],
+      [seal(), mist(0.12), el('crane', 0.32, 1, 1.3, 0.60)],
     ],
     dark: [   /* NIGHT SCROLL — the moon rises over broken-ink mountains */
-      [el('reeds', 0.30, 0.9, 1.3, 0.50)],
+      [el('reeds', 0.30, 0.9, 1.3, 0.56)],
       [moonL()],
-      [wash('hab2', 820, 1020, 0.16, 0.24, '遠山')],
-      [el('pagoda', 0.22, 0.9, 1.15, 0.85, '古塔')],
-      [mist(0.14)],
-      [wash('hab1', 900, 1200, 0.17, 0.26, '破墨')],
-      [el('pineOld', 0.26, 0.9, 1.25, 0.80, '古松'), wash('trees', 1000, 1300, 0.11, 0.17)],
-      [wash('shu2', 850, 1100, 0.15, 0.22, '遠浦'), el('crane', 0.28, 0.9, 1.2, 0.50)],
-      [el('rockS', 0.30, 1, 1.4, 0.58), wash('shore', 900, 1150, 0.16, 0.24, '汀')],
-      [seal(), mist(0.10)],
+      [wash('hab2', 900, 1120, 0.24, 0.33, '遠山')],
+      [el('pagoda', 0.22, 0.9, 1.15, 0.90, '古塔')],
+      [mist(0.16)],
+      [wash('hab1', 990, 1320, 0.25, 0.36, '破墨')],
+      [el('pineOld', 0.26, 0.9, 1.25, 0.86, '古松'), wash('trees', 1100, 1430, 0.17, 0.25)],
+      [wash('shu2', 935, 1210, 0.22, 0.31, '遠浦'), el('crane', 0.28, 0.9, 1.2, 0.56)],
+      [el('rockS', 0.30, 1, 1.4, 0.64), wash('shore', 990, 1270, 0.24, 0.33, '汀')],
+      [seal(), mist(0.12)],
     ],
     red: [    /* CINNABAR FIELD — vermillion country, gates and cliffs */
-      [el('maple', 0.30, 0.85, 1.2, 0.72), el('reeds', 0.22, 0.8, 1.2, 0.52)],
-      [wash('hab2', 820, 1040, 0.15, 0.22, '遠崖')],
-      [el('rockS', 0.28, 0.9, 1.3, 0.66), el('maple', 0.24, 0.9, 1.25, 0.68)],
-      [el('torii', 0.22, 0.85, 1.15, 0.85, '鳥居')],
-      [mist(0.15)],
-      [wash('cliff', 950, 1250, 0.14, 0.21, '絕壁')],
-      [el('deadTree', 0.26, 0.9, 1.2, 0.72, '古木'), el('lantern', 0.18, 0.85, 1.05, 0.66)],
-      [wash('guo', 900, 1200, 0.12, 0.18, '疊嶂'), el('crane', 0.26, 0.9, 1.2, 0.55)],
-      [el('rockS', 0.30, 1, 1.4, 0.64), el('bamboo', 0.24, 0.85, 1.2, 0.60)],
-      [seal(), mist(0.10)],
+      [el('maple', 0.30, 0.85, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.58)],
+      [wash('hab2', 900, 1140, 0.22, 0.31, '遠崖')],
+      [el('rockS', 0.28, 0.9, 1.3, 0.72), el('maple', 0.24, 0.9, 1.25, 0.74)],
+      [el('torii', 0.22, 0.85, 1.15, 0.90, '鳥居')],
+      [mist(0.17)],
+      [wash('cliff', 1050, 1380, 0.21, 0.30, '絕壁')],
+      [el('deadTree', 0.26, 0.9, 1.2, 0.78, '古木'), el('lantern', 0.18, 0.85, 1.05, 0.72)],
+      [wash('guo', 990, 1320, 0.18, 0.27, '疊嶂'), el('crane', 0.26, 0.9, 1.2, 0.61)],
+      [el('rockS', 0.30, 1, 1.4, 0.70), el('bamboo', 0.24, 0.85, 1.2, 0.66)],
+      [seal(), mist(0.12)],
     ],
     storm: [  /* STORM SHEET — wind, rain and the arriving sea */
-      [el('reeds', 0.32, 0.9, 1.35, 0.60, null, { bend: 1 })],
-      [wash('shu2', 820, 1080, 0.14, 0.20, '遠山')],
-      [el('pineOld', 0.28, 0.9, 1.3, 0.78, '風松', { bend: 1 }), el('pineYoung', 0.22, 0.85, 1.2, 0.64, null, { bend: 1 })],
-      [wash('waves2', 950, 1250, 0.13, 0.19, '波')],
-      [mist(0.17)],
-      [wash('guo', 950, 1250, 0.13, 0.19, '雨山')],
-      [el('boat', 0.24, 0.9, 1.2, 0.75, '孤舟')],
-      [wash('waves', 880, 1150, 0.14, 0.20, '怒濤'), el('crane', 0.22, 0.85, 1.1, 0.50, null, { bend: 1 })],
-      [el('rockS', 0.30, 1, 1.4, 0.62), el('reeds', 0.26, 0.9, 1.3, 0.52, null, { bend: 1 })],
-      [seal(), mist(0.10)],
+      [el('reeds', 0.32, 0.9, 1.35, 0.66, null, { bend: 1 })],
+      [wash('shu2', 900, 1190, 0.21, 0.29, '遠山')],
+      [el('pineOld', 0.28, 0.9, 1.3, 0.84, '風松', { bend: 1 }), el('pineYoung', 0.22, 0.85, 1.2, 0.70, null, { bend: 1 })],
+      [wash('waves2', 1050, 1380, 0.20, 0.28, '波')],
+      [mist(0.19)],
+      [wash('guo', 1050, 1380, 0.20, 0.28, '雨山')],
+      [el('boat', 0.24, 0.9, 1.2, 0.80, '孤舟')],
+      [wash('waves', 970, 1270, 0.21, 0.30, '怒濤'), el('crane', 0.22, 0.85, 1.1, 0.56, null, { bend: 1 })],
+      [el('rockS', 0.30, 1, 1.4, 0.68), el('reeds', 0.26, 0.9, 1.3, 0.58, null, { bend: 1 })],
+      [seal(), mist(0.12)],
     ],
     gilt: [   /* GILT SCROLL — the final page, gold and ceremony */
-      [el('pineYoung', 0.30, 0.8, 1.2, 0.72), el('reeds', 0.22, 0.8, 1.2, 0.56)],
-      [wash('kuan', 900, 1200, 0.13, 0.18, '遠嶽')],
-      [el('bamboo', 0.28, 0.85, 1.25, 0.68), el('rockS', 0.24, 0.85, 1.2, 0.60)],
-      [el('pavilion', 0.20, 0.85, 1.15, 0.85, '樓閣')],
-      [mist(0.14)],
-      [wash('guo', 950, 1250, 0.14, 0.20, '金山')],
-      [el('pineOld', 0.26, 0.95, 1.3, 0.78, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.66)],
-      [wash('shu2', 850, 1100, 0.14, 0.20), el('crane', 0.28, 0.9, 1.2, 0.58)],
-      [el('rockS', 0.30, 1, 1.4, 0.64), wash('shore', 900, 1150, 0.15, 0.22, '汀')],
-      [seal(), mist(0.10), el('crane', 0.30, 1, 1.3, 0.52)],
+      [el('pineYoung', 0.30, 0.8, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.62)],
+      [wash('kuan', 990, 1320, 0.20, 0.27, '遠嶽')],
+      [el('bamboo', 0.28, 0.85, 1.25, 0.74), el('rockS', 0.24, 0.85, 1.2, 0.66)],
+      [el('pavilion', 0.20, 0.85, 1.15, 0.90, '樓閣')],
+      [mist(0.16)],
+      [wash('guo', 1050, 1380, 0.21, 0.30, '金山')],
+      [el('pineOld', 0.26, 0.95, 1.3, 0.84, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.72)],
+      [wash('shu2', 935, 1210, 0.21, 0.29), el('crane', 0.28, 0.9, 1.2, 0.64)],
+      [el('rockS', 0.30, 1, 1.4, 0.70), wash('shore', 990, 1270, 0.22, 0.32, '汀')],
+      [seal(), mist(0.12), el('crane', 0.30, 1, 1.3, 0.58)],
     ],
   };
 
@@ -1064,10 +1064,14 @@ const R = (() => {
     const tick = Math.floor(t / CFG.ink.boilRate);
     const sd = seedFor(e, tick);
     const r = e.r;
+    const isBoss = !!ENEMIES[e.type].boss;
     c.save();
     c.translate(e.x, e.y);
-    c.fillStyle = INK;
-    c.strokeStyle = INK;
+    /* a boss is born of vermilion — the paper's one sacred red,
+       brightened on the night sheet so it burns there too */
+    const BOSS_INK = themeKey === 'dark' ? '#c9462e' : RED;
+    c.fillStyle = isBoss ? BOSS_INK : INK;
+    c.strokeStyle = isBoss ? BOSS_INK : INK;
     c.lineJoin = 'round';
     c.lineCap = 'round';
 
@@ -2063,7 +2067,7 @@ const R = (() => {
         eyeSlits(c, ang, r * 0.8, 0.55);
         break;
       }
-      case 'b_wheel': { /* THE STAIN — a rolling sea of ink */
+      case 'b_wheel': case 'k_blight': { /* THE STAIN / THE BLIGHT — a rolling sea of ink */
         const st2 = e.state;
         const swell = st2 === 'windup' ? 1 + Math.min(1, e.stateT / 0.7) * 0.24 : 1;
         c.rotate(e.t * 0.5);
@@ -2099,7 +2103,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.1, 18);
         break;
       }
-      case 'b_mother': { /* THE NIGHT MOTHER — a hole in the paper with eyes */
+      case 'b_mother': case 'k_husk': { /* THE NIGHT MOTHER / THE HUSK — a hole in the paper with eyes */
         const breathe = 1 + Math.sin(e.t * 1.4 + e.seed) * 0.05;
         c.save();
         c.scale(breathe, 2 - breathe);
@@ -2128,7 +2132,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.24, 14);
         break;
       }
-      case 'b_warlord': { /* THE CINNABAR ONI — four horns and a furnace chest */
+      case 'b_warlord': case 'k_cinder': { /* THE CINNABAR ONI / THE CINDER — four horns and a furnace chest */
         const st2 = e.state;
         const enraged = e.hp < e.maxHp * 0.5;
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
@@ -2178,7 +2182,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.11, 14);
         break;
       }
-      case 'b_tempest': { /* THE STORM EYE — a spiral with a hollow center */
+      case 'b_tempest': case 'k_veil': { /* THE STORM EYE / THE RAINVEIL — a spiral with a hollow center */
         const spin = e.t * 2.6;
         c.save();
         /* three rotating arc-strokes */
@@ -2211,7 +2215,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.18, 12);
         break;
       }
-      case 'b_origin': { /* THE FIRST BRUSH — the eldest stroke, bristling */
+      case 'b_origin': case 'k_nib': { /* THE FIRST BRUSH / THE NIB — the eldest stroke, bristling */
         const phase = e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
         const breathe = 1 + Math.sin(e.t * 1.8 + e.seed) * 0.035;
         c.save();
@@ -2233,13 +2237,17 @@ const R = (() => {
           ], 2.6, { alpha: 0.8 });
         }
         if (phase > 0) {
-          /* a red seal burns where its heart would be */
+          /* a paper seal burns where its heart would be — pressed red
+             when the beast is calm, bleeding red when it is not */
           c.save();
           c.rotate(Math.sin(e.t * 2) * 0.1 - 0.1);
-          c.globalAlpha = phase === 2 ? 0.9 : 0.5;
-          c.fillStyle = RED;
+          c.globalAlpha = phase === 2 ? 0.95 : 0.6;
+          c.fillStyle = PAPER;
           const s2 = r * 0.2;
           c.fillRect(-s2, -s2, s2 * 2, s2 * 2);
+          c.fillStyle = phase === 2 ? BOSS_INK : RED;
+          const s3 = s2 * 0.45;
+          c.fillRect(-s3, -s3, s3 * 2, s3 * 2);
           c.restore();
         }
         c.restore();
@@ -2255,6 +2263,17 @@ const R = (() => {
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang, r, 0.7);
       }
+    }
+
+    /* a wounded boss burns — its red halo beats like a second heart */
+    if (isBoss && e.hp < e.maxHp * 0.5) {
+      c.save();
+      c.globalAlpha = S.reduced ? 0.16 : 0.2 + 0.13 * Math.sin(t * 9);
+      c.strokeStyle = BOSS_INK;
+      c.lineWidth = 2.6;
+      blobPath(c, 0, 0, r * (1.3 + 0.05 * Math.sin(t * 6.3)), sd ^ 91, 0.16, 14);
+      c.stroke();
+      c.restore();
     }
 
     /* the guardian's mark */
@@ -2778,25 +2797,26 @@ const R = (() => {
     c.save();
     c.translate(b.x, b.y);
     c.rotate(b.ang);
+    const bi = b.red ? RED : INK;
     if (b.kind === 'needle') {
-      c.strokeStyle = INK;
+      c.strokeStyle = bi;
       c.lineWidth = 1.7;
       c.beginPath();
       c.moveTo(7, 0);
       c.lineTo(-11, 0);
       c.stroke();
-      c.fillStyle = INK;
+      c.fillStyle = bi;
       c.beginPath();
       c.arc(6.4, 0, 2.1, 0, TAU);
       c.fill();
-      inkStroke(c, [{ x: -10, y: 0 }, { x: -20 - b.age * 10, y: 0.4 }], 1.5, { alpha: 0.3 });
+      inkStroke(c, [{ x: -10, y: 0 }, { x: -20 - b.age * 10, y: 0.4 }], 1.5, { alpha: 0.3, color: b.red ? RED : null });
     } else {
-      c.strokeStyle = INK;
-      c.fillStyle = INK;
+      c.strokeStyle = bi;
+      c.fillStyle = bi;
       c.lineWidth = 1.8;
       c.beginPath(); c.arc(0, 0, 4.6, 0, TAU); c.stroke();
       c.beginPath(); c.arc(0, 0, 1.7, 0, TAU); c.fill();
-      inkStroke(c, [{ x: -6, y: 0 }, { x: -15 - b.age * 6, y: 0.5 }], 2.2, { alpha: 0.32 });
+      inkStroke(c, [{ x: -6, y: 0 }, { x: -15 - b.age * 6, y: 0.5 }], 2.2, { alpha: 0.32, color: b.red ? RED : null });
     }
     c.restore();
   }
@@ -3108,15 +3128,56 @@ const R = (() => {
     c.restore();
   }
 
+  /* a boss's promise, written in red before it lands: a dashed
+     stroke across the charge path, or a ring around the coming slam */
+  function drawTelg(c, tg, t) {
+    const S = G.S;
+    const e = tg.e;
+    if (!e || e.dead) return;
+    const k = tg.life / tg.maxLife;
+    c.save();
+    c.strokeStyle = RED;
+    c.fillStyle = RED;
+    c.lineWidth = 2.4;
+    c.setLineDash([9, 7]);
+    c.lineDashOffset = -t * 46;
+    c.globalAlpha = (0.34 + 0.34 * (1 - k)) * (S.reduced ? 0.55 : 1);
+    if (tg.kind === 'line') {
+      const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+      const x0 = e.x + Math.cos(ang) * (e.r + 8), y0 = e.y + Math.sin(ang) * (e.r + 8);
+      c.beginPath();
+      c.moveTo(x0, y0);
+      c.lineTo(e.x + Math.cos(ang) * tg.len, e.y + Math.sin(ang) * tg.len);
+      c.stroke();
+      c.setLineDash([]);
+      c.save();
+      c.translate(e.x + Math.cos(ang) * tg.len, e.y + Math.sin(ang) * tg.len);
+      c.rotate(ang);
+      teardrop(c, 6.5);
+      c.fill();
+      c.restore();
+    } else {
+      c.beginPath();
+      c.arc(e.x, e.y, tg.r, 0, TAU);
+      c.stroke();
+      c.setLineDash([]);
+      c.globalAlpha *= 0.3;
+      c.beginPath();
+      c.arc(e.x, e.y, tg.r * (0.86 + 0.1 * k), 0, TAU);
+      c.stroke();
+    }
+    c.restore();
+  }
+
   function drawParticle(c, p) {
     c.save();
     c.globalAlpha = Math.max(0, p.life / p.max);
     c.translate(p.x, p.y);
-    c.fillStyle = INK;
+    c.fillStyle = p.red ? RED : INK;
     const vang = Math.atan2(p.vy, p.vx);
     if (p.shape === 'line') {
       c.rotate(vang);
-      inkStroke(c, [{ x: -p.size * 1.4, y: 0 }, { x: p.size * 1.2, y: 0 }], 1.8, { alpha: 1 });
+      inkStroke(c, [{ x: -p.size * 1.4, y: 0 }, { x: p.size * 1.2, y: 0 }], 1.8, { alpha: 1, color: p.red ? RED : null });
     } else if (p.shape === 'dot') {
       c.rotate(vang);
       teardrop(c, p.size * 0.75);
@@ -4319,6 +4380,7 @@ const R = (() => {
 
     for (const m of S.markers) drawMarker(ctx, m);
     for (const r of S.rings) drawRing(ctx, r);
+    for (const tg of S.telgs) drawTelg(ctx, tg, t);
     for (const b of S.bullets) b.kind === 'boomer' ? drawBoomer(ctx, b) : drawBullet(ctx, b);
     for (const b of S.ebullets) drawEBullet(ctx, b);
     for (const e of S.enemies) drawEnemy(ctx, e, t);
@@ -4387,6 +4449,14 @@ const R = (() => {
       }
       ctx.globalAlpha = Math.min(1, (0.14 + 0.09 * Math.abs(Math.sin(t * 5))) / 0.23);
       ctx.fillStyle = vg.rGrad;
+      ctx.fillRect(0, 0, S.W, S.H);
+      ctx.globalAlpha = 1;
+    }
+
+    /* a boss's death washes the eye in vermilion for a breath */
+    if (S.redFlash > 0 && playing) {
+      ctx.globalAlpha = Math.min(0.42, S.redFlash * 0.8);
+      ctx.fillStyle = RED;
       ctx.fillRect(0, 0, S.W, S.H);
       ctx.globalAlpha = 1;
     }

@@ -377,47 +377,58 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 
 /* ============================================================
-   UPGRADE SCREEN
+   UPGRADE SCREEN — a hand of three strokes, always on one page.
+   Everything is fluid (vh-clamped): the panel shrinks to the
+   viewport and nothing ever scrolls — the choice must be seen
+   whole, at a glance, on a phone held sideways as much as a
+   desktop monitor.
    ============================================================ */
-.screen-upgrade{ align-items: center; justify-content: center; }
+.screen-upgrade{ align-items: center; justify-content: center; padding: clamp(10px, 1.8vh, 18px) clamp(10px, 1.6vw, 18px); }
 .panel{
-  width: min(860px, calc(100vw - 36px));
-  padding: 26px 28px 24px;
-  display: flex; flex-direction: column; gap: 20px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
+  width: min(880px, 100%);
+  padding: clamp(12px, 2.4vh, 26px) clamp(16px, 2.2vw, 28px) clamp(10px, 2vh, 22px);
+  display: flex; flex-direction: column; gap: clamp(8px, 1.8vh, 20px);
+  max-height: 100%;
+  overflow: hidden;
 }
 .panel::before{ content: ''; position: absolute; inset: 0; border: 1.6px solid var(--ink); background: var(--paper-80); filter: var(--rough); pointer-events: none; }
 .panel{ position: relative; background: none; }
-.panel > *{ position: relative; }
+.panel > *{ position: relative; min-height: 0; }
 
 .panel-banner{
   display: flex; justify-content: space-between; align-items: flex-end;
   border-bottom: 1px solid var(--ink-25);
-  padding-bottom: 16px;
+  padding-bottom: clamp(7px, 1.5vh, 16px);
+  flex: 0 0 auto;
 }
-.pb-kicker{ display: block; font-size: 9px; letter-spacing: .34em; color: var(--ink-70); margin-bottom: 8px; }
+.pb-kicker{ display: block; font-size: clamp(8px, 1.3vh, 9px); letter-spacing: .3em; color: var(--ink-70); margin-bottom: clamp(4px, 1vh, 8px); }
 .pb-kicker .kanji-inline{ color: var(--red); font-size: 12px; }
 .pb-title{
   font-family: var(--display);
-  font-size: clamp(24px, 4vw, 34px);
+  font-size: clamp(19px, 4.2vh, 34px);
   letter-spacing: .04em;
+  line-height: 1.05;
 }
-.pb-right{ text-align: right; }
-.pb-step-label{ display: block; font-size: 9px; letter-spacing: .34em; color: var(--ink-45); margin-bottom: 6px; }
-.pb-step-value{ font-family: var(--display); font-size: 30px; color: var(--red); }
+.pb-right{ text-align: right; flex: 0 0 auto; }
+.pb-step-label{ display: block; font-size: clamp(8px, 1.3vh, 9px); letter-spacing: .34em; color: var(--ink-45); margin-bottom: clamp(3px, .8vh, 6px); }
+.pb-step-value{ font-family: var(--display); font-size: clamp(19px, 3.8vh, 30px); color: var(--red); line-height: 1; }
 
 .upgrade-grid{
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(9px, 1.8vh, 18px);
 }
 .up-card{
   position: relative;
-  padding: 18px 16px 16px;
+  padding: clamp(9px, 1.9vh, 18px) clamp(11px, 1.3vw, 16px) clamp(8px, 1.6vh, 16px);
   text-align: left;
-  display: flex; flex-direction: column; gap: 10px;
-  min-height: 218px;
+  display: flex; flex-direction: column; gap: clamp(5px, 1.1vh, 10px);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   transition: transform .13s ease;
 }
 .up-card::before{
@@ -439,7 +450,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   border-width: 2px;
 }
 
-.up-top{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.up-top{ display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: 0 0 auto; }
 .up-new{
   font-size: 8px; letter-spacing: .26em; text-indent: .26em;
   color: var(--red);
@@ -448,7 +459,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transform: rotate(-2deg);
   white-space: nowrap;
 }
-.up-no{ font-family: var(--display); font-size: 15px; color: var(--ink-70); }
+.up-no{ font-family: var(--display); font-size: clamp(12px, 1.9vh, 15px); color: var(--ink-70); }
 .up-top-right{ display: inline-flex; align-items: center; gap: 8px; min-height: 16px; }
 .up-pips{ display: flex; gap: 4px; }
 .pip{
@@ -459,20 +470,30 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .pip.on{ background: var(--ink); border-color: var(--ink); }
 
-.up-glyph{ width: 40px; height: 40px; color: var(--ink); }
+.up-glyph{ width: clamp(26px, 4.8vh, 40px); height: clamp(26px, 4.8vh, 40px); color: var(--ink); flex: 0 0 auto; }
 .up-name{
   font-family: var(--display);
-  font-size: 21px;
+  font-size: clamp(15px, 2.7vh, 21px);
   letter-spacing: .03em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .up-desc{
-  font-size: 10.5px; line-height: 1.85; letter-spacing: .04em;
+  font-size: clamp(9px, 1.55vh, 10.5px); line-height: 1.7; letter-spacing: .03em;
   color: var(--ink-70);
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  max-height: 8.5em;
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
 }
 .up-check{
   align-self: flex-end;
-  width: 20px; height: 20px;
+  width: clamp(14px, 2.5vh, 20px); height: clamp(14px, 2.5vh, 20px);
+  flex: 0 0 auto;
   opacity: 0;
   transform: rotate(-6deg) scale(.6);
   transition: all .13s ease;
@@ -494,13 +515,15 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 .deploy-btn{
   align-self: center;
-  padding: 13px 42px;
-  font-size: 12px; font-weight: 600; letter-spacing: .3em; text-indent: .3em;
+  padding: clamp(8px, 1.6vh, 13px) clamp(26px, 4vw, 42px);
+  font-size: clamp(10px, 1.6vh, 12px); font-weight: 600; letter-spacing: .3em; text-indent: .3em;
   background: var(--ink);
   color: var(--paper);
   position: relative;
+  flex: 0 0 auto;
   transform: rotate(-.5deg);
   transition: transform .13s, opacity .13s, box-shadow .13s;
+  white-space: nowrap;
 }
 .deploy-btn::before{
   content: '';
@@ -517,6 +540,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   text-align: center;
   font-size: 9px; letter-spacing: .3em;
   color: var(--ink-45);
+  flex: 0 0 auto;
 }
 
 /* ============================================================
@@ -598,6 +622,116 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .wm-pause{ right: 5%; bottom: 3%; transform: rotate(3deg); }
 .wm-over{ left: 3%; top: 5%; transform: rotate(-3deg); }
 .wm-up{ right: 3%; bottom: 4%; transform: rotate(2deg); opacity: .04; }
+.wm-clear{ left: 4%; bottom: 3%; transform: rotate(-2deg); }
+
+/* ============================================================
+   LEVEL CLEAR — the seal is broken and the hand is asked:
+   onward to the next scene naked, or home with the honor.
+   A small panel, a red seal, two doors — never a scroll.
+   ============================================================ */
+.screen-clear{
+  align-items: center; justify-content: center;
+  background: var(--paper-55);
+  overflow: hidden;
+}
+.clear-box{
+  position: relative;
+  width: min(430px, calc(100vw - 44px));
+  max-height: calc(100% - 36px);
+  padding: 30px 34px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 13px;
+  text-align: center;
+}
+.clear-box::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1.6px solid var(--ink);
+  background: var(--paper-92);
+  filter: var(--rough);
+  pointer-events: none;
+}
+.clear-box > *{ position: relative; }
+.screen-clear.rise .clear-box{ animation: clearRise .5s cubic-bezier(.22,.9,.3,1) both; }
+@keyframes clearRise{
+  from{ opacity: 0; transform: translateY(16px) scale(.985); }
+  to{ opacity: 1; transform: none; }
+}
+.clear-seal{
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  font-family: var(--display);
+  font-size: 26px;
+  color: var(--paper);
+  background: var(--red);
+  transform: rotate(-4deg);
+  box-shadow: 2px 2px 0 rgba(26,23,20,.22);
+}
+.clear-seal::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1px solid rgba(237,231,217,.5);
+  filter: var(--rough-soft);
+}
+.clear-kicker{
+  font-size: 9px; font-weight: 600; letter-spacing: .3em; text-indent: .3em;
+  color: var(--ink-70);
+}
+.clear-title{
+  font-family: var(--display);
+  font-size: clamp(24px, 4.6vh, 32px);
+  letter-spacing: .1em;
+  display: flex; align-items: baseline; gap: 10px;
+  white-space: nowrap;
+}
+.clear-title .ct-lat{ font-size: .58em; letter-spacing: .22em; }
+.clear-sub{
+  font-size: 10px; letter-spacing: .06em; line-height: 1.7;
+  color: var(--ink-70);
+  max-width: 320px;
+}
+.clear-next{
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--ink-25);
+  border-bottom: 1px solid var(--ink-25);
+}
+.clear-next .cn-label{
+  font-size: 8px; font-weight: 600; letter-spacing: .3em; text-indent: .3em;
+  color: var(--ink-70);
+}
+.clear-next .cn-kanji{
+  font-family: var(--display);
+  font-size: 19px;
+  color: var(--red);
+}
+.clear-next .cn-name{
+  font-size: 10px; font-weight: 600; letter-spacing: .18em;
+}
+.clear-actions{
+  display: flex; flex-direction: column; gap: 9px;
+  width: 268px; max-width: 100%;
+  margin-top: 3px;
+}
+.clear-actions .block-btn{ white-space: nowrap; }
+.clear-hint{
+  font-size: 8px; letter-spacing: .2em; text-indent: .2em;
+  color: var(--ink-70);
+  opacity: .75;
+}
+@media (max-width: 720px){
+  .clear-box{ padding: 24px 22px 20px; gap: 11px; }
+  .clear-title{ white-space: normal; }
+  .clear-actions{ width: 100%; }
+}
+/* short landscape phones: the panel breathes in, not out */
+@media (max-height: 440px) and (orientation: landscape){
+  .clear-box{ padding: 14px 26px 12px; gap: 7px; }
+  .clear-seal{ width: 34px; height: 34px; font-size: 19px; }
+  .clear-sub{ max-width: 300px; }
+  .clear-actions{ gap: 6px; margin-top: 0; }
+  .clear-actions .block-btn{ padding: 9px 18px; }
+  .clear-actions .ghost-btn{ padding: 7px 18px; }
+}
 
 /* ============================================================
    GAME OVER
@@ -697,7 +831,19 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .hud-area{ display: flex; align-items: baseline; gap: 7px; }
 .hud-area-kanji{ font-family: var(--display); font-size: 16px; line-height: 1; color: var(--red); transform: rotate(-2deg); }
 .hud-area-name{ font-size: 8.5px; letter-spacing: .28em; color: var(--ink-70); }
-.hud-area-count{ font-size: 8.5px; letter-spacing: .16em; color: var(--ink-45); }
+/* the scene counter leads the read: 第二景 in display red, the
+   wave count behind it — a new level is never a silent reset */
+.hud-area-count{
+  display: inline-flex; align-items: baseline; gap: 6px;
+  font-size: 11px; letter-spacing: .14em; color: var(--ink-70);
+  padding: 2px 8px 3px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  transform: rotate(-.6deg);
+}
+.hud-area-count .lv-num{ font-family: var(--display); font-weight: 400; font-size: 15px; line-height: 1; color: var(--red); }
+.hud-area-count .lv-sep{ color: var(--ink-45); }
+.hud-area-count .lv-wave{ font-weight: 600; }
 .hud-mode{
   align-self: center;
   font-size: 8px; letter-spacing: .26em; text-indent: .26em;
@@ -865,7 +1011,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
   /* touch hands need no key hints — and the band owns the bottom air */
   .title-foot{ display: none; }
+  /* the three strokes stack, each an equal third of the page */
   .upgrade-grid{ grid-template-columns: 1fr; }
+  .up-desc{ max-height: 5.1em; }
   .up-card{ min-height: 0; }
   .over-body{ flex-direction: column; align-items: flex-start; gap: 30px; }
   .rank-block{ align-self: center; }
@@ -878,6 +1026,15 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .mode-row{ flex-direction: column; align-items: center; gap: 11px; }
   .mode-row .play-btn, .endless-btn{ width: min(320px, 86vw); justify-content: center; }
   .wm{ font-size: 130px; }
+}
+
+/* a phone on its side: the hand of three returns to a row,
+   the banner tightens, and the keyboard hint steps aside */
+@media (max-height: 540px) and (orientation: landscape){
+  .upgrade-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .up-desc{ max-height: 6.8em; }
+  .panel-hint{ display: none; }
+  .wm{ display: none; }
 }
 
 @media (max-width: 420px){
@@ -908,6 +1065,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-chip, .title-word .tl, .title-sub, .play-btn, .best-line,
   .title-foot, .mode-row, .brush-row, .opening-btn, .side-ins,
   .sheet-btn{ animation: none; }
+  .screen-clear.rise .clear-box{ animation: none; }
 }
 
 /* ============================================================
@@ -985,6 +1143,18 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   height: 100%; width: 100%;
   background: var(--red);
   transition: width .12s ease;
+}
+/* beneath half health the beast burns — the bar rages with it */
+.boss-bar.enrage .boss-fill{
+  animation: bossRage .46s ease-in-out infinite alternate;
+}
+.boss-bar.enrage .boss-name{ color: var(--red); }
+@keyframes bossRage{
+  from{ filter: brightness(1); }
+  to{   filter: brightness(1.5); }
+}
+@media (prefers-reduced-motion: reduce){
+  .boss-bar.enrage .boss-fill{ animation: none; }
 }
 
 /* --- kill chain (under the score) --- */
@@ -1317,10 +1487,27 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 /* the unlock cry rides above every screen */
 .wave-banner.front{ z-index: 45; }
 
+/* the scene ladder — ten slimmer tanzaku when a scroll unrolls:
+   same paper, same thread, narrower slips hanging from the beam */
+#levelRow{ gap: clamp(8px, 1vw, 14px); }
+.scene-strip{
+  min-width: 0;
+  width: clamp(84px, 7.9vw, 104px);
+  min-height: 268px;
+  padding: 11px 5px 10px;
+  gap: 4px;
+}
+.scene-strip .strip-kanji{ font-size: clamp(30px, 4.6vh, 44px); margin-top: 0; }
+.scene-strip .strip-no{ font-size: 7.5px; letter-spacing: .18em; text-indent: .18em; }
+.scene-strip .strip-ink{ letter-spacing: .05em; font-size: 7.5px; }
+.scene-strip.is-current .strip-no{ color: var(--ink); }
+
 @media (max-width: 740px){
   .screen-scrolls{ padding-left: 12px; padding-right: 12px; }
   .scroll-strip-row{ padding-left: 0; padding-right: 0; }
   .scroll-strip{ width: min(44vw, 200px); min-height: 236px; padding: 10px 8px 9px; gap: 4px; }
+  .scene-strip{ width: min(29vw, 132px); min-height: 198px; padding: 9px 5px 8px; }
+  .scene-strip .strip-kanji{ font-size: 28px; }
   .scroll-strip .strip-string{ top: -18px; height: 18px; }
   .strip-kanji{ font-size: 38px; }
   .strip-dots{ gap: 3px; margin: 5px 0 1px; }

@@ -94,6 +94,14 @@ const CFG = {
   /* the endless paper keeps growing teeth — and the teeth grow fangs */
   endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32 },
 
+  /* ---- per-level KEEPERS ----
+     Every level's tenth wave is a boss fight: the scene's Keeper —
+     a red-sealed beast, lesser kin of the sheet's Guardian — walks
+     the paper with a halved honor guard. Its hp grows gently with
+     the waves between its debuts, capped, so a keeper never becomes
+     a wall of numbers. */
+  keeper: { hpGrow: 0.015, hpGrowCap: 2.0 },
+
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
 
@@ -110,7 +118,7 @@ const CFG = {
   fan:    { period: lv => 3.4 - 0.35 * (lv - 1), count: lv => 4 + lv, speed: 430, life: 0.62, spread: 1.15, dmg: 1 },
   trail:  { gap: lv => 0.5 - 0.08 * (lv - 1), radius: lv => 26 + lv * 7, life: 2.7, tick: 0.42, dmg: 1 },
   spirit: { period: lv => 3.1 - 0.3 * (lv - 1), count: lv => 1 + lv, speed: 300, turn: 7.5, life: 3.2, dmg: 1 },
-  hanko:  { period: lv => 7.2 - 0.9 * (lv - 1), radius: lv => 96 + lv * 16, dmg: lv => 4 + lv * 2, stun: 0.45 },
+  hanko:  { period: lv => 11.5 - 1.1 * (lv - 1), radius: lv => 84 + lv * 10, dmg: lv => 3 + lv, stun: 0.4 },
   arc:    { period: lv => 2.5 - 0.22 * (lv - 1), jumps: lv => 2 + lv, range: 210, dmg: lv => 1 + Math.ceil(lv / 2) },
   boomer: { period: lv => 2.9 - 0.25 * (lv - 1), speed: 620, dist: lv => 300 + lv * 40, dmg: lv => 1 + lv, life: 3 },
   vortex: { period: lv => 7.5 - 0.7 * (lv - 1), radius: lv => 90 + lv * 24, dur: lv => 2 + 0.25 * lv, pull: 340, tick: 0.36, dmg: 1 },
@@ -192,6 +200,16 @@ const ENEMIES = {
   b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 880,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
   b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 1150, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
   b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 1450, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+
+  /* ---- the five Keepers, one per sheet, on EVERY tenth wave ----
+     lesser bosses cut from the same ink as their Guardian — they
+     share its body and its hunger, thinned for a scene's climax.
+     boss: 2 marks the keeper tier (red, named, bar-worn). */
+  k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 30,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
+  k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 46,  r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
+  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 66,  r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
+  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 88,  r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
+  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 115, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -223,7 +241,7 @@ const AREAS = [
     roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter'],
     order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith'],
     names: ['初描', '新樹', '遠山', '淡游', '霧起', '垂露', '鶴舞', '古松', '暮色', '落款'],
-    elite: 'slab', boss: 'b_wheel',
+    elite: 'slab', boss: 'b_wheel', keeper: 'k_blight',
   },
   {
     id: 'II', name: 'NIGHT SCROLL', kanji: '夜', theme: 'dark',
@@ -233,7 +251,7 @@ const AREAS = [
     roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother'],
     order: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan'],
     names: ['入夜', '遠浦', '梟鳴', '夜影', '高軒', '蓮池', '墨霧', '旌旗', '母胎', '落款'],
-    elite: 'shade', boss: 'b_mother',
+    elite: 'shade', boss: 'b_mother', keeper: 'k_husk',
   },
   {
     id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',
@@ -243,7 +261,7 @@ const AREAS = [
     roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper'],
     order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
-    elite: 'oni', boss: 'b_warlord',
+    elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
   },
   {
     id: 'IV', name: 'STORM SHEET', kanji: '嵐', theme: 'storm',
@@ -253,7 +271,7 @@ const AREAS = [
     roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom'],
     order: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
-    elite: 'stilt', boss: 'b_tempest',
+    elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
   },
   {
     id: 'V', name: 'GILT SCROLL', kanji: '金', theme: 'gilt',
@@ -263,7 +281,7 @@ const AREAS = [
     roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban'],
     order: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
-    elite: 'oni', boss: 'b_origin',
+    elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
   },
 ];
 
@@ -290,7 +308,7 @@ const UPGRADES = [
   { id: 'fan',    name: 'Folded Fan',   desc: 'Every few breaths the fan snaps open — a spray of paper blades.', max: 4, weapon: true, apply: s => { s.fan += 1; } },
   { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, weapon: true, apply: s => { s.trailW += 1; } },
   { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, weapon: true, apply: s => { s.spirit += 1; } },
-  { id: 'hanko',  name: 'Crimson Hanko',desc: 'A great red seal slams down on the nearest horde and crushes it.', max: 3, weapon: true, apply: s => { s.hanko += 1; } },
+  { id: 'hanko',  name: 'Crimson Hanko',desc: 'Every eleventh breath a great red seal slams the nearest horde — elites bend it, few break it.', max: 3, weapon: true, apply: s => { s.hanko += 1; } },
   { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, weapon: true, apply: s => { s.arc += 1; } },
   { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, weapon: true, apply: s => { s.boomer += 1; } },
   { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, weapon: true, apply: s => { s.vortex += 1; } },

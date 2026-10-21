@@ -64,7 +64,7 @@
       </div>
     </div>
     <div class="boss-bar hidden" id="hudBoss">
-      <span class="boss-kicker">守 GUARDIAN</span>
+      <span class="boss-kicker" id="hudBossKick">守 GUARDIAN</span>
       <span class="boss-name" id="hudBossName">THE STAIN</span>
       <div class="boss-track"><div class="boss-fill" id="hudBossFill"></div></div>
     </div>
@@ -133,7 +133,7 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND</div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V6.7</span></div>
     </div>
 
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
@@ -152,6 +152,7 @@
     </div>
     <div class="scroll-beam" aria-hidden="true"></div>
     <div class="scroll-strip-row" id="scrollRow"></div>
+    <div class="scroll-strip-row hidden" id="levelRow"></div>
     <div class="scrolls-foot">
       <p class="scrolls-hint" id="scrollsHint">TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT</p>
       <button id="scrollsBackBtn" class="ghost-btn">RETURN — 戻</button>
@@ -175,6 +176,26 @@
       <div class="upgrade-grid" id="upgradeGrid"></div>
       <button id="deployBtn" class="deploy-btn is-disabled" disabled>DEPLOY</button>
       <div class="panel-hint">PRESS 1 · 2 · 3 TO SELECT — AGAIN OR ENTER TO DEPLOY</div>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL CLEAR POPUP — the seal is broken, the hand chooses ============ -->
+  <section id="screenClear" class="screen screen-clear hidden">
+    <span class="wm wm-clear" aria-hidden="true">了</span>
+    <div class="clear-box">
+      <div class="clear-seal" aria-hidden="true">了</div>
+      <div class="clear-kicker" id="clearKicker">THE SEAL BREAKS</div>
+      <h2 class="clear-title" id="clearTitle">第一景 — SEALED</h2>
+      <p class="clear-sub" id="clearSub">The scene is pressed into the paper. The next begins unadorned.</p>
+      <div class="clear-next" id="clearNextLine">
+        <span class="cn-label">NEXT</span>
+        <span class="cn-value" id="clearNextValue">第二景</span>
+      </div>
+      <div class="clear-actions">
+        <button id="clearNextBtn" class="block-btn big">NEXT LEVEL — 次景</button>
+        <button id="clearHomeBtn" class="ghost-btn">HOME — 归还</button>
+      </div>
+      <div class="clear-hint">THE NEXT LEVEL BEGINS WITH NO UPGRADES — ENTER TO CONTINUE</div>
     </div>
   </section>
 

@@ -14,11 +14,14 @@ const UI = (() => {
     banner: $('waveBanner'), bannerKicker: $('bannerKicker'), bannerTitle: $('bannerTitle'),
     screens: {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
-      pause: $('screenPause'), over: $('screenOver'),
+      clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
     },
+    clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
+    clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
     runNo: $('runNo'), bestLine: $('bestLine'),
     hudLoadout: $('hudLoadout'), hudXpFill: $('hudXpFill'), hudXpLv: $('hudXpLv'),
     hudBoss: $('hudBoss'), hudBossName: $('hudBossName'), hudBossFill: $('hudBossFill'),
+    hudBossKick: $('hudBossKick'),
     hudCombo: $('hudCombo'), brushRow: $('brushRow'),
     upKicker: $('upKicker'), upNext: $('upNext'), upgradeGrid: $('upgradeGrid'), deployBtn: $('deployBtn'),
     overKicker: $('overKicker'), overRank: $('overRank'), overTitle: $('overTitle'), overSub: $('overSub'),
@@ -239,13 +242,14 @@ const UI = (() => {
   }
 
   /* the sheet's crest, and where the run stands within it:
-     第X景 · wave X of ten — 守 marks the Guardian's level */
+     第二景 · wave X of ten — the scene number leads, in red,
+     so a new level never reads as the counter resetting */
   function setArea(area, level, waveInLevel, isLevelEnd) {
     if (!el.hudArea) return;
     el.hudAreaKanji.textContent = area.kanji;
     el.hudAreaName.textContent = area.name;
-    el.hudWaveTotal.textContent =
-      `${toKanji(level)}景 · ${toKanji(waveInLevel)}/${toKanji(CFG.wave.wavesPerLevel)}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' · 守' : ''}`;
+    el.hudWaveTotal.innerHTML =
+      `<b class="lv-num">第${toKanji(level)}景</b><span class="lv-sep">·</span><span class="lv-wave">${toKanji(waveInLevel)}/${toKanji(CFG.wave.wavesPerLevel)}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' 守' : ''}</span>`;
   }
 
   function setWave(n) { el.hudWave.textContent = toKanji(n); }
@@ -290,7 +294,9 @@ const UI = (() => {
     bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 1500);
   }
 
-  /* a new scene grows on the same page — one level begins */
+  /* a new scene grows on the same page — one level begins.
+     Held a beat longer than a wave banner: the scene number is
+     the news, and it must land before the first beast does. */
   function levelBanner(area, level, name) {
     el.bannerKicker.textContent = `THE PAGE GROWS — LEVEL ${toKanji(level)} OF ${toKanji(CFG.wave.levelsPerArea)}`;
     el.bannerTitle.innerHTML =
@@ -301,7 +307,44 @@ const UI = (() => {
     void el.banner.offsetWidth;
     el.banner.classList.add('show');
     clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 1900);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2300);
+  }
+
+  /* a level's seal breaks — the scene is complete. Red, brief,
+     unmistakable: the counter is about to climb, not restart. */
+  function sealBanner(area, level) {
+    el.bannerKicker.textContent = `THE SEAL BREAKS — LEVEL ${toKanji(level)} COMPLETE`;
+    el.bannerTitle.innerHTML =
+      `<span class="ban-kanji">印</span><span class="ban-lat">第${toKanji(level)}景 — COMPLETE</span>`;
+    el.banner.classList.toggle('area', true);
+    el.banner.classList.toggle('surge', true);
+    el.banner.classList.remove('show');
+    void el.banner.offsetWidth;
+    el.banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 1700);
+  }
+
+  /* the level-clear rest: the seal is pressed, the hand chooses —
+     onward naked, or home. The next scene always starts unadorned. */
+  function showClear(d) {
+    const nextLevel = d.level + 1;
+    el.clearKicker.textContent = `SCROLL ${d.area.kanji} ${d.area.name}`;
+    el.clearTitle.innerHTML =
+      `<span class="ct-kanji">第${toKanji(d.level)}景</span><span class="ct-lat">— SEALED</span>`;
+    el.clearSub.textContent = d.guardian
+      ? 'The scroll is painted in full. The next unrolls naked — every stroke is earned again.'
+      : 'The scene is pressed into the paper. The next begins unadorned — the brush keeps nothing.';
+    el.clearNextValue.innerHTML = d.guardian && d.nextArea
+      ? `<span class="cn-kanji">${d.nextArea.kanji}</span><span class="cn-name">${d.nextArea.name}</span>`
+      : `<span class="cn-kanji">第${toKanji(nextLevel)}景</span><span class="cn-name">LEVEL ${pad2(nextLevel)}</span>`;
+    el.clearNextBtn.innerHTML = d.guardian
+      ? 'NEXT SCROLL — <span class="kanji-inline">次巻</span>'
+      : 'NEXT LEVEL — <span class="kanji-inline">次景</span>';
+    el.screens.clear.classList.remove('rise');
+    void el.screens.clear.offsetWidth;   /* the seal is pressed fresh each time */
+    el.screens.clear.classList.add('rise');
+    show('clear');
   }
 
   /* a new sheet unrolls: the scroll turns */
@@ -337,21 +380,24 @@ const UI = (() => {
     if (el.hudXpLv) el.hudXpLv.textContent = toKanji(level + 1);
   }
 
-  /* the guardian's seal, worn at the top of the sheet */
+  /* the red beast's seal, worn at the top of the sheet */
   let bossShown = false;
-  function setBoss(name, frac) {
+  function setBoss(name, frac, kick) {
     if (!el.hudBoss) return;
     if (!name) {
-      if (bossShown) { el.hudBoss.classList.add('hidden'); bossShown = false; lastBoss.name = null; }
+      if (bossShown) { el.hudBoss.classList.add('hidden'); bossShown = false; lastBoss.name = null; lastBoss.k = null; }
       return;
     }
     if (!bossShown) { el.hudBoss.classList.remove('hidden'); bossShown = true; }
     if (name !== lastBoss.name) { lastBoss.name = name; el.hudBossName.textContent = name; }
+    if (kick != null && kick !== lastBoss.k && el.hudBossKick) { lastBoss.k = kick; el.hudBossKick.textContent = kick; }
     const v = Math.max(0, Math.min(1, frac));
     if (Math.abs(v - lastBoss.f) >= 0.002) {
       lastBoss.f = v;
       el.hudBossFill.style.width = (v * 100).toFixed(1) + '%';
     }
+    /* beneath half, the beast burns — the bar itself begins to rage */
+    el.hudBoss.classList.toggle('enrage', v < 0.5);
   }
 
   /* the kill chain, worn under the score */
@@ -370,9 +416,12 @@ const UI = (() => {
     }
   }
 
-  /* the guardian arrives — the sheet names its keeper */
-  function guardianBanner(area, bossName) {
-    el.bannerKicker.textContent = `THE GUARDIAN OF SHEET ${area.kanji} WAKES`;
+  /* a red beast wakes — the sheet's Guardian, or a scene's Keeper.
+     Same cry, different rank; the gong backs it in game.js. */
+  function bossBanner(area, bossName, keeper, level) {
+    el.bannerKicker.textContent = keeper
+      ? `THE KEEPER OF SCENE ${toKanji(level || 1)} WAKES`
+      : `THE GUARDIAN OF SHEET ${area.kanji} WAKES`;
     el.bannerTitle.innerHTML =
       `<span class="ban-kanji">守</span><span class="ban-lat">${bossName}</span>`;
     el.banner.classList.toggle('area', true);
@@ -381,7 +430,23 @@ const UI = (() => {
     void el.banner.offsetWidth;
     el.banner.classList.add('show');
     clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2600);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), keeper ? 2200 : 2600);
+  }
+
+  function guardianBanner(area, bossName) { bossBanner(area, bossName, false, 1); }
+
+  function bossFalls(name, keeper) {
+    el.bannerKicker.textContent = keeper ? 'THE KEEPER FALLS' : 'THE GUARDIAN FALLS';
+    el.bannerTitle.innerHTML = keeper
+      ? `<span class="ban-kanji">倒</span><span class="ban-lat">${name} — THE SCENE REMEMBERS</span>`
+      : `<span class="ban-kanji">宝</span><span class="ban-lat">${name} — TAKE ITS TREASURE</span>`;
+    el.banner.classList.toggle('area', true);
+    el.banner.classList.toggle('surge', true);
+    el.banner.classList.remove('show');
+    void el.banner.offsetWidth;
+    el.banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2400);
   }
 
   function guardianFalls(name) {
@@ -418,11 +483,31 @@ const UI = (() => {
      unrolled may be entered; a strip sealed waits until the scroll
      before it lies finished — ten levels, ten waves each. */
   let onScrollPick = null;      /* main.js answers with a journey run */
+  let onOpenScroll = null;      /* main.js answers by unrolling the scroll's scenes */
   let onScrollsBack = null;     /* main.js answers with the title */
+  let ladderSheet = 0;          /* 0 = the shelf; n = the ten scenes of scroll n */
+  const SCROLLS_HEAD = {
+    kick: 'THE JOURNEY — 五巻五十景',
+    title: 'FIVE SCROLLS',
+    sub: "Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.",
+  };
+  function setScrollsHead(kick, title, sub) {
+    const q = s => document.querySelector('#screenScrolls ' + s);
+    const k = q('.scrolls-kicker'), t = q('.scrolls-title'), sb = q('.scrolls-sub');
+    if (k && kick) k.textContent = kick;
+    if (t && title) t.textContent = title;
+    if (sb && sub) sb.textContent = sub;
+  }
 
   function buildScrolls() {
     const row = document.getElementById('scrollRow');
     if (!row) return;
+    /* the shelf view returns: the scene ladder folds away */
+    ladderSheet = 0;
+    const lrow = document.getElementById('levelRow');
+    if (lrow) lrow.classList.add('hidden');
+    row.classList.remove('hidden');
+    setScrollsHead(SCROLLS_HEAD.kick, SCROLLS_HEAD.title, SCROLLS_HEAD.sub);
     const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
     const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
     const prog = (typeof G !== 'undefined' && G.getProg) ? G.getProg() : {};
@@ -475,7 +560,7 @@ const UI = (() => {
           return;
         }
         SFX.pick(1);
-        if (onScrollPick) onScrollPick(n);
+        if (onOpenScroll) onOpenScroll(n);   /* the scroll unrolls to its ten scenes */
       });
       row.appendChild(card);
     });
@@ -485,6 +570,79 @@ const UI = (() => {
         ? 'EVERY SCROLL LIES FINISHED — THE ENDLESS SCROLL 無 STILL ASKS FOR MORE'
         : 'TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT';
     }
+  }
+
+  /* the scroll unrolled: ten hanging scene-strips, the seals pressed
+     red, the frontier still wet — a sealed scene may be walked again */
+  function buildLevels(n) {
+    const row = document.getElementById('levelRow');
+    const shelf = document.getElementById('scrollRow');
+    const a = AREAS[n - 1];
+    if (!row || !shelf || !a) return;
+    ladderSheet = n;
+    shelf.classList.add('hidden');
+    row.classList.remove('hidden');
+    const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
+    const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
+    const seals = (typeof G !== 'undefined' && G.getSeals) ? G.getSeals() : {};
+    const frontier = (typeof G !== 'undefined' && G.frontierLevel) ? G.frontierLevel(n) : 1;
+    const isCleared = n <= cleared;
+    const sealedUpTo = isCleared ? CFG.wave.levelsPerArea : (seals[n] || 0);
+    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+    setScrollsHead(
+      `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · 十景`,
+      a.name,
+      isCleared
+        ? 'The scroll lies finished. Every scene stays open — walk any of them again.'
+        : 'Ten scenes of ten waves each. Enter any scene the brush has sealed — or the frontier, still wet.'
+    );
+    row.innerHTML = '';
+    for (let d = 1; d <= CFG.wave.levelsPerArea; d++) {
+      const sealed = d <= sealedUpTo;
+      const wet = !sealed && d === frontier;
+      const locked = !sealed && !wet;
+      const w0 = (n - 1) * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea +
+        (d - 1) * CFG.wave.wavesPerLevel + 1;
+      const w1 = w0 + CFG.wave.wavesPerLevel - 1;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'scroll-strip scene-strip' +
+        (sealed ? ' is-cleared' : '') +
+        (locked ? ' is-locked' : '') +
+        (wet ? ' is-current' : '');
+      card.style.setProperty('--tilt', ((d % 2 ? 1 : -1) * (0.4 + d * 0.12)).toFixed(2) + 'deg');
+      card.style.setProperty('--i', d - 1);
+      const state = locked
+        ? '<span class="strip-state"><span class="strip-lock">未</span>UNREACHED</span>'
+        : wet
+        ? '<span class="strip-state is-wait"><span class="strip-wait">筆</span>FRONTIER</span>'
+        : '<span class="strip-state is-done"><span class="strip-seal">了</span>SEALED</span>';
+      card.innerHTML =
+        `<span class="strip-string" aria-hidden="true"></span>` +
+        `<span class="strip-no">SCENE ${roman[d - 1]}</span>` +
+        `<span class="strip-kanji" aria-hidden="true">${toKanji(d)}</span>` +
+        `<span class="strip-name">第${toKanji(d)}景</span>` +
+        `<span class="strip-ink">WAVES ${w0}–${w1}</span>` +
+        state;
+      card.setAttribute('aria-label',
+        `Scene ${d} of ${a.name} — ${locked ? 'unreached' : wet ? 'the frontier' : 'sealed'}`);
+      card.addEventListener('click', () => {
+        if (locked) {
+          card.classList.remove('refuse');
+          void card.offsetWidth;
+          card.classList.add('refuse');
+          setScrollsHint('THE INK HAS NOT REACHED THIS SCENE — SEAL THE SCENES BEFORE IT FIRST');
+          SFX.thud();
+          return;
+        }
+        SFX.pick(1);
+        if (onScrollPick) onScrollPick(n, d);
+      });
+      row.appendChild(card);
+    }
+    setScrollsHint(isCleared
+      ? 'EVERY SCENE OF THIS SCROLL LIES SEALED — WALK ANY OF THEM AGAIN'
+      : 'ENTER A SEALED SCENE — OR WALK THE WET FRONTIER 次');
   }
 
   function setScrollsHint(txt) {
@@ -634,10 +792,13 @@ const UI = (() => {
     show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
     setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
-    setBoss, setCombo, guardianBanner, guardianFalls, el, toKanji,
-    buildScrolls, setScrollsHint, unlockBanner,
+    setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
+    buildScrolls, buildLevels, setScrollsHint, unlockBanner,
     get onScrollPick() { return onScrollPick; },
     set onScrollPick(fn) { onScrollPick = fn; },
+    get onOpenScroll() { return onOpenScroll; },
+    set onOpenScroll(fn) { onOpenScroll = fn; },
+    get scrollsLadder() { return ladderSheet; },
     get onScrollsBack() { return onScrollsBack; },
     set onScrollsBack(fn) { onScrollsBack = fn; },
   };

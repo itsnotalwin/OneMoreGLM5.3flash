@@ -83,6 +83,16 @@
     G.abandon();
   }
 
+  /* the level-clear rest: onward naked, or home */
+  function clearNext() {
+    SFX.ensure();
+    G.clearNext();
+  }
+  function clearHome() {
+    SFX.ensure();
+    G.clearHome();
+  }
+
   /* the shelf of scrolls: opened from the title, answered by a run */
   function openScrolls() {
     SFX.ensure();
@@ -99,11 +109,13 @@
     return s && !s.classList.contains('hidden');
   };
 
-  /* the journey answers the shelf: enter the chosen scroll — the
-     shelf only ever offers what is unrolled, and the run clamps too.
-     The title's strip of seals asks the same question. */
-  UI.onScrollPick = n => start('journey', { sheet: n });
-  UI.onJourneyPick = UI.onScrollPick;
+  /* the journey answers the shelf: a scene-strip pressed begins the
+     run at that scene's first wave; a scroll-strip pressed unrolls
+     the scroll to its ten scenes. The title's strip of seals walks
+     straight to a scroll's frontier. */
+  UI.onScrollPick = (sheet, level) => start('journey', { sheet, level });
+  UI.onOpenScroll = n => { SFX.ensure(); UI.buildLevels(n); };
+  UI.onJourneyPick = n => start('journey', { sheet: n, level: G.frontierLevel(n) });
   UI.onScrollsBack = closeScrolls;
 
   function toggleMute() {
@@ -129,19 +141,33 @@
     if (k === 'KeyM') { toggleMute(); return; }
     if (k === 'KeyF') { fpsOn = !fpsOn; return; }
     const m = G.mode;
+    /* the seal choice: ENTER walks on naked, ESC goes home */
+    if (m === 'clear') {
+      if (k === 'Enter') clearNext();
+      else if (k === 'Escape') clearHome();
+      return;
+    }
     if (k === 'KeyP' || k === 'Escape') {
-      if (scrollsOpen()) { closeScrolls(); return; }
+      if (scrollsOpen()) {
+        /* the scene ladder folds back to the shelf before the title */
+        if (UI.scrollsLadder) UI.buildScrolls(); else closeScrolls();
+        return;
+      }
       if (m === 'playing') pause();
       else if (m === 'paused') resume();
       return;
     }
     if (scrollsOpen()) {
-      if (k === 'Enter') { closeScrolls(); }
+      if (k === 'Enter') {
+        /* the ladder answers Enter with its wet frontier */
+        if (UI.scrollsLadder) UI.onScrollPick(UI.scrollsLadder, G.frontierLevel(UI.scrollsLadder));
+        else closeScrolls();
+      }
       return;
     }
     if (k === 'Enter') {
-      if (m === 'title') start('journey', { sheet: G.getFurthest() });
-      else if (m === 'over') start();
+      if (m === 'title') start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) });
+      else if (m === 'over') start(null, { retry: true });
       else if (m === 'upgrade') G.deploy();
       else if (m === 'paused') resume();
       return;
@@ -243,20 +269,26 @@
 
   /* ---------------- buttons ---------------- */
   document.getElementById('playBtn').addEventListener('click', openScrolls);
-  document.getElementById('scrollsBackBtn').addEventListener('click', closeScrolls);
+  document.getElementById('scrollsBackBtn').addEventListener('click', () => {
+    /* the scene ladder folds back to the shelf before the title */
+    if (UI.scrollsLadder) { SFX.ensure(); UI.buildScrolls(); return; }
+    closeScrolls();
+  });
   document.getElementById('endlessBtn').addEventListener('click', () => start('endless'));
-  document.getElementById('sheetBtn').addEventListener('click', () => start('journey', { sheet: G.getFurthest() }));
+  document.getElementById('sheetBtn').addEventListener('click', () => start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) }));
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {
     SFX.ensure();
     /* the same sheet keeps its stains — no fresh paper here */
     G.continueEndless();
   });
-  document.getElementById('againBtn').addEventListener('click', () => start());
+  document.getElementById('againBtn').addEventListener('click', () => start(null, { retry: true }));
   document.getElementById('menuBtn').addEventListener('click', goMenu);
   document.getElementById('resumeBtn').addEventListener('click', resume);
   document.getElementById('pauseMenuBtn').addEventListener('click', goMenu);
   document.getElementById('deployBtn').addEventListener('click', () => G.deploy());
+  document.getElementById('clearNextBtn').addEventListener('click', clearNext);
+  document.getElementById('clearHomeBtn').addEventListener('click', clearHome);
   document.getElementById('muteBtn').addEventListener('click', toggleMute);
 
   window.addEventListener('blur', pause);
