@@ -555,7 +555,7 @@ const UI = (() => {
           card.classList.remove('refuse');
           void card.offsetWidth;
           card.classList.add('refuse');
-          setScrollsHint(`THE PAPER IS SEALED — BREAK SCROLL ${(AREAS[i - 1] || a).kanji}'S GUARDIAN FIRST`);
+          setScrollsHint(`THE PAPER IS SEALED — BREAK THE GUARDIAN OF SCROLL ${(AREAS[i - 1] || a).kanji} FIRST`);
           SFX.thud();
           return;
         }

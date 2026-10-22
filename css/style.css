@@ -10,6 +10,10 @@
   --paper-55: rgba(237, 231, 217, 0.6);
   --ink: #1a1714;
   --ink-70: rgba(26, 23, 20, 0.7);
+  /* text tier — 4.7:1 on washi; the floor for every readable glyph */
+  --ink-62: rgba(26, 23, 20, 0.62);
+  /* component tier — 3.8:1; the floor for icons, dots and state marks */
+  --ink-55: rgba(26, 23, 20, 0.55);
   --ink-45: rgba(26, 23, 20, 0.45);
   --ink-25: rgba(26, 23, 20, 0.25);
   --ink-12: rgba(26, 23, 20, 0.12);
@@ -30,9 +34,13 @@ body[data-theme="dark"]{
   --paper-55: rgba(23, 19, 15, 0.6);
   --ink: #e9e2d2;
   --ink-70: rgba(233, 226, 210, 0.7);
+  --ink-62: rgba(233, 226, 210, 0.62);
+  --ink-55: rgba(233, 226, 210, 0.55);
   --ink-45: rgba(233, 226, 210, 0.45);
   --ink-25: rgba(233, 226, 210, 0.25);
   --ink-12: rgba(233, 226, 210, 0.12);
+  /* vermillion lifts on the dark sheet — 3.1:1 → 4.5:1 */
+  --red: #d55340;
 }
 
 *, *::before, *::after{ box-sizing: border-box; margin: 0; padding: 0; }
@@ -127,7 +135,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .icon-btn:hover{ color: var(--ink); }
 .icon-btn svg{ width: 20px; height: 20px; }
-.icon-btn.muted{ color: var(--ink-25); position: relative; }
+.icon-btn.muted{ color: var(--ink-55); position: relative; }
 .icon-btn.muted::after{
   content: ''; position: absolute; width: 22px; height: 1.6px;
   background: var(--red); transform: rotate(-40deg);
@@ -284,6 +292,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   display: flex; align-items: center; gap: 12px;
   animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 1.9s backwards;
 }
+/* the red 墨 rides the chip — monochrome, named in its own ink */
+.title-chip .kanji-inline{ color: var(--red); font-size: 14px; }
 .title-chip::before, .title-chip::after{
   content: ''; width: 30px; height: 1px; background: var(--ink-25);
 }
@@ -372,7 +382,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .controls-line{
   font-size: 9px; letter-spacing: .3em;
-  color: var(--ink-45);
+  color: var(--ink-62);
   text-align: center;
 }
 
@@ -410,7 +420,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   line-height: 1.05;
 }
 .pb-right{ text-align: right; flex: 0 0 auto; }
-.pb-step-label{ display: block; font-size: clamp(8px, 1.3vh, 9px); letter-spacing: .34em; color: var(--ink-45); margin-bottom: clamp(3px, .8vh, 6px); }
+.pb-step-label{ display: block; font-size: clamp(8px, 1.3vh, 9px); letter-spacing: .34em; color: var(--ink-62); margin-bottom: clamp(3px, .8vh, 6px); }
 .pb-step-value{ font-family: var(--display); font-size: clamp(19px, 3.8vh, 30px); color: var(--red); line-height: 1; }
 
 .upgrade-grid{
@@ -539,7 +549,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .panel-hint{
   text-align: center;
   font-size: 9px; letter-spacing: .3em;
-  color: var(--ink-45);
+  color: var(--ink-62);
   flex: 0 0 auto;
 }
 
@@ -715,8 +725,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .clear-actions .block-btn{ white-space: nowrap; }
 .clear-hint{
   font-size: 8px; letter-spacing: .2em; text-indent: .2em;
-  color: var(--ink-70);
-  opacity: .75;
+  color: var(--ink-62);
 }
 @media (max-width: 720px){
   .clear-box{ padding: 24px 22px 20px; gap: 11px; }
@@ -842,12 +851,12 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transform: rotate(-.6deg);
 }
 .hud-area-count .lv-num{ font-family: var(--display); font-weight: 400; font-size: 15px; line-height: 1; color: var(--red); }
-.hud-area-count .lv-sep{ color: var(--ink-45); }
+.hud-area-count .lv-sep{ color: var(--ink-62); }
 .hud-area-count .lv-wave{ font-weight: 600; }
 .hud-mode{
   align-self: center;
   font-size: 8px; letter-spacing: .26em; text-indent: .26em;
-  color: var(--ink-45);
+  color: var(--ink-62);
   border: 1px solid var(--ink-25);
   padding: 3.5px 6px 2.5px;
   transform: rotate(-2deg);
@@ -1376,7 +1385,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .scroll-strip:hover{ transform: translateY(-4px) rotate(var(--tilt)); box-shadow: 5px 8px 0 rgba(26,23,20,.18); }
 
-.strip-no{ font-size: 8.5px; letter-spacing: .34em; text-indent: .34em; color: var(--ink-45); }
+.strip-no{ font-size: 8.5px; letter-spacing: .34em; text-indent: .34em; color: var(--ink-62); }
 .strip-kanji{
   font-family: var(--display);
   font-size: clamp(44px, 6.4vh, 62px); line-height: 1.04;
@@ -1384,7 +1393,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   margin-top: 2px;
 }
 .strip-name{ font-size: 10px; letter-spacing: .24em; text-indent: .24em; font-weight: 600; color: var(--ink); }
-.strip-ink{ font-size: 8.5px; letter-spacing: .14em; color: var(--ink-45); }
+.strip-ink{ font-size: 8.5px; letter-spacing: .14em; color: var(--ink-62); }
 
 /* the sheet's ladder — ten levels, the tenth bears the Guardian */
 .strip-dots{
@@ -1393,7 +1402,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .ldot{
   width: 9px; height: 9px;
-  border: 1px solid var(--ink-25);
+  border: 1px solid var(--ink-55);
   background: transparent;
   transform: rotate(0deg);
 }
@@ -1403,14 +1412,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 .strip-prog{
   font-size: 8.5px; letter-spacing: .22em; text-indent: .22em;
-  color: var(--ink-45);
+  color: var(--ink-62);
   margin: 0 0 2px;
 }
 .strip-state{
   margin-top: auto;
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 7.5px; letter-spacing: .18em; text-indent: .06em;
-  color: var(--ink-45);
+  font-size: 8px; letter-spacing: .18em; text-indent: .06em;
+  color: var(--ink-62);
   padding-top: 8px;
   border-top: 1px solid var(--ink-12);
   width: 100%; justify-content: center;
@@ -1471,7 +1480,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .scrolls-hint{
   font-size: 9px; letter-spacing: .26em; text-indent: .26em;
-  color: var(--ink-45);
+  color: var(--ink-62);
   text-align: center;
   padding: 6px 16px;
   border-top: 1px solid var(--ink-12);
@@ -1479,7 +1488,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   max-width: 720px;
 }
 @keyframes hintNudge{
-  0%, 100%{ color: var(--ink-45); }
+  0%, 100%{ color: var(--ink-62); }
   25%, 60%{ color: var(--red); }
 }
 .scrolls-hint.nudge{ animation: hintNudge 1s ease; }
@@ -1512,7 +1521,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .strip-kanji{ font-size: 38px; }
   .strip-dots{ gap: 3px; margin: 5px 0 1px; }
   .ldot{ width: 7px; height: 7px; }
-  .strip-state{ font-size: 6.5px; letter-spacing: .12em; }
+  .strip-state{ font-size: 7px; letter-spacing: .12em; }
   .strip-no{ font-size: 7.5px; }
   .strip-name{ font-size: 8.5px; letter-spacing: .16em; text-indent: .16em; }
   .scrolls-sub{ font-size: 8.5px; letter-spacing: .14em; text-indent: .14em; }
@@ -1563,13 +1572,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transition: transform .16s ease, box-shadow .16s ease;
 }
 .j-name{
-  font-size: 7.5px; letter-spacing: .22em; text-indent: .22em;
-  color: var(--ink-45); white-space: nowrap;
+  font-size: 8px; letter-spacing: .22em; text-indent: .22em;
+  color: var(--ink-62); white-space: nowrap;
   transition: color .16s ease;
 }
 .j-ink{
-  font-size: 6.5px; letter-spacing: .2em; text-indent: .2em;
-  color: var(--pt, var(--ink-45));
+  font-size: 7px; letter-spacing: .2em; text-indent: .2em;
+  color: var(--pt, var(--ink-62));
   background: var(--pt-paper, transparent);
   box-shadow: inset 0 0 0 1px var(--pt-soft, transparent);
   padding: 2px 4px 1px;

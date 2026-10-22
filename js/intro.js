@@ -4,9 +4,11 @@
    A skippable ink cinematic before the title: a single drop
    falls through the void, bursts, and floods into a sheet of
    washi. A brush cuts strokes, the ink begins to move — and
-   then the ink stands up: the brush spirit wakes and stamps
-   the first mark onto the paper. Rendered entirely on canvas
-   with the game's ink language.
+   then the ink stands up as the scribe: the same kasa-hatted
+   figure who paints the title ring and walks the sheets wakes
+   here, raises the brush in both hands, and stamps the first
+   mark onto the paper. Rendered entirely on canvas with the
+   game's ink language.
    ============================================================ */
 
 const INTRO = (() => {
@@ -448,6 +450,158 @@ const INTRO = (() => {
     }
   }
 
+  /* the scribe — the same kasa-hatted figure who paints the title
+     ring and walks the sheets, reborn here in the film's ink */
+  function drawScribe(c, u, o) {
+    const R = o.R;
+    if (R < 2) return;
+    const s = R / 10;                    /* in-game absolute-px scaler (r 10) */
+    const t = o.t || 0;
+    const raise = o.raise || 0;
+    const awake = o.awake || 0;
+    const stamped = !!o.stamped;
+    const st = o.st || 0;
+    const sd = 991 ^ ((o.tick || 0) * 3);
+
+    /* a soft ink shadow grounds the figure */
+    c.save();
+    c.scale(1, 0.4);
+    c.globalAlpha = 0.16;
+    c.fillStyle = INK;
+    blobPath(c, 0, R * 1.62, R * 0.98, sd ^ 3, 0.2, 9);
+    c.fill();
+    c.restore();
+
+    /* the robe — a brush-cut cone, hem bitten ragged, breathing */
+    c.save();
+    c.rotate(Math.sin(t * 2.1) * 0.035);
+    c.fillStyle = INK;
+    c.beginPath();
+    c.moveTo(-R * 0.52, -R * 0.72);
+    c.quadraticCurveTo(-R * 0.78, R * 0.3, -R * 0.92, R * 1.02);
+    c.lineTo(-R * 0.55, R * 0.92);
+    c.lineTo(-R * 0.3, R * 1.05);
+    c.lineTo(0, R * 0.9);
+    c.lineTo(R * 0.3, R * 1.06);
+    c.lineTo(R * 0.58, R * 0.92);
+    c.lineTo(R * 0.95, R * 1.03);
+    c.quadraticCurveTo(R * 0.8, R * 0.3, R * 0.52, -R * 0.72);
+    c.quadraticCurveTo(0, -R * 1.02, -R * 0.52, -R * 0.72);
+    c.closePath();
+    c.fill();
+    /* dry creases down the robe */
+    c.globalAlpha = 0.28;
+    c.strokeStyle = PAPER;
+    c.lineWidth = 1.1 * s;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(-R * 0.3, -R * 0.2);
+    c.quadraticCurveTo(-R * 0.42, R * 0.5, -R * 0.36, R * 0.95);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(R * 0.34, -R * 0.16);
+    c.quadraticCurveTo(R * 0.5, R * 0.42, R * 0.42, R * 0.95);
+    c.stroke();
+    /* the obi — a pale sash at the waist, knot at the back */
+    c.globalAlpha = 0.8;
+    c.lineWidth = 2.6 * s;
+    c.beginPath();
+    c.moveTo(-R * 0.55, R * 0.22);
+    c.quadraticCurveTo(0, R * 0.38, R * 0.55, R * 0.22);
+    c.stroke();
+    c.globalAlpha = 1;
+    c.fillStyle = INK;
+    c.beginPath(); c.arc(-R * 0.3, R * 0.32, 2.1 * s, 0, TAU); c.fill();
+    c.restore();
+
+    /* the head */
+    c.fillStyle = INK;
+    c.beginPath();
+    c.arc(0, -R * 1.06, R * 0.5, 0, TAU);
+    c.fill();
+
+    /* the kasa — a wide shallow hat, rocking; it dips to the slam */
+    c.save();
+    c.translate(0, -R * 1.16);
+    c.rotate(Math.sin(t * 1.6) * 0.04 - raise * 0.06
+      + (stamped ? (1 - Math.min(1, st / 0.32)) * -0.07 : 0));
+    c.beginPath();
+    c.ellipse(0, 0, R * 1.06, R * 0.4, 0, 0, TAU);
+    c.fill();
+    c.globalAlpha = 0.45;
+    c.strokeStyle = PAPER;
+    c.lineWidth = 0.9 * s;
+    c.beginPath();
+    c.ellipse(0, -R * 0.06, R * 0.6, R * 0.19, 0, Math.PI * 1.08, Math.PI * 1.92);
+    c.stroke();
+    c.globalAlpha = 1;
+    c.fillStyle = INK;
+    c.beginPath();
+    c.arc(0, -R * 0.36, 1.7 * s, 0, TAU);
+    c.fill();
+    c.restore();
+
+    /* the eyes — two pale slits under the brim, opening as it wakes */
+    if (awake > 0) {
+      c.globalAlpha = 0.95 * awake;
+      c.strokeStyle = PAPER;
+      c.lineCap = 'round';
+      c.lineWidth = 1.5 * s;
+      const el = 2.4 * s;
+      for (const sgn of [-1, 1]) {
+        const xx = sgn * R * 0.21;
+        c.beginPath();
+        c.moveTo(xx - el / 2, -R * 0.9);
+        c.lineTo(xx + el / 2, -R * 0.9);
+        c.stroke();
+      }
+      c.globalAlpha = 1;
+    }
+
+    /* the held brush: slung at rest, raised high, slammed tip-down;
+       the sleeve reaches along the shaft and both hands grip it */
+    const bl = R / (11 * u);
+    const rec = stamped ? 1 - easeOutCubic(clamp01(st / 0.13)) : 0;
+    const brushA = stamped ? 1.15 - rec * 2.8 : -0.55 - easeOutCubic(raise) * 1.1;
+    const gripY = R * 0.05
+      - (stamped ? rec * 22 * u : easeOutCubic(raise) * 22 * u);
+    c.save();
+    c.translate(R * 0.42, gripY);
+    c.rotate(brushA);
+    c.strokeStyle = INK;
+    c.lineCap = 'round';
+    inkStroke(c, [
+      { x: -R * 1.1, y: R * 0.12 },
+      { x: -R * 0.72, y: R * 0.05 },
+      { x: -R * 0.4, y: 0 },
+    ], 4.2 * s, { alpha: 0.95, seed: sd ^ 11 });
+    c.lineWidth = 3.2 * u * bl;          /* bamboo shaft — gripped near its end */
+    c.beginPath();
+    c.moveTo(-6 * u * bl, 0.3 * u * bl);
+    c.quadraticCurveTo(6 * u * bl, -1.4 * u * bl, 20 * u * bl, -0.4 * u * bl);
+    c.stroke();
+    c.lineWidth = 4.6 * u * bl;          /* thread-wrap ferrule */
+    c.beginPath();
+    c.moveTo(19 * u * bl, -0.6 * u * bl);
+    c.lineTo(23 * u * bl, -0.2 * u * bl);
+    c.stroke();
+    c.fillStyle = INK;                   /* bristles, wet with ink */
+    c.beginPath();
+    c.moveTo(23 * u * bl, -3.4 * u * bl);
+    c.quadraticCurveTo(30 * u * bl, -2.6 * u * bl, 34 * u * bl, 0.2 * u * bl);
+    c.quadraticCurveTo(29 * u * bl, 3.2 * u * bl, 23 * u * bl, 2.8 * u * bl);
+    c.closePath();
+    c.fill();
+    c.globalAlpha = 0.95;                /* both hands near the shaft's end */
+    c.fillStyle = INK;
+    blobPath(c, -1.5 * u * bl, -0.1 * u * bl, R * 0.23, sd ^ 7, 0.25, 8);
+    c.fill();
+    blobPath(c, 3.5 * u * bl, 0.15 * u * bl, R * 0.2, sd ^ 9, 0.25, 8);
+    c.fill();
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
   /* the beasts that rise from the pools — solid ink, one language */
   function drawBeast(c, kind, x, y, r, tick, u, eyes) {
     const sd = (kind * 7919) ^ (tick * 13);
@@ -760,6 +914,7 @@ const INTRO = (() => {
         const gy = H * 0.58;
         const lift = easeOutCubic(gp) * 40 * u;
         const bodyR = 40 * u * (0.3 + 0.7 * easeOutBack(gp));
+        const K = 1.9;                 /* the scribe stands taller than the blob ever was */
 
         /* it lifts while raising the brush, ducks and squashes on the slam */
         const duck = stamped ? (1 - easeOutCubic(slamT)) * 13 * u : -5 * u * rp;
@@ -767,87 +922,29 @@ const INTRO = (() => {
         const sqy = 1 - (stamped ? (1 - slamT) * 0.14 : -rp * 0.08);
 
         /* the pool it gathers from */
-        if (gp < 1) splatPaint(ctx, ix, gy + 30 * u, 34 * u * (0.35 + 0.65 * gp), 4321, 0.72 * (1 - gp * 0.45), INK);
+        if (gp < 1) splatPaint(ctx, ix, gy + 30 * u, 50 * u * (0.35 + 0.65 * gp), 4321, 0.72 * (1 - gp * 0.45), INK);
 
         ctx.save();
         ctx.translate(ix, gy - lift + duck);
         ctx.scale(sqx, sqy);
-
-        /* the body — a living drop, the player in miniature */
-        ctx.fillStyle = INK;
-        ctx.globalAlpha = 0.16;
-        blobPath(ctx, 0, 1.5 * u, bodyR * 1.42, 991, 0.2, 10);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.save();
-        ctx.scale(0.94, 1.07);           /* a drop standing: taller than wide */
-        blobPath(ctx, 0, 0, bodyR * 0.98, 991 ^ (tick * 3), 0.12, 11);
-        ctx.fill();
-        ctx.restore();
-        ctx.globalAlpha = 0.35;
-        blobPath(ctx, -bodyR * 0.16, bodyR * 0.14, bodyR * 0.5, 997, 0.28, 9);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-
-        /* the held brush: slung at rest, raised high, slammed tip-down */
-        const brushA = stamped
-          ? 1.15 - (1 - easeOutCubic(clamp01(st / 0.13))) * 2.8
-          : -0.55 - easeOutCubic(rp) * 1.1;
-        const gripY = bodyR * 0.05
-          - (stamped ? (1 - easeOutCubic(clamp01(st / 0.13))) * 22 * u : easeOutCubic(rp) * 22 * u);
-        const bl = bodyR / (11 * u);
-        ctx.save();
-        ctx.translate(bodyR * 0.42, gripY);
-        ctx.rotate(brushA);
-        ctx.strokeStyle = INK;
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 3.2 * u * bl;          /* bamboo shaft */
-        ctx.beginPath();
-        ctx.moveTo(-24 * u * bl, 0);
-        ctx.quadraticCurveTo(-12 * u * bl, 1.2 * u * bl, -4 * u * bl, 0.4 * u * bl);
-        ctx.stroke();
-        ctx.lineWidth = 4.6 * u * bl;          /* thread-wrap ferrule */
-        ctx.beginPath();
-        ctx.moveTo(-5.5 * u * bl, 0.2 * u * bl);
-        ctx.lineTo(-1.5 * u * bl, 0);
-        ctx.stroke();
-        ctx.fillStyle = INK;                   /* bristles, wet with ink */
-        ctx.beginPath();
-        ctx.moveTo(-1.5 * u * bl, -3 * u * bl);
-        ctx.quadraticCurveTo(8 * u * bl, -2.8 * u * bl, 13 * u * bl, 0.2 * u * bl);
-        ctx.quadraticCurveTo(8 * u * bl, 3 * u * bl, -1.5 * u * bl, 3 * u * bl);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-
-        /* the eye — opens when the spirit wakes */
-        if (awake > 0) {
-          ctx.strokeStyle = PAPER;
-          ctx.lineWidth = 2.8 * u * bl;
-          ctx.lineCap = 'round';
-          ctx.globalAlpha = awake;
-          const el = 7 * u * bl;
-          ctx.beginPath();
-          ctx.moveTo(-el / 2 + bodyR * 0.16, -bodyR * 0.1 + el * 0.1);
-          ctx.lineTo(el / 2 + bodyR * 0.16, -bodyR * 0.1 - el * 0.1);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
+        drawScribe(ctx, u, {
+          R: bodyR * K, raise: rp, awake, stamped, st, t: T, tick,
+        });
         ctx.restore();
 
         /* a wisp curling off the freshly stood ink */
         if (!stamped && awake > 0) {
           inkStroke(ctx, [
-            { x: ix - bodyR * 1.5, y: gy - lift - bodyR * 1.15 },
-            { x: ix - bodyR * 1.95, y: gy - lift - bodyR * 2 + Math.sin(T * 3) * 2 * u },
+            { x: ix - bodyR * K * 0.55, y: gy - lift - bodyR * K * 1.35 },
+            { x: ix - bodyR * K * 1.1, y: gy - lift - bodyR * K * 1.9 + Math.sin(T * 3) * 2 * u },
           ], 2 * u, { alpha: 0.3 * awake });
         }
 
         /* the hanko it slams beneath its own brush */
         if (stamped) {
           const sz = Math.min(W, H) * 0.115;
-          const hx = ix + 34 * u + sz * 0.30;
-          const hy = gy - lift + duck + bodyR * 0.98 + sz * 0.42;
+          const hx = ix + bodyR * K * 1.35;
+          const hy = gy - lift + duck + bodyR * K * 1.05 + sz * 0.42;
           const s = 1.3 - 0.3 * press;
           ctx.save();
           ctx.translate(hx, hy);
