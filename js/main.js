@@ -11,14 +11,17 @@
   const stage = document.getElementById('stage');
 
   /* ---------------- adaptive resolution ----------------
-     holds 60fps on modest hardware: if the frame pace sags,
-     the sheet is drawn at a slightly softer internal scale,
-     invisibly, before anything stutters. */
+     a last-resort guard for genuinely modest hardware. The sheet
+     only softens after struggle that PERSISTS — a hiccough, a GC
+     pause, a spawn burst or a busy tab must never cost the scribe
+     his detail — and it always finds its way back to full crispness.
+     ?nores disables the guard entirely. */
   const ADAPT = {
     scale: 1,
-    ema: 60,          // smoothed fps
     downCool: 0,      // s before the next step down
     upHold: 0,        // s of healthy pace before a step up
+    sagT: 0,          // s of sustained struggle, decayed while healthy
+    grace: 0,         // s of protection at a run's start (spawn bursts)
     on: true,
   };
   try { ADAPT.on = new URLSearchParams(location.search).get('nores') === null; } catch (e) {}
@@ -34,8 +37,17 @@
     canvas.style.height = h + 'px';
     G.S.W = w; G.S.H = h; G.S.dpr = dpr;
   }
-  window.addEventListener('resize', resize);
+  /* a window change — moved, resized, zoomed, another monitor — is
+     a natural moment to retry full crispness */
+  window.addEventListener('resize', () => {
+    if (ADAPT.scale < 1) { ADAPT.scale = 1; ADAPT.sagT = 0; ADAPT.downCool = 4; }
+    resize();
+  });
   resize();
+  /* QA hook: force the internal scale to see the sheet softened or
+     restored (the adapt guard itself stays otherwise automatic) */
+  G.setResScale = v => { ADAPT.scale = Math.max(0.5, Math.min(1, v)); ADAPT.sagT = 0; resize(); };
+  G.resScale = () => ADAPT.scale;
   G.S.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------------- input ---------------- */
@@ -73,6 +85,7 @@
   function start(mode, opts) {
     SFX.ensure();
     R.resetStains(); /* a fresh sheet */
+    ADAPT.grace = 4; /* spawn bursts are allowed their jank */
     G.startRun(mode || lastMode, opts);
     lastMode = mode || lastMode;
   }
@@ -279,6 +292,7 @@
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {
     SFX.ensure();
+    ADAPT.grace = 4;
     /* the same sheet keeps its stains — no fresh paper here */
     G.continueEndless();
   });
@@ -335,16 +349,28 @@
       fpsBox.ms += (rawDt * 1000 - fpsBox.ms) * 0.05;
     }
     if (ADAPT.on) {
-      ADAPT.downCool -= rawDt; ADAPT.upHold += rawDt;
-      if (G.mode === 'playing' && ADAPT.downCool <= 0 && rawDt > 0.0005 && rawDt < 0.5) {
-        if (fpsBox.fps < 52 && ADAPT.scale > 0.58) {
-          ADAPT.scale = Math.max(0.58, ADAPT.scale - 0.14);
-          ADAPT.downCool = 2.5; ADAPT.upHold = 0;
-          resize();
-        } else if (fpsBox.fps > 58.5 && ADAPT.scale < 1 && ADAPT.upHold > 7) {
-          ADAPT.scale = Math.min(1, ADAPT.scale + 0.12);
-          ADAPT.downCool = 3; ADAPT.upHold = 0;
-          resize();
+      ADAPT.downCool -= rawDt; ADAPT.upHold += rawDt; ADAPT.grace -= rawDt;
+      if (rawDt > 0.0005 && rawDt < 0.5) {
+        /* struggle only counts while it lasts: the sag clock climbs
+           while the pace is truly poor and decays twice as fast when
+           the pace recovers — momentary hiccoughs never reach it */
+        if (G.mode === 'playing') {
+          if (fpsBox.fps < 46) ADAPT.sagT += rawDt;
+          else if (fpsBox.fps > 55) ADAPT.sagT = Math.max(0, ADAPT.sagT - rawDt * 2);
+        }
+        if (ADAPT.downCool <= 0 && ADAPT.grace <= 0) {
+          /* step down: sustained sag only, never below 75% */
+          if (G.mode === 'playing' && ADAPT.sagT > 1.4 && ADAPT.scale > 0.75) {
+            ADAPT.scale = Math.max(0.75, ADAPT.scale - 0.12);
+            ADAPT.sagT = 0; ADAPT.downCool = 4; ADAPT.upHold = 0;
+            resize();
+          /* step up: quick and forgiving, any mode — a soft sheet
+             should never outlive the struggle that earned it */
+          } else if (fpsBox.fps > 57 && ADAPT.scale < 1 && ADAPT.upHold > 2.5) {
+            ADAPT.scale = Math.min(1, ADAPT.scale + 0.12);
+            ADAPT.downCool = 1.5; ADAPT.upHold = 0;
+            resize();
+          }
         }
       }
     }

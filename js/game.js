@@ -111,7 +111,7 @@ const G = (() => {
       st.xp -= CFG.xp.req(st.xpLevel);
       st.xpLevel++;
       S.pendingLevels++;
-      S.popups.push({ x: S.player.x, y: S.player.y - 22, txt: '墨 INK RISES', life: 1.1, max: 1.1, red: true });
+      S.popups.push({ x: S.player.x, y: S.player.y - 22, txt: 'INK RISES', life: 1.1, max: 1.1, red: true });
     }
     if (S.pendingLevels > 0 && S.mode === 'playing') {
       /* a broken seal owns the screen: the choice (onward naked, or
@@ -1450,7 +1450,7 @@ const G = (() => {
     if (e.type === 'blotter' && proj && !e.bloat) {
       e.soak = (e.soak || 0) + 1;
       e.r = Math.min(19, e.r + 1.2);
-      S.popups.push({ x: e.x, y: e.y - e.r - 5, txt: '飲', life: 0.45, max: 0.45 });
+      S.popups.push({ x: e.x, y: e.y - e.r - 5, txt: 'SOAK', life: 0.45, max: 0.45 });
       SFX.ping();
       if (e.soak >= 3) {
         e.bloat = true;
@@ -1477,7 +1477,7 @@ const G = (() => {
       while (diff > Math.PI) diff -= TAU;
       while (diff < -Math.PI) diff += TAU;
       if (Math.abs(diff) < 1.15) {
-        S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: '掠', life: 0.4, max: 0.4 });
+        S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: 'DEFLECT', life: 0.4, max: 0.4 });
         SFX.ping();
         return false;
       }
@@ -1496,7 +1496,7 @@ const G = (() => {
           ang: ra, dmg: 1, hits: 1, age: 0, life: 0.8,
           kind: 'drop', brush: 'needle', seed: 100000 + ((Math.random() * 899999) | 0), refl: true,
         });
-        S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: '返', life: 0.4, max: 0.4 });
+        S.popups.push({ x: e.x + Math.cos(e.ang) * (e.r + 6), y: e.y + Math.sin(e.ang) * (e.r + 6), txt: 'RETURNED', life: 0.4, max: 0.4 });
         SFX.ping();
         return false;
       }
@@ -1648,7 +1648,7 @@ const G = (() => {
           SFX.heal();
         } else if (pk.kind === 'magnet') {
           S.magnetT = CFG.xp.magnetPulse;
-          S.popups.push({ x: p.x, y: p.y - 20, txt: '墨 — GATHERED', life: 1.1, max: 1.1, red: true });
+          S.popups.push({ x: p.x, y: p.y - 20, txt: 'INK — GATHERED', life: 1.1, max: 1.1, red: true });
           S.rings.push({ x: p.x, y: p.y, max: 120, life: 0.5, maxLife: 0.5 });
           SFX.magnet();
         } else if (pk.kind === 'bomb') {
@@ -2734,7 +2734,7 @@ const G = (() => {
           /* the smother's grip: its touch weighs the brush down */
           if (e.type === 'smother' && S.playerSlowT <= 0.35) {
             S.playerSlowT = 1.2;
-            S.popups.push({ x: p.x, y: p.y - 20, txt: '纏', life: 0.7, max: 0.7 });
+            S.popups.push({ x: p.x, y: p.y - 20, txt: 'GRIPPED', life: 0.7, max: 0.7 });
           }
           takeHit(); break;
         }
@@ -2903,9 +2903,9 @@ const G = (() => {
     if (boss && !boss.marker) {
       const bdef = ENEMIES[boss.type];
       UI.setBoss(bdef.name, boss.hp / boss.maxHp,
-        bdef.boss === 2 ? '守 KEEPER — SCENE ' + asBar.level : '守 GUARDIAN — SHEET ' + asBar.area.id);
+        bdef.boss === 2 ? 'KEEPER — SCENE ' + asBar.level : 'GUARDIAN — SHEET ' + asBar.area.id);
     }
-    else if (boss && boss.marker) UI.setBoss(boss.name, 1, boss.keeper ? '守 KEEPER — SCENE ' + asBar.level : '守 GUARDIAN — SHEET ' + asBar.area.id);
+    else if (boss && boss.marker) UI.setBoss(boss.name, 1, boss.keeper ? 'KEEPER — SCENE ' + asBar.level : 'GUARDIAN — SHEET ' + asBar.area.id);
     else UI.setBoss(null);
 
     const remaining = S.queue.length + S.markers.length + S.enemies.length;

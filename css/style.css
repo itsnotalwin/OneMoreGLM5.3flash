@@ -106,6 +106,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   box-shadow: 2.5px 2.5px 0 rgba(26,23,20,.28);
 }
 .wave-kanji{ font-family: var(--display); font-size: 24px; line-height: 1; transform: translateY(-1px); }
+.wave-kanji.long{ font-size: 15px; letter-spacing: .02em; }
 .hud-wave-meta{ display: flex; flex-direction: column; gap: 5px; }
 .hud-label{ font-size: 9px; letter-spacing: .34em; color: var(--ink-70); }
 .wave-progress{ width: 110px; height: 3px; background: var(--ink-12); }
@@ -480,7 +481,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .pip.on{ background: var(--ink); border-color: var(--ink); }
 
-.up-glyph{ width: clamp(26px, 4.8vh, 40px); height: clamp(26px, 4.8vh, 40px); color: var(--ink); flex: 0 0 auto; }
+.up-glyph{ width: clamp(24px, 4.2vh, 36px); height: clamp(24px, 4.2vh, 36px); color: var(--ink); flex: 0 0 auto; }
 .up-name{
   font-family: var(--display);
   font-size: clamp(15px, 2.7vh, 21px);
@@ -489,16 +490,16 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 0 0 auto;   /* the name never yields its line to the squeeze */
 }
+/* the description is the whole point of a choice — it reads at
+   full size, unmasked, in the card's open air */
 .up-desc{
-  font-size: clamp(9px, 1.55vh, 10.5px); line-height: 1.7; letter-spacing: .03em;
+  font-size: clamp(11.5px, 1.85vh, 14.5px); line-height: 1.55; letter-spacing: .02em;
   color: var(--ink-70);
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  max-height: 8.5em;
-  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
 }
 .up-check{
   align-self: flex-end;
@@ -1022,8 +1023,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-foot{ display: none; }
   /* the three strokes stack, each an equal third of the page */
   .upgrade-grid{ grid-template-columns: 1fr; }
-  .up-desc{ max-height: 5.1em; }
-  .up-card{ min-height: 0; }
+  .up-card{ min-height: 0; gap: 6px; }
+  .up-glyph{ width: 26px; height: 26px; }
+  .up-name{ font-size: 17px; }
+  .up-desc{ font-size: 12px; line-height: 1.5; }
   .over-body{ flex-direction: column; align-items: flex-start; gap: 30px; }
   .rank-block{ align-self: center; }
   .over-actions{ flex-direction: column; }

@@ -36,12 +36,12 @@
   <!-- ============ IN-RUN HUD ============ -->
   <div id="hud" class="hidden">
     <div class="hud-tl">
-      <div class="wave-chip"><span class="wave-kanji" id="hudWave">一</span></div>
+      <div class="wave-chip"><span class="wave-kanji" id="hudWave">1</span></div>
       <div class="hud-wave-meta">
         <div class="hud-area" id="hudArea">
           <span class="hud-area-kanji" id="hudAreaKanji">一</span>
           <span class="hud-area-name" id="hudAreaName">FIRST WASH</span>
-          <span class="hud-area-count" id="hudWaveTotal">一 / 十</span>
+          <span class="hud-area-count" id="hudWaveTotal">SCENE 1 · 1/10</span>
         </div>
         <div class="wave-progress"><div class="wave-fill" id="waveFill"></div></div>
       </div>
@@ -60,11 +60,11 @@
       <div class="hud-xp">
         <span class="xp-label">墨</span>
         <div class="xp-track"><div class="xp-fill" id="hudXpFill"></div></div>
-        <span class="xp-lv" id="hudXpLv">一</span>
+        <span class="xp-lv" id="hudXpLv">1</span>
       </div>
     </div>
     <div class="boss-bar hidden" id="hudBoss">
-      <span class="boss-kicker" id="hudBossKick">守 GUARDIAN</span>
+      <span class="boss-kicker" id="hudBossKick">GUARDIAN</span>
       <span class="boss-name" id="hudBossName">THE STAIN</span>
       <div class="boss-track"><div class="boss-fill" id="hudBossFill"></div></div>
     </div>
@@ -133,7 +133,7 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V6.9</span></div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V7.1</span></div>
     </div>
 
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
@@ -146,7 +146,7 @@
   <section id="screenScrolls" class="screen screen-scrolls hidden">
     <span class="wm wm-scrolls" aria-hidden="true">巻</span>
     <div class="scrolls-head">
-      <div class="scrolls-kicker">THE JOURNEY — 五巻五十景</div>
+      <div class="scrolls-kicker">THE JOURNEY — FIVE SCROLLS · FIFTY SCENES</div>
       <h2 class="scrolls-title">FIVE SCROLLS</h2>
       <p class="scrolls-sub">Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.</p>
     </div>
@@ -155,7 +155,7 @@
     <div class="scroll-strip-row hidden" id="levelRow"></div>
     <div class="scrolls-foot">
       <p class="scrolls-hint" id="scrollsHint">TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT</p>
-      <button id="scrollsBackBtn" class="ghost-btn">RETURN — 戻</button>
+      <button id="scrollsBackBtn" class="ghost-btn">RETURN</button>
     </div>
   </section>
 
@@ -165,12 +165,12 @@
     <div class="panel">
       <div class="panel-banner">
         <div class="pb-left">
-          <span class="pb-kicker" id="upKicker">WAVE 一 — CLEARED</span>
+          <span class="pb-kicker" id="upKicker">WAVE 01 — CLEARED</span>
           <span class="pb-title">CHOOSE ONE MORE</span>
         </div>
         <div class="pb-right">
           <span class="pb-step-label">NEXT</span>
-          <span class="pb-step-value" id="upNext">二</span>
+          <span class="pb-step-value" id="upNext">2</span>
         </div>
       </div>
       <div class="upgrade-grid" id="upgradeGrid"></div>
@@ -185,15 +185,15 @@
     <div class="clear-box">
       <div class="clear-seal" aria-hidden="true">了</div>
       <div class="clear-kicker" id="clearKicker">THE SEAL BREAKS</div>
-      <h2 class="clear-title" id="clearTitle">第一景 — SEALED</h2>
+      <h2 class="clear-title" id="clearTitle">SCENE 1 — SEALED</h2>
       <p class="clear-sub" id="clearSub">The scene is pressed into the paper. The next begins unadorned.</p>
       <div class="clear-next" id="clearNextLine">
         <span class="cn-label">NEXT</span>
-        <span class="cn-value" id="clearNextValue">第二景</span>
+        <span class="cn-value" id="clearNextValue">SCENE 2</span>
       </div>
       <div class="clear-actions">
-        <button id="clearNextBtn" class="block-btn big">NEXT LEVEL — 次景</button>
-        <button id="clearHomeBtn" class="ghost-btn">HOME — 归还</button>
+        <button id="clearNextBtn" class="block-btn big">NEXT SCENE</button>
+        <button id="clearHomeBtn" class="ghost-btn">HOME</button>
       </div>
       <div class="clear-hint">THE NEXT LEVEL BEGINS WITH NO UPGRADES — ENTER TO CONTINUE</div>
     </div>
@@ -206,8 +206,8 @@
       <div class="pause-chip">REST</div>
       <p class="pause-note">The ink waits. For now.</p>
       <div class="pause-actions">
-        <button id="resumeBtn" class="block-btn">RESUME — 続</button>
-        <button id="pauseMenuBtn" class="ghost-btn">ABANDON — 撤</button>
+        <button id="resumeBtn" class="block-btn">RESUME</button>
+        <button id="pauseMenuBtn" class="ghost-btn">ABANDON</button>
       </div>
     </div>
   </section>
@@ -235,7 +235,7 @@
       <div class="over-actions">
         <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
         <button id="againBtn" class="block-btn big">ONE MORE</button>
-        <button id="menuBtn" class="ghost-btn">MENU — 归</button>
+        <button id="menuBtn" class="ghost-btn">MENU</button>
       </div>
     </div>
   </section>

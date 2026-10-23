@@ -249,10 +249,15 @@ const UI = (() => {
     el.hudAreaKanji.textContent = area.kanji;
     el.hudAreaName.textContent = area.name;
     el.hudWaveTotal.innerHTML =
-      `<b class="lv-num">第${toKanji(level)}景</b><span class="lv-sep">·</span><span class="lv-wave">${toKanji(waveInLevel)}/${toKanji(CFG.wave.wavesPerLevel)}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' 守' : ''}</span>`;
+      `<b class="lv-num">SCENE ${level}</b><span class="lv-sep">·</span><span class="lv-wave">${waveInLevel}/${CFG.wave.wavesPerLevel}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' <span class="lv-keep">守</span>' : ''}</span>`;
   }
 
-  function setWave(n) { el.hudWave.textContent = toKanji(n); }
+  /* the HUD's wave seal now wears the count itself — Arabic numerals,
+     English-first; the seal just carries them */
+  function setWave(n) {
+    el.hudWave.textContent = n;
+    el.hudWave.classList.toggle('long', n >= 100);
+  }
 
   function setProgress(f) {
     const v = Math.max(0, Math.min(1, f));
@@ -298,9 +303,9 @@ const UI = (() => {
      Held a beat longer than a wave banner: the scene number is
      the news, and it must land before the first beast does. */
   function levelBanner(area, level, name) {
-    el.bannerKicker.textContent = `THE PAGE GROWS — LEVEL ${toKanji(level)} OF ${toKanji(CFG.wave.levelsPerArea)}`;
+    el.bannerKicker.textContent = `THE PAGE GROWS — SCENE ${level} OF ${CFG.wave.levelsPerArea}`;
     el.bannerTitle.innerHTML =
-      `<span class="ban-kanji">${area.kanji}</span><span class="ban-lat">第${toKanji(level)}景${name ? ' — ' + name : ''}</span>`;
+      `<span class="ban-kanji">${toKanji(level)}</span><span class="ban-lat">SCENE ${level}${name ? ' — ' + name : ''}</span>`;
     el.banner.classList.toggle('area', true);
     el.banner.classList.toggle('surge', false);
     el.banner.classList.remove('show');
@@ -313,9 +318,9 @@ const UI = (() => {
   /* a level's seal breaks — the scene is complete. Red, brief,
      unmistakable: the counter is about to climb, not restart. */
   function sealBanner(area, level) {
-    el.bannerKicker.textContent = `THE SEAL BREAKS — LEVEL ${toKanji(level)} COMPLETE`;
+    el.bannerKicker.textContent = `THE SEAL BREAKS — SCENE ${level} COMPLETE`;
     el.bannerTitle.innerHTML =
-      `<span class="ban-kanji">印</span><span class="ban-lat">第${toKanji(level)}景 — COMPLETE</span>`;
+      `<span class="ban-kanji">印</span><span class="ban-lat">SCENE ${level} — COMPLETE</span>`;
     el.banner.classList.toggle('area', true);
     el.banner.classList.toggle('surge', true);
     el.banner.classList.remove('show');
@@ -331,16 +336,16 @@ const UI = (() => {
     const nextLevel = d.level + 1;
     el.clearKicker.textContent = `SCROLL ${d.area.kanji} ${d.area.name}`;
     el.clearTitle.innerHTML =
-      `<span class="ct-kanji">第${toKanji(d.level)}景</span><span class="ct-lat">— SEALED</span>`;
+      `<span class="ct-kanji">${toKanji(d.level)}</span><span class="ct-lat">SCENE ${d.level} — SEALED</span>`;
     el.clearSub.textContent = d.guardian
       ? 'The scroll is painted in full. The next unrolls naked — every stroke is earned again.'
       : 'The scene is pressed into the paper. The next begins unadorned — the brush keeps nothing.';
     el.clearNextValue.innerHTML = d.guardian && d.nextArea
       ? `<span class="cn-kanji">${d.nextArea.kanji}</span><span class="cn-name">${d.nextArea.name}</span>`
-      : `<span class="cn-kanji">第${toKanji(nextLevel)}景</span><span class="cn-name">LEVEL ${pad2(nextLevel)}</span>`;
+      : `<span class="cn-kanji">${toKanji(nextLevel)}</span><span class="cn-name">SCENE ${pad2(nextLevel)}</span>`;
     el.clearNextBtn.innerHTML = d.guardian
-      ? 'NEXT SCROLL — <span class="kanji-inline">次巻</span>'
-      : 'NEXT LEVEL — <span class="kanji-inline">次景</span>';
+      ? 'NEXT SCROLL'
+      : 'NEXT SCENE';
     el.screens.clear.classList.remove('rise');
     void el.screens.clear.offsetWidth;   /* the seal is pressed fresh each time */
     el.screens.clear.classList.add('rise');
@@ -350,8 +355,8 @@ const UI = (() => {
   /* a new sheet unrolls: the scroll turns */
   function areaBanner(area, cycle, deepEndless) {
     el.bannerKicker.textContent = deepEndless
-      ? `THE SCROLL TURNS FOREVER — SHEET ${toKanji(cycle + 1)}`
-      : `THE SCROLL TURNS — SHEET ${toKanji(cycle + 1)} OF ${toKanji(AREAS.length)}`;
+      ? `THE SCROLL TURNS FOREVER — SHEET ${cycle + 1}`
+      : `THE SCROLL TURNS — SHEET ${cycle + 1} OF ${AREAS.length}`;
     el.bannerTitle.innerHTML =
       `<span class="ban-kanji">${area.kanji}</span><span class="ban-lat">${area.name}</span>`;
     el.banner.classList.toggle('area', true);
@@ -377,7 +382,7 @@ const UI = (() => {
     if (Math.abs(v - lastXp.f) < 0.002 && level === lastXp.lv) return;
     lastXp.f = v; lastXp.lv = level;
     el.hudXpFill.style.width = (v * 100).toFixed(1) + '%';
-    if (el.hudXpLv) el.hudXpLv.textContent = toKanji(level + 1);
+    if (el.hudXpLv) el.hudXpLv.textContent = level + 1;
   }
 
   /* the red beast's seal, worn at the top of the sheet */
@@ -409,7 +414,7 @@ const UI = (() => {
     lastCombo.n = n; lastCombo.m = m;
     if (n >= CFG.combo.showAt) {
       el.hudCombo.classList.remove('hidden');
-      el.hudCombo.innerHTML = `<b>×${mult.toFixed(2)}</b><i>${n} 折</i>`;
+      el.hudCombo.innerHTML = `<b>×${mult.toFixed(2)}</b><i>${n} CHAIN</i>`;
       el.hudCombo.classList.toggle('hot', n >= 40);
     } else {
       el.hudCombo.classList.add('hidden');
@@ -420,8 +425,8 @@ const UI = (() => {
      Same cry, different rank; the gong backs it in game.js. */
   function bossBanner(area, bossName, keeper, level) {
     el.bannerKicker.textContent = keeper
-      ? `THE KEEPER OF SCENE ${toKanji(level || 1)} WAKES`
-      : `THE GUARDIAN OF SHEET ${area.kanji} WAKES`;
+      ? `THE KEEPER OF SCENE ${level || 1} WAKES`
+      : `THE GUARDIAN OF ${area.name} WAKES`;
     el.bannerTitle.innerHTML =
       `<span class="ban-kanji">守</span><span class="ban-lat">${bossName}</span>`;
     el.banner.classList.toggle('area', true);
@@ -487,7 +492,7 @@ const UI = (() => {
   let onScrollsBack = null;     /* main.js answers with the title */
   let ladderSheet = 0;          /* 0 = the shelf; n = the ten scenes of scroll n */
   const SCROLLS_HEAD = {
-    kick: 'THE JOURNEY — 五巻五十景',
+    kick: 'THE JOURNEY — FIVE SCROLLS · FIFTY SCENES',
     title: 'FIVE SCROLLS',
     sub: "Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.",
   };
@@ -538,14 +543,14 @@ const UI = (() => {
         ? '<span class="strip-state is-done"><span class="strip-seal">落</span>CLEARED</span>'
         : '<span class="strip-state is-wait"><span class="strip-wait">筆</span>IN PROGRESS</span>';
       const progLine = (!isLocked && !isCleared)
-        ? `<span class="strip-prog">${toKanji(reached)} / ${toKanji(CFG.wave.levelsPerArea)}景</span>`
+        ? `<span class="strip-prog">${reached} / ${CFG.wave.levelsPerArea} SCENES</span>`
         : '';
       card.innerHTML =
         `<span class="strip-string" aria-hidden="true"></span>` +
         `<span class="strip-no">SCROLL ${['I', 'II', 'III', 'IV', 'V'][i]}</span>` +
         `<span class="strip-kanji" aria-hidden="true">${a.kanji}</span>` +
         `<span class="strip-name">${a.name}</span>` +
-        `<span class="strip-ink">${a.ink} · 十景</span>` +
+        `<span class="strip-ink">${a.ink} ink · TEN SCENES</span>` +
         `<span class="strip-dots" aria-hidden="true">${dots}</span>` +
         progLine + state;
       card.setAttribute('aria-label',
@@ -590,7 +595,7 @@ const UI = (() => {
     const sealedUpTo = isCleared ? CFG.wave.levelsPerArea : (seals[n] || 0);
     const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
     setScrollsHead(
-      `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · 十景`,
+      `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · TEN SCENES`,
       a.name,
       isCleared
         ? 'The scroll lies finished. Every scene stays open — walk any of them again.'
@@ -621,7 +626,7 @@ const UI = (() => {
         `<span class="strip-string" aria-hidden="true"></span>` +
         `<span class="strip-no">SCENE ${roman[d - 1]}</span>` +
         `<span class="strip-kanji" aria-hidden="true">${toKanji(d)}</span>` +
-        `<span class="strip-name">第${toKanji(d)}景</span>` +
+        `<span class="strip-name">${a.names[d - 1] || ''}</span>` +
         `<span class="strip-ink">WAVES ${w0}–${w1}</span>` +
         state;
       card.setAttribute('aria-label',
@@ -642,7 +647,7 @@ const UI = (() => {
     }
     setScrollsHint(isCleared
       ? 'EVERY SCENE OF THIS SCROLL LIES SEALED — WALK ANY OF THEM AGAIN'
-      : 'ENTER A SEALED SCENE — OR WALK THE WET FRONTIER 次');
+      : 'ENTER A SEALED SCENE — OR WALK THE WET FRONTIER');
   }
 
   function setScrollsHint(txt) {
@@ -677,7 +682,7 @@ const UI = (() => {
   function setBest(b) {
     if (b && b.score > 0) {
       el.bestLine.classList.remove('hidden');
-      el.bestLine.innerHTML = `BEST — WAVE <span class="kanji-inline">${toKanji(b.wave)}</span> · ${b.score.toLocaleString('en-US')} PTS`;
+      el.bestLine.innerHTML = `BEST — WAVE ${b.wave} · ${b.score.toLocaleString('en-US')} PTS`;
     } else {
       el.bestLine.classList.add('hidden');
     }
@@ -693,9 +698,9 @@ const UI = (() => {
       const pips = u.patch ? '' : Array.from({ length: u.max }, (_, k) =>
         `<i class="pip${k < lv ? ' on' : ''}"></i>`).join('');
       const isNew = !u.patch && lv === 0 ? '<span class="up-new">NEW</span>' : '';
-      const isWpn = u.weapon ? '<span class="up-wpn">武</span>' : '';
+      const isWpn = u.weapon ? '<span class="up-wpn">WEAPON</span>' : '';
       card.innerHTML =
-        `<div class="up-top"><span class="up-no">之${toKanji(i + 1)}</span><span class="up-top-right">${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
+        `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
         `<svg class="up-glyph" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg>` +
         `<h3 class="up-name">${u.name}</h3>` +
         `<p class="up-desc">${u.desc}</p>` +
@@ -726,16 +731,16 @@ const UI = (() => {
     el.deployBtn.innerHTML = on
       ? (nextArea
         ? `UNROLL — <span class="kanji-inline">${nextArea.kanji}</span> ${nextArea.name}`
-        : `DEPLOY — LEVEL <span class="kanji-inline">${toKanji(level)}</span>`)
+        : `DEPLOY — SCENE ${level}`)
       : (nextArea
         ? `NEXT — SCROLL <span class="kanji-inline">${nextArea.kanji}</span> ${nextArea.name}`
-        : `DEPLOY — LEVEL <span class="kanji-inline">${toKanji(level)}</span>`);
+        : `DEPLOY — SCENE ${level}`);
   }
 
   function setUpgradeHeader(waveInLevel, level, area, kind, xpLevel) {
     if (kind === 'level') {
       el.upKicker.innerHTML =
-        `THE INK RISES — LEVEL <span class="kanji-inline">${toKanji(xpLevel)}</span>`;
+        `THE INK RISES — INK LEVEL ${xpLevel}`;
       el.upNext.innerHTML = '<span class="kanji-inline">墨</span>';
       return;
     }
@@ -748,10 +753,10 @@ const UI = (() => {
     /* a level's seal was just broken */
     const lastLevel = level >= CFG.wave.levelsPerArea;
     el.upKicker.innerHTML =
-      `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — LEVEL <span class="kanji-inline">${toKanji(level)}</span> SEALED`;
+      `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — SCENE ${level} SEALED`;
     el.upNext.innerHTML = lastLevel
       ? '<span class="kanji-inline">?</span>'
-      : '<span class="kanji-inline">' + toKanji(level + 1) + '</span>';
+      : String(level + 1);
   }
 
   function showOver(d) {
@@ -763,7 +768,7 @@ const UI = (() => {
     el.overKicker.textContent =
       `RUN ${pad3(d.run)} — ${d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}`;
     el.overRank.textContent = d.rank;
-    el.statWaves.innerHTML = `${d.waves} <span class="kanji-inline">${toKanji(d.waves)}</span>`;
+    el.statWaves.textContent = d.waves;
     el.statKills.textContent = d.kills.toLocaleString('en-US');
     el.statTime.textContent = fmtTime(d.time);
     el.statScore.textContent = d.score.toLocaleString('en-US');
