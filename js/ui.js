@@ -7,6 +7,7 @@ const UI = (() => {
   const $ = id => document.getElementById(id);
 
   const el = {
+    hardBtn: $('hardBtn'), hudHard: $('hudHard'),
     hud: $('hud'), hudWave: $('hudWave'), waveFill: $('waveFill'), hudHp: $('hudHp'),
     hudScore: $('hudScore'), hudTime: $('hudTime'), muteBtn: $('muteBtn'),
     hudArea: $('hudArea'), hudAreaKanji: $('hudAreaKanji'), hudAreaName: $('hudAreaName'),
@@ -15,6 +16,7 @@ const UI = (() => {
     screens: {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
+      board: $('screenBoard'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
@@ -315,6 +317,33 @@ const UI = (() => {
     bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2300);
   }
 
+  /* the red seal, cried once at a hard run's start — after the run
+     is named. From there the 難 on the HUD does the talking. */
+  function hardBanner() {
+    el.bannerKicker.textContent = 'REALLY HARD — THE INK BITES BACK';
+    el.bannerTitle.innerHTML =
+      `<span class="ban-kanji">難</span><span class="ban-lat">EVERY PAGE BITES DEEPER</span>`;
+    el.banner.classList.toggle('area', false);
+    el.banner.classList.toggle('surge', true);
+    el.banner.classList.remove('show');
+    void el.banner.offsetWidth;
+    el.banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2200);
+  }
+
+  /* the toggle, worn in three places: the title's red chip, the
+     HUD's vermillion 難 seal through the run, and the state word */
+  function setHard(v) {
+    if (el.hardBtn) {
+      el.hardBtn.classList.toggle('on', !!v);
+      el.hardBtn.setAttribute('aria-pressed', v ? 'true' : 'false');
+    }
+    const st = document.querySelector('#hardBtn .hard-state');
+    if (st) st.textContent = v ? 'ON' : 'OFF';
+    if (el.hudHard) el.hudHard.classList.toggle('hidden', !v);
+  }
+
   /* a level's seal breaks — the scene is complete. Red, brief,
      unmistakable: the counter is about to climb, not restart. */
   function sealBanner(area, level) {
@@ -353,8 +382,12 @@ const UI = (() => {
   }
 
   /* a new sheet unrolls: the scroll turns */
-  function areaBanner(area, cycle, deepEndless) {
-    el.bannerKicker.textContent = deepEndless
+  function areaBanner(area, cycle, deepEndless, runNo) {
+    el.bannerKicker.textContent = runNo
+      ? (G.S.runMode === 'endless'
+        ? `THE ENDLESS SCROLL — RUN ${pad3(runNo)}`
+        : `THE JOURNEY — RUN ${pad3(runNo)}`)
+      : deepEndless
       ? `THE SCROLL TURNS FOREVER — SHEET ${cycle + 1}`
       : `THE SCROLL TURNS — SHEET ${cycle + 1} OF ${AREAS.length}`;
     el.bannerTitle.innerHTML =
@@ -503,6 +536,20 @@ const UI = (() => {
     if (t && title) t.textContent = title;
     if (sb && sub) sb.textContent = sub;
   }
+  /* a scroll unrolling is an event: the head re-inks itself */
+  function retraceHead() {
+    const h = document.querySelector('#screenScrolls .scrolls-head');
+    if (!h) return;
+    h.classList.remove('retrace');
+    void h.offsetWidth;
+    h.classList.add('retrace');
+  }
+  /* the foot's return door says where it lands: the shelf folds to
+     the title; a scene ladder folds to the shelf first */
+  function setBackLabel(txt) {
+    const b = document.getElementById('scrollsBackBtn');
+    if (b) b.textContent = txt;
+  }
 
   function buildScrolls() {
     const row = document.getElementById('scrollRow');
@@ -513,6 +560,7 @@ const UI = (() => {
     if (lrow) lrow.classList.add('hidden');
     row.classList.remove('hidden');
     setScrollsHead(SCROLLS_HEAD.kick, SCROLLS_HEAD.title, SCROLLS_HEAD.sub);
+    setBackLabel('TITLE');
     const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
     const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
     const prog = (typeof G !== 'undefined' && G.getProg) ? G.getProg() : {};
@@ -571,8 +619,11 @@ const UI = (() => {
     });
     const hint = document.getElementById('scrollsHint');
     if (hint) {
+      const cur = Math.min(unlocked, AREAS.length);
       hint.textContent = done
         ? 'EVERY SCROLL LIES FINISHED — THE ENDLESS SCROLL 無 STILL ASKS FOR MORE'
+        : cleared > 0
+        ? `SCROLL ${['I', 'II', 'III', 'IV', 'V'][cur - 1]} IS UNROLLED — TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN FOR THE NEXT`
         : 'TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT';
     }
   }
@@ -594,6 +645,8 @@ const UI = (() => {
     const isCleared = n <= cleared;
     const sealedUpTo = isCleared ? CFG.wave.levelsPerArea : (seals[n] || 0);
     const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+    setBackLabel('ALL SCROLLS');
+    retraceHead();
     setScrollsHead(
       `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · TEN SCENES`,
       a.name,
@@ -609,6 +662,12 @@ const UI = (() => {
       const w0 = (n - 1) * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea +
         (d - 1) * CFG.wave.wavesPerLevel + 1;
       const w1 = w0 + CFG.wave.wavesPerLevel - 1;
+      /* the kit the shelf hands back on this page — printed, so an
+         old scene is re-walked with open eyes */
+      const kit = (typeof G !== 'undefined' && G.checkpointPower)
+        ? G.checkpointPower(n, d) : 0;
+      const kitLine = locked ? '' :
+        `<span class="strip-kit">ARRIVE WITH ${kit} PICKS</span>`;
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'scroll-strip scene-strip' +
@@ -628,6 +687,7 @@ const UI = (() => {
         `<span class="strip-kanji" aria-hidden="true">${toKanji(d)}</span>` +
         `<span class="strip-name">${a.names[d - 1] || ''}</span>` +
         `<span class="strip-ink">WAVES ${w0}–${w1}</span>` +
+        kitLine +
         state;
       card.setAttribute('aria-label',
         `Scene ${d} of ${a.name} — ${locked ? 'unreached' : wet ? 'the frontier' : 'sealed'}`);
@@ -647,7 +707,7 @@ const UI = (() => {
     }
     setScrollsHint(isCleared
       ? 'EVERY SCENE OF THIS SCROLL LIES SEALED — WALK ANY OF THEM AGAIN'
-      : 'ENTER A SEALED SCENE — OR WALK THE WET FRONTIER');
+      : 'ENTER A SEALED SCENE — OR WALK THE WET FRONTIER · EACH HANDS BACK THE KIT IT PRINTS');
   }
 
   function setScrollsHint(txt) {
@@ -766,7 +826,7 @@ const UI = (() => {
       ? 'Five sheets painted, every guardian felled. The paper asks for more.'
       : 'The paper keeps every stroke. Even this one.';
     el.overKicker.textContent =
-      `RUN ${pad3(d.run)} — ${d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}`;
+      `RUN ${pad3(d.run)} — ${d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
     el.overRank.textContent = d.rank;
     el.statWaves.textContent = d.waves;
     el.statKills.textContent = d.kills.toLocaleString('en-US');
@@ -798,7 +858,7 @@ const UI = (() => {
     setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
-    buildScrolls, buildLevels, setScrollsHint, unlockBanner,
+    buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard,
     get onScrollPick() { return onScrollPick; },
     set onScrollPick(fn) { onScrollPick = fn; },
     get onOpenScroll() { return onOpenScroll; },

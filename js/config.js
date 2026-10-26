@@ -94,13 +94,21 @@ const CFG = {
   /* the endless paper keeps growing teeth — and the teeth grow fangs */
   endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32 },
 
+  /* ---- REALLY HARD ----
+     the title's red toggle, remembered on this device. A hard page
+     bites: every beast stands ~1.4× taller, arrives ~1.15× faster,
+     and the waves spend ~1.45× more — the ledger pays double for
+     every stroke that survives it. */
+  hard: { hp: 1.4, sp: 1.15, budget: 1.45, score: 2.0 },
+
   /* ---- per-level KEEPERS ----
      Every level's tenth wave is a boss fight: the scene's Keeper —
      a red-sealed beast, lesser kin of the sheet's Guardian — walks
-     the paper with a halved honor guard. Its hp grows gently with
-     the waves between its debuts, capped, so a keeper never becomes
-     a wall of numbers. */
-  keeper: { hpGrow: 0.015, hpGrowCap: 2.0 },
+     the paper with a halved honor guard. Bases are tuned so each
+     debut is a ~14-second duel against the power a scribe truly
+     carries at that wave (measured, not guessed); repeats grow
+     gently and stay capped, so a keeper is a boss, never a wall. */
+  keeper: { hpGrow: 0.012, hpGrowCap: 1.8 },
 
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
@@ -176,6 +184,7 @@ const ENEMIES = {
   gate:      { name: 'GATE',       trait: 'SHIELDED', cost: 4, intro: 221, hp: 8,  r: 15, speed: 38,  score: 55, shape: 'gate'    },
   ashigaru:  { name: 'ASHIGARU',   trait: 'RANK',     cost: 2, intro: 211, hp: 4,  r: 11, speed: 76,  score: 40, shape: 'ashigaru' },
   stamper:   { name: 'STAMPER',    trait: 'SEALSMITH',cost: 4, intro: 241, hp: 8,  r: 15, speed: 34,  score: 70, shape: 'stamper' },
+  shiki:     { name: 'SHIKI',      trait: 'SUMMONER', cost: 3, intro: 246, hp: 4,  r: 13, speed: 78,  score: 50, shape: 'shiki'   },
 
   /* ---- SHEET IV · STORM SHEET — rain-grey ink ---- */
   raindrake: { name: 'RAINDRAKE',  trait: 'CALLER',   cost: 3, intro: 301, hp: 3,  r: 12, speed: 88,  score: 48, shape: 'raindrake' },
@@ -183,6 +192,7 @@ const ENEMIES = {
   koi:       { name: 'KOI',        trait: 'SINEW',    cost: 2, intro: 311, hp: 2,  r: 10, speed: 195, score: 30, shape: 'koi'     },
   surge:     { name: 'SURGE',      trait: 'BREAKER',  cost: 3, intro: 316, hp: 6,  r: 16, speed: 48,  score: 55, shape: 'surge'   },
   maelstrom: { name: 'MAELSTROM',  trait: 'UNDERTOW', cost: 4, intro: 351, hp: 7,  r: 14, speed: 26,  score: 60, shape: 'maelstrom' },
+  crest:     { name: 'WAVE CREST', trait: 'SWELL',    cost: 3, intro: 356, hp: 6,  r: 15, speed: 88,  score: 55, shape: 'crest'   },
 
   /* ---- SHEET V · GILT SCROLL — gold-dusted ink ---- */
   gildling:  { name: 'GILDLING',   trait: 'GILDED',   cost: 3, intro: 401, hp: 6,  r: 13, speed: 52,  score: 50, shape: 'gildling' },
@@ -190,26 +200,33 @@ const ENEMIES = {
   golem:     { name: 'GOLEM',      trait: 'COLOSSUS', cost: 5, intro: 411, hp: 26, r: 24, speed: 30,  score: 110, shape: 'golem'   },
   mirror:    { name: 'MIRROR',     trait: 'REFLECT',  cost: 4, intro: 421, hp: 6,  r: 13, speed: 30,  score: 75, shape: 'mirror'  },
   koban:     { name: 'KOBAN',      trait: 'GREED',    cost: 2, intro: 436, hp: 3,  r: 10, speed: 148, score: 80, shape: 'koban'   },
+  cask:      { name: 'RELIC CASK', trait: 'TREASURY', cost: 4, intro: 441, hp: 14, r: 18, speed: 34,  score: 70, shape: 'cask'    },
 
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
-  /* ---- the five Guardians, one per sheet, on its tenth level ---- */
-  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 320,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
-  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 540,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
+  /* ---- the five Guardians, one per sheet, on its tenth level ----
+     Bases ride the scribe's real measured power at each sheet's
+     close — early sheets climb hard, late sheets sit heavy — so
+     every Guardian is a thirty-to-fifty-second set piece. */
+  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 775,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
+  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 700,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
   b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 880,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
-  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 1150, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
-  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 1450, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 1000, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
+  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 1050, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
 
   /* ---- the five Keepers, one per sheet, on EVERY tenth wave ----
      lesser bosses cut from the same ink as their Guardian — they
      share its body and its hunger, thinned for a scene's climax.
-     boss: 2 marks the keeper tier (red, named, bar-worn). */
-  k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 30,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
-  k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 46,  r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
-  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 66,  r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
-  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 88,  r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
-  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 115, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
+     Bases are measured against the scribe's true power at each
+     sheet's gate (the ladder is flatter than it looks: the brush
+     grows faster than the sheets do). boss: 2 marks the keeper
+     tier (red, named, bar-worn). */
+  k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 90,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
+  k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 340, r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
+  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 285, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
+  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 300, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
+  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 285, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -223,6 +240,7 @@ const ENEMY_WEIGHTS = {
   /* the second breed of each paper */
   gnat: 2.6, blotter: 1.6, owl: 1.4, smother: 1.5, ashigaru: 1.9,
   stamper: 1.0, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85,
+  shiki: 1.1, crest: 1.4, cask: 0.9,
 };
 
 /* ------------------------------------------------------------
@@ -258,7 +276,7 @@ const AREAS = [
     ink: '朱墨',                                     // vermillion-stained
     desc: 'A vermillion wash dries underfoot. The last stroke is heaviest.',
     mult: { hp: 2.7, sp: 1.1, budget: 2.0 },
-    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper'],
+    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper', 'shiki'],
     order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
     elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
@@ -268,7 +286,7 @@ const AREAS = [
     ink: '雨墨',                                     // rain-grey
     desc: 'Rain hammers the paper. The ink runs like rivers.',
     mult: { hp: 4.2, sp: 1.16, budget: 2.7 },
-    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom'],
+    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom', 'crest'],
     order: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
     elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
@@ -278,7 +296,7 @@ const AREAS = [
     ink: '金墨',                                     // gold-dusted
     desc: 'Old gold leaf underfoot. The last sheet is the heaviest.',
     mult: { hp: 6.6, sp: 1.22, budget: 3.4 },
-    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban'],
+    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask'],
     order: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',

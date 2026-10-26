@@ -181,6 +181,79 @@ python3 -m http.server 8000
 
 (Opening `index.html` directly from disk also works.)
 
+## The endless leaderboard (榜) + Google sign-in
+
+The **ENDLESS LEADERBOARD** records the furthest wave every scribe has
+carried the ink in **THE ENDLESS SCROLL**. It runs on Google's free
+**Firebase** tier: Google sign-in for identity, Firestore for the ledger.
+Until it is connected the game plays exactly as before — the ledger sits
+quietly offline.
+
+**How it behaves when connected**
+
+- Endless runs post automatically on death — but only if the run carried
+  further than your best on this device (one page per scribe, no spam).
+- Died signed out? The over sheet offers **SIGN IN WITH GOOGLE — POST
+  WAVE n**; the pending run posts itself the moment the sign-in lands.
+- Rank = the wave you reached; score breaks ties. Top three wear red
+  hanko seals. Your own row is edged in vermillion.
+- The journey's own deaths never post — the ledger belongs to the endless
+  scroll alone (a journey victory that walks INTO THE ENDLESS posts from
+  then on, carrying the whole run's depth).
+
+**One-time setup (about five minutes)**
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com).
+2. **Project overview → the web glyph (</>)** → register a Web app → copy
+   the `firebaseConfig` values into `js/firebase-config.js`.
+3. **Build → Authentication → Get started → Sign-in method → Google →
+   Enable** (support email = yours).
+4. **Build → Firestore Database → Create database** (production mode),
+   then **Rules →** paste the rules below **→ Publish**.
+5. **Authentication → Settings → Authorized domains → Add domain** — add
+   `<your-username>.github.io` (and any custom domain). `localhost` is
+   already trusted for local play.
+
+The free Spark plan is generous (50k ledger reads / 20k writes a day);
+this ledger costs a read when the board opens and a write only when a
+scribe beats their own best.
+
+**Firestore security rules**
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /om_scores/{uid} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 24
+        && request.resource.data.wave is int
+        && request.resource.data.wave >= 1
+        && request.resource.data.wave <= 99999
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 999999999
+        && request.resource.data.kills is int
+        && request.resource.data.kills >= 0
+        && request.resource.data.kills <= 999999
+        && request.resource.data.time is number
+        && request.resource.data.time >= 0
+        && request.resource.data.v is int;
+      allow delete: if false;
+    }
+  }
+}
+```
+
+> A client-only leaderboard can be poked by a determined hand — the
+> rules above cap the damage (sane ranges, one page per signed-in
+> scribe, no deletes). That is the right weight for a brush-and-paper
+> arcade board.
+
 ## Project structure
 
 ```
@@ -198,6 +271,8 @@ one-more/
 │   ├── cutscene.js             # the scroll-turn interludes & the journey's-end
 │   │                           #   finale (credits, closing ensō) — skippable films
 │   ├── intro.js                # THE OPENING — skippable ink cinematic before the title
+│   ├── firebase-config.js      # the ink cloud's address (paste your Firebase config)
+│   ├── lb.js                   # the endless ledger: Google sign-in + Firestore board
 │   └── main.js                 # bootstrap, input, hit-stop game loop, wiring
 ├── .github/
 │   └── workflows/

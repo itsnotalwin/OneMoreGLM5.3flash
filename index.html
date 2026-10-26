@@ -46,6 +46,7 @@
         <div class="wave-progress"><div class="wave-fill" id="waveFill"></div></div>
       </div>
       <span class="hud-mode" id="hudMode">THE JOURNEY</span>
+      <span class="hud-hard hidden" id="hudHard" title="REALLY HARD — the ink bites back" aria-hidden="true">難</span>
     </div>
     <div class="hud-tr">
       <div class="hp-row" id="hudHp"></div>
@@ -123,6 +124,17 @@
           <span class="play-label">THE ENDLESS SCROLL</span>
         </button>
       </div>
+      <div class="minor-row">
+        <button id="boardBtn" class="board-btn" type="button" title="The endless ledger — who carried the ink furthest">
+          <span class="board-kanji" aria-hidden="true">榜</span>
+          <span class="play-label">LEADERBOARD</span>
+        </button>
+        <button id="hardBtn" class="hard-btn" type="button" aria-pressed="false"
+          title="REALLY HARD — every beast stands taller, comes faster, comes thicker. The ledger pays double.">
+          <span class="hard-kanji" aria-hidden="true">難</span>
+          <span class="play-label">REALLY HARD —&nbsp;<span class="hard-state">OFF</span></span>
+        </button>
+      </div>
       <button id="sheetBtn" class="sheet-btn hidden" type="button" title="Resume the journey from the furthest sheet"></button>
       <p class="best-line hidden" id="bestLine"></p>
     </div>
@@ -133,7 +145,7 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V7.1</span></div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V7.5</span></div>
     </div>
 
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
@@ -199,6 +211,25 @@
     </div>
   </section>
 
+  <!-- ============ THE ENDLESS LEDGER — who carried the ink furthest ============ -->
+  <section id="screenBoard" class="screen screen-board hidden">
+    <span class="wm wm-board" aria-hidden="true">榜</span>
+    <div class="board-wrap">
+      <div class="board-head">
+        <div class="board-kicker">THE ENDLESS SCROLL — <span class="kanji-inline">無</span></div>
+        <h2 class="board-title">ENDLESS LEADERBOARD</h2>
+        <p class="board-sub">HOW FAR THE BRUSH HAS CARRIED THE INK</p>
+      </div>
+      <div class="board-auth" id="boardAuth"></div>
+      <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span></div>
+      <ol class="board-rows" id="boardRows"></ol>
+      <div class="board-foot">
+        <span class="board-mine" id="boardMine"></span>
+        <button id="boardBackBtn" class="ghost-btn">RETURN</button>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ PAUSE SCREEN ============ -->
   <section id="screenPause" class="screen screen-pause hidden">
     <span class="wm wm-pause" aria-hidden="true">休</span>
@@ -237,6 +268,7 @@
         <button id="againBtn" class="block-btn big">ONE MORE</button>
         <button id="menuBtn" class="ghost-btn">MENU</button>
       </div>
+      <div class="over-board hidden" id="overBoard"></div>
     </div>
   </section>
 
@@ -255,6 +287,8 @@
 <script src="./js/game.js"></script>
 <script src="./js/render.js"></script>
 <script src="./js/intro.js"></script>
+<script src="./js/firebase-config.js"></script>
+<script src="./js/lb.js"></script>
 <script src="./js/main.js"></script>
 </body>
 </html>

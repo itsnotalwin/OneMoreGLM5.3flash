@@ -11,11 +11,12 @@ const G = (() => {
 
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
-  let qaWave = 0, qaPower = 0;
+  let qaWave = 0, qaPower = 0, qaHard = false;
   try {
     const q = new URLSearchParams(location.search);
     qaWave = Math.max(0, Math.min(999, parseInt(q.get('wave'), 10) || 0));
     qaPower = Math.max(0, Math.min(30, parseInt(q.get('power'), 10) || 0));
+    qaHard = q.get('hard') === '1';
   } catch (e) {}
 
   const store = {
@@ -55,6 +56,7 @@ const G = (() => {
     choices: [], selected: null,
 
     brush: 'needle',
+    hardMode: false,               /* REALLY HARD — the red toggle */
     beginT: 0,                     // the opening wash of a run
     landscapeWave: 0,              // how far the sheet is painted
     waveRevealT: 0,                // when the newest layer was inked
@@ -69,6 +71,16 @@ const G = (() => {
     S.brush = id;
     store.set('om_brush_v1', id);
   }
+
+  /* REALLY HARD — the title's red toggle, remembered on this device.
+     A hard page bites: taller beasts, faster beasts, thicker waves —
+     and the ledger pays double for every stroke that survives it. */
+  const getHard = () => !!store.get('om_hard_v1', false);
+  function setHard(v) {
+    S.hardMode = !!v;
+    store.set('om_hard_v1', !!v);
+  }
+  S.hardMode = getHard();
 
   function freshStats() {
     const bm = CFG.brushes[S.brush] ? CFG.brushes[S.brush].mods : {};
@@ -169,6 +181,13 @@ const G = (() => {
     const top = Math.max(getProg()[sheet] || 0, (getSeals()[sheet] || 0) + 1);
     return Math.min(CFG.wave.levelsPerArea, top);
   }
+  /* the kit a scene hands the brush when the shelf sends it back:
+     a run that far would carry roughly half its depth in picks, plus
+     one — the same rule the shelf prints on every walkable strip, so
+     the choice is made with open eyes */
+  function checkpointPower(sheet, level) {
+    return 1 + Math.floor(((sheet - 1) * CFG.wave.levelsPerArea + (level - 1)) / 2);
+  }
   /* legacy name — the title's continue door reads the unlocked shelf */
   const getFurthest = getUnlocked;
 
@@ -204,6 +223,14 @@ const G = (() => {
       hp *= Math.pow(CFG.endless.hpGrowth, k);
       sp *= Math.pow(CFG.endless.spGrowth, k);
       budget *= Math.pow(CFG.endless.budgetGrowth, k);
+    }
+    /* REALLY HARD: every multiplier bites deeper — the paper's own
+       pressure climbs with the road, so the toggle rides on top of
+       whatever sheet, level or loop the brush stands on */
+    if (S.hardMode) {
+      hp *= CFG.hard.hp;
+      sp *= CFG.hard.sp;
+      budget *= CFG.hard.budget;
     }
     const depth = (S.runMode === 'journey' ? Math.min(cycle, AREAS.length - 1) : cycle)
       * CFG.wave.levelsPerArea + (level - 1);
@@ -294,7 +321,8 @@ const G = (() => {
     /* the chain: each kill within the breath of the last feeds the score */
     S.combo++;
     S.comboT = CFG.combo.decay;
-    const pts = Math.round((def.score * mult * (e.elite ? 6 : 1) * comboMult()) / 5) * 5;
+    const pts = Math.round((def.score * mult * (e.elite ? 6 : 1) * comboMult() *
+      (S.hardMode ? CFG.hard.score : 1)) / 5) * 5;
     S.stats.score += pts;
     S.stats.kills++;
     UI.setScore(S.stats.score);
@@ -393,6 +421,23 @@ const G = (() => {
         c.kbx = s * 210; c.kby = rand(-80, 80);
       }
       S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.4, alpha: 0.4 });
+    }
+    if (e.type === 'crest') {
+      /* the crest breaks — two gusts scatter out of the foam */
+      for (const s of [-1, 1]) {
+        const c = spawnEnemy('gale', e.x + s * 12, e.y + rand(-6, 6));
+        c.kbx = s * 220; c.kby = rand(-80, 80);
+      }
+      S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.5, alpha: 0.38 });
+    }
+    if (e.type === 'cask') {
+      /* the cask shatters — its hoard of coin-spirits scatters, worth the chase */
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * TAU + rand(-0.3, 0.3);
+        const c = spawnEnemy('koban', e.x + Math.cos(a) * 14, e.y + Math.sin(a) * 14);
+        c.kbx = Math.cos(a) * 240; c.kby = Math.sin(a) * 240;
+      }
+      S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.6, alpha: 0.42 });
     }
     if (e.type === 'raindrake') {
       /* its last call: rain falls where it stood */
@@ -614,9 +659,18 @@ const G = (() => {
     UI.setProgress(0);
     if (opts.quiet) return;   /* a cutscene announces this sheet — no banners */
     if (paperStart) {
-      /* the scroll turns — a new sheet of paper */
-      UI.areaBanner(as.area, as.cycle, S.runMode === 'endless' && as.cycle >= AREAS.length);
+      /* the scroll turns — a new sheet of paper. A run's first page
+         names the run itself: THE JOURNEY — RUN 007. */
+      UI.areaBanner(as.area, as.cycle, S.runMode === 'endless' && as.cycle >= AREAS.length,
+        opts.runStart ? getRuns() : 0);
       SFX.gong();
+      if (opts.runStart && S.hardMode) {
+        /* the red seal, cried after the run is named: a hard page
+           announces itself once, then the 難 on the HUD does the talking */
+        setTimeout(() => {
+          if (S.mode === 'playing' && S.stats && S.stats.wave === n) UI.hardBanner();
+        }, 2650);
+      }
     } else if (as.waveInLevel === 1) {
       /* a new scene grows on the same page */
       UI.levelBanner(as.area, as.level, as.area.names[as.level - 1]);
@@ -696,6 +750,7 @@ const G = (() => {
     const prevWave = S.stats ? (S.stats.wave | 0) : 0;   /* where the last run fell */
     S.runMode = mode === 'endless' ? 'endless' : 'journey';
     S.brush = getBrush();
+    S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
     S.bullets = []; S.ebullets = []; S.enemies = []; S.markers = []; S.telgs = [];
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = [];
@@ -745,12 +800,12 @@ const G = (() => {
       const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, getUnlocked())));
       const level = Math.max(1, Math.min(frontierLevel(sheet),
         Math.min(CFG.wave.levelsPerArea, (opts.level | 0) || 1)));
-      applyQAPower(1 + Math.floor(((sheet - 1) * CFG.wave.levelsPerArea + (level - 1)) / 2));
+      applyQAPower(checkpointPower(sheet, level));
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
       startWave((sheet - 1) * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea +
-        (level - 1) * CFG.wave.wavesPerLevel + 1);
+        (level - 1) * CFG.wave.wavesPerLevel + 1, { runStart: true });
       return;
     }
     /* ONE MORE: the brush returns to the scene it fell in, not to the
@@ -759,7 +814,7 @@ const G = (() => {
       const sheet = Math.max(1, Math.min(AREAS.length,
         Math.floor((prevWave - 1) / (CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea)) + 1));
       const clamped = Math.max(1, Math.min(frontierLevel(sheet), areaStateFor(prevWave).level));
-      applyQAPower(1 + Math.floor(((sheet - 1) * CFG.wave.levelsPerArea + (clamped - 1)) / 2));
+      applyQAPower(checkpointPower(sheet, clamped));
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
@@ -772,10 +827,10 @@ const G = (() => {
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
-      startWave(qaWave);
+      startWave(qaWave, { runStart: true });
       return;
     }
-    startWave(1);
+    startWave(1, { runStart: true });
   }
 
   function continueEndless() {
@@ -982,11 +1037,21 @@ const G = (() => {
     UI.showOver({
       run: getRuns(), waves: cleared, kills: st.kills,
       time: st.time, score: st.score, rank, newBest: nb,
-      mode: S.runMode, victory: !!victory,
+      mode: S.runMode, victory: !!victory, hard: S.hardMode,
     });
     UI.hud(false);
     UI.show('over');
     S.mode = 'over';
+    /* the endless ledger takes its entry when an endless run truly
+       ends — the journey answers only to its own seals (LB is the
+       ledger module; absent it, the game plays exactly as before) */
+    if (typeof LB !== 'undefined' && LB.onRunEnd) {
+      LB.onRunEnd({
+        mode: S.runMode, victory: !!victory, hard: S.hardMode,
+        wave: Math.max(1, st.wave | 0), score: st.score | 0,
+        kills: st.kills | 0, time: st.time || 0,
+      });
+    }
   }
 
   function takeHit() {
@@ -1861,6 +1926,7 @@ const G = (() => {
           case 'slab':
           case 'golem':
           case 'titan':
+          case 'cask':   /* the relic cask plods like the heavy kin it trusts */
             vx = ux * e.speed * sm; vy = uy * e.speed * sm;
             e.ang = Math.atan2(uy, ux);
             /* the mother sheds her brood */
@@ -1927,6 +1993,46 @@ const G = (() => {
               if (e.stateT > 0.8) { e.state = 'cruise'; e.stateT = 0; }
             }
             break;
+          case 'shiki': { /* the paper doll — keeps its distance and calls lesser ink to serve */
+            if (e.state === 'cruise') {
+              e.ang = Math.atan2(uy, ux);
+              if (d > 280) { vx = ux * e.speed * sm; vy = uy * e.speed * sm; }
+              else { /* a slow ceremonial strafe */
+                const sdir = Math.sin(e.seed + e.t * 0.5) > 0 ? 1 : -1;
+                vx = -uy * e.speed * 0.7 * sm * sdir;
+                vy = ux * e.speed * 0.7 * sm * sdir;
+              }
+              e.stateT += dt;
+              if (d < 360 && e.stateT > 3.4) { e.state = 'tele'; e.stateT = 0; SFX.wind(); }
+            } else if (e.state === 'tele') {
+              /* the rite: a ring draws itself around the doll */
+              e.stateT += dt;
+              vx = uy * 0.001; vy = -ux * 0.001;
+              if (e.stateT > 0.75) {
+                e.state = 'rest'; e.stateT = 0;
+                if (S.enemies.length < broodCap) {
+                  for (let i = 0; i < 2; i++) {
+                    const a = rand(0, TAU);
+                    const c = spawnEnemy('ember', e.x + Math.cos(a) * (e.r + 9), e.y + Math.sin(a) * (e.r + 9));
+                    c.kbx = Math.cos(a) * 190; c.kby = Math.sin(a) * 190;
+                  }
+                  S.rings.push({ x: e.x, y: e.y, max: e.r * 2.6, life: 0.45, maxLife: 0.45 });
+                  S.popups.push({ x: e.x, y: e.y - e.r - 8, txt: 'SUMMONED', life: 0.8, max: 0.8, red: true });
+                  SFX.elite();
+                }
+              }
+            } else { /* rest */
+              e.stateT += dt;
+              if (e.stateT > 1.1) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
+          case 'crest': { /* the swell — the farther it runs, the harder it rears */
+            const rear = 1 + 0.55 * (1 - Math.min(d, 420) / 420);
+            vx = ux * e.speed * rear * sm; vy = uy * e.speed * rear * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          }
           case 'moth': { /* erratic: fresh heading every few beats */
             e.dirT -= dt;
             if (e.dirT <= 0) {
@@ -3015,6 +3121,7 @@ const G = (() => {
     set mode(m) { S.mode = m; },
     startRun, continueEndless, abandon, deploy, pickAt, clearNext, clearHome,
     update, updateDying, updateIdle, initAttract,
-    getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, getBrush, setBrush,
+    getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
+    getHard, setHard,
   };
 })();

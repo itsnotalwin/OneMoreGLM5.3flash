@@ -122,6 +122,20 @@
     return s && !s.classList.contains('hidden');
   };
 
+  /* the endless ledger: opened from the title or the over sheet,
+     answered with RETURN back to wherever the hand stood */
+  const boardOpen = () => {
+    const b = document.getElementById('screenBoard');
+    return b && !b.classList.contains('hidden');
+  };
+  function openBoard() {
+    SFX.ensure();
+    LB.open();
+  }
+  function closeBoard() {
+    LB.close();
+  }
+
   /* the journey answers the shelf: a scene-strip pressed begins the
      run at that scene's first wave; a scroll-strip pressed unrolls
      the scroll to its ten scenes. The title's strip of seals walks
@@ -160,6 +174,12 @@
       else if (k === 'Escape') clearHome();
       return;
     }
+    /* the ledger overlay answers only its own return keys —
+       ENTER must never start a run behind the open board */
+    if (boardOpen()) {
+      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') closeBoard();
+      return;
+    }
     if (k === 'KeyP' || k === 'Escape') {
       if (scrollsOpen()) {
         /* the scene ladder folds back to the shelf before the title */
@@ -172,9 +192,10 @@
     }
     if (scrollsOpen()) {
       if (k === 'Enter') {
-        /* the ladder answers Enter with its wet frontier */
+        /* the ladder answers Enter with its wet frontier; the shelf
+           drills into the scroll the brush currently walks */
         if (UI.scrollsLadder) UI.onScrollPick(UI.scrollsLadder, G.frontierLevel(UI.scrollsLadder));
-        else closeScrolls();
+        else { SFX.pick(1); UI.buildLevels(Math.min(G.getUnlocked(), AREAS.length)); }
       }
       return;
     }
@@ -264,6 +285,7 @@
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
     UI.setSheetContinue(G.getFurthest());
     UI.buildJourney();                              /* the seals restamped */
+    UI.setHard(G.getHard());                        /* the red toggle remembered */
     UI.show('title');
     G.mode = 'title';
   }
@@ -288,6 +310,14 @@
     closeScrolls();
   });
   document.getElementById('endlessBtn').addEventListener('click', () => start('endless'));
+  document.getElementById('boardBtn').addEventListener('click', openBoard);
+  document.getElementById('hardBtn').addEventListener('click', () => {
+    SFX.ensure();
+    G.setHard(!G.getHard());
+    UI.setHard(G.getHard());
+    SFX.pick(1);
+  });
+  document.getElementById('boardBackBtn').addEventListener('click', closeBoard);
   document.getElementById('sheetBtn').addEventListener('click', () => start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) }));
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {

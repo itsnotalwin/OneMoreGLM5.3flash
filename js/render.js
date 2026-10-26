@@ -2067,6 +2067,109 @@ const R = (() => {
         eyeSlits(c, ang, r * 0.8, 0.55);
         break;
       }
+      case 'shiki': { /* SHIKI — a paper doll that calls lesser ink to serve */
+        const raise = e.state === 'tele' ? Math.min(1, e.stateT / 0.75) : 0;
+        /* the body: one tall brush stroke, leaning as it strafes */
+        c.save();
+        c.rotate(Math.sin(e.t * 1.8 + e.seed) * 0.08);
+        inkStroke(c, [
+          { x: 0, y: r * 0.95 },
+          { x: r * 0.06, y: 0 },
+          { x: 0, y: -r * 0.55 },
+        ], r * 0.62, { alpha: 0.95, taper: 0.7 });
+        /* the head: a small inked circle above the shoulders */
+        c.beginPath(); c.arc(0, -r * 0.78, r * 0.34, 0, TAU); c.fill();
+        /* the sleeves: two strokes that lift as the rite begins */
+        const sy = -r * 0.32, lift = raise * r * 0.55;
+        inkStroke(c, [
+          { x: -r * 0.18, y: sy }, { x: -r * 0.72, y: sy + r * 0.34 - lift },
+        ], r * 0.3, { alpha: 0.85 });
+        inkStroke(c, [
+          { x: r * 0.18, y: sy }, { x: r * 0.72, y: sy + r * 0.34 - lift },
+        ], r * 0.3, { alpha: 0.85 });
+        /* the ofuda: a red paper tag swinging from the right sleeve */
+        c.save();
+        c.translate(r * 0.72, sy + r * 0.4 - lift);
+        c.rotate(Math.sin(e.t * 3 + e.seed) * 0.25 + raise * 0.5);
+        c.fillStyle = RED;
+        c.fillRect(-r * 0.11, 0, r * 0.22, r * 0.42);
+        c.globalAlpha = 0.85;
+        c.fillStyle = PAPER;
+        c.fillRect(-r * 0.03, r * 0.05, r * 0.06, r * 0.26);
+        c.restore();
+        c.restore();
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang, r * 0.55, 0.7);
+        silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.2, 9);
+        break;
+      }
+      case 'crest': { /* WAVE CREST — a curl of grey ink rearing to break */
+        c.rotate(e.ang);
+        /* the breaking lip: a heavy arc curling forward */
+        c.lineWidth = r * 0.5;
+        c.beginPath();
+        c.arc(-r * 0.15, 0, r * 0.72, -1.15, 1.15);
+        c.stroke();
+        c.save(); c.globalAlpha = 0.3; c.fill(); c.restore();
+        /* the face of the wave: hatch below the lip */
+        c.save();
+        c.beginPath();
+        c.arc(-r * 0.15, 0, r * 0.72, -1.0, 1.0);
+        c.arc(-r * 0.15, 0, r * 0.34, 0.85, -0.85, true);
+        c.closePath();
+        c.globalAlpha = 0.45;
+        c.fillStyle = patHatch; c.fill();
+        c.restore();
+        /* foam: a scatter of pale drops along the curl */
+        const foam = mulberry(sd >> 2);
+        c.fillStyle = PAPER;
+        for (let i = 0; i < 5; i++) {
+          const fa = -0.9 + foam() * 1.8;
+          c.globalAlpha = 0.5 + foam() * 0.4;
+          c.beginPath();
+          c.arc(-r * 0.15 + Math.cos(fa) * r * 0.78, Math.sin(fa) * r * 0.78, 1.1 + foam() * 1.6, 0, TAU);
+          c.fill();
+        }
+        c.fillStyle = INK;
+        c.globalAlpha = 1;
+        silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.arc(0, 0, r * 1.08, 0, TAU); c.restore(); };
+        break;
+      }
+      case 'cask': { /* RELIC CASK — a sealed urn of the old gold, heavy with hoard */
+        const wobble = 1 + Math.sin(e.t * 2.4 + e.seed) * 0.035;
+        c.save();
+        c.scale(wobble, 2 - wobble);
+        /* the belly */
+        blobPath(c, 0, r * 0.12, r * 0.92, sd, 0.1, 12);
+        c.fill();
+        c.save(); c.globalAlpha = 0.32; c.fillStyle = patHatch; c.fill(); c.restore();
+        c.lineWidth = 2.4;
+        blobPath(c, 0, r * 0.12, r * 0.92, sd, 0.1, 12);
+        c.stroke();
+        /* the neck and lip */
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-r * 0.3, -r * 0.62);
+        c.quadraticCurveTo(-r * 0.36, -r * 0.98, -r * 0.42, -r * 1.02);
+        c.moveTo(r * 0.3, -r * 0.62);
+        c.quadraticCurveTo(r * 0.36, -r * 0.98, r * 0.42, -r * 1.02);
+        c.stroke();
+        /* the gilt band and its red seal */
+        c.globalAlpha = 0.65;
+        c.lineWidth = 2.6;
+        c.beginPath();
+        c.ellipse(0, r * 0.05, r * 0.86, r * 0.2, 0, 0, TAU);
+        c.stroke();
+        c.globalAlpha = 1;
+        c.fillStyle = RED;
+        c.beginPath(); c.arc(r * 0.3, r * 0.42, r * 0.14, 0, TAU); c.fill();
+        c.fillStyle = INK;
+        c.restore();
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang, r * 0.6, 0.6);
+        silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.12, 12);
+        break;
+      }
       case 'b_wheel': case 'k_blight': { /* THE STAIN / THE BLIGHT — a rolling sea of ink */
         const st2 = e.state;
         const swell = st2 === 'windup' ? 1 + Math.min(1, e.stateT / 0.7) * 0.24 : 1;
