@@ -1,0 +1,19 @@
+{
+  "name": "ONE MORE — An Ink-Born Survival",
+  "short_name": "ONE MORE",
+  "description": "An endless sheet of washi. Five scrolls of ten waves, five named Guardians, then the paper never ends. A monochrome survival painted in living ink.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ede7d9",
+  "theme_color": "#ede7d9",
+  "categories": ["games"],
+  "icons": [
+    { "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "img/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -452,3 +452,13 @@
   }
   requestAnimationFrame(frame);
 })();
+
+/* ---------- PWA — the paper travels with the scribe ---------- */
+/* Registers the service worker (relative path: honest wherever the
+   game is hosted — root or a subpath on GitHub Pages). Silently does
+   nothing on file:// or when the browser has no worker support. */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}

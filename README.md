@@ -181,6 +181,20 @@ python3 -m http.server 8000
 
 (Opening `index.html` directly from disk also works.)
 
+## Install as an app (PWA) · 端
+
+ONE MORE is a full PWA — installable and fully offline. Visit the site
+in Chrome, Edge or Safari and choose **Install app** / **Add to Home
+Screen**: the game opens standalone with no browser chrome, stamped
+with its own hanko icon (brush ensō + vermillion 一 seal), and plays
+entirely offline. The service worker (`sw.js`) precaches the shell and
+every ink asset on first visit and sweeps images into a runtime cache
+as they are first painted; page navigations fall back to the cached
+shell when the network is gone. Updates land on the next visit after a
+deploy — the versioned cache (`om-core-vX.Y`) is swapped silently in
+the background. All paths are scope-relative, so it works identically
+at a user-site root or a project subpath on GitHub Pages.
+
 ## The endless leaderboard (榜) + Google sign-in
 
 The **ENDLESS LEADERBOARD** records the furthest wave every scribe has
@@ -330,6 +344,8 @@ Example: `index.html?wave=49&power=14`.
 - Vampire-Survivors loop: kill-dropped XP motes, mid-wave level-ups,
   chain-kill score multiplier, hit-stop on heavy kills
 - Zero dependencies, zero build step, zero telemetry
+- Full PWA: web manifest + service worker — installable, offline-capable,
+  versioned cache, hanko icon set (192/512 any + maskable, apple-touch, favicon)
 - Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system
   fallbacks if offline)
 

@@ -43,6 +43,49 @@ body[data-theme="dark"]{
   --red: #d55340;
 }
 
+/* the cinnabar field, the storm sheet, the gilt scroll: the DOM
+   chrome grinds its ink in the same wash the canvas paints with
+   (ink pulled toward the sheet's tint, as render.js mixes it) */
+body[data-theme="red"]{
+  --paper: #eadbc4;
+  --paper-92: rgba(234, 219, 196, 0.94);
+  --paper-80: rgba(234, 219, 196, 0.82);
+  --paper-55: rgba(234, 219, 196, 0.6);
+  --ink: #2e1b17;
+  --ink-70: rgba(46, 27, 23, 0.7);
+  --ink-62: rgba(46, 27, 23, 0.62);
+  --ink-55: rgba(46, 27, 23, 0.55);
+  --ink-45: rgba(46, 27, 23, 0.45);
+  --ink-25: rgba(46, 27, 23, 0.25);
+  --ink-12: rgba(46, 27, 23, 0.12);
+}
+body[data-theme="storm"]{
+  --paper: #c7cdc9;
+  --paper-92: rgba(199, 205, 201, 0.94);
+  --paper-80: rgba(199, 205, 201, 0.82);
+  --paper-55: rgba(199, 205, 201, 0.6);
+  --ink: #19252d;
+  --ink-70: rgba(25, 37, 45, 0.7);
+  --ink-62: rgba(25, 37, 45, 0.62);
+  --ink-55: rgba(25, 37, 45, 0.55);
+  --ink-45: rgba(25, 37, 45, 0.45);
+  --ink-25: rgba(25, 37, 45, 0.25);
+  --ink-12: rgba(25, 37, 45, 0.12);
+}
+body[data-theme="gilt"]{
+  --paper: #e7d6ad;
+  --paper-92: rgba(231, 214, 173, 0.94);
+  --paper-80: rgba(231, 214, 173, 0.82);
+  --paper-55: rgba(231, 214, 173, 0.6);
+  --ink: #342710;
+  --ink-70: rgba(52, 39, 16, 0.7);
+  --ink-62: rgba(52, 39, 16, 0.62);
+  --ink-55: rgba(52, 39, 16, 0.55);
+  --ink-45: rgba(52, 39, 16, 0.45);
+  --ink-25: rgba(52, 39, 16, 0.25);
+  --ink-12: rgba(52, 39, 16, 0.12);
+}
+
 *, *::before, *::after{ box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body{ height: 100%; }
@@ -1316,6 +1359,93 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
     radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.08), transparent 60%);
 }
 .wm-scrolls{ right: 3%; top: 4%; transform: rotate(-2deg); opacity: .04; }
+
+/* a hovered strip breathes its sheet's ink into the shelf air
+   (the wash colour is set from ui.js on hover) */
+#shelfWash{
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+#shelfWash.on{ opacity: 1; }
+
+/* ---- the unrolled scroll dresses the room in its own ink ----
+   data-wear is set while a scene ladder is open: the head, the
+   beam, the hint and every strip print in the sheet's tone */
+#screenScrolls[data-wear="dark"]{
+  --paper: #17130f;
+  --paper-92: rgba(23, 19, 15, 0.94);
+  --paper-80: rgba(23, 19, 15, 0.82);
+  --paper-55: rgba(23, 19, 15, 0.6);
+  --ink: #e9e2d2;
+  --ink-70: rgba(233, 226, 210, 0.7);
+  --ink-62: rgba(233, 226, 210, 0.62);
+  --ink-55: rgba(233, 226, 210, 0.55);
+  --ink-45: rgba(233, 226, 210, 0.45);
+  --ink-25: rgba(233, 226, 210, 0.25);
+  --ink-12: rgba(233, 226, 210, 0.12);
+  --red: #d55340;
+  background:
+    radial-gradient(ellipse at 24% 12%, rgba(233,226,210,.06), transparent 55%),
+    radial-gradient(ellipse at 78% 90%, rgba(178,58,43,.05), transparent 60%),
+    linear-gradient(rgba(23,19,15,.93), rgba(23,19,15,.93));
+}
+#screenScrolls[data-wear="red"]{
+  --paper: #eadbc4;
+  --paper-92: rgba(234, 219, 196, 0.94);
+  --paper-80: rgba(234, 219, 196, 0.82);
+  --paper-55: rgba(234, 219, 196, 0.6);
+  --ink: #2e1b17;
+  --ink-70: rgba(46, 27, 23, 0.7);
+  --ink-62: rgba(46, 27, 23, 0.62);
+  --ink-55: rgba(46, 27, 23, 0.55);
+  --ink-45: rgba(46, 27, 23, 0.45);
+  --ink-25: rgba(46, 27, 23, 0.25);
+  --ink-12: rgba(46, 27, 23, 0.12);
+  background:
+    radial-gradient(ellipse at 22% 14%, rgba(255,250,238,.42), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(162,50,31,.09), transparent 60%),
+    linear-gradient(rgba(234,219,196,.93), rgba(234,219,196,.93));
+}
+#screenScrolls[data-wear="storm"]{
+  --paper: #c7cdc9;
+  --paper-92: rgba(199, 205, 201, 0.94);
+  --paper-80: rgba(199, 205, 201, 0.82);
+  --paper-55: rgba(199, 205, 201, 0.6);
+  --ink: #19252d;
+  --ink-70: rgba(25, 37, 45, 0.7);
+  --ink-62: rgba(25, 37, 45, 0.62);
+  --ink-55: rgba(25, 37, 45, 0.55);
+  --ink-45: rgba(25, 37, 45, 0.45);
+  --ink-25: rgba(25, 37, 45, 0.25);
+  --ink-12: rgba(25, 37, 45, 0.12);
+  background:
+    radial-gradient(ellipse at 22% 14%, rgba(240,246,244,.5), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(49,72,90,.12), transparent 60%),
+    linear-gradient(rgba(199,205,201,.93), rgba(199,205,201,.93));
+}
+#screenScrolls[data-wear="gilt"]{
+  --paper: #e7d6ad;
+  --paper-92: rgba(231, 214, 173, 0.94);
+  --paper-80: rgba(231, 214, 173, 0.82);
+  --paper-55: rgba(231, 214, 173, 0.6);
+  --ink: #342710;
+  --ink-70: rgba(52, 39, 16, 0.7);
+  --ink-62: rgba(52, 39, 16, 0.62);
+  --ink-55: rgba(52, 39, 16, 0.55);
+  --ink-45: rgba(52, 39, 16, 0.45);
+  --ink-25: rgba(52, 39, 16, 0.25);
+  --ink-12: rgba(52, 39, 16, 0.12);
+  background:
+    radial-gradient(ellipse at 22% 14%, rgba(255,250,232,.45), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(138,100,32,.13), transparent 60%),
+    linear-gradient(rgba(231,214,173,.93), rgba(231,214,173,.93));
+}
+/* a sheet's own light: the wordmark's hard shadow follows its ink */
+#screenScrolls[data-wear] .scrolls-title{
+  text-shadow: 4px 4px 0 rgba(0,0,0,.06);
+}
 
 .scrolls-head{ text-align: center; z-index: 1; animation: riseIn .6s cubic-bezier(.22,.7,.25,1) .05s backwards; }
 /* a scroll unrolled: the head re-inks itself */

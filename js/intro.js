@@ -33,14 +33,28 @@ const INTRO = (() => {
   const T_AWAKE = 14.9;       // its eye opens
   const T_STAMP = 15.75;      // it raises the brush
   const T_SLAM = 16.1;        // the mark lands
-  const T_FADE = 17.0;        // fade to paper
-  const DUR = 17.55;          // handoff
+  const T_PAPERS = 17.0;      // the five papers pass before the title
+  const PAPER_CYCLE = 0.36;   // s per paper's wipe-and-hold
+  const PAPER_WIPE = 0.30;    // the wipe itself, the rest is a hold
+  const DUR = 19.0;           // handoff (17.0 + 5 papers + a breath of washi)
 
   const CAPTIONS = [
     { kanji: '墨', en: 'IN THE BEGINNING, THERE WAS INK.', t0: 3.9, t1: 6.1 },
     { kanji: '紙', en: 'THEN A SHEET THAT REMEMBERS EVERY STROKE.', t0: 6.5, t1: 8.7 },
     { kanji: '筆', en: 'ONE BRUSH WAS CUT FROM THE REED.', t0: 9.0, t1: 11.1 },
     { kanji: '生', en: 'AND THE INK BEGAN TO MOVE.', t0: 11.4, t1: 13.4 },
+  ];
+
+  /* the five scrolls pass before the title — each paper wipes the
+     last away and stamps its kanji: 濃 the night scroll, 朱 the
+     cinnabar field, 雨 the storm sheet, 金 the gilt scroll, and
+     淡 the pale washi the journey begins on */
+  const PAPERS = [
+    { p: '#17130f', k: '濃', ink: '233,226,210' },
+    { p: '#eadbc4', k: '朱', ink: '162,50,31'  },
+    { p: '#c7cdc9', k: '雨', ink: '49,72,90'   },
+    { p: '#e7d6ad', k: '金', ink: '138,100,32' },
+    { p: '#ede7d9', k: '淡', ink: '74,61,40'   },
   ];
 
   /* ---------------- state ---------------- */
@@ -69,6 +83,7 @@ const INTRO = (() => {
   const easeInCubic = p => p * p * p;
   const easeOutQuad = p => 1 - (1 - p) * (1 - p);
   const easeOutBack = p => { const c = 1.55; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+  const easeInOut = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 
   function mulberry(s) {
     s |= 0; s = (s + 0x6d2b79f5) | 0;
@@ -988,18 +1003,63 @@ const INTRO = (() => {
 
     ctx.restore(); /* shake */
 
-    /* ===== progress hairline ===== */
-    const prog = clamp01(T / DUR);
-    ctx.fillStyle = flooded ? 'rgba(26,23,20,0.3)' : 'rgba(237,231,217,0.35)';
-    ctx.fillRect(0, H - 2, W * prog, 2);
+    /* ===== progress hairline (rests once the papers begin) ===== */
+    if (T <= T_PAPERS) {
+      const prog = clamp01(T / T_PAPERS);
+      ctx.fillStyle = flooded ? 'rgba(26,23,20,0.3)' : 'rgba(237,231,217,0.35)';
+      ctx.fillRect(0, H - 2, W * prog, 2);
+    }
 
-    /* ===== skip fade / final fade to paper ===== */
-    let overA = 0;
-    if (skipping) overA = clamp01(skipT / 0.32);
-    else if (T > T_FADE) overA = clamp01((T - T_FADE) / (DUR - T_FADE));
-    if (overA > 0) {
-      ctx.fillStyle = `rgba(237,231,217,${overA})`;
-      ctx.fillRect(0, 0, W, H);
+    /* ===== skip fade / the five papers pass before the title ===== */
+    if (skipping) {
+      const overA = clamp01(skipT / 0.32);
+      if (overA > 0) {
+        ctx.fillStyle = `rgba(237,231,217,${overA})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+    } else if (T > T_PAPERS) {
+      /* each paper wipes the last away left-to-right, a thin inked
+         edge pulling the new sheet across, then its kanji settles
+         into the centre like a seal pressed in that sheet's ink.
+         The last paper is the pale washi the journey begins on —
+         it holds a breath, and the title rises from the same sheet. */
+      for (let i = 0; i < PAPERS.length; i++) {
+        const pp = PAPERS[i];
+        const t0 = T_PAPERS + i * PAPER_CYCLE;
+        if (T <= t0) break;
+        const wp = clamp01((T - t0) / PAPER_WIPE);
+        const edge = W * easeInOut(wp);
+        /* the sheet, pulled across */
+        ctx.fillStyle = pp.p;
+        ctx.fillRect(0, 0, edge + 1, H);
+        if (wp < 1) {
+          /* the wet edge: a thin inked rod and its shadow */
+          const g = ctx.createLinearGradient(edge - 30, 0, edge, 0);
+          g.addColorStop(0, `rgba(${pp.ink},0)`);
+          g.addColorStop(1, `rgba(${pp.ink},0.12)`);
+          ctx.fillStyle = g;
+          ctx.fillRect(Math.max(0, edge - 30), 0, 30, H);
+          ctx.fillStyle = `rgba(${pp.ink},0.55)`;
+          ctx.fillRect(edge - 1.5, 0, 2.5, H);
+        }
+        /* the kanji pressed into the sheet once it lies still */
+        if (wp >= 1) {
+          const sp = clamp01((T - t0 - PAPER_WIPE) / 0.14);
+          const sz = Math.round(Math.max(120, Math.min(260, 190 * (Math.min(W, H) / 900))));
+          ctx.save();
+          ctx.translate(W / 2, H * 0.46);
+          ctx.rotate(-0.02);
+          const pop = 1 + (1 - easeOutBack(sp)) * 0.08;
+          ctx.scale(pop, pop);
+          ctx.globalAlpha = 0.2 * sp;
+          ctx.fillStyle = `rgb(${pp.ink})`;
+          ctx.font = `${sz}px "Zen Antique", "Hiragino Mincho ProN", serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(pp.k, 0, 0);
+          ctx.restore();
+        }
+      }
     }
   }
 

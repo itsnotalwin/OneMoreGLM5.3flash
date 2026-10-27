@@ -143,6 +143,43 @@ const UI = (() => {
     gilt:  { ink: '#8a6420', rgba: '138,100,32',  paper: '#e7d6ad' },
   };
   const toneOf = a => BAND_TONES[a.theme] || BAND_TONES.pale;
+  /* the shelf re-inks a whole subtree with a sheet's tones: every
+     strip is a small sheet of its own paper, so the ink tiers it
+     prints with must be the sheet's ink, not the page's */
+  function sheetVars(theme, opts) {
+    const t = BAND_TONES[theme] || BAND_TONES.pale;
+    const o = opts || {};
+    /* a sealed sheet shows its tone through the seal: the paper
+       pulls toward the desk and the ink toward the desk's ghost */
+    const PAPER_DESK = [237, 231, 217], INK_DESK = [26, 23, 20];
+    const pm = o.locked ? 0.52 : 0, im = o.locked ? 0.55 : 0;
+    const paper = mixRGB(hex2rgb(t.paper), PAPER_DESK, pm);
+    const ink = mixRGB(hex2rgb(t.ink), INK_DESK, im);
+    const ir = ink.join(',');
+    const dark = theme === 'dark';
+    return {
+      'pt-paper': `rgb(${paper.join(',')})`,
+      'paper': `rgb(${paper.join(',')})`,
+      'paper-92': `rgba(${paper.join(',')},0.94)`,
+      'paper-80': `rgba(${paper.join(',')},0.82)`,
+      'paper-55': `rgba(${paper.join(',')},0.6)`,
+      'ink': `rgb(${ir})`,
+      'ink-70': `rgba(${ir},0.7)`,
+      'ink-62': `rgba(${ir},0.62)`,
+      'ink-55': `rgba(${ir},0.55)`,
+      'ink-45': `rgba(${ir},0.45)`,
+      'ink-25': `rgba(${ir},0.25)`,
+      'ink-12': `rgba(${ir},0.12)`,
+      /* the one sacred red — lifted on the night sheet alone */
+      'red': dark ? '#d55340' : '#b23a2b',
+      /* the wash a hover breathes: the sheet's ink in the air */
+      'pt-rgba': t.rgba,
+    };
+  }
+  function applySheetVars(elm, theme, opts) {
+    const v = sheetVars(theme, opts);
+    for (const k in v) elm.style.setProperty('--' + k, v[k]);
+  }
   /* tones must read on the page they hang on: a band that survived
      the night scroll lies on dark paper, and its pale warm inks
      would drown — so each tone is pulled a little toward the
@@ -551,11 +588,26 @@ const UI = (() => {
     if (b) b.textContent = txt;
   }
 
+  /* a hovered strip breathes its sheet's ink into the shelf air —
+     the same language the title's journey band speaks */
+  function shelfWash(theme) {
+    const wash = document.getElementById('shelfWash');
+    if (!wash) return;
+    if (!theme) { wash.classList.remove('on'); return; }
+    const t = BAND_TONES[theme] || BAND_TONES.pale;
+    wash.style.background =
+      `radial-gradient(ellipse 46% 34% at 50% 46%, rgba(${t.rgba},0.14), transparent 72%)`;
+    wash.classList.add('on');
+  }
+
   function buildScrolls() {
     const row = document.getElementById('scrollRow');
     if (!row) return;
-    /* the shelf view returns: the scene ladder folds away */
+    /* the shelf view returns: the scene ladder folds away, and the
+       screen wears no single sheet — five papers hang here */
     ladderSheet = 0;
+    const scr = document.getElementById('screenScrolls');
+    if (scr) scr.removeAttribute('data-wear');
     const lrow = document.getElementById('levelRow');
     if (lrow) lrow.classList.add('hidden');
     row.classList.remove('hidden');
@@ -579,6 +631,12 @@ const UI = (() => {
         (isLocked ? ' is-locked' : '') +
         (isCurrent ? ' is-current' : '');
       card.style.setProperty('--tilt', ((i % 2 ? 1 : -1) * (0.5 + i * 0.22)).toFixed(2) + 'deg');
+      /* the strip is a small sheet of its own paper: every ink tier
+         it prints with is the sheet's own — a sealed scroll shows
+         its tone through the seal, ghosted toward the desk */
+      applySheetVars(card, a.theme, { locked: isLocked });
+      card.addEventListener('mouseenter', () => shelfWash(a.theme));
+      card.addEventListener('mouseleave', () => shelfWash(null));
       /* ten level dots — the sheet's own ladder, filled to the deepest walk */
       let dots = '';
       for (let d = 1; d <= CFG.wave.levelsPerArea; d++) {
@@ -638,6 +696,11 @@ const UI = (() => {
     ladderSheet = n;
     shelf.classList.add('hidden');
     row.classList.remove('hidden');
+    /* the unrolled scroll dresses the whole room in its own ink:
+       head, beam, hint and strips all print in the sheet's tone */
+    const scr = document.getElementById('screenScrolls');
+    if (scr) scr.dataset.wear = a.theme;
+    shelfWash(null);
     const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
     const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
     const seals = (typeof G !== 'undefined' && G.getSeals) ? G.getSeals() : {};
