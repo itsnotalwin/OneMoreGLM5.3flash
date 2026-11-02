@@ -560,7 +560,15 @@
      asked to sit through it again (序 replays it on demand) */
   let introSeen = false;
   try { introSeen = sessionStorage.getItem('om_intro_seen') === '1'; } catch (e) {}
-  if (G.S.reduced || introSeen) {
+  /* Returning from Google OAuth is a navigation, not a new game.
+     Resume the exact leaderboard tab (including v12's weekly ledger)
+     without replaying the opening, while retaining normal v12 intros. */
+  const oauthReturn = LB.consumeOAuthReturn();
+  if (oauthReturn) {
+    try { sessionStorage.setItem('om_intro_seen', '1'); } catch (e) {}
+    enterTitle();
+    LB.open('title', oauthReturn.tab);
+  } else if (G.S.reduced || introSeen) {
     enterTitle();          /* stillness — or this session has seen the film */
   } else {
     try { sessionStorage.setItem('om_intro_seen', '1'); } catch (e) {}
