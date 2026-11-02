@@ -40,9 +40,49 @@ const LB = (() => {
     debug: false,      // QA: a paper cloud — no network, fake rows
     rows: null,        // cached board rows
     tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet
+    oauthError: '',     // feedback shown on a failed Google return
   };
 
   const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const oauthReturnKey = 'om_lb_google_return_v1';
+
+  /* Google navigation reloads the game. Save UI intent only (never tokens)
+     and recover the three-tab leaderboard before normal opening startup.
+     A PKCE ?code alone also signals a return if tab storage is unavailable. */
+  function consumeOAuthReturn() {
+    let intent = null;
+    try {
+      const saved = sessionStorage.getItem(oauthReturnKey);
+      if (saved) {
+        sessionStorage.removeItem(oauthReturnKey);
+        const parsed = JSON.parse(saved);
+        if (parsed && Number.isFinite(parsed.at) &&
+            parsed.at <= Date.now() + 60000 &&
+            Date.now() - parsed.at < 15 * 60 * 1000) intent = parsed;
+      }
+    } catch (e) {}
+    let callback = false, oauthError = '';
+    try {
+      const q = new URLSearchParams(location.search);
+      callback = q.has('code') || q.has('error') || q.has('error_code');
+      oauthError = q.get('error_description') || q.get('error') || '';
+    } catch (e) {}
+    if (!intent && !callback) return null;
+    ST.oauthError = oauthError ? authFail({ message: oauthError }) : '';
+    /* Clear failed callback parameters, not a successful PKCE code. */
+    if (oauthError) {
+      try {
+        const u = new URL(location.href);
+        if (!u.searchParams.has('code')) {
+          ['error', 'error_code', 'error_description'].forEach(k => u.searchParams.delete(k));
+          if (/^#(?:error|error_code|error_description)=/.test(u.hash)) u.hash = '';
+          history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+        }
+      } catch (e) {}
+    }
+    const tab = intent && ['all', 'day', 'week'].includes(intent.tab) ? intent.tab : 'all';
+    return { tab };
+  }
 
   const cfg = () => {
     const c = window.OM_SUPABASE || {};
@@ -133,6 +173,8 @@ const LB = (() => {
   function authFail(e) {
     const s = String((e && (e.message || e.msg)) || e || '');
     const c = String((e && e.code) || '').toLowerCase();
+    if (/unable to exchange external code/i.test(s) || c === 'unexpected_failure')
+      return 'GOOGLE SIGN-IN FAILED AT TOKEN EXCHANGE — VERIFY GOOGLE CLIENT ID AND CLIENT SECRET IN SUPABASE AUTH';
     if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
       return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
     if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
@@ -159,6 +201,7 @@ const LB = (() => {
   async function signIn(name) {
     SFX.ensure();
     if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' }; renderAuth(); refreshOverStrip(); return me(); }
+    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.auth.signInAnonymously();
@@ -183,19 +226,28 @@ const LB = (() => {
   async function signInGoogle() {
     SFX.ensure();
     if (ST.debug) return signIn();
+    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
-    const { error } = await s.client.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: location.origin + location.pathname },
-    });
-    if (error) {
-      const msg = authFail(error);
+    try {
+      sessionStorage.setItem(oauthReturnKey, JSON.stringify({
+        tab: ST.tab, at: Date.now(),
+      }));
+    } catch (e) {} // ?code on callback is still recognized if storage fails
+    try {
+      const { error } = await s.client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: location.origin + location.pathname },
+      });
+      if (error) throw error;
+    } catch (e) {
+      try { sessionStorage.removeItem(oauthReturnKey); } catch (_) {}
+      const msg = authFail(e);
       renderAuth(msg);
       throw new Error(msg);
     }
-    /* the page redirects; the session lands back here and the
-       auth listener consumes any pending post */
+    /* Browser redirects, then main.js resumes this ledger while the SDK
+       exchanges the PKCE code and restores the signed-in session. */
   }
 
   async function signOut() {
@@ -812,6 +864,8 @@ const LB = (() => {
     const box = document.getElementById('boardAuth');
     if (!box) return;
     if (!configured()) { box.innerHTML = ''; return; }
+    if (err) ST.oauthError = err;
+    if (ST.user) ST.oauthError = '';
     if (ST.debug && ST.debugUser) {
       box.innerHTML = `<span class="board-user"><span class="r-ava r-ava-ink" aria-hidden="true"></span><b>QA SCRIBE</b></span>
         <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
@@ -833,7 +887,7 @@ const LB = (() => {
     }
     box.innerHTML = signWidget('SIGN THE PAGE') +
       gBtn('OR USE GOOGLE', true) +
-      (err ? `<span class="auth-err">${esc(err)}</span>` : '');
+      (ST.oauthError ? `<span class="auth-err">${esc(ST.oauthError)}</span>` : '');
     const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
       g.disabled = true;
@@ -887,7 +941,7 @@ const LB = (() => {
 
   /* ---------------- api ---------------- */
   return {
-    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
+    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab, consumeOAuthReturn,
     get user() { return me(); },
     get debug() { return ST.debug; },
     get lastDebugPost() { return ST.debugLastPost || null; },
