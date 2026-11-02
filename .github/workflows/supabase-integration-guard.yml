@@ -1,0 +1,82 @@
+name: Supabase integration guard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-supabase-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: |
+          node --check js/supabase-config.js
+          node --check js/lb.js
+          node --check js/main.js
+          node --check sw.js
+      - name: Detect overwritten Supabase and Google OAuth wiring
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const issues = [];
+          const read = (path) => {
+            try { return fs.readFileSync(path, 'utf8'); }
+            catch { issues.push('Missing ' + path); return ''; }
+          };
+          const assert = (condition, message) => { if (!condition) issues.push(message); };
+          const config = read('js/supabase-config.js');
+          const lb = read('js/lb.js');
+          const main = read('js/main.js');
+          const index = read('index.html');
+          const sw = read('sw.js');
+
+          assert(config.includes('https://sffpyvxbgmhepftxoesy.supabase.co'),
+            'Supabase URL no longer targets the shared Pinpoint project');
+          assert(/anonKey\s*:\s*['"]sb_publishable_[^'"]+['"]/.test(config),
+            'Public publishable key missing from js/supabase-config.js');
+          assert(!/anonKey\s*:\s*['"]sb_secret_/.test(config),
+            'Forbidden secret key in public JS config');
+          assert(lb.includes("from('om_scores')") && lb.includes("from('om_daily')"),
+            'Separate ONE MORE leaderboard tables missing');
+          assert(lb.includes('auth.signInAnonymously'),
+            'Anonymous sign-in client flow missing');
+          assert(lb.includes("provider: 'google'") || lb.includes('provider: "google"'),
+            'Google OAuth sign-in client flow missing');
+          assert(lb.includes("flowType: 'pkce'") && lb.includes('detectSessionInUrl: true'),
+            'Google OAuth PKCE callback handling missing');
+          assert(lb.includes('om_lb_google_return_v1') && lb.includes('consumeOAuthReturn'),
+            'Short-lived Google callback/board context restoration missing');
+          assert(lb.includes('unable to exchange external code'),
+            'Actionable token-exchange error handling missing');
+          assert(main.includes('LB.consumeOAuthReturn()') && main.includes('LB.open('),
+            'Startup no longer restores the leaderboard after Google OAuth');
+
+          const scripts = ['js/supabase-config.js', 'js/lb.js', 'js/main.js'];
+          const scriptPositions = scripts.map(s => index.indexOf('src="./' + s + '"'));
+          assert(scriptPositions.every(p => p !== -1) &&
+            scriptPositions[0] < scriptPositions[1] &&
+            scriptPositions[1] < scriptPositions[2],
+            'Critical script tags missing or ordered incorrectly in index.html');
+          for (const file of scripts) {
+            assert(sw.includes("'" + file + "'"), 'PWA cache no longer includes ' + file);
+          }
+          assert(/const VER\s*=\s*['"][^'"]+['"]/.test(sw),
+            'PWA cache version missing');
+
+          if (issues.length) {
+            console.error('Supabase integration REGRESSION after this push:');
+            issues.forEach(x => console.error(' - ' + x));
+            console.error('Recovery: SUPABASE-RECOVERY.md');
+            process.exitCode = 1;
+          } else {
+            console.log('Supabase source wiring preserved. Auth providers and live login require separate verification.');
+          }
+          NODE
