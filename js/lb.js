@@ -65,6 +65,21 @@ const LB = (() => {
     } catch (e) {}
     if (!intent && !callback) return null;
     ST.oauthError = oauthError ? authFail({ message: oauthError }) : '';
+
+    /* Google/Supabase error URLs can contain one-time OAuth details.
+       Once captured for display, remove only the failed callback
+       parameters so refresh never replays a stale error. Never strip
+       ?code on a successful PKCE return; the SDK still needs it. */
+    if (oauthError) {
+      try {
+        const u = new URL(location.href);
+        if (!u.searchParams.has('code')) {
+          ['error', 'error_code', 'error_description'].forEach(k => u.searchParams.delete(k));
+          if (/^#(?:error|error_code|error_description)=/.test(u.hash)) u.hash = '';
+          history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+        }
+      } catch (e) {}
+    }
     return { tab: intent && intent.tab === 'day' ? 'day' : 'all' };
   }
 
@@ -157,6 +172,8 @@ const LB = (() => {
   function authFail(e) {
     const s = String((e && (e.message || e.msg)) || e || '');
     const c = String((e && e.code) || '').toLowerCase();
+    if (/unable to exchange external code/i.test(s) || c === 'unexpected_failure')
+      return 'GOOGLE SIGN-IN FAILED AT TOKEN EXCHANGE — VERIFY GOOGLE CLIENT ID AND CLIENT SECRET IN SUPABASE AUTH';
     if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
       return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
     if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
