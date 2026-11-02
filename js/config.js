@@ -17,14 +17,20 @@ const CFG = {
     spread: 0.13,      // rad between extra droplets
   },
 
-  /* starting brushes — choose one before the run begins */
+  /* starting brushes — choose one before the run begins.
+     The v11 balancing test (scripts/balance_probe.sh, seeded daily
+     sheets) measured the old trio: THE STONE cleared hordes 44% faster
+     than THE NEEDLE AND walked in with 7 integrity (mods add to the
+     base 3 — maxHp: 4 meant seven, not four) while losing every duel.
+     The triangle now: the needle outranges and outpaces, the broom
+     out-sweeps, the stone out-tanks and out-bites, one lane each. */
   brushes: {
-    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. Fire comes fast, strokes stay light.',
-      mods: { fireCdMult: 0.72, moveMult: 1.08 } },
-    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, slower between strokes.',
-      mods: { shots: 2, fireCdMult: 1.24 } },
-    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. Every droplet bites deeper and the paper holds longer.',
-      mods: { dmg: 2, maxHp: 4, moveMult: 0.9, fireCdMult: 1.08 } },
+    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. Fire comes fast, strokes stay light, and the droplets fly far.',
+      mods: { fireCdMult: 0.72, moveMult: 1.08, bulletLifeMult: 1.3 } },
+    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, a beat slower between strokes.',
+      mods: { shots: 2, fireCdMult: 1.12 } },
+    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. Every droplet bites deeper and the paper holds longer — the hand walks slower.',
+      mods: { dmg: 2, maxHp: 1, moveMult: 0.9, fireCdMult: 1.24 } },
   },
 
   /* the world is unbounded — the brush walks an endless sheet */
@@ -112,6 +118,27 @@ const CFG = {
      every stroke that survives it. */
   hard: { hp: 1.4, sp: 1.15, budget: 1.45, score: 2.0 },
 
+  /* ---- THE INKSTONE (硯) — what the runs press out ----
+     When a run ends, the press squeezes its ink back into the stone:
+     a currency that survives the paper, spent on CHARMS between runs.
+     Every wave survived presses 6 drops (waves past the five sheets
+     press double — the endless loops go deeper than the journey ever
+     asked); each Guardian felled this run adds 80; the five sheets
+     signed adds 300, once ever. A new personal best presses 1.25×,
+     REALLY HARD presses the ledger's own double, and a practiced
+     daily sheet presses only a fifth — practice is for the hand,
+     not the stone. Checked in scripts/economy_calc.js. */
+  charmEarn: {
+    perWave: 6,        // ink pressed per wave survived
+    loopFrom: 500,     // waves past the five sheets pay double
+    loopMult: 2,
+    sheetFall: 80,     // per Guardian felled this run
+    victoryFeat: 300,  // the five sheets signed — once, ever
+    bestMult: 1.25,    // a new personal best presses deeper
+    hardMult: 2,       // REALLY HARD — the ledger's own law
+    practiceMult: 0.2, // a practiced sheet presses a fifth
+  },
+
   /* ---- per-level KEEPERS ----
      Every level's tenth wave is a boss fight: the scene's Keeper —
      a red-sealed beast, lesser kin of the sheet's Guardian — walks
@@ -130,6 +157,18 @@ const CFG = {
 
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
+
+  /* ---- THE GUARDIANS' HALL (殿) — the boss rush (v11) ----
+     Five guardians, one life, the old master's kit (applyQAPower(30)
+     — the fifteen teachings, twice through). The sheet's climb stays
+     outside: each guardian fights at its OWN ink (def.hp × the boss
+     levy), a thin honor guard at its heels, +2 integrity between
+     gates. Score = the felled (500/800/1200/1700/2400, cumulative)
+     + the swift (+10 a breath under the seven-minute par, counting
+     down live) + the flawless (+500 untouched). REALLY HARD pays
+     the ledger's double. The hall presses no ink and keeps its own
+     ten best (om_hall_v1). */
+  hall: { par: 420, swift: 10, flawless: 500, guard0: 4 },
 
   /* brush skills */
   orbit:   { radius: lv => 40 + lv * 5, speed: 2.7, dmgCd: 0.45 },
@@ -223,6 +262,23 @@ const ENEMIES = {
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
+  /* ---- SHEET VI · THE BLANK SCROLL — the paper before ink ----
+     The secret act: the sheet the five inks never touched, walked
+     only once the five scrolls lie signed. Its beasts are PALE —
+     shapes the other sheets already know, born of the unwritten
+     paper, walking to their OWN first waves (fresh intros: the
+     sheet keeps its own climb, no borrowed growth). */
+  blankling:  { name: 'THE BLANK',     trait: 'DRIFTER',  cost: 1, intro: 501, hp: 3,  r: 12, speed: 84,  score: 40, shape: 'circle'  },
+  quill:      { name: 'THE QUILL',     trait: 'LUNGER',   cost: 2, intro: 506, hp: 2,  r: 9,  speed: 92,  score: 45, shape: 'tri'     },
+  eraser:     { name: 'THE ERASER',    trait: 'BOMBER',   cost: 2, intro: 511, hp: 3,  r: 10, speed: 132, score: 50, shape: 'popper'  },
+  palewing:   { name: 'PALEWING',      trait: 'SWOOPER',  cost: 2, intro: 516, hp: 3,  r: 11, speed: 205, score: 48, shape: 'crane'   },
+  stainlet:   { name: 'STAINLET',      trait: 'SWARM',    cost: 1, intro: 516, hp: 1,  r: 5,  speed: 150, score: 12, shape: 'gnat'    },
+  hush:       { name: 'THE HUSH',      trait: 'WEAVER',   cost: 2, intro: 521, hp: 3,  r: 11, speed: 100, score: 45, shape: 'ring'    },
+  flyleaf:    { name: 'THE FLYLEAF',   trait: 'SPONGE',   cost: 2, intro: 526, hp: 4,  r: 11, speed: 60,  score: 50, shape: 'blotter' },
+  undone:     { name: 'THE UNDONE',    trait: 'DIVIDER',  cost: 2, intro: 531, hp: 4,  r: 12, speed: 88,  score: 40, shape: 'diamond' },
+  palecolossus: { name: 'PALE COLOSSUS', trait: 'COLOSSUS', cost: 5, intro: 536, hp: 30, r: 24, speed: 28, score: 120, shape: 'golem' },
+  whitewisp:  { name: 'WHITE WISP',    trait: 'GUNNER',   cost: 3, intro: 541, hp: 3,  r: 11, speed: 66,  score: 60, shape: 'spit'    },
+
   /* ---- the five Guardians, one per sheet, on its tenth level ----
      Bases are the beast's own ink mass, measured against the
      NATURAL build a scribe carries at each sheet's gate — the sheet
@@ -248,6 +304,15 @@ const ENEMIES = {
   k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 540, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
   k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 620, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
   k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 520, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
+
+  /* ---- the SIXTH Guardian — the blank sheet's own ----
+     THE PAPER ITSELF: not a beast ON the paper but the paper,
+     awake. It wants the brush the way a blank page wants the
+     pen — it pulls, it breathes out everything the five sheets
+     taught, and under half its ink it stops waiting. Its keeper
+     THE MARGIN walks every tenth wave of the blank sheet. */
+  b_blank: { name: 'THE PAPER ITSELF', trait: 'GUARDIAN VI', cost: 0, intro: 600, hp: 800, r: 38, speed: 42, score: 3200, shape: 'boss', boss: 1 },
+  k_blank: { name: 'THE MARGIN',       trait: 'KEEPER VI',   cost: 0, intro: 501, hp: 640, r: 26, speed: 54, score: 640, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -262,6 +327,9 @@ const ENEMY_WEIGHTS = {
   gnat: 2.6, blotter: 1.6, owl: 1.4, smother: 1.5, ashigaru: 1.9,
   stamper: 1.0, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85,
   shiki: 1.1, crest: 1.4, cask: 0.9,
+  /* the blank sheet's pale kin */
+  blankling: 2.4, quill: 2.2, eraser: 1.8, palewing: 1.6, stainlet: 2.4,
+  hush: 1.7, flyleaf: 1.4, undone: 1.8, palecolossus: 0.8, whitewisp: 1.5,
 };
 
 /* ------------------------------------------------------------
@@ -322,6 +390,16 @@ const AREAS = [
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
   },
+  {
+    id: 'VI', name: 'THE BLANK SCROLL', kanji: '六', theme: 'blank',
+    ink: '白墨',                                     // the unwritten
+    desc: 'The paper before ink. It appears only for the hand that signed the five.',
+    mult: { hp: 10, sp: 1.28, budget: 4.3 },
+    roster: ['blankling', 'quill', 'eraser', 'palewing', 'stainlet', 'hush', 'flyleaf', 'undone', 'palecolossus', 'whitewisp'],
+    order: ['blankling', 'quill', 'eraser', 'palewing', 'stainlet', 'hush', 'flyleaf', 'undone', 'palecolossus'],
+    names: ['白紙', '無題', '空白', '未書', '静白', '余白', '虚白', '待墨', '終章', '落款'],
+    elite: 'palecolossus', boss: 'b_blank', keeper: 'k_blank',
+  },
 ];
 
 const UPGRADES = [
@@ -351,4 +429,42 @@ const UPGRADES = [
   { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, weapon: true, apply: s => { s.arc += 1; } },
   { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, weapon: true, apply: s => { s.boomer += 1; } },
   { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, weapon: true, apply: s => { s.vortex += 1; } },
+];
+
+/* ---- CHARMS (符) — what the inkstone buys ----
+   Permanent upgrades, pressed between runs. The stone holds the
+   ink (om_charms_v1); a charm's rank rides every page the hand
+   opens — journey, endless, daily, the shelf's resumed scenes.
+   The ladder is best-practice shaped: the cheapest charm lands on
+   the FIRST run, quality-of-life leads, damage is capped at half
+   a real build, and the ward's in-run pick retires once the charm
+   owns it (no trap options). Total board: 硯 4,890 over 19 ranks. */
+const CHARMS = [
+  { id: 'hunger', kanji: '引', name: 'INK HUNGER',   cost: [50, 130],
+    desc: 'The paper pulls harder. Gathering radius widens, rank by rank.',
+    apply: s => { s.magnet += 1; } },
+  { id: 'breath', kanji: '息', name: 'LONG BREATH',  cost: [70, 180],
+    desc: 'Droplets fly ten parts farther in ten. The wrist never tires.',
+    apply: s => { s.bulletSpeedMult *= 1.10; } },
+  { id: 'quick',  kanji: '疾', name: 'QUICK HAND',   cost: [90, 220, 500],
+    desc: 'The brush lifts eight parts in a hundred faster, between volleys.',
+    apply: s => { s.fireCdMult *= 0.92; } },
+  { id: 'flick',  kanji: '歩', name: 'FLICK',        cost: [80, 200, 460],
+    desc: 'The hand moves lighter. Be elsewhere before the ink lands.',
+    apply: s => { s.moveMult *= 1.08; } },
+  { id: 'thick',  kanji: '厚', name: 'THICK PAPER',  cost: [140, 360],
+    desc: 'One more integrity, pressed into every run. The sheet holds.',
+    apply: s => { s.maxHp += 1; s.hp += 1; } },
+  { id: 'bitter', kanji: '重', name: 'BITTER INK',   cost: [160, 420],
+    desc: 'Every droplet bites one deeper. Dense, dark, permanent.',
+    apply: s => { s.dmg += 1; } },
+  { id: 'redtip', kanji: '赤', name: 'RED TIP',      cost: [150, 400],
+    desc: 'Six strokes in a hundred bite twice as deep, whatever the hand carries.',
+    apply: s => { s.critC += 0.06; } },
+  { id: 'oldink', kanji: '遺', name: 'THE OLD INK',  cost: [240, 560],
+    desc: 'Every mote of ink is worth a fourth more to the brush. The old ink remembers.',
+    apply: s => { s.well += 1; } },
+  { id: 'ward',   kanji: '守', name: 'THE PAPER WARD', cost: [480],
+    desc: 'Every run begins warded. A dry talisman swallows the first blow whole.',
+    apply: s => { s.ward = true; } },
 ];

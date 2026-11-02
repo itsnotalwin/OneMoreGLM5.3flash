@@ -1,0 +1,254 @@
+/* ONE MORE — the inkstone's own paper (砚, v8.9).
+   The side room where the stone lives: it condenses ink from
+   the air, takes the runs' presses, and grows across a lifetime.
+   Same palette as the game's washi — paper, ink, one vermillion. */
+
+:root{
+  --paper: #ede7d9;
+  --paper-92: rgba(237, 231, 217, 0.94);
+  --ink: #1a1714;
+  --ink-70: rgba(26, 23, 20, 0.7);
+  --ink-55: rgba(26, 23, 20, 0.55);
+  --ink-45: rgba(26, 23, 20, 0.45);
+  --ink-25: rgba(26, 23, 20, 0.25);
+  --ink-12: rgba(26, 23, 20, 0.12);
+  --red: #b23a2b;
+  --red-deep: #8e2c20;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+  --display: 'Zen Antique', 'Songti SC', 'SimSun', serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper: #17130f;
+    --paper-92: rgba(23, 19, 15, 0.94);
+    --ink: #e9e2d2;
+    --ink-70: rgba(233, 226, 210, 0.7);
+    --ink-55: rgba(233, 226, 210, 0.55);
+    --ink-45: rgba(233, 226, 210, 0.45);
+    --ink-25: rgba(233, 226, 210, 0.25);
+    --ink-12: rgba(233, 226, 210, 0.12);
+  }
+}
+
+*{ margin: 0; padding: 0; box-sizing: border-box; }
+html{ height: 100%; }
+body{
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.stone-room{
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px 16px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---- header: back · wordmark · charms ---- */
+.stone-head{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.stone-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  color: var(--ink-70);
+  border: 1px solid var(--ink-25);
+  padding: 7px 12px 7px 9px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  background: none;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, transform .15s;
+  transform: rotate(-.4deg);
+}
+.stone-link:hover{ color: var(--ink); border-color: var(--ink-45); transform: rotate(-.4deg) translateY(-1px); }
+.stone-link .sl-kanji{ font-family: var(--display); font-size: 16px; line-height: 1; }
+.stone-wordmark{
+  display: flex; align-items: baseline; gap: 9px;
+  transform: rotate(-.4deg);
+}
+.stone-wordmark .stone-kanji{
+  font-family: var(--display);
+  font-size: 34px; line-height: 1;
+  color: var(--ink);
+}
+.stone-wordmark .stone-word{
+  font-family: var(--mono);
+  font-size: 12px; letter-spacing: .3em; font-weight: 600;
+}
+
+/* ---- the name + the stage ---- */
+.stone-name-line{
+  margin-top: 14px;
+  font-size: 11px; letter-spacing: .12em;
+  color: var(--ink-55);
+}
+.stone-stage-line{
+  margin-top: 6px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.stage-kanji{ font-family: var(--display); font-size: 21px; line-height: 1; }
+.stage-dot{ color: var(--ink-45); }
+.stage-name{ font-size: 10px; letter-spacing: .26em; color: var(--ink-70); }
+
+/* ---- the canvas ---- */
+.stone-canvas-wrap{
+  margin-top: 14px;
+  width: min(74vw, 330px);
+  aspect-ratio: 1 / 1;
+  position: relative;
+}
+#stoneCanvas{
+  width: 100%; height: 100%;
+  display: block;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- flavor + pool ---- */
+.stone-flavor{
+  margin-top: 2px;
+  font-size: 11px; letter-spacing: .06em;
+  color: var(--ink-70);
+  text-align: center;
+  font-style: italic;
+  min-height: 1.4em;
+}
+.stone-pool{
+  margin-top: 14px;
+  width: min(74vw, 330px);
+  display: flex; align-items: center; gap: 10px;
+}
+.pool-label, .pool-next{
+  font-size: 8px; letter-spacing: .2em; color: var(--ink-45);
+  white-space: nowrap;
+}
+.pool-track{
+  flex: 1; height: 5px;
+  border: 1px solid var(--ink-25);
+  background: var(--ink-12);
+  position: relative;
+  overflow: hidden;
+}
+.pool-fill{
+  position: absolute; inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: var(--ink);
+  transition: transform .6s cubic-bezier(.2,.8,.2,1);
+}
+.pool-fill.is-full{ background: var(--red); }
+
+/* ---- the purse ---- */
+.stone-stats{
+  margin-top: 16px;
+  width: min(74vw, 330px);
+  display: flex; justify-content: space-between; gap: 8px;
+}
+.stat{ display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.stat-num{ font-size: 15px; font-weight: 600; }
+.stat-num.is-gain{ color: var(--red); }
+.stat-label{ font-size: 8px; letter-spacing: .18em; color: var(--ink-45); text-align: center; }
+
+.stone-hint{
+  margin-top: 13px;
+  font-size: 9.5px; line-height: 1.7; letter-spacing: .08em;
+  color: var(--ink-45);
+  text-align: center;
+  max-width: 340px;
+  transition: color .2s;
+}
+.stone-hint.is-dry{ color: var(--red); }
+
+/* ---- naming ---- */
+.stone-name-row{
+  margin-top: 18px;
+  display: flex; align-items: center; gap: 9px;
+}
+.name-label{ font-size: 8px; letter-spacing: .2em; color: var(--ink-45); }
+.name-input{
+  width: 130px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ink-25);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 16px;
+  padding: 3px 2px;
+  text-align: center;
+  outline: none;
+}
+.name-input:focus{ border-bottom-color: var(--ink-55); }
+.name-input::placeholder{ color: var(--ink-25); }
+.name-seal{
+  width: 30px; height: 30px;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: var(--display);
+  font-size: 15px; line-height: 1;
+  background: none;
+  cursor: pointer;
+  transform: rotate(-1.2deg);
+  transition: background .15s, color .15s;
+}
+.name-seal:hover{ background: var(--red); color: var(--paper); }
+.name-seal.is-set{ background: var(--red); color: var(--paper); }
+
+/* ---- the journal ---- */
+.stone-journal{
+  margin-top: 22px;
+  width: min(100%, 420px);
+}
+.journal-head{
+  font-size: 8px; letter-spacing: .3em; font-weight: 600;
+  color: var(--ink-45);
+  text-align: center;
+  margin-bottom: 9px;
+}
+.journal-list{ list-style: none; }
+.journal-list li{
+  font-size: 9.5px; line-height: 1.6; letter-spacing: .06em;
+  color: var(--ink-70);
+  text-align: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--ink-12);
+}
+.journal-list li:last-child{ border-bottom: none; }
+.journal-list li .j-date{ color: var(--ink-45); margin-right: 7px; }
+.journal-list li.is-stage{ color: var(--ink); }
+.journal-list .j-empty{ color: var(--ink-25); font-style: italic; }
+
+/* ---- footer ---- */
+.stone-foot{
+  margin-top: 26px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.foot-line{ font-size: 8px; letter-spacing: .28em; color: var(--ink-25); }
+.foot-stamp{ font-size: 8px; letter-spacing: .2em; color: var(--ink-45); }
+
+/* ---- small screens ---- */
+@media (max-width: 420px){
+  .stone-room{ padding: 14px 12px 28px; }
+  .stone-wordmark .stone-kanji{ font-size: 28px; }
+  .stone-wordmark .stone-word{ font-size: 10px; letter-spacing: .22em; }
+  .stone-link{ padding: 6px 9px 6px 7px; font-size: 8.5px; }
+  .stone-link .sl-label{ display: none; }
+  .stone-link .sl-kanji{ font-size: 18px; }
+  .stone-canvas-wrap{ width: min(80vw, 300px); }
+  .stone-pool, .stone-stats{ width: min(80vw, 300px); }
+  .name-input{ width: 110px; }
+}

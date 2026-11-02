@@ -6,12 +6,17 @@
    Design of the ledger:
    · one page per scribe — om_scores, keyed by uid — so the
      board reads a roster of ink-carriers, never one hand
-     repeated; a page a day — om_daily, keyed (day, uid);
+     repeated; a page a day — om_daily, keyed (day, uid); a
+     page a week — om_weekly, keyed (week, uid);
+   · every page may carry its scribe's echo — the recorded
+     strokes of the run that set it — and the board's 影 chips
+     download a stranger's echo to race beside the brush;
    · identity is a sign, not an account: anonymous sign-ins
      (one toggle in the dashboard) + a mark the scribe picks.
      Google stays as an optional second door.
    · a run is posted only when it carries further than the hand
-     has ever carried before (local best, om_lb_best_v1);
+     has ever carried before (local best, om_lb_best_v1); the
+     week's page rides along on every endless run;
    · rank counts the pages that reached further, +1;
    · row-level security is the lock: the world may read, only
      the signed scribe may raise their own page.
@@ -34,54 +39,10 @@ const LB = (() => {
     posting: false,
     debug: false,      // QA: a paper cloud — no network, fake rows
     rows: null,        // cached board rows
-    tab: 'all',        // the board's eye: 'all' time, or today's 'day' sheet
-    oauthError: '',     // show a failed Google return on the restored board
+    tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet
   };
 
   const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-  const oauthReturnKey = 'om_lb_google_return_v1';
-
-  /* OAuth leaves the app for Google and loads a fresh document on return.
-     Save UI intent in this tab only; never store access tokens here.
-     The callback's ?code is also recognized if tab storage is unavailable. */
-  function consumeOAuthReturn() {
-    let intent = null;
-    try {
-      const stored = sessionStorage.getItem(oauthReturnKey);
-      if (stored) {
-        sessionStorage.removeItem(oauthReturnKey);
-        const parsed = JSON.parse(stored);
-        if (parsed && Number.isFinite(parsed.at) &&
-            parsed.at <= Date.now() + 60000 &&
-            Date.now() - parsed.at < 15 * 60 * 1000) intent = parsed;
-      }
-    } catch (e) {}
-    let callback = false;
-    let oauthError = '';
-    try {
-      const q = new URLSearchParams(location.search);
-      callback = q.has('code') || q.has('error') || q.has('error_code');
-      oauthError = q.get('error_description') || q.get('error') || '';
-    } catch (e) {}
-    if (!intent && !callback) return null;
-    ST.oauthError = oauthError ? authFail({ message: oauthError }) : '';
-
-    /* Google/Supabase error URLs can contain one-time OAuth details.
-       Once captured for display, remove only the failed callback
-       parameters so refresh never replays a stale error. Never strip
-       ?code on a successful PKCE return; the SDK still needs it. */
-    if (oauthError) {
-      try {
-        const u = new URL(location.href);
-        if (!u.searchParams.has('code')) {
-          ['error', 'error_code', 'error_description'].forEach(k => u.searchParams.delete(k));
-          if (/^#(?:error|error_code|error_description)=/.test(u.hash)) u.hash = '';
-          history.replaceState(history.state, '', u.pathname + u.search + u.hash);
-        }
-      } catch (e) {}
-    }
-    return { tab: intent && intent.tab === 'day' ? 'day' : 'all' };
-  }
 
   const cfg = () => {
     const c = window.OM_SUPABASE || {};
@@ -172,8 +133,6 @@ const LB = (() => {
   function authFail(e) {
     const s = String((e && (e.message || e.msg)) || e || '');
     const c = String((e && e.code) || '').toLowerCase();
-    if (/unable to exchange external code/i.test(s) || c === 'unexpected_failure')
-      return 'GOOGLE SIGN-IN FAILED AT TOKEN EXCHANGE — VERIFY GOOGLE CLIENT ID AND CLIENT SECRET IN SUPABASE AUTH';
     if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
       return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
     if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
@@ -200,7 +159,6 @@ const LB = (() => {
   async function signIn(name) {
     SFX.ensure();
     if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' }; renderAuth(); refreshOverStrip(); return me(); }
-    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.auth.signInAnonymously();
@@ -225,28 +183,19 @@ const LB = (() => {
   async function signInGoogle() {
     SFX.ensure();
     if (ST.debug) return signIn();
-    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
-    try {
-      sessionStorage.setItem(oauthReturnKey, JSON.stringify({
-        tab: ST.tab, at: Date.now(),
-      }));
-    } catch (e) {}  // ?code on the callback remains a fallback
-    try {
-      const { error } = await s.client.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: location.origin + location.pathname },
-      });
-      if (error) throw error;
-    } catch (e) {
-      try { sessionStorage.removeItem(oauthReturnKey); } catch (_) {}
-      const msg = authFail(e);
+    const { error } = await s.client.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname },
+    });
+    if (error) {
+      const msg = authFail(error);
       renderAuth(msg);
       throw new Error(msg);
     }
-    /* The browser redirects. On its return, main.js reopens the
-       board and init() consumes the PKCE callback via Supabase. */
+    /* the page redirects; the session lands back here and the
+       auth listener consumes any pending post */
   }
 
   async function signOut() {
@@ -260,30 +209,89 @@ const LB = (() => {
 
   /* ---------------- the ledger's strokes ---------------- */
 
-  /* one page per scribe; a post only when the run carried further */
+  /* the run's echo, as the ledger keeps it: the recording rides the
+     page, and has_ghost lets the board offer the race without paying
+     for a hundred kilobytes of strokes on every unroll */
+  function echoPiece(run) {
+    const has = !!(run.rec && run.rec.data);
+    return has ? { has_ghost: true, ghost: JSON.stringify(run.rec) }
+               : { has_ghost: false };
+  }
+
+  /* one page per scribe; a post only when the run carried further.
+     The week's page rides along: every endless run may raise the
+     scribe's best-of-week, whether or not the all-time page moves. */
   async function submitRun(run) {
-    if (ST.debug) return { ok: true, rank: ST.debugRank || 7 };
+    if (ST.debug) {
+      ST.debugLastPost = { wave: run.wave | 0, score: run.score | 0,
+        hasRec: !!(run.rec && run.rec.data), recN: run.rec ? (run.rec.n | 0) : 0 };
+      return { ok: true, rank: ST.debugRank || 7 };
+    }
     const s = ST.sb;
     if (!s || !ST.user) return { ok: false, reason: 'signed-out' };
     const uid = ST.user.id;
+    let kept = false;
     const { data: old, error: readErr } = await s.client.from('om_scores')
       .select('wave,score').eq('uid', uid).maybeSingle();
     if (readErr) throw new Error(readErr.message || 'post failed');
     if (old && ((old.wave | 0) > run.wave ||
-        ((old.wave | 0) === run.wave && (old.score | 0) >= run.score)))
-      return { ok: true, kept: true };
-    const { error } = await s.client.from('om_scores').upsert({
-      uid,
+        ((old.wave | 0) === run.wave && (old.score | 0) >= run.score))) kept = true;
+    else {
+      const { error } = await s.client.from('om_scores').upsert({
+        uid,
+        name: cleanName(myName()) || 'INK DRIFTER',
+        wave: run.wave | 0,
+        score: run.score | 0,
+        kills: run.kills | 0,
+        time: Math.max(0, Math.round(run.time || 0)) | 0,
+        hard: !!run.hard,
+        v: 1,
+        ...echoPiece(run),
+      });
+      if (error) throw new Error(error.message || 'post failed');
+    }
+    try { await submitWeekly(run); } catch (e) {}
+    return { ok: true, kept };
+  }
+
+  /* ---------------- the weekly ledger ----------------
+     one page per scribe a week — om_weekly(week, uid) — the same
+     paper the daily keeps, on a slower drum. ISO weeks, 'YYYY-Wnn'. */
+
+  function weekKey(d) {
+    const t = d ? new Date(d) : new Date();
+    const dt = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const dow = (dt.getDay() + 6) % 7;            /* Mon = 0 … Sun = 6 */
+    dt.setDate(dt.getDate() - dow + 3);           /* this week's Thursday */
+    const y = dt.getFullYear();
+    const jan4 = new Date(y, 0, 4);
+    const fd = (jan4.getDay() + 6) % 7;
+    jan4.setDate(jan4.getDate() - fd + 3);        /* the year's first Thursday */
+    const wk = 1 + Math.round((dt - jan4) / 604800000);
+    return y + '-W' + String(wk).padStart(2, '0');
+  }
+
+  async function submitWeekly(run) {
+    const s = ST.sb;
+    if (!s || !ST.user) return;
+    const wk = weekKey();
+    const { data: old, error: readErr } = await s.client.from('om_weekly')
+      .select('score,wave').eq('week', wk).eq('uid', ST.user.id).maybeSingle();
+    if (readErr) return;
+    if (old && ((old.score | 0) > (run.score | 0) ||
+        ((old.score | 0) === (run.score | 0) && (old.wave | 0) >= (run.wave | 0)))) return;
+    const { error } = await s.client.from('om_weekly').upsert({
+      week: wk,
+      uid: ST.user.id,
       name: cleanName(myName()) || 'INK DRIFTER',
       wave: run.wave | 0,
       score: run.score | 0,
       kills: run.kills | 0,
-      time: Math.max(0, Math.round(run.time || 0)) | 0,
       hard: !!run.hard,
       v: 1,
+      ...echoPiece(run),
     });
     if (error) throw new Error(error.message || 'post failed');
-    return { ok: true };
   }
 
   async function fetchTop() {
@@ -291,13 +299,13 @@ const LB = (() => {
     const s = ST.sb;
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.from('om_scores')
-      .select('uid,name,wave,score,kills,hard')
+      .select('uid,name,wave,score,kills,hard,has_ghost')
       .order('wave', { ascending: false }).order('score', { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message || 'the board would not unroll');
     const rows = (data || []).map(r => ({
       name: r.name, wave: r.wave | 0, score: r.score | 0,
-      kills: r.kills | 0, hard: !!r.hard, __uid: r.uid,
+      kills: r.kills | 0, hard: !!r.hard, hasGhost: !!r.has_ghost, __uid: r.uid,
     }));
     rows.sort((a, b) => (b.wave - a.wave) || (b.score - a.score));
     return rows;
@@ -331,6 +339,7 @@ const LB = (() => {
       kills: run.kills | 0,
       hard: !!run.hard,
       v: 1,
+      ...echoPiece(run),
     });
     if (error) throw new Error(error.message || 'post failed');
     return { ok: true };
@@ -341,14 +350,14 @@ const LB = (() => {
     const s = ST.sb;
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.from('om_daily')
-      .select('uid,name,wave,score,kills,hard')
+      .select('uid,name,wave,score,kills,hard,has_ghost')
       .eq('day', String(day || '').replace(/[^0-9-]/g, ''))
       .order('score', { ascending: false }).order('wave', { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message || 'the day would not unroll');
     const rows = (data || []).map(r => ({
       name: r.name, wave: r.wave | 0, score: r.score | 0,
-      kills: r.kills | 0, hard: !!r.hard, __uid: r.uid,
+      kills: r.kills | 0, hard: !!r.hard, hasGhost: !!r.has_ghost, __uid: r.uid,
     }));
     rows.sort((a, b) => (b.score - a.score) || (b.wave - a.wave));
     return rows;
@@ -364,6 +373,49 @@ const LB = (() => {
       .gt('score', score | 0);
     if (error) return null;
     return (count || 0) + 1;
+  }
+
+  async function fetchWeeklyTop(wk) {
+    if (ST.debug) return debugRows().slice(0, 8).map(r => ({ ...r, wave: Math.min(r.wave, 40) }));
+    const s = ST.sb;
+    if (!s) throw new Error('unconfigured');
+    const { data, error } = await s.client.from('om_weekly')
+      .select('uid,name,wave,score,kills,hard,has_ghost')
+      .eq('week', String(wk || '').replace(/[^0-9W-]/g, ''))
+      .order('score', { ascending: false }).order('wave', { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message || 'the week would not unroll');
+    const rows = (data || []).map(r => ({
+      name: r.name, wave: r.wave | 0, score: r.score | 0,
+      kills: r.kills | 0, hard: !!r.hard, hasGhost: !!r.has_ghost, __uid: r.uid,
+    }));
+    rows.sort((a, b) => (b.score - a.score) || (b.wave - a.wave));
+    return rows;
+  }
+
+  /* the board's quiet download: one scribe's recording, for the racing */
+  async function fetchEcho(tab, uid, day) {
+    if (ST.debug) return debugEcho(uid);
+    const s = ST.sb;
+    if (!s) throw new Error('unconfigured');
+    let q;
+    if (tab === 'day')
+      q = s.client.from('om_daily').select('name,wave,score,hard,ghost')
+          .eq('day', String(day || '').replace(/[^0-9-]/g, '')).eq('uid', uid).maybeSingle();
+    else if (tab === 'week')
+      q = s.client.from('om_weekly').select('name,wave,score,hard,ghost')
+          .eq('week', weekKey()).eq('uid', uid).maybeSingle();
+    else
+      q = s.client.from('om_scores').select('name,wave,score,hard,ghost')
+          .eq('uid', uid).maybeSingle();
+    const { data, error } = await q;
+    if (error) throw new Error(error.message || 'the echo could not be reached');
+    if (!data || !data.ghost) return null;
+    let payload = null;
+    try { payload = JSON.parse(data.ghost); } catch (e) { return null; }
+    if (!payload || !payload.data || !payload.n) return null;
+    return { name: data.name, wave: data.wave | 0, score: data.score | 0,
+             hard: !!data.hard, payload };
   }
 
   /* ---------------- the over sheet's post strip ---------------- */
@@ -461,6 +513,8 @@ const LB = (() => {
         `<button id="obViewBtn" class="ghost-btn small" type="button">VIEW BOARD</button>`;
       const b = document.getElementById('obViewBtn');
       if (b) b.addEventListener('click', () => { SFX.ensure(); open('over'); });
+      /* the share card's hanko takes the ledger's rank when it exists */
+      try { if (typeof UI !== 'undefined' && UI.lastOver) UI.lastOver.lbRank = state || null; } catch (e) {}
       return;
     }
     /* awaiting: signed in → post at once; signed out → offer the seal */
@@ -503,6 +557,7 @@ const LB = (() => {
         `<button id="obViewBtn" class="ghost-btn small" type="button">VIEW BOARD</button>`;
       const b = document.getElementById('obViewBtn');
       if (b) b.addEventListener('click', () => { SFX.ensure(); open('over', 'day'); });
+      try { if (typeof UI !== 'undefined' && UI.lastOver) UI.lastOver.lbRank = state || null; } catch (e) {}
       return;
     }
     if (signedIn()) { postDailyRun(run); return; }
@@ -552,7 +607,7 @@ const LB = (() => {
   function open(returnTo, tab) {
     const over = document.getElementById('screenOver');
     ST.returnTo = returnTo || (over && !over.classList.contains('hidden') ? 'over' : 'title');
-    if (tab === 'day' || tab === 'all') ST.tab = tab;
+    if (tab === 'day' || tab === 'all' || tab === 'week') ST.tab = tab;
     UI.show('board');
     renderTabs();
     renderAuth();
@@ -572,9 +627,14 @@ const LB = (() => {
       return;
     }
     if (rows) rows.innerHTML = `<li class="board-note board-loading"><span class="brush-spin"></span>UNROLLING THE LEDGER…</li>`;
+    wireRows();
     init()
-      .then(() => (ST.tab === 'day' ? fetchDailyTop(day) : fetchTop()))
-      .then(list => { if (ST.tab === 'day') renderDailyRows(list); else renderRows(list); })
+      .then(() => (ST.tab === 'day' ? fetchDailyTop(day)
+                  : ST.tab === 'week' ? fetchWeeklyTop(weekKey())
+                  : fetchTop()))
+      .then(list => { if (ST.tab === 'day') renderDailyRows(list);
+                      else if (ST.tab === 'week') renderWeeklyRows(list);
+                      else renderRows(list); })
       .catch(e => {
         if (rows) rows.innerHTML = `<li class="board-note">THE CLOUD IS UNREACHABLE —<br>${esc(ST.loadErr || (e && e.message) || 'TRY AGAIN')}</li>`;
       });
@@ -595,45 +655,72 @@ const LB = (() => {
   function renderTabs() {
     const all = document.getElementById('boardTabAll');
     const day = document.getElementById('boardTabDay');
+    const week = document.getElementById('boardTabWeek');
     const lab = document.getElementById('boardDayLabel');
-    if (!all || !day) return;
+    if (!all || !day || !week) return;
     all.classList.toggle('is-on', ST.tab === 'all');
     day.classList.toggle('is-on', ST.tab === 'day');
+    week.classList.toggle('is-on', ST.tab === 'week');
     all.setAttribute('aria-selected', ST.tab === 'all' ? 'true' : 'false');
     day.setAttribute('aria-selected', ST.tab === 'day' ? 'true' : 'false');
+    week.setAttribute('aria-selected', ST.tab === 'week' ? 'true' : 'false');
     if (lab) lab.textContent = 'TODAY';
   }
 
   function setTab(tab) {
     if (ST.tab === tab) return;
+    SFX.ensure();
+    SFX.tick();
     ST.tab = tab;
     open(ST.returnTo, tab);
+  }
+
+  /* one row of the ledger — the 影 chip offers the scribe's echo
+     for racing when the page carries their recording */
+  function rowHTML(r, i, uid) {
+    const rank = i + 1;
+    const top = rank <= 3;
+    const isMe = uid && r.__uid === uid;
+    const ava = r.photo
+      ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
+      : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
+    const echo = r.hasGhost
+      ? `<button class="r-echo" type="button" data-i="${i}" title="RACE THIS ECHO — their run walks beside yours">影</button>`
+      : `<span class="r-noecho" aria-hidden="true"></span>`;
+    return `<li class="board-row${top ? ` top${rank}` : ''}${isMe ? ' me' : ''}">
+      <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
+      ${ava}
+      <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This run was REALLY HARD">難</i>' : ''}</span>
+      <span class="r-wave">${r.wave | 0}</span>
+      <span class="r-score">${(r.score | 0).toLocaleString('en-US')}</span>
+      ${echo}
+    </li>`;
   }
 
   function renderDailyRows(list) {
     const rows = document.getElementById('boardRows');
     if (!rows) return;
+    ST.rows = list;
     if (!list.length) {
       rows.innerHTML = `<li class="board-note">TODAY'S PAPER IS BLANK —<br>BE THE FIRST INK OF THE DAY</li>`;
       return;
     }
     const m_ = me();
     const uid = m_ ? m_.uid : null;
-    rows.innerHTML = list.map((r, i) => {
-      const rank = i + 1;
-      const top = rank <= 3;
-      const isMe = uid && r.__uid === uid;
-      const ava = r.photo
-        ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
-        : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
-      return `<li class="board-row${top ? ` top${rank}` : ''}${isMe ? ' me' : ''}">
-        <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
-        ${ava}
-        <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This sheet was REALLY HARD">難</i>' : ''}</span>
-        <span class="r-wave">${r.wave | 0}</span>
-        <span class="r-score">${(r.score | 0).toLocaleString('en-US')}</span>
-      </li>`;
-    }).join('');
+    rows.innerHTML = list.map((r, i) => rowHTML(r, i, uid)).join('');
+  }
+
+  function renderWeeklyRows(list) {
+    const rows = document.getElementById('boardRows');
+    if (!rows) return;
+    ST.rows = list;
+    if (!list.length) {
+      rows.innerHTML = `<li class="board-note">THE WEEK'S PAPER IS BLANK —<br>BE THE FIRST INK OF THE WEEK</li>`;
+      return;
+    }
+    const m_ = me();
+    const uid = m_ ? m_.uid : null;
+    rows.innerHTML = list.map((r, i) => rowHTML(r, i, uid)).join('');
   }
 
   function close() {
@@ -652,21 +739,7 @@ const LB = (() => {
     }
     const m_ = me();
     const uid = m_ ? m_.uid : null;
-    rows.innerHTML = list.map((r, i) => {
-      const rank = i + 1;
-      const top = rank <= 3;
-      const isMe = uid && r.__uid === uid;
-      const ava = r.photo
-        ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
-        : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
-      return `<li class="board-row${top ? ` top${rank}` : ''}${isMe ? ' me' : ''}">
-        <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
-        ${ava}
-        <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This run was REALLY HARD">難</i>' : ''}</span>
-        <span class="r-wave">${r.wave | 0}</span>
-        <span class="r-score">${(r.score | 0).toLocaleString('en-US')}</span>
-      </li>`;
-    }).join('');
+    rows.innerHTML = list.map((r, i) => rowHTML(r, i, uid)).join('');
     renderMine();
   }
 
@@ -686,12 +759,59 @@ const LB = (() => {
     mine.innerHTML = `YOUR BEST — WAVE ${best.wave | 0} · ${(best.score | 0).toLocaleString('en-US')}${rankTxt}`;
   }
 
+  /* the 影 chips answer through one delegated ear on the list itself */
+  function wireRows() {
+    const rows = document.getElementById('boardRows');
+    if (!rows) return;
+    rows.onclick = e => {
+      const b = e.target && e.target.closest ? e.target.closest('.r-echo') : null;
+      if (b) raceEcho(Number(b.dataset.i), b);
+    };
+  }
+
+  let mineTimer = null;
+  function mineNote(msg) {
+    const mine = document.getElementById('boardMine');
+    if (!mine) return;
+    mine.textContent = msg;
+    clearTimeout(mineTimer);
+    mineTimer = setTimeout(() => { mine.textContent = ''; }, 2600);
+  }
+
+  /* race a stranger: download their strokes, arm the rival, unroll a
+     run — an endless echo races the endless scroll, a daily echo the
+     day's own seeded sheet */
+  async function raceEcho(i, btn) {
+    const r = (ST.rows || [])[i];
+    if (!r || !r.__uid) return;
+    const old = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    const daily = ST.tab === 'day';
+    try {
+      const e = await fetchEcho(ST.tab, r.__uid, todayKey());
+      if (!e) {
+        mineNote('THAT SCRIBE WALKED UNRECORDED');
+        if (btn) { btn.disabled = false; btn.textContent = old; }
+        return;
+      }
+      const armed = typeof G !== 'undefined' && G.setRival && G.setRival({
+        kind: daily ? 'daily' : 'endless',
+        day: daily ? todayKey() : '',
+        name: e.name, wave: e.wave, score: e.score, payload: e.payload,
+      });
+      if (!armed) throw new Error('the echo refused the paper');
+      close();
+      if (LB.launchRun) LB.launchRun(daily ? 'daily' : 'endless');
+    } catch (err) {
+      mineNote('THE ECHO COULD NOT BE REACHED — TRY AGAIN');
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
+  }
+
   function renderAuth(err) {
     const box = document.getElementById('boardAuth');
     if (!box) return;
     if (!configured()) { box.innerHTML = ''; return; }
-    if (err) ST.oauthError = err;
-    if (ST.user) ST.oauthError = '';
     if (ST.debug && ST.debugUser) {
       box.innerHTML = `<span class="board-user"><span class="r-ava r-ava-ink" aria-hidden="true"></span><b>QA SCRIBE</b></span>
         <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
@@ -713,7 +833,7 @@ const LB = (() => {
     }
     box.innerHTML = signWidget('SIGN THE PAGE') +
       gBtn('OR USE GOOGLE', true) +
-      (ST.oauthError ? `<span class="auth-err">${esc(ST.oauthError)}</span>` : '');
+      (err ? `<span class="auth-err">${esc(err)}</span>` : '');
     const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
       g.disabled = true;
@@ -741,17 +861,36 @@ const LB = (() => {
       'QUIET SPEAR', 'MOTH OF THE LAMP'];
     let wave = 612;
     return N.map((name, i) => {
-      const row = { name, photo: '', wave, score: wave * 1370 + (i * 913) % 700, kills: wave * 31, hard: i === 2 || i === 7, __uid: i === 6 ? 'qa-scribe' : `u${i}` };
+      const row = { name, photo: '', wave, score: wave * 1370 + (i * 913) % 700, kills: wave * 31, hard: i === 2 || i === 7, hasGhost: i !== 4, __uid: i === 6 ? 'qa-scribe' : `u${i}` };
       wave -= 7 + ((i * 13) % 23);
       return row;
     });
   }
 
+  /* a paper echo: twelve seconds of wandering, fallen at wave 2 —
+     so the QA scribe can outlive it and read their own verdict */
+  function debugEcho() {
+    let s = 20261107;
+    let t = 0;
+    const fr = [];
+    for (let i = 0; i < 100; i++) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      const a = (s / 4294967296) * Math.PI * 2;
+      const r = 30 + (s % 190);
+      fr.push(t.toFixed(1) + ',' + Math.round(Math.cos(a) * r) + ',' + Math.round(Math.sin(a) * r));
+      t += 0.12;
+    }
+    return { name: 'PAPER SCRIBE', wave: 2, score: 640, hard: false,
+      payload: { wave: 2, score: 640, kills: 41, hard: false,
+                 date: '2026-11-07', dt: 0.12, n: 100, data: fr.join(';') } };
+  }
+
   /* ---------------- api ---------------- */
   return {
-    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab, consumeOAuthReturn,
+    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
     get user() { return me(); },
     get debug() { return ST.debug; },
+    get lastDebugPost() { return ST.debugLastPost || null; },
     debugFill,
   };
 

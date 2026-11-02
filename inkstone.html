@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>砚 — THE INKSTONE · ONE MORE</title>
+<meta name="description" content="The stone the runs press. It condenses ink from the air while you are away — grind it in, name it, and watch it grow across a lifetime of paper." />
+<meta name="theme-color" content="#ede7d9" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" type="image/png" sizes="32x32" href="./img/icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="./img/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="./img/icons/icon-180.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="THE INKSTONE" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Antique&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./css/inkstone.css" />
+</head>
+<body>
+<section class="stone-room">
+
+  <header class="stone-head">
+    <a class="stone-link stone-back" href="./" title="Back to the paper">
+      <span class="sl-kanji" aria-hidden="true">墨</span><span class="sl-label">THE PAPER</span>
+    </a>
+    <div class="stone-wordmark">
+      <span class="stone-kanji" lang="zh">砚</span>
+      <span class="stone-word">THE&nbsp;INKSTONE</span>
+    </div>
+    <a class="stone-link stone-charms" href="./" id="toCharms" title="Spend the ink on charms — inside the paper">
+      <span class="sl-kanji" aria-hidden="true">符</span><span class="sl-label">CHARMS</span>
+    </a>
+  </header>
+
+  <p class="stone-name-line" id="stoneNameLine">the unnamed stone</p>
+
+  <div class="stone-stage-line">
+    <span class="stage-kanji" id="stageKanji" lang="zh">顽石</span>
+    <span class="stage-dot" aria-hidden="true">·</span>
+    <span class="stage-name" id="stageName">ROUGH STONE</span>
+  </div>
+
+  <div class="stone-canvas-wrap">
+    <canvas id="stoneCanvas" aria-label="The inkstone — press and hold to grind"></canvas>
+  </div>
+
+  <p class="stone-flavor" id="stageFlavor">a dull pebble. it remembers nothing.</p>
+
+  <div class="stone-pool" aria-hidden="true">
+    <span class="pool-label">THE POOL</span>
+    <span class="pool-track"><i class="pool-fill" id="poolFill"></i></span>
+    <span class="pool-next" id="poolNext">显纹 AT 硯 50</span>
+  </div>
+
+  <div class="stone-stats">
+    <div class="stat"><span class="stat-num" id="purseN">0</span><span class="stat-label">砚 HELD</span></div>
+    <div class="stat"><span class="stat-num" id="pressedN">0</span><span class="stat-label">PRESSED · LIFETIME</span></div>
+    <div class="stat"><span class="stat-num" id="dripN">0</span><span class="stat-label">DROPS ON THE RIM</span></div>
+  </div>
+
+  <p class="stone-hint" id="stoneHint">the stone condenses ink from the air — one drop a quarter hour, kept overnight. press and hold to grind it in.</p>
+
+  <div class="stone-name-row">
+    <label class="name-label" for="stoneName">NAME THE STONE</label>
+    <input class="name-input" id="stoneName" maxlength="10" placeholder="砚" autocomplete="off" spellcheck="false" />
+    <button class="name-seal" id="nameSeal" type="button" title="Seal the name onto the stone">印</button>
+  </div>
+
+  <div class="stone-journal">
+    <h2 class="journal-head">THE STONE REMEMBERS</h2>
+    <ul class="journal-list" id="journalList"></ul>
+  </div>
+
+  <footer class="stone-foot">
+    <span class="foot-line">EVERY FALL PRESSES. EVERY WAVE PAYS.</span>
+    <span class="foot-stamp" id="verStamp">BUILD V12.0</span>
+  </footer>
+
+</section>
+<script src="./js/inkstone.js"></script>
+</body>
+</html>

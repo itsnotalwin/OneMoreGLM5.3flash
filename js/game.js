@@ -24,7 +24,7 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
-  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false;
+  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false, qaCharms = -1;
   try {
     const q = new URLSearchParams(location.search);
     qaWave = Math.max(0, Math.min(999, parseInt(q.get('wave'), 10) || 0));
@@ -34,6 +34,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaDay = (q.get('day') || '').slice(0, 10);
     qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
                                        must outlive a wave-300 instant swarm */
+    if (q.get('charms') != null) qaCharms = Math.max(0, parseInt(q.get('charms'), 10) || 0);
   } catch (e) {}
 
   const store = {
@@ -72,6 +73,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     arcT: 2.0, boomerT: 1.5, vortexT: 3.0,
     combo: 0, comboT: 0, hitstop: 0, magnetT: 0, pendingSeal: false,
     pendingLevels: 0, pendingChests: 0, upKind: 'wave', vacuum: false,
+    hallIdx: 0, hallHits: 0,          /* the hall: which gate, how many blows taken */
     choices: [], selected: null,
 
     brush: 'needle',
@@ -101,20 +103,86 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
   S.hardMode = getHard();
 
+  /* ---------------- the inkstone (硯) — v8.8 ----------------
+     what the runs press out, kept between runs. om_charms_v1
+     carries the ink, every charm's rank, and the one-time feats
+     (the five sheets signed). The settings room's WIPE already
+     sweeps every om_* key — the stone empties with the rest. */
+  const CHARMS_KEY = 'om_charms_v1';
+  function charmsSave() {
+    const c = store.get(CHARMS_KEY, null);
+    return c && typeof c === 'object'
+      ? { ink: c.ink | 0, earned: c.earned | 0, lv: c.lv || {}, feats: c.feats || {} }
+      : { ink: 0, earned: 0, lv: {}, feats: {} };
+  }
+  const getInk = () => charmsSave().ink;
+  /* the lifetime line: every drop any run has ever pressed (v8.8 shape) */
+  const getLifetimeInk = () => charmsSave().earned | 0;
+  function setInk(n) {   /* QA probe: ?charms=1 seeds the stone */
+    const c = charmsSave(); c.ink = Math.max(0, n | 0);
+    store.set(CHARMS_KEY, c);
+  }
+  const charmLv = id => (charmsSave().lv[id] || 0);
+  if (qaCharms >= 0) setInk(qaCharms);   /* ?charms=N — seed the stone for probes */
+  const charmRankCount = () => Object.values(charmsSave().lv).reduce((a, b) => a + (b | 0), 0);
+  function buyCharm(id) {
+    const def = CHARMS.find(c => c.id === id);
+    if (!def) return false;
+    const c = charmsSave();
+    const rank = c.lv[id] || 0;
+    if (rank >= def.cost.length) return false;
+    const price = def.cost[rank];
+    if ((c.ink | 0) < price) return false;
+    c.ink -= price; c.lv[id] = rank + 1;
+    store.set(CHARMS_KEY, c);
+    return true;
+  }
+  /* the earned line: waves pressed into drops, sheet-falls and the
+     victory feat ride on top, the multipliers press deeper. paid
+     marks what this run already surrendered (a continued run —
+     the finale's endless sheet — pays only its further waves). */
+  function inkForRun(cleared, paid, opts) {
+    const E = CFG.charmEarn;
+    let sum = 0;
+    for (let w = paid + 1; w <= cleared; w++) sum += E.perWave * (w > E.loopFrom ? E.loopMult : 1);
+    if (sum <= 0 && !(opts.victory && !opts.victoryPaid)) return 0;
+    sum += (Math.floor(cleared / 100) - Math.floor(paid / 100)) * E.sheetFall;
+    if (opts.practice) {
+      sum *= E.practiceMult;                    /* practice presses a fifth */
+    } else {
+      if (opts.hard) sum *= E.hardMult;
+      if (opts.best) sum *= E.bestMult;
+    }
+    if (opts.victory && !opts.victoryPaid) sum += E.victoryFeat;
+    return Math.round(sum);
+  }
+
   function freshStats() {
     const bm = CFG.brushes[S.brush] ? CFG.brushes[S.brush].mods : {};
-    return {
+    const ret = {
       fireCdMult: bm.fireCdMult || 1, dmg: bm.dmg || 1, shots: bm.shots || 1,
       pierce: 0, moveMult: bm.moveMult || 1,
       maxHp: CFG.player.hp + (bm.maxHp || 0), hp: CFG.player.hp + (bm.maxHp || 0),
-      bulletSpeedMult: 1,
+      bulletSpeedMult: 1, bulletLifeMult: bm.bulletLifeMult || 1,
       adren: 0, shock: false, levels: {},
       echo: 0, orb: 0, nova: 0, slow: 0, crit: 0, ward: false, wardCd: 0,
       fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0,
-      magnet: 0, mends: 0, well: 0, mendsT: 0,
+      magnet: 0, mends: 0, well: 0, mendsT: 0, critC: 0,
       xp: 0, xpLevel: 0,
       score: 0, kills: 0, time: 0, wave: 0,
     };
+    /* the charms ride every fresh page — journey, endless, daily,
+       the shelf's resumed scenes, the ONE MORE retry, all of them */
+    applyCharms(ret);
+    return ret;
+  }
+
+  function applyCharms(st) {
+    const lv = charmsSave().lv;
+    for (const c of CHARMS) {
+      const n = lv[c.id] | 0;
+      for (let i = 0; i < n; i++) c.apply(st);
+    }
   }
 
   /* ---------------- ink motes & level-ups ---------------- */
@@ -195,12 +263,66 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- persistence ---------------- */
   const getBest = () => store.get('om_best_v1', null);
   const getRuns = () => store.get('om_runs_v1', 0);
+  /* ---------------- the memory — 史 (v9.3) ----------------
+     the paper remembers the last twenty true ends: where the brush
+     stood, what the walk pressed into the stone. One key,
+     om_history_v1 — the WIPE sweeps it with the rest. Abandoned
+     sheets stay unkept: only the ink drying or the scroll ending
+     presses a line. A walk revived INTO THE ENDLESS keeps walking
+     and keeps another line — the paper tells it as it happened. */
+  const HIST_KEY = 'om_history_v1';
+  const HIST_MAX = 20;
+  const historySave = () => {
+    const h = store.get(HIST_KEY, null);
+    return (h && Array.isArray(h.runs) && h.stats)
+      ? { runs: h.runs, stats: h.stats }
+      : { runs: [], stats: { runs: 0, felled: 0, victories: 0, deepest: null } };
+  };
+  function recordRun(rec) {
+    const h = historySave();
+    h.runs.push(rec);
+    if (h.runs.length > HIST_MAX) h.runs = h.runs.slice(-HIST_MAX);
+    const st = h.stats;
+    st.runs = (st.runs | 0) + 1;
+    st.felled = (st.felled | 0) + (rec.felled | 0);
+    if (rec.victory) st.victories = (st.victories | 0) + 1;
+    if (rec.deep) {
+      const cur = st.deepest;
+      if (!cur || (rec.deep | 0) > (cur.deep | 0))
+        st.deepest = { deep: rec.deep | 0, where: rec.where };
+    }
+    store.set(HIST_KEY, h);
+  }
+  const getHistory = () => historySave();
+  /* ---------------- the guardians' hall — 殿 (v11) ----------------
+     the boss rush keeps its own ten best: om_hall_v1, swept by the
+     WIPE like every om_ key. One line per true end — the fall or
+     the fifth felled guardian. Abandoned halls stay uncarved. */
+  const HALL_KEY = 'om_hall_v1';
+  const HALL_MAX = 10;
+  const hallSave = () => {
+    const h = store.get(HALL_KEY, null);
+    return (h && Array.isArray(h.rows)) ? { rows: h.rows.slice(0, HALL_MAX) } : { rows: [] };
+  };
+  function recordHall(rec) {
+    const h = hallSave();
+    h.rows.push(rec);
+    h.rows.sort((a, b) => (b.score | 0) - (a.score | 0));
+    if (h.rows.length > HALL_MAX) h.rows = h.rows.slice(0, HALL_MAX);
+    store.set(HALL_KEY, h);
+  }
+  const getHall = () => hallSave();
   /* the shelf of scrolls: what is unrolled, what lies finished.
      om_unlocked_v1 — the highest sheet the journey may enter (1-based).
      om_cleared_v1  — the highest sheet whose Guardian has fallen.
      om_prog_v1     — per sheet, the deepest level the brush has reached. */
   const getUnlocked = () => Math.max(1, store.get('om_unlocked_v1', 1), store.get('om_furthest_v1', 1));
   function setUnlocked(n) { if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
+  /* ---------------- the sixth scroll — 六 (v12) ----------------
+     the blank sheet waits behind the five inks: the shelf shows it
+     only when the five scrolls lie signed — the fifth Guardian
+     felled, or the victory feat pressed into the stone. */
+  const getSixthUnlocked = () => getCleared() >= SHEETS || !!charmsSave().feats.victory;
   const getCleared = () => store.get('om_cleared_v1', 0);
   function setCleared(n) { if (n > getCleared()) store.set('om_cleared_v1', n); }
   const getProg = () => store.get('om_prog_v1', {});
@@ -244,6 +366,14 @@ const rand = (a, b) => a + RNG() * (b - a);
     return a;
   }
 
+  /* ---------------- the five inks and the sixth ----------------
+     THE JOURNEY is five scrolls — SHEETS is that five, and the
+     endless paper cycles and grows across the five inks exactly as
+     it always has (a sixth sheet must never shift the endless
+     ladder). AREAS[5] — THE BLANK SCROLL — is the secret act: it
+     joins the journey only for the hand that signed the five. */
+  const SHEETS = 5;
+
   /* which sheet, which level, which wave — the journey reads
      wave N as: sheet = N / 100, level = N / 10 within the sheet,
      wave = N within the level. Endless turns past sheet 五. */
@@ -254,7 +384,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const level = Math.floor(inCycle / CFG.wave.wavesPerLevel) + 1;   // 1..10
     const waveInLevel = (inCycle % CFG.wave.wavesPerLevel) + 1;       // 1..10
     const themeIdx = S.runMode !== 'journey'
-      ? cycle % AREAS.length
+      ? cycle % SHEETS
       : Math.min(cycle, AREAS.length - 1);
     const area = AREAS[themeIdx];
     let hp = area.mult.hp, sp = area.mult.sp, budget = area.mult.budget;
@@ -262,8 +392,8 @@ const rand = (a, b) => a + RNG() * (b - a);
        so a sheet's tenth level always bites far harder than its first */
     hp *= CFG.wave.levelHp(level);
     budget *= CFG.wave.levelBudget(level);
-    if (S.runMode !== 'journey' && cycle >= AREAS.length) {
-      const k = cycle - (AREAS.length - 1);
+    if (S.runMode !== 'journey' && cycle >= SHEETS) {
+      const k = cycle - (SHEETS - 1);   /* growth starts past the FIVE inks, sixth or no sixth */
       hp *= Math.pow(CFG.endless.hpGrowth, k);
       sp *= Math.pow(CFG.endless.spGrowth, k);
       budget *= Math.pow(CFG.endless.budgetGrowth, k);
@@ -341,10 +471,14 @@ const rand = (a, b) => a + RNG() * (b - a);
         CFG.boss.keeperHp;
     } else if (def.boss === 1) {
       /* Guardians: the same sheet pressure, then the full boss levy —
-         the sheet's closing duel is the longest stroke on the page */
+         the sheet's closing duel is the longest stroke on the page.
+         THE HALL opts out of the climb: a guardian fights at its own
+         true ink (opts.trueInk), the sheet's mercy and climb outside */
       hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp * CFG.boss.hp;
+      if (opts.trueInk) hp = def.hp * CFG.boss.hp;
     } else {
       hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp;
+      if (opts.flatHp) hp = def.hp * opts.flatHp;   /* the hall's honor guard: sheet-native, sheet-thin */
     }
     let speed = def.speed * CFG.wave.spScale(w, def.intro) * st.sp;
     if (opts.elite) {
@@ -381,7 +515,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       (S.hardMode ? CFG.hard.score : 1)) / 5) * 5;
     S.stats.score += pts;
     S.stats.kills++;
-    UI.setScore(S.stats.score);
+    if (S.runMode !== 'hall') UI.setScore(S.stats.score);   /* the hall's score counts the felled, not the horde */
     UI.setCombo(S.combo, comboMult());
     S.popups.push({
       x: e.x, y: e.y - e.r - 4,
@@ -404,6 +538,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     if (e.elite || isBoss) { S.shake = Math.max(S.shake, isBoss ? (keeper ? 15 : 19) : 9); }
     if (isBoss) {
+      S.felledRun = (S.felledRun | 0) + 1;   /* the memory counts the fell */
+      if (G.buzz) G.buzz(35);                /* the paper trembles under the seal */
       /* a boss dies in red: a flash across the eye, twin red novas,
          and the paper drinks a deep seal of vermilion */
       S.redFlash = Math.max(S.redFlash || 0, keeper ? 0.42 : 0.58);
@@ -436,9 +572,12 @@ const rand = (a, b) => a + RNG() * (b - a);
            death anywhere else never credits a sheet */
         if (asNow.isGuardianWave && sheet > getCleared()) {
           setCleared(sheet);
-          const next = AREAS[sheet] || null;   /* sheet is 1-based; AREAS[sheet] is the next */
+          /* the unroll chain runs across the FIVE inks only — the fifth
+             Guardian's fall is the finale, not a sixth sheet's herald;
+             the blank act is entered from its own strip, never unrolled */
+          const next = sheet < SHEETS ? (AREAS[sheet] || null) : null;
           if (next) {
-            setUnlocked(sheet + 1);
+            setUnlocked(Math.min(AREAS.length, sheet + 1));
             if (!S.reduced) unroll = { area: asNow.area, next };
             else UI.unlockBanner(asNow.area, next, false);
           }
@@ -690,10 +829,22 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     let elites = 0;
     if (as.isGuardianWave) {
-      /* the Guardian of the sheet enters — a beast with a name */
+      /* the hall keeps the horde out — the duel is the whole scene,
+         the queue the seal wave would have spent is struck from the page */
+      if (S.runMode === 'hall') S.queue.length = 0;
+      /* the Guardian of the sheet enters — a beast with a name.
+         In the hall it fights at its own true ink, and a thin honor
+         guard walks with it — the sheet's climb stays outside */
       const pt = edgePoint();
-      S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
+      S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true, hall: S.runMode === 'hall' });
       elites = 1;
+      if (S.runMode === 'hall') {
+        const n = CFG.hall.guard0 + S.hallIdx;
+        for (let i = 0; i < n; i++) {
+          const gp = edgePoint(i % 4);
+          S.markers.push({ type: as.area.elite, x: gp.x, y: gp.y, t: 0.55 + i * 0.22, elite: false, flatHp: 3 });
+        }
+      }
     } else if (as.isLevelEnd) {
       /* the seal wave is a BOSS FIGHT: the scene's Keeper — the
          Guardian's lesser red kin — walks the paper, a halved
@@ -717,7 +868,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (paperStart) {
       /* the scroll turns — a new sheet of paper. A run's first page
          names the run itself: THE JOURNEY — RUN 007. */
-      UI.areaBanner(as.area, as.cycle, S.runMode !== 'journey' && as.cycle >= AREAS.length,
+      UI.areaBanner(as.area, as.cycle, S.runMode !== 'journey' && as.cycle >= SHEETS,
         opts.runStart ? getRuns() : 0);
       SFX.gong();
       if (opts.runStart && S.hardMode) {
@@ -746,7 +897,10 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   function pickUpgrades(n) {
     const st = S.stats;
-    const avail = shuffle(UPGRADES.filter(u => (st.levels[u.id] || 0) < u.max));
+    /* no trap picks: the Paper Ward charm owns the ward — its
+       in-run pick retires from the shelf while the charm rides */
+    const avail = shuffle(UPGRADES.filter(u =>
+      (st.levels[u.id] || 0) < u.max && !(u.id === 'ward' && charmLv('ward') > 0)));
     const out = avail.slice(0, n);
     let i = 0;
     while (out.length < n) {
@@ -804,9 +958,13 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- the ghost ----------------
      your own best endless carry — and today's daily sheet — recorded
      as a trail of strokes and replayed as a pale echo walking beside
-     the living brush. Purely local ink: nothing leaves the device. */
+     the living brush. The board arms strangers' echoes too: a row
+     carrying 影 lends its scribe's recording to the next race. The
+     recording itself stays local ink until a PB post carries it to
+     the ledger, where another hand may download it. */
   const GHOST_ENDLESS_KEY = 'om_ghost_endless_v1';
   const GHOST_DAILY_KEY = 'om_ghost_daily_v1';
+  const GHOST_RIVAL_KEY = 'om_ghost_rival_v1';
   const GHOST_DT = 0.12;          /* one stroke every eighth of a breath */
   const GHOST_MAX = 14000;        /* ~28 minutes of paper, then the pen rests */
 
@@ -825,24 +983,79 @@ const rand = (a, b) => a + RNG() * (b - a);
     } catch (e) { return false; }
   }
 
-  function ghostLoad(kind) {
+  /* a recorded echo, unfurled — the raw payload plus whose it was */
+  function ghostParse(g, name) {
+    if (!g || !g.data || !g.n) return null;
+    const pts = g.data.split(';').map(fr => {
+      const a = fr.split(',');
+      return [ +a[0], +a[1], +a[2] ];
+    });
+    if (pts.length < 4) return null;
+    for (let k = 0; k < pts.length; k++) {
+      if (!isFinite(pts[k][0]) || !isFinite(pts[k][1]) || !isFinite(pts[k][2])) return null;
+    }
+    return { wave: g.wave | 0, score: g.score | 0, kills: g.kills | 0, hard: !!g.hard,
+             name: name || null,
+             dt: g.dt || GHOST_DT, pts,
+             t: 0, i: 1, x: pts[0][1], y: pts[0][2],
+             dead: false, deathT: pts[pts.length - 1][0],
+             deathX: pts[pts.length - 1][1], deathY: pts[pts.length - 1][2] };
+  }
+
+  /* the rival: a stranger's echo, armed from the board */
+  function rivalArmed() {
+    try { return JSON.parse(localStorage.getItem(GHOST_RIVAL_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function setRival(r) {
     try {
-      if (store.get('om_ghost_off_v1', false)) return null;   /* settings: the rival rests */
+      if (!r || !r.payload || !r.payload.data) return false;
+      const daily = r.kind === 'daily';
+      localStorage.setItem(GHOST_RIVAL_KEY, JSON.stringify({
+        kind: daily ? 'daily' : 'endless',
+        day: daily ? String(r.day || '') : '',
+        name: String(r.name || 'INK DRIFTER').slice(0, 24),
+        wave: Math.max(1, r.wave | 0), score: r.score | 0,
+        payload: {
+          wave: Math.max(1, (r.payload.wave | 0) || 1), score: r.payload.score | 0,
+          kills: r.payload.kills | 0, hard: !!r.payload.hard,
+          date: String(r.payload.date || ''), dt: +r.payload.dt || GHOST_DT,
+          n: r.payload.n | 0, data: String(r.payload.data),
+        },
+      }));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* the own-page payload — the turnover gate must never read the rival */
+  function ghostLoadOwn(kind) {
+    try {
       const raw = localStorage.getItem(kind === 'daily' ? GHOST_DAILY_KEY : GHOST_ENDLESS_KEY);
       if (!raw) return null;
       const g = JSON.parse(raw);
       if (!g || !g.data || !g.n) return null;
       if (kind === 'daily' && g.date !== dayKey()) return null;   /* yesterday's sheet haunts nobody */
-      const pts = g.data.split(';').map(fr => {
-        const a = fr.split(',');
-        return [ +a[0], +a[1], +a[2] ];
-      });
-      if (pts.length < 4) return null;
-      return { wave: g.wave | 0, score: g.score | 0, kills: g.kills | 0, hard: !!g.hard,
-               dt: g.dt || GHOST_DT, pts,
-               t: 0, i: 1, x: pts[0][1], y: pts[0][2],
-               dead: false, deathT: pts[pts.length - 1][0],
-               deathX: pts[pts.length - 1][1], deathY: pts[pts.length - 1][2] };
+      return g;
+    } catch (e) { return null; }
+  }
+
+  function ghostLoad(kind) {
+    try {
+      if (store.get('om_ghost_off_v1', false)) return null;   /* settings: the rival rests */
+      /* an armed stranger's echo walks first — an endless rival haunts
+         the endless scroll; a daily rival only the day it was walked */
+      const rv = rivalArmed();
+      if (rv && rv.payload && rv.payload.data) {
+        if (kind === 'daily') {
+          if (rv.kind === 'daily' && rv.day === dayKey()) {
+            const rg = ghostParse(rv.payload, rv.name);
+            if (rg) return rg;
+          }
+        } else if (rv.kind === 'endless') {
+          const rg = ghostParse(rv.payload, rv.name);
+          if (rg) return rg;
+        }
+      }
+      return ghostParse(ghostLoadOwn(kind), null);
     } catch (e) { return null; }
   }
 
@@ -871,7 +1084,8 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- flow ---------------- */
   function startRun(mode, opts = {}) {
     const prevWave = S.stats ? (S.stats.wave | 0) : 0;   /* where the last run fell */
-    S.runMode = mode === 'endless' ? 'endless' : mode === 'daily' ? 'daily' : 'journey';
+    S.runMode = mode === 'endless' ? 'endless' : mode === 'daily' ? 'daily'
+      : mode === 'hall' ? 'hall' : 'journey';
     /* the daily deals one fixed paper: the same seed, the same beasts,
        the same luck for every scribe who unrolls today's sheet */
     if (S.runMode === 'daily') {
@@ -882,12 +1096,15 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.dailyCounting = false;
     }
     /* the ghost's scribe dips its pen: endless and daily runs record
-       their strokes (the journey's scenes are too short to race) */
-    S.rec = S.runMode === 'journey' ? null : { t: 0, acc: 0, frames: [] };
-    S.ghost = S.runMode === 'journey' ? null : ghostLoad(S.runMode === 'daily' ? 'daily' : 'endless');
+       their strokes (the journey's scenes and the hall's duels are
+       too short — and the hall race is its own paper) */
+    S.rec = (S.runMode === 'endless' || S.runMode === 'daily') ? { t: 0, acc: 0, frames: [] } : null;
+    S.ghost = (S.runMode === 'endless' || S.runMode === 'daily')
+      ? ghostLoad(S.runMode === 'daily' ? 'daily' : 'endless') : null;
     S.brush = getBrush();
     S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
+    S.inkWave = 0;   /* the stone counts this run's waves from zero */
     S.bullets = []; S.ebullets = []; S.enemies = []; S.markers = []; S.telgs = [];
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = [];
     S.puddles = []; S.spirits = []; S.stamps = [];
@@ -899,10 +1116,13 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.combo = 0; S.comboT = 0; S.hitstop = 0; S.magnetT = 0; S.playerSlowT = 0;
     S.redFlash = 0;   /* the red wash that bleeds across the eye when a boss dies */
     S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
+    S.hallIdx = 0; S.hallHits = 0;   /* the hall's gates, reset */
+    S.sixthWalk = false;             /* a fresh page is never the blank act */
     S.arrived = S.reduced; S.washStamp = S.reduced;   // reduced motion: no entrance rite
     S.choices = []; S.selected = null; S.idle = [];
     S.levelMarks = []; S.inklings = []; S.spawnPattern = 'flank';
     S.areaIdx = 0;
+    S.felledRun = 0; S.felledMarked = 0;   /* the memory's fresh ledger */
     S.landscapeWave = 1;
     S.waveRevealT = performance.now() / 1000;
     S.beginT = S.reduced ? 0.01 : 1.7;   // the brush paints the run in
@@ -931,9 +1151,24 @@ const rand = (a, b) => a + RNG() * (b - a);
        the brush arrives with the kit a run that far would carry —
        and the shelf opens a scroll to any scene the ink has reached
        or sealed, never past the frontier (the kit grows with the road) */
+    /* THE GUARDIANS' HALL — the boss rush: five gates, one life,
+       the old master's whole teaching as the kit (every rank of the
+       QA power ladder, twice through — fifteen teachings, twice).
+       The brush choice still flavors the hand; the hall keeps its
+       own ten best; the score is the hall's own arithmetic. */
+    if (S.runMode === 'hall') {
+      applyQAPower(30);
+      S.hallIdx = 1; S.hallHits = 0;
+      UI.setHp(S.stats.hp, S.stats.maxHp);
+      UI.setLoadout(S.stats.levels);
+      UI.setXp(0, S.stats.xpLevel);
+      startWave(CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea, { runStart: true });
+      return;
+    }
     if (opts.sheet && S.runMode === 'journey' && qaWave < 1) {
       /* the shelf answers only what is unrolled — a locked scroll cannot open */
-      const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, getUnlocked())));
+      const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, Math.max(getUnlocked(), getSixthUnlocked() ? AREAS.length : 0)))) ;
+      S.sixthWalk = sheet > SHEETS;   /* the blank act remembers its own */
       const level = Math.max(1, Math.min(frontierLevel(sheet),
         Math.min(CFG.wave.levelsPerArea, (opts.level | 0) || 1)));
       applyQAPower(checkpointPower(sheet, level));
@@ -949,6 +1184,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (opts.retry && S.runMode === 'journey' && qaWave < 1 && prevWave > 1) {
       const sheet = Math.max(1, Math.min(AREAS.length,
         Math.floor((prevWave - 1) / (CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea)) + 1));
+      S.sixthWalk = sheet > SHEETS;   /* ONE MORE returns to the blank act if that is where the ink dried */
       const clamped = Math.max(1, Math.min(frontierLevel(sheet), areaStateFor(prevWave).level));
       applyQAPower(checkpointPower(sheet, clamped));
       UI.setHp(S.stats.hp, S.stats.maxHp);
@@ -968,6 +1204,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     if (qaWave > 1) {
       if (qaPower > 0) applyQAPower(qaPower);
+      if (S.runMode === 'journey' && qaWave > SHEETS * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea) S.sixthWalk = true;
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
@@ -1005,6 +1242,58 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.arrived = false; S.washStamp = false;
     S.mode = 'playing';
     startWave(S.stats.wave + 1);
+  }
+
+  /* ---------------- the guardians' hall — the gate turns ----------------
+     a guardian lies felled: the hall grants a breath (+2 integrity),
+     washes the page, and opens the next gate. Past the fifth, the
+     over sheet speaks the hall's own arithmetic. */
+  function hallAdvance() {
+    const st = S.stats;
+    S.pendingSeal = false;
+    st.hp = Math.min(st.maxHp, st.hp + 2);   /* the hall grants a breath */
+    UI.setHp(st.hp, st.maxHp);
+    S.hallIdx = (S.hallIdx | 0) + 1;
+    if (S.hallIdx > SHEETS) { showOver(true); return; }   /* the hall is five gates, sixth or no sixth */
+    S.bullets.length = 0; S.ebullets.length = 0; S.enemies.length = 0; S.markers.length = 0;
+    S.telgs.length = 0;
+    S.motes.length = 0; S.pickups.length = 0; S.arcs.length = 0; S.vortices.length = 0;
+    S.bolts.length = 0; S.particles.length = 0; S.popups.length = 0; S.rings.length = 0;
+    S.spirits.length = 0; S.stamps.length = 0; S.puddles.length = 0;
+    S.queue.length = 0; S.waveInitial = 0; S.waveActive = false;
+    S.invulnT = 1.4; S.adrenT = 0; S.shake = 0; S.hitstop = 0; S.magnetT = 0;
+    S.playerSlowT = 0; S.novaT = 0; S.combo = 0; S.comboT = 0;
+    S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
+    S.levelMarks = []; S.inklings = []; S.spawnPattern = 'flank';
+    if (R.resetStains) R.resetStains();   /* a washed page for the next duel */
+    const p = S.player;
+    p.vx = 0; p.vy = 0; p.fireT = 0.35; p.recoil = 0;
+    S.beginT = S.reduced ? 0.01 : 0.9;    /* a short wash — the gate, not the journey */
+    S.arrived = S.reduced; S.washStamp = S.reduced;
+    UI.show(null);
+    UI.hud(true);
+    UI.setLoadout(S.stats.levels);
+    S.mode = 'playing';
+    startWave(S.hallIdx * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea);
+  }
+
+  /* the hall's own arithmetic: the felled, the swift, the flawless.
+     Live it counts what has already fallen and the breath still left
+     under the par; at the end it also pays the flawless purse. */
+  const HALL_CUM = [0, 500, 1300, 2500, 4200, 6600];
+  function hallParts(felled, time, hits, final) {
+    const hm = S.hardMode ? CFG.hard.score : 1;
+    const guardians = Math.round((HALL_CUM[Math.min(SHEETS, Math.max(0, felled | 0))] || 0) * hm);
+    const swift = Math.round(Math.max(0, CFG.hall.par - Math.round(time)) * CFG.hall.swift * hm);
+    const flawless = (final && (hits | 0) === 0) ? Math.round(CFG.hall.flawless * hm) : 0;
+    return { guardians, swift, flawless, total: guardians + swift + flawless };
+  }
+  function hallScoreLive() {
+    const st = S.stats;
+    const felled = Math.max(0, Math.min(SHEETS, (S.hallIdx | 0) - 1));
+    const p = hallParts(felled, st.time, S.hallHits, false);
+    st.score = p.total;
+    UI.setScore(p.total);
   }
 
   /* ---------------- the level-clear rest ----------------
@@ -1114,6 +1403,16 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (kind === 'wave') S.pendingSeal = false;
     UI.show(null);
     const nxt = areaStateFor(S.stats.wave + 1);
+    /* the hall answers to its own gate: a pick taken between duels
+       (the vacuum's last motes) hands control straight back — the
+       clearedT beat resumes and hallAdvance opens the next gate.
+       No scroll films, no wave count climbed, the seals stay unpressed */
+    if (S.runMode === 'hall') {
+      if (S.pendingLevels > 0 || S.pendingChests > 0) { openUpgrade('level'); return; }
+      UI.show(null);
+      S.mode = 'playing';
+      return;
+    }
     if (kind === 'wave' && nxt.level === 1 && !S.reduced) {
       /* the sheet turns on film — the new scroll announces itself */
       startWave(S.stats.wave + 1, { quiet: true });
@@ -1121,7 +1420,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       UI.hud(false);
       CUT.start('scroll', {
         area: nxt.area, cycle: nxt.cycle,
-        deep: S.runMode !== 'journey' && nxt.cycle >= AREAS.length,
+        deep: S.runMode !== 'journey' && nxt.cycle >= SHEETS,
       });
       return;
     }
@@ -1166,6 +1465,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         r: 9 + Math.random() * 22, alpha: 0.6,
       });
     }
+    if (G.buzz) G.buzz(25);   /* the fall trembles the hand */
     SFX.over();
   }
 
@@ -1176,7 +1476,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     for (const [min, r] of CFG.ranks) { if (cleared >= min) { rank = r; break; } }
     const best = getBest();
     const nb = st.score > (best ? best.score : 0);
-    if (nb) store.set('om_best_v1', { score: st.score, wave: cleared });
+    if (nb && S.runMode !== 'hall') store.set('om_best_v1', { score: st.score, wave: cleared });   /* the hall keeps its own ten — the endless best stays endless */
     if (victory) SFX.victory();
     /* the daily sheet files its one true entry on the day it is walked
        (declared before the over sheet reads it — no ink before its name) */
@@ -1193,29 +1493,112 @@ const rand = (a, b) => a + RNG() * (b - a);
         if (UI.setDailyChip) UI.setDailyChip(dailyState());
       }
     } else if (S.runMode === 'endless') {
-      /* the endless echo only turns over when the carry went further */
-      const prev = ghostLoad('endless');
-      if (!prev || (st.score | 0) > prev.score) ghostSave('endless', st);
+      /* the endless echo only turns over when the carry went further
+         (ghostLoadOwn — an armed rival must never gate the turnover) */
+      const prev = ghostLoadOwn('endless');
+      if (!prev || (st.score | 0) > (prev.score | 0)) ghostSave('endless', st);
+    }
+    /* ---- the inkstone: the run presses its ink back (v8.8) ----
+       death and victory alike press; a run continued past the
+       finale pays only the waves it walked further. Practice
+       sheets press a fifth; the ledger's double still stands. */
+    let inkGain = 0, inkTotal = 0;
+    {
+      const cs = charmsSave();
+      if (S.runMode === 'hall') {
+        /* the hall is honor, not labor — it presses no ink into the stone */
+        inkTotal = cs.ink | 0;
+      } else {
+        inkGain = inkForRun(cleared, S.inkWave | 0, {
+          victory: !!victory, victoryPaid: !!cs.feats.victory,
+          practice: S.runMode === 'daily' && !S.dailyCounting,
+          hard: !!S.hardMode, best: !!nb,
+        });
+        if (inkGain > 0) {
+          cs.ink = (cs.ink | 0) + inkGain;
+          cs.earned = (cs.earned | 0) + inkGain;
+          if (victory && !cs.feats.victory) cs.feats.victory = true;
+          store.set(CHARMS_KEY, cs);
+        }
+        S.inkWave = cleared;
+      }
+      inkTotal = inkTotal || (cs.ink | 0);
+    }
+    /* the brush's last recording rides to the ledger — the echo another
+       scribe may race (a death inside a breath leaves too few strokes) */
+    const recPayload = S.rec && S.rec.frames.length >= 8
+      ? { wave: Math.max(1, st.wave | 0), score: st.score | 0, kills: st.kills | 0,
+          hard: !!S.hardMode, date: dayKey(), dt: GHOST_DT,
+          n: S.rec.frames.length, data: S.rec.frames.join(';') }
+      : null;
+    /* ---- the memory: the walk presses its line (v9.3) ----
+       the fell count rides as a per-line delta — a walk revived
+       INTO THE ENDLESS keeps its ledger honest, never doubled */
+    {
+      const per = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea;
+      const isJ = S.runMode === 'journey';
+      const s = isJ ? Math.floor((st.wave - 1) / per) + 1 : 0;
+      const l = isJ ? areaStateFor(st.wave).level : 0;
+      const wIn = isJ ? ((st.wave - 1) % CFG.wave.wavesPerLevel) + 1 : 0;
+      const felledNow = S.felledRun | 0;
+      const felledDelta = Math.max(0, felledNow - (S.felledMarked | 0));
+      S.felledMarked = felledNow;
+      const isHall = S.runMode === 'hall';
+      const hallFelled = isHall ? Math.max(0, Math.min(SHEETS, (S.hallIdx | 0) - 1)) : 0;
+      recordRun({
+        run: getRuns(), mode: S.runMode, victory: !!victory, hard: !!S.hardMode,
+        waves: cleared, wave: st.wave | 0, s, l, wIn,
+        kills: st.kills | 0, time: st.time | 0, score: st.score | 0,
+        rank, ink: inkGain, felled: felledDelta, date: dayKey(),
+        deep: isJ ? s * 10000 + l * 100 + wIn
+          : isHall ? 60000 + hallFelled : (st.wave | 0),
+        where: isJ
+          ? `SCROLL ${['I', 'II', 'III', 'IV', 'V', 'VI'][s - 1] || s} · SCENE ${l} · WAVE ${wIn}`
+          : isHall
+            ? (victory ? 'THE HALL — ALL FIVE FELLED'
+              : 'THE HALL — GUARDIAN ' + (['I', 'II', 'III', 'IV', 'V'][hallFelled - 1] || '?') + ' STOOD')
+            : `WAVE ${st.wave | 0}`,
+      });
+    }
+    /* ---- the hall's own ledger: the ten best walks of the rush ----
+       its score is the hall's arithmetic — the felled, the swift,
+       the flawless — written over the horde's kill-points. */
+    let hallPay = null;
+    if (S.runMode === 'hall') {
+      const felled = Math.max(0, Math.min(AREAS.length, (S.hallIdx | 0) - 1));
+      const p = hallParts(felled, st.time, S.hallHits, true);
+      st.score = p.total;
+      hallPay = { felled, hits: S.hallHits | 0, victory: !!victory,
+                  guardians: p.guardians, swift: p.swift, flawless: p.flawless };
+      recordHall({ score: p.total, felled, time: st.time | 0, hard: !!S.hardMode,
+                   victory: !!victory, date: dayKey() });
     }
     UI.showOver({
       run: getRuns(), waves: cleared, kills: st.kills,
-      time: st.time, score: st.score, rank, newBest: nb,
+      time: st.time, score: st.score, rank, newBest: nb && S.runMode !== 'hall',
       mode: S.runMode, victory: !!victory, hard: S.hardMode,
       day: dailyDay, practice: S.runMode === 'daily' && !dailyCounting,
-      ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score } : null,
+      ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score,
+                         name: S.ghost.name || null } : null,
+      ink: inkGain, inkTotal,
+      charms: charmRankCount(),
+      hall: hallPay,
     });
     UI.hud(false);
     UI.show('over');
     S.mode = 'over';
+    UI.setInkLine(inkTotal);            /* the title's stone, freshly read */
+    if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     /* the endless ledger takes its entry when an endless run truly
        ends — the journey answers only to its own seals (LB is the
        ledger module; absent it, the game plays exactly as before) */
-    if (typeof LB !== 'undefined' && LB.onRunEnd) {
+    if (typeof LB !== 'undefined' && LB.onRunEnd && S.runMode !== 'hall') {
       LB.onRunEnd({
         mode: S.runMode, victory: !!victory, hard: S.hardMode,
         wave: Math.max(1, st.wave | 0), score: st.score | 0,
         kills: st.kills | 0, time: st.time || 0,
         day: dailyDay, counting: dailyCounting,
+        rec: recPayload,
       });
     }
   }
@@ -1234,6 +1617,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       return;
     }
     st.hp--;
+    if (S.runMode === 'hall') S.hallHits = (S.hallHits | 0) + 1;   /* the flawless purse watches */
     S.invulnT = CFG.player.invuln;
     if (!S.reduced) S.shake = 8;
     for (let i = 0; i < 3; i++) {
@@ -1450,6 +1834,12 @@ const rand = (a, b) => a + RNG() * (b - a);
         const d = Math.hypot(dx, dy) || 1;
         p.x += (dx / d) * 52 * dt;
         p.y += (dy / d) * 52 * dt;
+      } else if (e.type === 'b_blank') {
+        /* the blank sheet pulls gently — the paper wants to be written on */
+        const dx = e.x - p.x, dy = e.y - p.y;
+        const d = Math.hypot(dx, dy) || 1;
+        p.x += (dx / d) * 30 * dt;
+        p.y += (dy / d) * 30 * dt;
       } else if (e.type === 'maelstrom') {
         const dx = e.x - p.x, dy = e.y - p.y;
         const d2 = dx * dx + dy * dy;
@@ -1615,7 +2005,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.bullets.push({
         x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
         vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-        ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0, life: CFG.player.bulletLife,
+        ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0,
+        life: CFG.player.bulletLife * st.bulletLifeMult,
         kind: 'drop', brush: S.brush, seed: 100000 + ((Math.random() * 899999) | 0),
       });
     }
@@ -1629,7 +2020,8 @@ const rand = (a, b) => a + RNG() * (b - a);
         S.bullets.push({
           x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
           vx: Math.cos(a) * spd * 0.92, vy: Math.sin(a) * spd * 0.92,
-          ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0, life: CFG.player.bulletLife,
+          ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0,
+          life: CFG.player.bulletLife * st.bulletLifeMult,
           kind: 'drop', brush: S.brush, seed: 100000 + ((Math.random() * 899999) | 0),
         });
       }
@@ -1733,7 +2125,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         return false;
       }
     }
-    const critCh = CFG.crit.chance(st.crit);
+    const critCh = CFG.crit.chance(st.crit) + (st.critC || 0);
     let d = dmg;
     if (critCh > 0 && RNG() < critCh) {
       d *= 2;
@@ -1970,7 +2362,10 @@ const rand = (a, b) => a + RNG() * (b - a);
           S.rings.push({ x: bo.x, y: bo.y, max: bo.r * 1.5, life: 0.3, maxLife: 0.3, red: !!bo.red });
           S.stainQueue.push({ x: bo.x, y: bo.y, r: bo.r * 0.4, alpha: 0.4, red: !!bo.red });
           const dx = p.x - bo.x, dy = p.y - bo.y;
-          if (dx * dx + dy * dy < bo.r * bo.r) takeHit();
+          /* the bolt obeys the paper's grace like every other blow —
+             contact and flying ink check the grace; the thunder must too
+             (v11 fix: a guardian's marked strike hit straight through it) */
+          if (S.invulnT <= 0 && dx * dx + dy * dy < bo.r * bo.r) takeHit();
           SFX.thunder();
         }
       } else {
@@ -2947,6 +3342,83 @@ const rand = (a, b) => a + RNG() * (b - a);
             }
             break;
           }
+          case 'b_blank': case 'k_blank': { /* THE PAPER ITSELF / THE MARGIN — the blank sheet breathes:
+              it pulls the brush the way a blank page pulls the pen, and every
+              beat is one of the five sheets' teachings turned back on the hand */
+            const mini = ENEMIES[e.type].boss === 2;
+            const enr = e.hp < e.maxHp * 0.5;
+            const phase = e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            e.stateT += dt;
+            /* beat one — the Stain's lesson: swell, then a ring of ink */
+            e.vT = (e.vT || 0) + dt;
+            if (e.vT > (mini ? 4.4 : enr ? 2.6 : phase === 2 ? 2.9 : 3.4)) {
+              e.vT = 0;
+              const n = (mini ? 7 : 10) + (enr ? 3 : 0), off = rand(0, TAU);
+              for (let i = 0; i < n; i++) {
+                const a = (i / n) * TAU + off;
+                S.ebullets.push({
+                  kind: 'glob', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 8), y: e.y + Math.sin(a) * (e.r + 8),
+                  vx: Math.cos(a) * CFG.glob.speed * 0.85, vy: Math.sin(a) * CFG.glob.speed * 0.85,
+                  ang: a, age: 0, life: CFG.glob.life * 1.4,
+                });
+              }
+              S.rings.push({ x: e.x, y: e.y, max: 220, life: 0.5, maxLife: 0.5, red: true });
+              S.shake = Math.max(S.shake, 8);
+              SFX.nova();
+            }
+            /* beat two — the Storm Eye's lesson: a spiral of needles */
+            e.spinT = (e.spinT || 0) + dt;
+            if (e.spinT > (mini ? 3.6 : enr ? 1.9 : 2.5)) {
+              e.spinT = 0;
+              const base = e.t * 1.9;
+              const nn = (mini ? 3 : 4) + (enr ? 2 : 0);
+              for (let i = 0; i < nn; i++) {
+                const a = base + (i / nn) * TAU;
+                S.ebullets.push({
+                  kind: 'needle', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                  vx: Math.cos(a) * CFG.needle.speed * 0.8, vy: Math.sin(a) * CFG.needle.speed * 0.8,
+                  ang: a, age: 0, life: CFG.needle.life * 1.25,
+                });
+              }
+              SFX.needle();
+            }
+            /* beat three — the Mother's lesson: it blinks behind the brush
+               and sheds its own pale kin (the full sheet only) */
+            e.sT = (e.sT || 0) + dt;
+            if (!mini && e.sT > (enr ? 6.5 : 8.5)) {
+              e.sT = 0;
+              S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 0.9, alpha: 0.4 });
+              const ba = rand(0, TAU), bd = rand(150, 210);
+              e.x = p.x + Math.cos(ba) * bd; e.y = p.y + Math.sin(ba) * bd;
+              S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.1, alpha: 0.45 });
+              S.rings.push({ x: e.x, y: e.y, max: e.r * 2.6, life: 0.4, maxLife: 0.4, red: true });
+              SFX.blink();
+              if (S.enemies.length < broodCap + 6) {
+                for (const s of [-1, 1]) {
+                  const c = spawnEnemy(phase === 2 ? 'stainlet' : 'blankling', e.x + s * 46, e.y + rand(-36, 36));
+                  c.kbx = s * 150; c.kby = rand(-70, 70);
+                }
+              }
+            }
+            /* beat four — the Warlord's lesson: mark a line, then charge it */
+            if (phase >= 1 && e.state === 'cruise' && e.stateT > (mini ? 5.5 : 4.4)) {
+              e.state = 'windup'; e.stateT = 0; SFX.wind();
+              S.telgs.push({ e, kind: 'line', len: mini ? 300 : 400, life: 0.6, maxLife: 0.6 });
+            } else if (e.state === 'windup' && e.stateT > 0.6) {
+              e.ang = Math.atan2(p.y - e.y, p.x - e.x);
+              e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
+              e.state = 'charge'; e.stateT = 0;
+            } else if (e.state === 'charge') {
+              vx = e.px * (enr ? 600 : 540); vy = e.py * (enr ? 600 : 540);
+              if (Math.random() < 0.3) S.stainQueue.push({ x: e.x, y: e.y, r: 8, alpha: 0.28, red: true });
+              if (e.stateT > 0.68) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
         }
         /* a wounded Guardian moves like something cornered */
         if (ENEMIES[e.type].boss && e.hp < e.maxHp * 0.35) {
@@ -3046,7 +3518,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (mk.t <= 0) {
         S.markers.splice(i, 1);
         S.stainQueue.push({ x: mk.x, y: mk.y, r: ENEMIES[mk.type].r * (mk.boss ? 2.4 : mk.elite ? 2 : 1.1), alpha: mk.boss || mk.elite ? 0.55 : 0.42, red: !!mk.elite });
-        spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss });
+        spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss, trueInk: !!mk.hall, flatHp: mk.flatHp || 0 });
         if (mk.boss) { S.shake = Math.max(S.shake, 10); SFX.elite(); }
         else if (mk.elite) { S.shake = Math.max(S.shake, 7); SFX.elite(); }
       }
@@ -3179,6 +3651,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.popups.length > CFG.fx.popupCap) S.popups.splice(0, S.popups.length - CFG.fx.popupCap);
 
     UI.setXp(st.xp / CFG.xp.req(st.xpLevel), st.xpLevel);
+    /* the hall's score breathes: the felled so far, and the swift
+       purse shrinking one part of ten a breath past the par */
+    if (S.runMode === 'hall') hallScoreLive();
 
     /* the red beast's seal, worn on the top of the sheet */
     let boss = null;
@@ -3202,8 +3677,9 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.waveActive = false;
       S.clearedT = 0.7;
       /* if the seal earned a pick and a mote-upgrade steals the screen,
-         the pick is still owed — remember it */
-      S.pendingSeal = areaStateFor(st.wave).isLevelEnd;
+         the pick is still owed — remember it (the hall keeps its own
+         gates: no seal is pressed there, the next gate simply opens) */
+      S.pendingSeal = areaStateFor(st.wave).isLevelEnd && S.runMode !== 'hall';
       /* the seal breaks — cry the scene complete before the counter
          climbs, so a new level never reads as the wave restarting */
       if (S.pendingSeal) {
@@ -3220,9 +3696,14 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.clearedT -= dt;
       if (S.clearedT <= 0) {
         S.vacuum = false;
+        /* the hall answers its own gate — the next guardian, or the truth */
+        if (S.runMode === 'hall') { hallAdvance(); return; }
         const as = areaStateFor(st.wave);
-        /* the fifth sheet, washed clean — the scroll ends on film */
-        if (S.runMode === 'journey' && st.wave >= CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea * AREAS.length) {
+        /* the fifth sheet, washed clean — the scroll ends on film.
+           THE BLANK ACT walks further: its true finale waits at wave 600 */
+        const finaleWave = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea *
+          (S.sixthWalk ? AREAS.length : SHEETS);
+        if (S.runMode === 'journey' && st.wave >= finaleWave) {
           if (S.reduced) { showOver(true); return; }
           S.mode = 'cutscene';
           UI.hud(false);
@@ -3250,7 +3731,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     updateFx(dt);
     S.dyingT -= dt;
-    if (S.dyingT <= 0) showOver(false);
+    if (S.dyingT <= 0) {
+      S.dyingT = Infinity;   /* the fall reports once — the stone pays once */
+      showOver(false);
+    }
   }
 
   /* ---------------- attract mode (title backdrop) ----------------
@@ -3303,7 +3787,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     startRun, continueEndless, abandon, deploy, pickAt, clearNext, clearHome,
     update, updateDying, updateIdle, initAttract,
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
-    getHard, setHard, dailyState,
+    getHard, setHard, setRival, rivalArmed, dailyState,
+    getSixthUnlocked,
+    /* the inkstone (v8.8): the charm room and the QA probes read these */
+    getInk, setInk, charmLv, charmRankCount, buyCharm,
+    getHistory, getLifetimeInk, getHall,
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
     qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },

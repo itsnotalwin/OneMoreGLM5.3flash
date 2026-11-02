@@ -1,7 +1,5 @@
 # ONE MORE
 
-> **Updating the repository manually?** Read [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md) **before replacing files**. The preserved Supabase integration is on branch [`backup/supabase-integration-2026-11-02`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02), and the [read-only Actions guard](https://github.com/itsnotalwin/OneMoreGLM5.3flash/actions/workflows/supabase-integration-guard.yml) checks that core wiring survives new uploads. Google OAuth and Anonymous provider settings are external; the last observed Google Client Secret error still requires dashboard correction and retesting.
-
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
@@ -144,7 +142,9 @@ remembered.
 
 ## Deploy to GitHub Pages
 
-This repository currently uses GitHub's built-in **pages build and deployment** workflow for pushes to `main` (rather than a committed `.github/workflows/deploy.yml`). Check the Actions tab for the latest run before considering a new deployment live.
+The repo ships with a ready-made workflow at
+`.github/workflows/deploy.yml` that publishes the site on every push to
+`main` using the official GitHub Pages Actions pipeline.
 
 1. Create a new repository on GitHub (e.g. `one-more`).
 2. Push this folder's contents to the `main` branch:
@@ -211,28 +211,24 @@ as before — the ledger sits quietly offline.
 - Died without signing? The over sheet offers **SIGN THE PAGE — POST
   WAVE n**; type a mark (or leave it blank and ride as INK DRIFTER), and
   the pending run posts itself the moment the sign lands.
+- Every endless run also raises your **WEEKLY** page — your best run of
+  the ISO week, one page per scribe a week. The board wears three eyes:
+  ALL-TIME, DAILY, WEEKLY.
+- Pages carry their scribe's **echo** — the recorded strokes of the run
+  that set them. A row bearing 影 downloads that recording when pressed:
+  **RACE THIS ECHO** arms a stranger's echo, closes the board, and starts
+  a run with their pale ink walking beside yours (a daily echo races the
+  day's own seeded sheet). The over sheet names them in the verdict, and
+  the 設 room's 影 toggle still silences every echo at once.
 - Rank = the wave you reached; score breaks ties. Top three wear red
-  hanko seals. Your own row is edged in vermillion.
+  hanko seals. Your own row is edged in vermillion. When a post lands,
+  the share card's hanko stamps your **ledger rank** (#N) instead of the
+  run's seal rank.
 - The journey's own deaths never post — the ledger belongs to the endless
   scroll alone (a journey victory that walks INTO THE ENDLESS posts from
   then on, carrying the whole run's depth).
 
-**Current shared-backend setup (verified 2 November 2026)**
-
-This variant is connected to the existing **Pinpoint** Supabase project `sffpyvxbgmhepftxoesy`, not a new project. Only the ONE MORE tables `public.om_scores` and `public.om_daily` were created (plus their indexes and RLS policies). The Pinpoint tables `public.scores` and `public.pinpoint_profiles` retain their own schemas, rows, and access policies.
-
-- Migration: `20261102155646_onemore_glm_flash_isolated_leaderboards`; follow-up `onemore_daily_uid_foreign_key_index`.
-- `js/supabase-config.js` contains the project URL and **public publishable key**. Never put a Supabase secret/service-role key in browser code.
-- Database checks passed: simulated authenticated inserts and upserts to both game tables, denial of a different player's insert, and rollback of test rows.
-- Pending real-browser check: **Authentication → Sign In / Up / Providers → Anonymous sign-ins** must be enabled; open LEADERBOARD, sign the page and submit an endless/daily run. Browser-hosted sign-in and posting have not yet been independently demonstrated.
-- Google OAuth is now configured separately in the shared Supabase Auth project and its Google Cloud Web OAuth client; never expose the Google Client Secret. The game stores only a short-lived per-tab return intent before redirecting, and resumes the leaderboard (including the Daily tab) on the PKCE callback instead of replaying the opening. Verified in a local JavaScript callback-state harness; a live browser sign-in still needs confirmation.
-- To test: open LEADERBOARD → OR USE GOOGLE → sign in → the app should **return directly to the leaderboard**, show the signed-in Google profile and retain the selected tab. A normal cold launch must still play the intro. Then play an Endless run and verify its score posts.
-- This is not needed for anonymous score posting.
-- This is a **shared Supabase project**: user authentication and project quotas are shared, even though the application tables and RLS are separate.
-- **Google login troubleshooting (2 Nov 2026):** Supabase Auth logs confirm Google redirects work but external code exchange fails with `oauth2: invalid_client` / `The provided client secret is invalid`. In [Google Auth Platform](https://console.cloud.google.com/auth/clients), find the **Web application** OAuth Client ID and its corresponding Client Secret. Configure that exact pair in [shared Pinpoint project's Google provider](https://supabase.com/dashboard/project/sffpyvxbgmhepftxoesy/auth/providers?provider=Google). Do not use a Supabase publishable key as a Google secret and never commit a secret. The callback URL remains `https://sffpyvxbgmhepftxoesy.supabase.co/auth/v1/callback`. Logs independently show that **anonymous sign-ins are disabled**, so enable Anonymous in this same Auth project if the game's `SIGN THE PAGE` login should work; Pinpoint also uses anonymous Auth. Browser `error_description` now yields an actionable message and failing error parameters are removed after capture, while successful PKCE `?code` remains for the SDK. Google sign-in remains unverified until the owner corrects credentials.
-- PWA players should reload after the `v8.6-supabase-oauth-3` service-worker update so cached JavaScript refreshes. On an installed PWA, close and reopen it after the deploy, and refresh if it still shows the previous behavior.
-
-**Fresh-project setup (only for a different Supabase project)**
+**One-time setup (about five minutes)**
 
 1. Create a project at [supabase.com](https://supabase.com) — the free
    tier is plenty for a board of scribes.
@@ -248,7 +244,8 @@ quota, far beyond what a board of honest scribes spends); this ledger
 costs a read when the board opens and a write only when a scribe beats
 their own best.
 
-**Reference bootstrap SQL (fresh empty database only):** The following is the original setup example, **not** the already-applied production migration. Do **not** re-run it inside the shared Pinpoint project: it attempts to recreate tables and policies. The actual shared-project migration uses explicit `anon`/`authenticated` grants and scoped `om_*` RLS policies with the same application data columns.
+**The ledger's SQL** — three tables, one page per scribe, checks that cap
+any damage a mischievous brush could try. Paste all of it:
 
 ```sql
 -- ONE MORE — the endless ledger (榜)
@@ -261,6 +258,8 @@ create table if not exists om_scores (
   kills integer not null default 0 check (kills between 0 and 999999),
   time  integer not null default 0 check (time >= 0),
   hard  boolean not null default false,
+  ghost text,
+  has_ghost boolean not null default false,
   v     integer not null default 1,
   ts    timestamptz not null default now()
 );
@@ -273,16 +272,35 @@ create table if not exists om_daily (
   score integer not null default 0 check (score between 0 and 999999999),
   kills integer not null default 0 check (kills between 0 and 999999),
   hard  boolean not null default false,
+  ghost text,
+  has_ghost boolean not null default false,
   v     integer not null default 1,
   ts    timestamptz not null default now(),
   primary key (day, uid)
 );
 
+create table if not exists om_weekly (
+  week  text    not null check (week ~ '^[0-9]{4}-W[0-9]{2}$'),
+  uid   uuid    not null references auth.users(id) on delete cascade,
+  name  text    not null default 'INK DRIFTER' check (char_length(name) between 1 and 24),
+  wave  integer not null check (wave between 1 and 99999),
+  score integer not null default 0 check (score between 0 and 999999999),
+  kills integer not null default 0 check (kills between 0 and 999999),
+  hard  boolean not null default false,
+  ghost text,
+  has_ghost boolean not null default false,
+  v     integer not null default 1,
+  ts    timestamptz not null default now(),
+  primary key (week, uid)
+);
+
 create index if not exists om_scores_wave_idx on om_scores (wave desc, score desc);
 create index if not exists om_daily_day_idx  on om_daily (day, score desc);
+create index if not exists om_weekly_week_idx on om_weekly (week, score desc);
 
 alter table om_scores enable row level security;
 alter table om_daily  enable row level security;
+alter table om_weekly enable row level security;
 
 -- the world may read; only the signed scribe may raise their own page
 create policy "the board is public" on om_scores
@@ -298,11 +316,55 @@ create policy "a scribe signs only their day" on om_daily
   for insert with check (auth.uid() = uid);
 create policy "a scribe raises only their day" on om_daily
   for update using (auth.uid() = uid) with check (auth.uid() = uid);
+
+create policy "the week is public" on om_weekly
+  for select using (true);
+create policy "a scribe signs only their week" on om_weekly
+  for insert with check (auth.uid() = uid);
+create policy "a scribe raises only their week" on om_weekly
+  for update using (auth.uid() = uid) with check (auth.uid() = uid);
 ```
+
+> Already running the earlier two-table ledger? Paste this once and the
+> v8.7 powers land in place — the echo columns, the weekly page, and the
+> board's third eye. Safe to re-run:
+>
+> ```sql
+> alter table om_scores add column if not exists ghost text;
+> alter table om_scores add column if not exists has_ghost boolean not null default false;
+> alter table om_daily  add column if not exists ghost text;
+> alter table om_daily  add column if not exists has_ghost boolean not null default false;
+>
+> create table if not exists om_weekly (
+>   week  text    not null check (week ~ '^[0-9]{4}-W[0-9]{2}$'),
+>   uid   uuid    not null references auth.users(id) on delete cascade,
+>   name  text    not null default 'INK DRIFTER' check (char_length(name) between 1 and 24),
+>   wave  integer not null check (wave between 1 and 99999),
+>   score integer not null default 0 check (score between 0 and 999999999),
+>   kills integer not null default 0 check (kills between 0 and 999999),
+>   hard  boolean not null default false,
+>   ghost text,
+>   has_ghost boolean not null default false,
+>   v     integer not null default 1,
+>   ts    timestamptz not null default now(),
+>   primary key (week, uid)
+> );
+> create index if not exists om_weekly_week_idx on om_weekly (week, score desc);
+> alter table om_weekly enable row level security;
+> drop policy if exists "the week is public" on om_weekly;
+> create policy "the week is public" on om_weekly for select using (true);
+> drop policy if exists "a scribe signs only their week" on om_weekly;
+> create policy "a scribe signs only their week" on om_weekly
+>   for insert with check (auth.uid() = uid);
+> drop policy if exists "a scribe raises only their week" on om_weekly;
+> create policy "a scribe raises only their week" on om_weekly
+>   for update using (auth.uid() = uid) with check (auth.uid() = uid);
+> ```
 
 > A client-only leaderboard can be poked by a determined hand — the
 > SQL above caps the damage (sane ranges, one page per signed scribe,
-> no deletes, RLS refusing every page but one's own). That is the
+> no deletes, RLS refusing every page but one's own, echo blobs capped
+> by the recorder itself at ~28 minutes of strokes). That is the
 > right weight for a brush-and-paper arcade board.
 
 **Optional: the Google door** — if you want cross-device identity too:

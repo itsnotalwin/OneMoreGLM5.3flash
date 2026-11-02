@@ -21,6 +21,7 @@
   function modeLine(d, day) {
     if (d.mode === 'daily') return 'DAILY INK — ' + day;
     if (d.mode === 'journey') return 'THE JOURNEY — SCROLL ' + (d.scroll || '一');
+    if (d.mode === 'hall') return 'THE GUARDIANS’ HALL';
     return 'THE ENDLESS SCROLL';
   }
 
@@ -94,18 +95,27 @@
     c.lineWidth = 3;
     c.strokeRect(-58, -58, 116, 116);
     c.fillStyle = PAPER;
-    c.font = '400 96px ' + DISP;
-    c.fillText(d.rank || '一', 0, 8);
+    /* the ledger's rank rides the seal when the post landed (#12,
+       sized to its digits) — otherwise the run's own seal rank keeps
+       the stamp */
+    if (d.lbRank) {
+      const rk = '#' + (d.lbRank | 0);
+      c.font = '400 ' + (rk.length > 3 ? 46 : 60) + 'px ' + DISP;
+      c.fillText(rk, 0, 8);
+    } else {
+      c.font = '400 96px ' + DISP;
+      c.fillText(d.rank || '一', 0, 8);
+    }
     c.restore();
 
-    /* the great number: waves survived */
+    /* the great number: waves survived — or the hall's gates cleared */
     c.fillStyle = INK;
     c.globalAlpha = 0.6;
     c.font = '500 30px ' + MONO;
-    c.fillText('W A V E S   S U R V I V E D', W / 2, 420);
+    c.fillText(d.hall ? 'G U A R D I A N S   F E L L E D' : 'W A V E S   S U R V I V E D', W / 2, 420);
     c.globalAlpha = 1;
-    c.font = '400 258px ' + DISP;
-    c.fillText(String(Math.max(1, d.waves | 0)), W / 2, 596);
+    c.font = '400 ' + (d.hall ? 200 : 258) + 'px ' + DISP;
+    c.fillText(d.hall ? (d.hall.felled > 0 ? ['I', 'II', 'III', 'IV', 'V'][Math.min(4, (d.hall.felled | 0) - 1)] : '0') + ' / V' : String(Math.max(1, d.waves | 0)), W / 2, 596);
 
     /* the ledger line */
     c.globalAlpha = 0.78;
@@ -126,9 +136,20 @@
     c.fillText(modeLine(d, day), W / 2, 876);
     let line2 = '';
     if (d.hard) line2 = 'REALLY HARD · 難';
-    else if (d.victory) line2 = 'THE FIVE SCROLLS ARE SIGNED';
+    else if (d.victory) line2 = (d.waves | 0) >= 599 ? 'THE SIXTH SCROLL IS SIGNED' : 'THE FIVE SCROLLS ARE SIGNED';
+    else if (d.hall) line2 = d.hall.victory ? 'ALL FIVE GUARDIANS FELLED'
+      : 'FELL AT GUARDIAN ' + (['I', 'II', 'III', 'IV', 'V'][Math.max(0, d.hall.felled | 0) - 1] || 'I');
     else if (d.practice) line2 = 'A PRACTICE SHEET';
-    if (d.ghost && d.ghost.wave) line2 = (line2 ? line2 + '   ·   ' : '') + 'THE GHOST FELL AT WAVE ' + d.ghost.wave;
+    if (d.ghost && d.ghost.wave) {
+      const gv = d.ghost.name
+        ? String(d.ghost.name).toUpperCase().slice(0, 16) + "'S ECHO FELL AT WAVE " + d.ghost.wave
+        : 'THE GHOST FELL AT WAVE ' + d.ghost.wave;
+      line2 = (line2 ? line2 + '   ·   ' : '') + gv;
+    }
+    /* the charms the scribe wore ride the honours too (v8.8) */
+    if (d.charms) {
+      line2 = (line2 ? line2 + '   ·   ' : '') + '符 ' + d.charms + ' CHARMS';
+    }
     if (line2) {
       c.globalAlpha = 0.62;
       c.font = '500 27px ' + MONO;

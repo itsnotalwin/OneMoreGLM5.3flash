@@ -77,6 +77,8 @@
 
   function resume() {
     if (G.mode !== 'paused') return;
+    SFX.ensure();
+    SFX.namestamp();          /* the brush returns to the hand */
     G.mode = 'playing';
     UI.show(null);
   }
@@ -92,6 +94,7 @@
 
   function goMenu() {
     SFX.ensure();
+    SFX.thud();               /* a knock: the run is set down */
     R.resetStains();
     G.abandon();
   }
@@ -103,17 +106,21 @@
   }
   function clearHome() {
     SFX.ensure();
+    SFX.page(0.7);            /* the paper folds home */
     G.clearHome();
   }
 
   /* the shelf of scrolls: opened from the title, answered by a run */
   function openScrolls() {
     SFX.ensure();
+    SFX.page();               /* the shelf unrolls */
     UI.buildScrolls();
     UI.show('scrolls');
   }
 
   function closeScrolls() {
+    SFX.ensure();
+    SFX.page(0.7);
     UI.show('title');
   }
 
@@ -130,11 +137,72 @@
   };
   function openBoard() {
     SFX.ensure();
+    SFX.page();
     LB.open();
   }
   function closeBoard() {
+    SFX.ensure();
+    SFX.page(0.7);
     LB.close();
   }
+
+  /* ---------------- the charm room — 符 ----------------
+     what the runs pressed into the inkstone buys permanent power.
+     A quiet shop beside the settings room. */
+  const charmsOpen = () => typeof CH !== 'undefined' && CH.isOpen();
+  document.getElementById('charmBtn').addEventListener('click', () => { SFX.ensure(); SFX.page(); CH.open(); });
+  document.getElementById('charmBackBtn').addEventListener('click', () => { SFX.pick(1); CH.close(); });
+
+  /* ---------------- the runs — 史 ----------------
+     the paper's memory: the lifetime line and the last twenty
+     walks, opened from its own chip on the desk rail. */
+  const histOpen = () => {
+    const s = document.getElementById('screenHistory');
+    return s && !s.classList.contains('hidden');
+  };
+  function openHistory() {
+    SFX.ensure();
+    SFX.page();               /* the memory's cover lifts */
+    UI.buildHistory();
+    UI.show('history');
+    UI.hud(false);
+  }
+  function closeHistory() {
+    SFX.ensure();
+    SFX.page(0.7);            /* the cover falls shut */
+    UI.show('title');
+  }
+  document.getElementById('histBtn').addEventListener('click', openHistory);
+  document.getElementById('histBackBtn').addEventListener('click', closeHistory);
+
+  /* ---------------- the guardians' hall — 殿 (v11) ----------------
+     the boss rush's front door: the rules, the ten best, and the
+     walk in. Enter on the page starts the rush — the page IS the
+     mode's door, like the shelf's frontier. */
+  const hallOpen = () => {
+    const s = document.getElementById('screenHall');
+    return s && !s.classList.contains('hidden');
+  };
+  function openHall() {
+    SFX.ensure();
+    SFX.page();               /* the hall's doors part */
+    UI.buildHall();
+    UI.show('hall');
+    UI.hud(false);
+  }
+  function closeHall() {
+    SFX.ensure();
+    SFX.page(0.7);
+    UI.show('title');
+  }
+  document.getElementById('hallBtn').addEventListener('click', openHall);
+  document.getElementById('hallBackBtn').addEventListener('click', closeHall);
+  document.getElementById('hallEnterBtn').addEventListener('click', () => start('hall'));
+
+  /* the paper's pulse: a small tremor for the heavy moments —
+     the guardian's seal and the fall. The senses rest together:
+     a muted page keeps its hand still (M quiets both). */
+  G.buzz = p => { try { if (!SFX.muted && navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
 
   /* ---------------- settings — 設 ----------------
      the paper's habits: sound, the ghost rival, REALLY HARD,
@@ -163,6 +231,7 @@
   }
   function openSettings() {
     SFX.ensure();
+    SFX.page();               /* the study door slides */
     wipeArmed = false;
     refreshSettings();
     UI.show('settings');
@@ -231,7 +300,9 @@
 
   function toggleMute() {
     SFX.ensure();
-    UI.muteVisual(SFX.toggle());
+    const m = SFX.toggle();
+    UI.muteVisual(m);
+    if (!m) SFX.tick();       /* sound returns: the ear hears it come back */
   }
 
   /* ---------------- fps meter (F toggles it, ?fps=1 pins it) ---------------- */
@@ -261,6 +332,23 @@
     /* the settings room answers only its own return keys */
     if (settingsOpen()) {
       if (k === 'Enter' || k === 'Escape') closeSettings();
+      return;
+    }
+    /* the charm room likewise — ENTER must never start a run behind it */
+    if (charmsOpen()) {
+      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') CH.close();
+      return;
+    }
+    /* the runs page likewise — ENTER must never start a run behind it */
+    if (histOpen()) {
+      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') closeHistory();
+      return;
+    }
+    /* the hall's door: Enter walks IN — Escape folds back to the title.
+       (unlike the reading rooms, this page is the mode's front door) */
+    if (hallOpen()) {
+      if (k === 'Enter') { start('hall'); return; }
+      if (k === 'Escape' || k === 'KeyP') closeHall();
       return;
     }
     /* the ledger overlay answers only its own return keys —
@@ -379,6 +467,8 @@
     UI.buildJourney();                              /* the seals restamped */
     UI.setHard(G.getHard());                        /* the red toggle remembered */
     UI.setDailyChip(G.dailyState());                /* today's sheet, freshly read */
+    UI.setInkLine(G.getInk());                      /* the stone, freshly read */
+    if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     UI.show('title');
     G.mode = 'title';
   }
@@ -408,9 +498,16 @@
     start('daily');
   });
   document.getElementById('boardBtn').addEventListener('click', openBoard);
-  /* the ledger's two eyes: all time, and today's sheet */
+  /* the stone's own room — a separate paper beside the game's */
+  document.getElementById('stoneBtn').addEventListener('click', () => {
+    location.href = 'inkstone.html';
+  });
+  /* the ledger's three eyes: all time, today's sheet, the week */
   document.getElementById('boardTabAll').addEventListener('click', () => LB.setTab('all'));
   document.getElementById('boardTabDay').addEventListener('click', () => LB.setTab('day'));
+  document.getElementById('boardTabWeek').addEventListener('click', () => LB.setTab('week'));
+  /* the board's 影 chips launch their race through the game's own door */
+  LB.launchRun = mode => start(mode);
   document.getElementById('hardBtn').addEventListener('click', () => {
     SFX.ensure();
     G.setHard(!G.getHard());
@@ -457,16 +554,16 @@
   UI.setSheetContinue(G.getFurthest());
   UI.buildJourney();
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
-  /* Google sign-in navigates away and back. Preserve the player's
-     leaderboard context instead of replaying the opening film.
-     Opening the board initializes Supabase and exchanges ?code (PKCE). */
-  const oauthReturn = LB.consumeOAuthReturn();
-  if (oauthReturn) {
-    enterTitle();
-    LB.open('title', oauthReturn.tab);
-  } else if (G.S.reduced) {
-    enterTitle();          /* the opening is a film — stillness goes straight to the title */
+  UI.setInkLine(G.getInk());                        /* the stone reads itself */
+  if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
+  /* the opening is a film seen once a session — a reload is not
+     asked to sit through it again (序 replays it on demand) */
+  let introSeen = false;
+  try { introSeen = sessionStorage.getItem('om_intro_seen') === '1'; } catch (e) {}
+  if (G.S.reduced || introSeen) {
+    enterTitle();          /* stillness — or this session has seen the film */
   } else {
+    try { sessionStorage.setItem('om_intro_seen', '1'); } catch (e) {}
     playIntro();
   }
 

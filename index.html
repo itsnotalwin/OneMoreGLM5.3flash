@@ -132,13 +132,31 @@
         </button>
       </div>
       <div class="minor-row">
-        <button id="boardBtn" class="board-btn" type="button" title="The endless ledger — who carried the ink furthest">
+        <button id="boardBtn" class="board-btn" type="button" title="THE ENDLESS LEDGER — who carried the ink furthest">
           <span class="board-kanji" aria-hidden="true">榜</span>
-          <span class="play-label">LEADERBOARD</span>
+          <span class="play-label">LEDGER</span>
         </button>
         <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
           <span class="daily-kanji" aria-hidden="true">日</span>
-          <span class="play-label">DAILY INK —&nbsp;<span id="dailyLabel">TODAY</span></span>
+          <span class="play-label">DAILY&nbsp;·&nbsp;<span id="dailyLabel">TODAY</span></span>
+        </button>
+        <button id="hallBtn" class="board-btn hall-btn" type="button" title="THE GUARDIANS' HALL — five guardians, one life, the old master's kit. The hall keeps its own ten best.">
+          <span class="board-kanji" aria-hidden="true">殿</span>
+          <span class="play-label">THE&nbsp;HALL</span>
+        </button>
+        <button id="charmBtn" class="board-btn charm-btn" type="button" title="CHARMS — what the runs press into the inkstone buys ranks of permanent power">
+          <span class="board-kanji" aria-hidden="true">符</span>
+          <span class="play-label">CHARMS</span>
+          <i class="charm-dot" aria-hidden="true"></i>
+        </button>
+        <button id="stoneBtn" class="board-btn stone-btn" type="button" title="THE INKSTONE — the stone the runs press. It condenses ink from the air while you are away; visit it, grind, and watch it grow.">
+          <span class="board-kanji" aria-hidden="true">砚</span>
+          <span class="play-label">INKSTONE</span>
+          <span class="chip-count hidden" id="stoneCount" aria-live="polite" title="Ink held by the stone"></span>
+        </button>
+        <button id="histBtn" class="board-btn hist-btn" type="button" title="THE RUNS — the paper remembers the last twenty walks: where each sheet fell, what it pressed into the stone.">
+          <span class="board-kanji" aria-hidden="true">史</span>
+          <span class="play-label">RUNS</span>
         </button>
         <button id="hardBtn" class="hard-btn" type="button" aria-pressed="false"
           title="REALLY HARD — every beast stands taller, comes faster, comes thicker. The ledger pays double.">
@@ -156,7 +174,7 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V8.6</span></div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V12.0</span></div>
     </div>
 
     <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the sound, the ghost rival, REALLY HARD, and the paper itself">
@@ -183,7 +201,7 @@
     <div class="scroll-strip-row" id="scrollRow"></div>
     <div class="scroll-strip-row hidden" id="levelRow"></div>
     <div class="scrolls-foot">
-      <p class="scrolls-hint" id="scrollsHint">TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT</p>
+      <p class="scrolls-hint" id="scrollsHint" hidden></p>
       <button id="scrollsBackBtn" class="ghost-btn">RETURN</button>
     </div>
   </section>
@@ -239,10 +257,11 @@
         <div class="board-tabs" role="tablist">
           <button id="boardTabAll" class="board-tab is-on" type="button" role="tab" aria-selected="true">ALL-TIME</button>
           <button id="boardTabDay" class="board-tab" type="button" role="tab" aria-selected="false">DAILY — <span id="boardDayLabel">TODAY</span></button>
+          <button id="boardTabWeek" class="board-tab" type="button" role="tab" aria-selected="false">WEEKLY</button>
         </div>
       </div>
       <div class="board-auth" id="boardAuth"></div>
-      <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span></div>
+      <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span><span>影</span></div>
       <ol class="board-rows" id="boardRows"></ol>
       <div class="board-foot">
         <span class="board-mine" id="boardMine"></span>
@@ -278,13 +297,15 @@
           <span class="rank-label">SEAL</span>
         </div>
         <div class="over-stats">
-          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">WAVES SURVIVED</span><span class="stat-dots"></span><span class="stat-value" id="statWaves">0</span></div>
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name" id="statWavesName">WAVES SURVIVED</span><span class="stat-dots"></span><span class="stat-value" id="statWaves">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">BLOTS CLEANED</span><span class="stat-dots"></span><span class="stat-value" id="statKills">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">TIME IN ARENA</span><span class="stat-dots"></span><span class="stat-value" id="statTime">00:00</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
+          <div class="stat-row hidden" id="inkStatRow"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">PRESSED INTO THE STONE</span><span class="stat-dots"></span><span class="stat-value" id="statInk">+0</span></div>
         </div>
       </div>
       <div class="ghost-line hidden" id="ghostLine" aria-live="polite"></div>
+      <div class="hall-line hidden" id="hallLine" aria-live="polite"></div>
       <div class="over-actions">
         <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
         <button id="againBtn" class="block-btn big">ONE MORE</button>
@@ -334,6 +355,54 @@
     </div>
   </section>
 
+  <!-- ============ CHARMS — 符 — the inkstone's shop ============ -->
+  <section id="screenCharms" class="screen screen-charms hidden">
+    <span class="wm wm-charms" aria-hidden="true">符</span>
+    <div class="set-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE INKSTONE — <span class="kanji-inline">硯</span></div>
+        <h2 class="set-title">CHARMS</h2>
+        <p class="set-sub">WHAT THE RUNS PRESS OUT, THE PAPER KEEPS</p>
+        <p class="charm-purse">硯 <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
+      </div>
+      <div class="set-rows" id="charmRows"></div>
+      <button id="charmBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
+    </div>
+  </section>
+
+  <!-- ============ THE RUNS — 史 — the paper's memory ============ -->
+  <section id="screenHistory" class="screen screen-history hidden">
+    <span class="wm wm-history" aria-hidden="true">史</span>
+    <div class="set-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE PAPER REMEMBERS — <span class="kanji-inline">史</span></div>
+        <h2 class="set-title">THE RUNS</h2>
+        <p class="set-sub">THE LAST TWENTY WALKS, KEPT IN INK</p>
+        <div class="hist-life" id="histLife"></div>
+      </div>
+      <ol class="hist-rows" id="histRows"></ol>
+      <button id="histBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
+    </div>
+  </section>
+
+  <!-- ============ THE GUARDIANS' HALL — 殿 — the boss rush ============ -->
+  <section id="screenHall" class="screen screen-hall hidden">
+    <span class="wm wm-hall" aria-hidden="true">殿</span>
+    <div class="set-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE GUARDIANS WAIT — <span class="kanji-inline">殿</span></div>
+        <h2 class="set-title">THE GUARDIANS' HALL</h2>
+        <p class="set-sub">FIVE GUARDIANS · ONE LIFE · THE OLD MASTER'S KIT</p>
+        <p class="hall-rule">THE SHEET'S CLIMB STAYS OUTSIDE — EACH GUARDIAN FIGHTS AT ITS OWN INK, A THIN HONOR GUARD AT ITS HEELS. THE HALL GRANTS A BREATH BETWEEN GATES. SCORE: THE FELLED · THE SWIFT, +10 A BREATH UNDER SEVEN MINUTES · THE FLAWLESS, +500 UNTOUCHED. REALLY HARD PAYS DOUBLE.</p>
+      </div>
+      <ol class="hall-rows" id="hallRows"></ol>
+      <div class="hall-actions">
+        <button id="hallEnterBtn" class="block-btn big" type="button">ENTER THE HALL — 殿</button>
+        <button id="hallBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
+      </div>
+    </div>
+  </section>
+
   <div id="flash" aria-hidden="true"></div>
 
   <!-- ============ OPENING SCENE SKIP ============ -->
@@ -352,6 +421,7 @@
 <script src="./js/supabase-config.js"></script>
 <script src="./js/lb.js"></script>
 <script src="./js/share.js"></script>
+<script src="./js/charms.js"></script>
 <script src="./js/main.js"></script>
 </body>
 </html>

@@ -18,7 +18,8 @@ const UI = (() => {
     screens: {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
-      board: $('screenBoard'), settings: $('screenSettings'),
+      board: $('screenBoard'), settings: $('screenSettings'), charms: $('screenCharms'),
+      history: $('screenHistory'), hall: $('screenHall'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
@@ -31,6 +32,7 @@ const UI = (() => {
     overKicker: $('overKicker'), overRank: $('overRank'), overTitle: $('overTitle'), overSub: $('overSub'),
     continueBtn: $('continueBtn'),
     statWaves: $('statWaves'), statKills: $('statKills'), statTime: $('statTime'), statScore: $('statScore'),
+    statInk: $('statInk'),
     newBestBadge: $('newBestBadge'), flash: $('flash'),
     journeyBand: $('journeyBand'),
   };
@@ -143,6 +145,9 @@ const UI = (() => {
     red:   { ink: '#a2321f', rgba: '162,50,31',   paper: '#eadbc4' },
     storm: { ink: '#31485a', rgba: '49,72,90',    paper: '#c7cdc9' },
     gilt:  { ink: '#8a6420', rgba: '138,100,32',  paper: '#e7d6ad' },
+    /* the blank sheet: the palest paper and the greyest ink —
+       the tone of a page that has not yet been written on */
+    blank: { ink: '#565248', rgba: '86,82,72',    paper: '#f4f1e6' },
   };
   const toneOf = a => BAND_TONES[a.theme] || BAND_TONES.pale;
   /* the shelf re-inks a whole subtree with a sheet's tones: every
@@ -211,10 +216,13 @@ const UI = (() => {
     if (!band || typeof AREAS === 'undefined') return;
     const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
     const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
+    /* the blank scroll hangs only for the hand that signed the five */
+    const sixthOpen = (typeof G !== 'undefined' && G.getSixthUnlocked) ? G.getSixthUnlocked() : false;
+    const list = AREAS.slice(0, sixthOpen ? AREAS.length : 5);
     const wash = document.getElementById('toneWash');
     if (wash) wash.classList.remove('on');
     band.innerHTML = '';
-    AREAS.forEach((a, i) => {
+    list.forEach((a, i) => {
       const n = i + 1;
       const isCleared = n <= cleared;
       const isOpen = n <= unlocked;
@@ -254,8 +262,8 @@ const UI = (() => {
         });
       }
       band.appendChild(node);
-      if (i < AREAS.length - 1) {
-        const right = toneOf(AREAS[i + 1]);
+      if (i < list.length - 1) {
+        const right = toneOf(list[i + 1]);
         const adjR = pageAdjusted(right);
         const link = document.createElement('span');
         link.className = 'j-link' + (n < unlocked ? ' flowed' : '');
@@ -279,6 +287,7 @@ const UI = (() => {
     if (el.hudMode) {
       el.hudMode.textContent =
         m === 'daily' ? 'DAILY INK · ' + (sub || 'TODAY')
+        : m === 'hall' ? 'THE GUARDIANS\u2019 HALL'
         : m === 'endless' ? 'ENDLESS SCROLL' : 'THE JOURNEY';
       el.hudMode.classList.toggle('endless', m !== 'journey');
     }
@@ -615,14 +624,23 @@ const UI = (() => {
     const lrow = document.getElementById('levelRow');
     if (lrow) lrow.classList.add('hidden');
     row.classList.remove('hidden');
-    setScrollsHead(SCROLLS_HEAD.kick, SCROLLS_HEAD.title, SCROLLS_HEAD.sub);
     setBackLabel('TITLE');
     const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
     const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
     const prog = (typeof G !== 'undefined' && G.getProg) ? G.getProg() : {};
-    const done = cleared >= AREAS.length;
+    /* the blank scroll hangs only for the hand that signed the five */
+    const sixthOpen = (typeof G !== 'undefined' && G.getSixthUnlocked) ? G.getSixthUnlocked() : false;
+    const list = AREAS.slice(0, sixthOpen ? AREAS.length : 5);
+    const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    const done = cleared >= list.length;
+    /* the shelf's head speaks the count it actually hangs */
+    setScrollsHead(
+      sixthOpen ? 'THE JOURNEY — SIX SCROLLS · SIXTY SCENES' : SCROLLS_HEAD.kick,
+      sixthOpen ? 'SIX SCROLLS' : SCROLLS_HEAD.title,
+      SCROLLS_HEAD.sub);
+    setBackLabel('TITLE');
     row.innerHTML = '';
-    AREAS.forEach((a, i) => {
+    list.forEach((a, i) => {
       const n = i + 1;
       const isCleared = n <= cleared;
       const isLocked = n > unlocked;
@@ -641,7 +659,8 @@ const UI = (() => {
       applySheetVars(card, a.theme, { locked: isLocked });
       card.addEventListener('mouseenter', () => shelfWash(a.theme));
       card.addEventListener('mouseleave', () => shelfWash(null));
-      /* ten level dots — the sheet's own ladder, filled to the deepest walk */
+      /* ten level dots — the sheet's own ladder, filled to the deepest walk
+         (the dots ARE the count: no second numeric line under them) */
       let dots = '';
       for (let d = 1; d <= CFG.wave.levelsPerArea; d++) {
         const filled = isCleared || d <= reached;
@@ -652,17 +671,14 @@ const UI = (() => {
         : isCleared
         ? '<span class="strip-state is-done"><span class="strip-seal">落</span>CLEARED</span>'
         : '<span class="strip-state is-wait"><span class="strip-wait">筆</span>IN PROGRESS</span>';
-      const progLine = (!isLocked && !isCleared)
-        ? `<span class="strip-prog">${reached} / ${CFG.wave.levelsPerArea} SCENES</span>`
-        : '';
       card.innerHTML =
         `<span class="strip-string" aria-hidden="true"></span>` +
-        `<span class="strip-no">SCROLL ${['I', 'II', 'III', 'IV', 'V'][i]}</span>` +
+        `<span class="strip-no">SCROLL ${ROMANS[i]}</span>` +
         `<span class="strip-kanji" aria-hidden="true">${a.kanji}</span>` +
         `<span class="strip-name">${a.name}</span>` +
-        `<span class="strip-ink">${a.ink} ink · TEN SCENES</span>` +
+        `<span class="strip-ink">${a.ink} ink</span>` +
         `<span class="strip-dots" aria-hidden="true">${dots}</span>` +
-        progLine + state;
+        state;
       card.setAttribute('aria-label',
         `Scroll ${a.name} — ${isLocked ? 'sealed' : isCleared ? 'cleared' : 'unrolled'}`);
       card.addEventListener('click', () => {
@@ -679,14 +695,16 @@ const UI = (() => {
       });
       row.appendChild(card);
     });
+    /* the foot speaks only when it has something new to say — the
+       head's sub already told the fresh scribe how the journey works */
     const hint = document.getElementById('scrollsHint');
     if (hint) {
       const cur = Math.min(unlocked, AREAS.length);
-      hint.textContent = done
+      setScrollsHint(done
         ? 'EVERY SCROLL LIES FINISHED — THE ENDLESS SCROLL 無 STILL ASKS FOR MORE'
         : cleared > 0
-        ? `SCROLL ${['I', 'II', 'III', 'IV', 'V'][cur - 1]} IS UNROLLED — TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN FOR THE NEXT`
-        : 'TEN LEVELS OF TEN WAVES EACH — BREAK A GUARDIAN TO UNROLL THE NEXT';
+        ? `SCROLL ${ROMANS[Math.min(list.length, cur) - 1]} IS UNROLLED — BREAK ITS GUARDIAN FOR THE NEXT`
+        : '');
     }
   }
 
@@ -715,7 +733,7 @@ const UI = (() => {
     setBackLabel('ALL SCROLLS');
     retraceHead();
     setScrollsHead(
-      `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · TEN SCENES`,
+      `SCROLL ${['I', 'II', 'III', 'IV', 'V', 'VI'][n - 1]} — ${a.kanji} · TEN SCENES`,
       a.name,
       isCleared
         ? 'The scroll lies finished. Every scene stays open — walk any of them again.'
@@ -734,7 +752,7 @@ const UI = (() => {
       const kit = (typeof G !== 'undefined' && G.checkpointPower)
         ? G.checkpointPower(n, d) : 0;
       const kitLine = locked ? '' :
-        `<span class="strip-kit">ARRIVE WITH ${kit} PICKS</span>`;
+        `<span class="strip-kit">ARRIVE WITH ${kit} PICK${kit === 1 ? '' : 'S'}</span>`;
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'scroll-strip scene-strip' +
@@ -780,6 +798,7 @@ const UI = (() => {
   function setScrollsHint(txt) {
     const hint = document.getElementById('scrollsHint');
     if (!hint) return;
+    hint.hidden = !txt;
     hint.textContent = txt;
     hint.classList.remove('nudge');
     void hint.offsetWidth;
@@ -788,11 +807,16 @@ const UI = (() => {
 
   /* the guardian's fall unrolls the next scroll — cried across the sheet */
   function unlockBanner(area, nextArea, isLast) {
+    const sixth = area && area.kanji === '六';
     el.bannerKicker.textContent = isLast
-      ? `THE FIFTH GUARDIAN FALLS — SCROLL ${area.kanji} IS PAINTED`
+      ? sixth
+        ? `THE PAPER'S OWN GUARDIAN FALLS — SCROLL ${area.kanji} IS WRITTEN`
+        : `THE FIFTH GUARDIAN FALLS — SCROLL ${area.kanji} IS PAINTED`
       : `SCROLL ${area.kanji} ${area.name} — CLEARED IN FULL`;
     el.bannerTitle.innerHTML = isLast
-      ? `<span class="ban-kanji">終</span><span class="ban-lat">THE JOURNEY IS COMPLETE</span>`
+      ? sixth
+        ? `<span class="ban-kanji">白</span><span class="ban-lat">THE BLANK IS WRITTEN</span>`
+        : `<span class="ban-kanji">終</span><span class="ban-lat">THE JOURNEY IS COMPLETE</span>`
       : `<span class="ban-kanji">${nextArea.kanji}</span><span class="ban-lat">${nextArea.name} — UNROLLED</span>`;
     el.banner.classList.toggle('area', true);
     el.banner.classList.toggle('surge', true);
@@ -886,19 +910,29 @@ const UI = (() => {
       : String(level + 1);
   }
 
-  /* the ghost's verdict: who outlived whom, printed once */
+  /* the ghost's verdict: who outlived whom, printed once.
+     An armed rival walks under its scribe's own name. */
   function setGhostVerdict(d) {
     const line = document.getElementById('ghostLine');
     if (!line) return;
     if (d.ghost && d.ghost.wave > 0) {
       const mine = d.waves | 0;
+      const n = d.ghost.wave;
+      const rival = d.ghost.name
+        ? String(d.ghost.name).toUpperCase().slice(0, 24) + "'S ECHO" : null;
       line.classList.remove('hidden');
-      if (mine > d.ghost.wave)
-        line.textContent = `THE GHOST FELL AT WAVE ${d.ghost.wave} — YOU OUTLIVED IT BY ${mine - d.ghost.wave}`;
-      else if (mine === d.ghost.wave)
-        line.textContent = `THE GHOST FELL AT WAVE ${d.ghost.wave} — YOU WALKED IT STROKE FOR STROKE`;
+      if (mine > n)
+        line.textContent = rival
+          ? `${rival} FELL AT WAVE ${n} — YOU OUTLIVED IT BY ${mine - n}`
+          : `THE GHOST FELL AT WAVE ${n} — YOU OUTLIVED IT BY ${mine - n}`;
+      else if (mine === n)
+        line.textContent = rival
+          ? `${rival} FELL AT WAVE ${n} — WALKED STROKE FOR STROKE`
+          : `THE GHOST FELL AT WAVE ${n} — YOU WALKED IT STROKE FOR STROKE`;
       else
-        line.textContent = `THE GHOST WALKED FURTHER — WAVE ${d.ghost.wave} TO YOUR ${mine}`;
+        line.textContent = rival
+          ? `${rival} WALKED FURTHER — WAVE ${n} TO YOUR ${mine}`
+          : `THE GHOST WALKED FURTHER — WAVE ${n} TO YOUR ${mine}`;
     } else {
       line.classList.add('hidden');
       line.textContent = '';
@@ -909,23 +943,51 @@ const UI = (() => {
     lastOver = d;   /* the share card presses this same report (v8.3) */
     setGhostVerdict(d);
     const vict = !!d.victory;
-    el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
-    el.overSub.textContent = vict
-      ? 'Five sheets painted, every guardian felled. The paper asks for more.'
+    const sixthWin = vict && d.mode === 'journey' && (d.waves | 0) >= 599;   /* only the blank act's walk reaches 599 */
+    el.overTitle.textContent = sixthWin ? 'THE SIXTH SCROLL IS SIGNED.'
+      : vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
+    el.overSub.textContent = sixthWin
+      ? 'The blank paper is written. The brush dips, and finds no more paper asking.'
+      : vict ? 'Five sheets painted, every guardian felled. The paper asks for more.'
       : d.mode === 'daily' && d.practice
         ? 'Practice sheet — today\u2019s ink is already on the ledger.'
         : 'The paper keeps every stroke. Even this one.';
     el.overKicker.textContent =
-      `RUN ${pad3(d.run)} — ${d.mode === 'daily' ? 'DAILY INK' + (d.day ? ' · ' + d.day : '') : d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
+      `RUN ${pad3(d.run)} — ${d.mode === 'daily' ? 'DAILY INK' + (d.day ? ' · ' + d.day : '') : d.mode === 'hall' ? 'THE GUARDIANS\u2019 HALL' : d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
+    const wvName = document.getElementById('statWavesName');
+    const hallLine = document.getElementById('hallLine');
+    if (d.hall) {
+      el.overTitle.textContent = d.hall.victory ? 'THE HALL STANDS EMPTY.' : 'THE HALL KEEPS ITS GUARDIANS.';
+      el.overSub.textContent = d.hall.victory
+        ? 'Five guardians, one life, one sheet of paper. The hall bows to the brush.'
+        : d.hall.felled > 0
+          ? `${HALL_ROMAN[d.hall.felled - 1]} fell. The next gate held.`
+          : 'The first gate held. The hall waits.';
+      if (wvName) wvName.textContent = 'GUARDIANS FELLED';
+      el.statWaves.textContent = (HALL_ROMAN[(d.hall.felled | 0) - 1] || '0') + ' / V';
+      if (hallLine) {
+        hallLine.classList.remove('hidden');
+        hallLine.textContent =
+          `THE FELLED ${d.hall.guardians.toLocaleString('en-US')} · THE SWIFT +${d.hall.swift.toLocaleString('en-US')}` +
+          (d.hall.flawless > 0 ? ` · FLAWLESS +${d.hall.flawless.toLocaleString('en-US')}` : ` · HITS TAKEN ${d.hall.hits}`);
+      }
+    } else {
+      if (hallLine) { hallLine.classList.add('hidden'); hallLine.textContent = ''; }
+      if (wvName) wvName.textContent = 'WAVES SURVIVED';
+    }
     el.overRank.textContent = d.rank;
-    el.statWaves.textContent = d.waves;
+    if (!d.hall) el.statWaves.textContent = d.waves;   /* the hall already wrote III / V */
     el.statKills.textContent = d.kills.toLocaleString('en-US');
     el.statTime.textContent = fmtTime(d.time);
     el.statScore.textContent = d.score.toLocaleString('en-US');
+    /* the inkstone: what this run pressed back into the stone */
+    const inkRow = document.getElementById('inkStatRow');
+    if (inkRow) inkRow.classList.toggle('hidden', !(d.ink > 0));
+    if (d.ink > 0) el.statInk.textContent = '+' + d.ink.toLocaleString('en-US');
     el.newBestBadge.classList.toggle('hidden', !d.newBest);
     if (el.continueBtn) {
-      el.continueBtn.classList.toggle('hidden', !vict);
-      if (vict) {
+      el.continueBtn.classList.toggle('hidden', !vict || !!d.hall);   /* the hall ends where it ends — no endless carry */
+      if (vict && !d.hall) {
         el.continueBtn.innerHTML =
           'INTO THE ENDLESS — <span class="kanji-inline">無</span>';
       }
@@ -946,6 +1008,94 @@ const UI = (() => {
 
   function muteVisual(m) { el.muteBtn.classList.toggle('muted', m); }
 
+  /* the purse lives on the 砚 chip now — the rail reads the wallet.
+     It stays quiet until the first press lands. */
+  function setInkLine(total) {
+    const badge = document.getElementById('stoneCount');
+    if (!badge) return;
+    const t = Math.max(0, total | 0);
+    badge.textContent = t.toLocaleString('en-US');
+    badge.classList.toggle('hidden', t <= 0);
+  }
+
+  /* ---------------- the runs — 史 (v9.3) ----------------
+     the paper's memory, read back: the lifetime line and the last
+     twenty lines the walks have pressed. */
+  const HIST_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                       'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const HIST_MODE = { journey: '旅', endless: '無', daily: '日', hall: '殿' };
+  function histDate(ds) {
+    const p = String(ds || '').split('-');
+    const m = (+p[1] || 1) - 1, d = +p[2] || 0;
+    return (HIST_MONTHS[m] || '') + ' ' + pad2(d);
+  }
+  function buildHistory() {
+    const life = document.getElementById('histLife');
+    const rows = document.getElementById('histRows');
+    if (!rows) return;
+    const H = (typeof G !== 'undefined' && G.getHistory)
+      ? G.getHistory() : { runs: [], stats: {} };
+    const st = H.stats || {};
+    const ink = (typeof G !== 'undefined' && G.getLifetimeInk) ? G.getLifetimeInk() : 0;
+    if (life) {
+      const deep = st.deepest;
+      const cells = [
+        ['RUNS', st.runs | 0],
+        ['GUARDIANS', st.felled | 0],
+        ['LIFETIME INK', ink.toLocaleString('en-US')],
+        ['DEEPEST', deep ? deep.where : '—'],
+      ];
+      life.innerHTML = cells.map(c =>
+        `<div class="hist-life-cell"><span class="hl-k">${c[0]}</span><span class="hl-v">${c[1]}</span></div>`
+      ).join('');
+    }
+    const list = (H.runs || []).slice().reverse();   /* freshest line first */
+    if (!list.length) {
+      rows.innerHTML = '<li class="hist-empty">THE PAPER IS STILL BLANK —<br>THE FIRST WALK PRESSES THE FIRST LINE</li>';
+      return;
+    }
+    rows.innerHTML = list.map(r => {
+      const mode = HIST_MODE[r.mode] || '旅';
+      const hard = r.hard ? ' · 難' : '';
+      const out = r.victory
+        ? (r.mode === 'hall' ? '<b class="hist-vict">ALL FIVE FELLED</b>' : '<b class="hist-vict">THE SCROLL ENDS</b>')
+        : `FELL — ${r.where || ('WAVE ' + (r.wave | 0))}`;
+      return `<li class="hist-row${r.victory ? ' is-vict' : ''}${r.hard ? ' is-hard' : ''}">` +
+        `<span class="hr-mode" aria-hidden="true">${mode}</span>` +
+        `<span class="hr-main"><span class="hr-top">RUN ${pad3(r.run | 0)} — ${String(r.mode || 'journey').toUpperCase()}${hard} · ${histDate(r.date)}</span>` +
+        `<span class="hr-out">${out}</span></span>` +
+        `<span class="hr-num"><span class="hr-score">${(r.score | 0).toLocaleString('en-US')}</span>` +
+        `<span class="hr-ink">${(r.ink | 0) > 0 ? '+' + (r.ink | 0) + ' 墨' : '—'}</span></span>` +
+        `</li>`;
+    }).join('');
+  }
+
+  /* ---------------- the guardians' hall — 殿 (v11) ----------------
+     the boss rush's front door: the rules, and the ten best walks
+     the hall has kept. Enter starts the rush; Enter on the page
+     walks in too (the page IS the mode's door, like the shelf). */
+  const HALL_ROMAN = ['I', 'II', 'III', 'IV', 'V'];
+  function buildHall() {
+    const rows = document.getElementById('hallRows');
+    if (!rows) return;
+    const H = (typeof G !== 'undefined' && G.getHall) ? G.getHall() : { rows: [] };
+    const list = H.rows || [];
+    if (!list.length) {
+      rows.innerHTML = '<li class="hist-empty">NO NAME IS CARVED YET —<br>THE FIRST WALK CARVES IT</li>';
+      return;
+    }
+    rows.innerHTML = list.map((r, i) => {
+      const what = r.victory ? 'ALL FIVE FELLED'
+        : 'FELL AT GUARDIAN ' + (HALL_ROMAN[Math.max(0, r.felled | 0) - 1] || 'I');
+      return `<li class="hist-row hall-row${r.victory ? ' is-vict' : ''}${r.hard ? ' is-hard' : ''}">` +
+        `<span class="hr-mode hr-rank" aria-hidden="true">${i + 1}</span>` +
+        `<span class="hr-main"><span class="hr-top">${what}${r.hard ? ' · 難' : ''} · ${histDate(r.date)}</span>` +
+        `<span class="hr-out">${fmtTime(r.time | 0)} IN THE HALL</span></span>` +
+        `<span class="hr-num"><span class="hr-score">${(r.score | 0).toLocaleString('en-US')}</span></span>` +
+        `</li>`;
+    }).join('');
+  }
+
   /* the brush's current loadout, worn on the wrist */
   function setLoadout(levels) {
     if (!el.hudLoadout) return;
@@ -960,7 +1110,9 @@ const UI = (() => {
     setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
+    setInkLine,
     buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard, setDailyChip,
+    buildHistory, buildHall,
     get onScrollPick() { return onScrollPick; },
     set onScrollPick(fn) { onScrollPick = fn; },
     get onOpenScroll() { return onOpenScroll; },

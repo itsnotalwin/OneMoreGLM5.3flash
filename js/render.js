@@ -23,6 +23,9 @@ const R = (() => {
     red:   { paper: '#eadbc4', ink: '#1a1714', tint: '#4a211a', vig: '122,42,26', wash: '178,58,43',   washA: 0.031, fiber: [70,62,48],  speck: '50,45,36',    weather: 'petals' },
     storm: { paper: '#c7cdc9', ink: '#161c1f', tint: '#1e3240', vig: '26,38,44',  wash: '58,74,84',    washA: 0.03,  fiber: [56,66,70],  speck: '40,52,58',    weather: 'rain'   },
     gilt:  { paper: '#e7d6ad', ink: '#241c12', tint: '#4a360e', vig: '96,70,20',  wash: '166,124,44',  washA: 0.035, fiber: [96,78,44],  speck: '120,92,40',   weather: 'gold'   },
+    /* the blank sheet: the paper before ink — the brightest and the
+       stillest sheet, barely tinted, dust adrift on an unwritten page */
+    blank: { paper: '#f4f1e6', ink: '#26221c', tint: '#3a3630', vig: '86,84,70',  wash: '150,146,130', washA: 0.012, fiber: [122,118,102], speck: '132,128,112', weather: 'motes' },
   };
   let INK = THEMES.pale.ink;
   let PAPER = THEMES.pale.paper;
@@ -832,6 +835,19 @@ const R = (() => {
       [wash('shu2', 935, 1210, 0.21, 0.29), el('crane', 0.28, 0.9, 1.2, 0.64)],
       [el('rockS', 0.30, 1, 1.4, 0.70), wash('shore', 990, 1270, 0.22, 0.32, '汀')],
       [seal(), mist(0.12), el('crane', 0.30, 1, 1.3, 0.58)],
+    ],
+    blank: [  /* THE BLANK SCROLL — nothing is painted here. Almost nothing:
+                 nine empty scenes of unwritten paper, then the one seal */
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [seal(), mist(0.08)],
     ],
   };
 
@@ -2608,6 +2624,15 @@ const R = (() => {
     c.moveTo(6, -2);
     c.quadraticCurveTo(14, 2, 19, 9);
     c.stroke();
+    /* a rival signs the air above their echo — their name, faint */
+    if (gh.name) {
+      c.globalAlpha = gh.dead ? 0.12 : 0.3;
+      c.fillStyle = INK;
+      c.font = '9px "Zen Antique", serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'alphabetic';
+      c.fillText(String(gh.name).slice(0, 14), 0, -26);
+    }
     c.restore();
     /* where the echo fell: the place-keeping seal */
     if (gh.dead) {
@@ -3232,7 +3257,10 @@ const R = (() => {
   function drawMarker(c, m) {
     const def = ENEMIES[m.type];
     const big = m.elite ? CFG.wave.eliteR : 1;
-    const pr = 1 - m.t / (m.elite ? 1.7 : 0.62);
+    /* pr floors at zero: a late marker in a staggered wave (the hall's
+       honor guard waits turns of up to ~2.4s) must not fold its
+       teardrop through a negative radius — the arc throws (v11 fix) */
+    const pr = Math.max(0, 1 - m.t / (m.elite ? 1.7 : 0.62));
     c.save();
     c.translate(m.x, m.y);
     /* puddle spreading */

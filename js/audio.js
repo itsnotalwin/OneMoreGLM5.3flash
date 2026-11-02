@@ -17,7 +17,12 @@ const SFX = (() => {
       ctx = new AC();
       master = ctx.createGain();
       master.gain.value = 0.55;
-      master.connect(ctx.destination);
+      /* a gentle ceiling: a guardian entrance over a surge drum over a
+         bomb must swell, not clip — the kit's loud moments stay whole */
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 4;
+      comp.attack.value = 0.004; comp.release.value = 0.18;
+      master.connect(comp); comp.connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
   }
@@ -32,7 +37,11 @@ const SFX = (() => {
     osc.type = type;
     osc.frequency.setValueAtTime(Math.max(1, f), t0);
     osc.frequency.exponentialRampToValueAtTime(Math.max(1, f2), t0 + dur);
-    g.gain.setValueAtTime(vol, t0);
+    /* a hair of attack: voices rise instead of popping in — squares
+       and saws especially used to land with a click */
+    const atk = Math.min(0.004, dur * 0.3);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + atk);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     osc.connect(g); g.connect(master);
     osc.start(t0); osc.stop(t0 + dur + 0.03);
@@ -64,7 +73,8 @@ const SFX = (() => {
       f.Q.value = o.q ?? 0.8;
       node.connect(f); node = f;
     }
-    g.gain.setValueAtTime(vol, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.004, dur * 0.3));
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     node.connect(g); g.connect(master);
     src.start(t0); src.stop(t0 + dur + 0.03);
@@ -272,6 +282,13 @@ const SFX = (() => {
     namestamp() {
       tone({ f: 150, f2: 58, type: 'sine', dur: 0.16, vol: 0.15 });
       noise({ dur: 0.05, vol: 0.06, lp: 900, q: 1.2 });
+    },
+    /* a page of the paper turns — the doors between rooms: shelf,
+       ledger, settings, charms. A whisper of moving sheet, not a chord */
+    page(v = 1) {
+      noise({ dur: 0.13, vol: 0.05 * v, hp: 500, lp: 2600, q: 1.1 });
+      noise({ dur: 0.08, vol: 0.028 * v, hp: 1400, lp: 4800, q: 1.4, delay: 0.015 });
+      tone({ f: 220, f2: 130, type: 'sine', dur: 0.1, vol: 0.03 * v, delay: 0.01 });
     },
   };
 })();
