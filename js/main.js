@@ -457,7 +457,14 @@
   UI.setSheetContinue(G.getFurthest());
   UI.buildJourney();
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
-  if (G.S.reduced) {
+  /* Google sign-in navigates away and back. Preserve the player's
+     leaderboard context instead of replaying the opening film.
+     Opening the board initializes Supabase and exchanges ?code (PKCE). */
+  const oauthReturn = LB.consumeOAuthReturn();
+  if (oauthReturn) {
+    enterTitle();
+    LB.open('title', oauthReturn.tab);
+  } else if (G.S.reduced) {
     enterTitle();          /* the opening is a film — stillness goes straight to the title */
   } else {
     playIntro();
