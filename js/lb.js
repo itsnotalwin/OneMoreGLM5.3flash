@@ -35,9 +35,38 @@ const LB = (() => {
     debug: false,      // QA: a paper cloud — no network, fake rows
     rows: null,        // cached board rows
     tab: 'all',        // the board's eye: 'all' time, or today's 'day' sheet
+    oauthError: '',     // show a failed Google return on the restored board
   };
 
   const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const oauthReturnKey = 'om_lb_google_return_v1';
+
+  /* OAuth leaves the app for Google and loads a fresh document on return.
+     Save UI intent in this tab only; never store access tokens here.
+     The callback's ?code is also recognized if tab storage is unavailable. */
+  function consumeOAuthReturn() {
+    let intent = null;
+    try {
+      const stored = sessionStorage.getItem(oauthReturnKey);
+      if (stored) {
+        sessionStorage.removeItem(oauthReturnKey);
+        const parsed = JSON.parse(stored);
+        if (parsed && Number.isFinite(parsed.at) &&
+            parsed.at <= Date.now() + 60000 &&
+            Date.now() - parsed.at < 15 * 60 * 1000) intent = parsed;
+      }
+    } catch (e) {}
+    let callback = false;
+    let oauthError = '';
+    try {
+      const q = new URLSearchParams(location.search);
+      callback = q.has('code') || q.has('error') || q.has('error_code');
+      oauthError = q.get('error_description') || q.get('error') || '';
+    } catch (e) {}
+    if (!intent && !callback) return null;
+    ST.oauthError = oauthError ? authFail({ message: oauthError }) : '';
+    return { tab: intent && intent.tab === 'day' ? 'day' : 'all' };
+  }
 
   const cfg = () => {
     const c = window.OM_SUPABASE || {};
@@ -154,6 +183,7 @@ const LB = (() => {
   async function signIn(name) {
     SFX.ensure();
     if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' }; renderAuth(); refreshOverStrip(); return me(); }
+    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.auth.signInAnonymously();
@@ -178,19 +208,28 @@ const LB = (() => {
   async function signInGoogle() {
     SFX.ensure();
     if (ST.debug) return signIn();
+    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
-    const { error } = await s.client.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: location.origin + location.pathname },
-    });
-    if (error) {
-      const msg = authFail(error);
+    try {
+      sessionStorage.setItem(oauthReturnKey, JSON.stringify({
+        tab: ST.tab, at: Date.now(),
+      }));
+    } catch (e) {}  // ?code on the callback remains a fallback
+    try {
+      const { error } = await s.client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: location.origin + location.pathname },
+      });
+      if (error) throw error;
+    } catch (e) {
+      try { sessionStorage.removeItem(oauthReturnKey); } catch (_) {}
+      const msg = authFail(e);
       renderAuth(msg);
       throw new Error(msg);
     }
-    /* the page redirects; the session lands back here and the
-       auth listener consumes any pending post */
+    /* The browser redirects. On its return, main.js reopens the
+       board and init() consumes the PKCE callback via Supabase. */
   }
 
   async function signOut() {
@@ -634,6 +673,8 @@ const LB = (() => {
     const box = document.getElementById('boardAuth');
     if (!box) return;
     if (!configured()) { box.innerHTML = ''; return; }
+    if (err) ST.oauthError = err;
+    if (ST.user) ST.oauthError = '';
     if (ST.debug && ST.debugUser) {
       box.innerHTML = `<span class="board-user"><span class="r-ava r-ava-ink" aria-hidden="true"></span><b>QA SCRIBE</b></span>
         <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
@@ -655,7 +696,7 @@ const LB = (() => {
     }
     box.innerHTML = signWidget('SIGN THE PAGE') +
       gBtn('OR USE GOOGLE', true) +
-      (err ? `<span class="auth-err">${esc(err)}</span>` : '');
+      (ST.oauthError ? `<span class="auth-err">${esc(ST.oauthError)}</span>` : '');
     const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
       g.disabled = true;
@@ -691,7 +732,7 @@ const LB = (() => {
 
   /* ---------------- api ---------------- */
   return {
-    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
+    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab, consumeOAuthReturn,
     get user() { return me(); },
     get debug() { return ST.debug; },
     debugFill,
