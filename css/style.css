@@ -1905,6 +1905,77 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   white-space: nowrap;
 }
 
+/* the ghost's verdict: a quiet line between the tally and the doors */
+.ghost-line{
+  margin-top: 12px;
+  font-size: 9px; font-weight: 600; letter-spacing: .24em; text-indent: .12em;
+  color: var(--ink-45);
+  text-align: center;
+}
+.ghost-line.hidden{ display: none; }
+
+/* ---- the daily sheet's door: solid paper, the sun-seal 日 ---- */
+.daily-btn{
+  position: relative;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 22px 10px 14px;
+  font-family: inherit;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .3em; text-indent: .1em;
+  color: var(--ink-70);
+  background: none; border: none; cursor: pointer;
+  --tilt: -.3deg;
+  transform: rotate(var(--tilt));
+  transition: color .14s ease, transform .14s ease;
+  animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.6s backwards;
+}
+.daily-btn::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-55);
+  filter: var(--rough-soft);
+  pointer-events: none;
+}
+.daily-btn .daily-kanji{
+  position: relative; z-index: 1;
+  font-family: var(--display); font-size: 17px; line-height: 1;
+  color: var(--ink-70); transform: rotate(3deg);
+  transition: color .14s ease;
+}
+.daily-btn .play-label{ position: relative; z-index: 1; color: inherit; }
+.daily-btn #dailyLabel{ color: var(--ink-45); letter-spacing: .26em; }
+.daily-btn:hover{ color: var(--ink); transform: rotate(var(--tilt)) translateY(-1px); }
+.daily-btn:hover .daily-kanji{ color: var(--red); }
+/* the sheet walked: the sun-seal keeps a red ring, the label remembers */
+.daily-btn.is-done::before{ border: 1.5px solid rgba(178,58,43,.5); }
+.daily-btn.is-done .daily-kanji{ color: var(--red); }
+.daily-btn.is-done #dailyLabel{ color: var(--red); }
+
+/* the ledger's two eyes: all time, and today's sheet */
+.board-tabs{
+  display: flex; justify-content: center; gap: 10px;
+  margin-top: 10px;
+}
+.board-tab{
+  font-family: inherit;
+  font-size: 8.5px; font-weight: 600; letter-spacing: .28em; text-indent: .14em;
+  color: var(--ink-45);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 14px;
+  position: relative;
+  transition: color .14s ease;
+}
+.board-tab::before{
+  content: '';
+  position: absolute; inset: 0;
+  border: 1px dashed transparent;
+  filter: var(--rough-soft);
+  pointer-events: none;
+}
+.board-tab:hover{ color: var(--ink-70); }
+.board-tab.is-on{ color: var(--ink); }
+.board-tab.is-on::before{ border: 1px solid var(--ink-25); background: var(--paper-55); }
+
 /* ---- the ledger leaf ---- */
 .screen-board{
   align-items: center; justify-content: flex-start;

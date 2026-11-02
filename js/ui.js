@@ -273,10 +273,12 @@ const UI = (() => {
 
   function hud(v) { el.hud.classList.toggle('hidden', !v); }
 
-  function setMode(m) {
+  function setMode(m, sub) {
     if (el.hudMode) {
-      el.hudMode.textContent = m === 'endless' ? 'ENDLESS SCROLL' : 'THE JOURNEY';
-      el.hudMode.classList.toggle('endless', m === 'endless');
+      el.hudMode.textContent =
+        m === 'daily' ? 'DAILY INK · ' + (sub || 'TODAY')
+        : m === 'endless' ? 'ENDLESS SCROLL' : 'THE JOURNEY';
+      el.hudMode.classList.toggle('endless', m !== 'journey');
     }
   }
 
@@ -882,14 +884,36 @@ const UI = (() => {
       : String(level + 1);
   }
 
+  /* the ghost's verdict: who outlived whom, printed once */
+  function setGhostVerdict(d) {
+    const line = document.getElementById('ghostLine');
+    if (!line) return;
+    if (d.ghost && d.ghost.wave > 0) {
+      const mine = d.waves | 0;
+      line.classList.remove('hidden');
+      if (mine > d.ghost.wave)
+        line.textContent = `THE GHOST FELL AT WAVE ${d.ghost.wave} — YOU OUTLIVED IT BY ${mine - d.ghost.wave}`;
+      else if (mine === d.ghost.wave)
+        line.textContent = `THE GHOST FELL AT WAVE ${d.ghost.wave} — YOU WALKED IT STROKE FOR STROKE`;
+      else
+        line.textContent = `THE GHOST WALKED FURTHER — WAVE ${d.ghost.wave} TO YOUR ${mine}`;
+    } else {
+      line.classList.add('hidden');
+      line.textContent = '';
+    }
+  }
+
   function showOver(d) {
+    setGhostVerdict(d);
     const vict = !!d.victory;
     el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
     el.overSub.textContent = vict
       ? 'Five sheets painted, every guardian felled. The paper asks for more.'
-      : 'The paper keeps every stroke. Even this one.';
+      : d.mode === 'daily' && d.practice
+        ? 'Practice sheet — today\u2019s ink is already on the ledger.'
+        : 'The paper keeps every stroke. Even this one.';
     el.overKicker.textContent =
-      `RUN ${pad3(d.run)} — ${d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
+      `RUN ${pad3(d.run)} — ${d.mode === 'daily' ? 'DAILY INK' + (d.day ? ' · ' + d.day : '') : d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
     el.overRank.textContent = d.rank;
     el.statWaves.textContent = d.waves;
     el.statKills.textContent = d.kills.toLocaleString('en-US');
@@ -903,6 +927,18 @@ const UI = (() => {
           'INTO THE ENDLESS — <span class="kanji-inline">無</span>';
       }
     }
+  }
+
+  /* the daily sheet's seal on the title: fresh paper prints TODAY,
+     a walked sheet prints what the scribe carried — never a re-run */
+  function setDailyChip(st) {
+    const lab = document.getElementById('dailyLabel');
+    const btn = document.getElementById('dailyBtn');
+    if (!lab || !btn) return;
+    const done = st && st.played;
+    lab.textContent = done ? `WAVE ${st.wave | 0} · ${(st.score | 0).toLocaleString('en-US')}` : 'TODAY';
+    btn.classList.toggle('is-done', !!done);
+    btn.classList.toggle('is-hard', !!st.hard);
   }
 
   function muteVisual(m) { el.muteBtn.classList.toggle('muted', m); }
@@ -921,7 +957,7 @@ const UI = (() => {
     setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
-    buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard,
+    buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard, setDailyChip,
     get onScrollPick() { return onScrollPick; },
     set onScrollPick(fn) { onScrollPick = fn; },
     get onOpenScroll() { return onOpenScroll; },

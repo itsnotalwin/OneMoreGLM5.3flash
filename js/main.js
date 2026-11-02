@@ -200,7 +200,10 @@
       return;
     }
     if (k === 'Enter') {
-      if (m === 'title') start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) });
+      if (m === 'title') {
+        if (G.qaDaily) start('daily');   /* ?daily=1 — the QA door into today's sheet */
+        else start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) });
+      }
       else if (m === 'over') start(null, { retry: true });
       else if (m === 'upgrade') G.deploy();
       else if (m === 'paused') resume();
@@ -286,6 +289,7 @@
     UI.setSheetContinue(G.getFurthest());
     UI.buildJourney();                              /* the seals restamped */
     UI.setHard(G.getHard());                        /* the red toggle remembered */
+    UI.setDailyChip(G.dailyState());                /* today's sheet, freshly read */
     UI.show('title');
     G.mode = 'title';
   }
@@ -310,7 +314,14 @@
     closeScrolls();
   });
   document.getElementById('endlessBtn').addEventListener('click', () => start('endless'));
+  document.getElementById('dailyBtn').addEventListener('click', () => {
+    /* one seeded sheet a day — the same paper for every scribe on Earth */
+    start('daily');
+  });
   document.getElementById('boardBtn').addEventListener('click', openBoard);
+  /* the ledger's two eyes: all time, and today's sheet */
+  document.getElementById('boardTabAll').addEventListener('click', () => LB.setTab('all'));
+  document.getElementById('boardTabDay').addEventListener('click', () => LB.setTab('day'));
   document.getElementById('hardBtn').addEventListener('click', () => {
     SFX.ensure();
     G.setHard(!G.getHard());
@@ -356,6 +367,7 @@
   UI.setBest(G.getBest());
   UI.setSheetContinue(G.getFurthest());
   UI.buildJourney();
+  UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   if (G.S.reduced) {
     enterTitle();          /* the opening is a film — stillness goes straight to the title */
   } else {

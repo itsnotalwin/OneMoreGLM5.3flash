@@ -136,6 +136,10 @@
           <span class="board-kanji" aria-hidden="true">榜</span>
           <span class="play-label">LEADERBOARD</span>
         </button>
+        <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
+          <span class="daily-kanji" aria-hidden="true">日</span>
+          <span class="play-label">DAILY INK —&nbsp;<span id="dailyLabel">TODAY</span></span>
+        </button>
         <button id="hardBtn" class="hard-btn" type="button" aria-pressed="false"
           title="REALLY HARD — every beast stands taller, comes faster, comes thicker. The ledger pays double.">
           <span class="hard-kanji" aria-hidden="true">難</span>
@@ -152,7 +156,7 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V7.7</span></div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V8.0.1</span></div>
     </div>
 
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
@@ -228,6 +232,10 @@
         <div class="board-kicker">THE ENDLESS SCROLL — <span class="kanji-inline">無</span></div>
         <h2 class="board-title">ENDLESS LEADERBOARD</h2>
         <p class="board-sub">HOW FAR THE BRUSH HAS CARRIED THE INK</p>
+        <div class="board-tabs" role="tablist">
+          <button id="boardTabAll" class="board-tab is-on" type="button" role="tab" aria-selected="true">ALL-TIME</button>
+          <button id="boardTabDay" class="board-tab" type="button" role="tab" aria-selected="false">DAILY — <span id="boardDayLabel">TODAY</span></button>
+        </div>
       </div>
       <div class="board-auth" id="boardAuth"></div>
       <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span></div>
@@ -272,6 +280,7 @@
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
         </div>
       </div>
+      <div class="ghost-line hidden" id="ghostLine" aria-live="polite"></div>
       <div class="over-actions">
         <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
         <button id="againBtn" class="block-btn big">ONE MORE</button>

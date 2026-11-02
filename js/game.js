@@ -6,17 +6,32 @@
    ============================================================ */
 
 const G = (() => {
-  const rand = (a, b) => a + Math.random() * (b - a);
+  /* ---- the seeded hand: a daily sheet deals the SAME paper to every
+   scribe on Earth. Outside the daily, RNG is Math.random and the paper
+   stays as wild as ever. Gameplay rolls (spawns, drops, crits, upgrade
+   shuffles) all pour through RNG; pure ink-noise keeps Math.random. */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let RNG = Math.random;
+const rand = (a, b) => a + RNG() * (b - a);
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
-  let qaWave = 0, qaPower = 0, qaHard = false;
+  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '';
   try {
     const q = new URLSearchParams(location.search);
     qaWave = Math.max(0, Math.min(999, parseInt(q.get('wave'), 10) || 0));
     qaPower = Math.max(0, Math.min(30, parseInt(q.get('power'), 10) || 0));
     qaHard = q.get('hard') === '1';
+    qaDaily = q.get('daily') === '1';
+    qaDay = (q.get('day') || '').slice(0, 10);
   } catch (e) {}
 
   const store = {
@@ -40,6 +55,8 @@ const G = (() => {
     bullets: [], ebullets: [], enemies: [], markers: [], particles: [], popups: [], rings: [], idle: [],
     puddles: [], spirits: [], stamps: [], motes: [], pickups: [],
     arcs: [], vortices: [], bolts: [], telgs: [],   /* telgs: boss attack telegraphs */
+    rec: null,          /* the ghost's scribe: this run, stroke by stroke */
+    ghost: null,        /* a past run's echo, walking beside the brush */
     stainQueue: [],
     queue: [], waveInitial: 0, waveActive: false, spawnTimer: 0, clearedT: 0,
     spawnPattern: 'flank',           // flank | ring | flood — the wave's shape
@@ -148,6 +165,31 @@ const G = (() => {
     return 1 + Math.min(CFG.combo.max - 1, S.combo * CFG.combo.step);
   }
 
+  /* ---------------- the daily sheet ----------------
+     one seeded endless paper per day; the first sheet a device
+     walks is the one that counts and may post to the ledger —
+     every sheet after it is practice against today's ink. */
+  const DAILY_KEY = 'om_daily_v1';
+  const dayKey = (d = new Date()) =>
+    d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const seedOf = (key) => {
+    let h = 2166136261;
+    for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  };
+  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  function dailyLabel(key) {
+    const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(key || '');
+    return m ? MONTHS[+m[1] - 1] + ' ' + (+m[2]) : 'TODAY';
+  }
+  function dailyState() {
+    const day = qaDay || dayKey();
+    const rec = store.get(DAILY_KEY, null);
+    const mine = rec && rec.day === day ? rec : null;
+    return { day, label: dailyLabel(day), played: !!mine,
+             wave: mine ? mine.wave | 0 : 0, score: mine ? mine.score | 0 : 0, hard: mine ? !!mine.hard : false };
+  }
+
   /* ---------------- persistence ---------------- */
   const getBest = () => store.get('om_best_v1', null);
   const getRuns = () => store.get('om_runs_v1', 0);
@@ -194,7 +236,7 @@ const G = (() => {
   /* ---------------- helpers ---------------- */
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(RNG() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
@@ -209,7 +251,7 @@ const G = (() => {
     const inCycle = (w - 1) % per;
     const level = Math.floor(inCycle / CFG.wave.wavesPerLevel) + 1;   // 1..10
     const waveInLevel = (inCycle % CFG.wave.wavesPerLevel) + 1;       // 1..10
-    const themeIdx = S.runMode === 'endless'
+    const themeIdx = S.runMode !== 'journey'
       ? cycle % AREAS.length
       : Math.min(cycle, AREAS.length - 1);
     const area = AREAS[themeIdx];
@@ -218,7 +260,7 @@ const G = (() => {
        so a sheet's tenth level always bites far harder than its first */
     hp *= CFG.wave.levelHp(level);
     budget *= CFG.wave.levelBudget(level);
-    if (S.runMode === 'endless' && cycle >= AREAS.length) {
+    if (S.runMode !== 'journey' && cycle >= AREAS.length) {
       const k = cycle - (AREAS.length - 1);
       hp *= Math.pow(CFG.endless.hpGrowth, k);
       sp *= Math.pow(CFG.endless.spGrowth, k);
@@ -283,10 +325,15 @@ const G = (() => {
     const st = areaStateFor(w);
     let hp, r = def.r;
     if (def.boss === 2) {
-      /* keepers: area and level pressure, but a gentle capped growth
-         between their debuts — a boss, never a wall of numbers */
+      /* keepers: area and level pressure, a growth that follows the
+         scribe's real power, and the boss-ink levy on top */
       hp = def.hp * st.hp *
-        Math.min(CFG.keeper.hpGrowCap, 1 + CFG.keeper.hpGrow * Math.max(0, w - def.intro));
+        Math.min(CFG.keeper.hpGrowCap, 1 + CFG.keeper.hpGrow * Math.max(0, w - def.intro)) *
+        CFG.boss.keeperHp;
+    } else if (def.boss === 1) {
+      /* Guardians: the same sheet pressure, then the full boss levy —
+         the sheet's closing duel is the longest stroke on the page */
+      hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp * CFG.boss.hp;
     } else {
       hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp;
     }
@@ -403,9 +450,9 @@ const G = (() => {
       dropMote(e.x, e.y, moteValue(tier === 2 ? 4 : tier === 1 ? 2 : 1), tier);
       /* rare talismans from the heavy bodies */
       const heavy = e.type === 'slab' || e.type === 'titan' || e.type === 'oni' || e.type === 'golem';
-      if (heavy && Math.random() < 0.05) dropPickup('pot', e.x, e.y);
-      else if (Math.random() < 0.006) dropPickup('magnet', e.x, e.y);
-      else if (Math.random() < 0.006) dropPickup('bomb', e.x, e.y);
+      if (heavy && RNG() < 0.05) dropPickup('pot', e.x, e.y);
+      else if (RNG() < 0.006) dropPickup('magnet', e.x, e.y);
+      else if (RNG() < 0.006) dropPickup('bomb', e.x, e.y);
     }
 
     if (e.type === 'split') {
@@ -504,7 +551,7 @@ const G = (() => {
     if (e.type === 'koban') {
       /* the coin spills its worth — a chase well paid */
       for (let i = 0; i < 6; i++) dropMote(e.x + rand(-18, 18), e.y + rand(-18, 18), moteValue(3), 2);
-      if (Math.random() < 0.22) dropPickup('pot', e.x, e.y);
+      if (RNG() < 0.22) dropPickup('pot', e.x, e.y);
       S.rings.push({ x: e.x, y: e.y, max: 62, life: 0.4, maxLife: 0.4, red: true });
     }
     if (e.type === 'nightshade' || e.type === 'gale') SFX.blink();
@@ -562,7 +609,7 @@ const G = (() => {
       for (const k of avail) {
         total += (ENEMY_WEIGHTS[k] || 1) * (k === featured ? 3 : 1);
       }
-      let r = Math.random() * total, pick = avail[0];
+      let r = RNG() * total, pick = avail[0];
       for (const k of avail) {
         r -= (ENEMY_WEIGHTS[k] || 1) * (k === featured ? 3 : 1);
         if (r <= 0) { pick = k; break; }
@@ -661,7 +708,7 @@ const G = (() => {
     if (paperStart) {
       /* the scroll turns — a new sheet of paper. A run's first page
          names the run itself: THE JOURNEY — RUN 007. */
-      UI.areaBanner(as.area, as.cycle, S.runMode === 'endless' && as.cycle >= AREAS.length,
+      UI.areaBanner(as.area, as.cycle, S.runMode !== 'journey' && as.cycle >= AREAS.length,
         opts.runStart ? getRuns() : 0);
       SFX.gong();
       if (opts.runStart && S.hardMode) {
@@ -745,10 +792,89 @@ const G = (() => {
     S.stats.xpLevel = picks;   /* keeps the gauge honest */
   }
 
+  /* ---------------- the ghost ----------------
+     your own best endless carry — and today's daily sheet — recorded
+     as a trail of strokes and replayed as a pale echo walking beside
+     the living brush. Purely local ink: nothing leaves the device. */
+  const GHOST_ENDLESS_KEY = 'om_ghost_endless_v1';
+  const GHOST_DAILY_KEY = 'om_ghost_daily_v1';
+  const GHOST_DT = 0.12;          /* one stroke every eighth of a breath */
+  const GHOST_MAX = 14000;        /* ~28 minutes of paper, then the pen rests */
+
+  function ghostSave(kind, stats) {
+    try {
+      const rec = S.rec;
+      if (!rec || rec.frames.length < 8) return false;
+      const payload = {
+        score: stats.score | 0, wave: Math.max(1, stats.wave | 0),
+        kills: stats.kills | 0, hard: !!S.hardMode,
+        date: dayKey(), dt: GHOST_DT, n: rec.frames.length,
+        data: rec.frames.join(';'),
+      };
+      localStorage.setItem(kind === 'daily' ? GHOST_DAILY_KEY : GHOST_ENDLESS_KEY, JSON.stringify(payload));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function ghostLoad(kind) {
+    try {
+      const raw = localStorage.getItem(kind === 'daily' ? GHOST_DAILY_KEY : GHOST_ENDLESS_KEY);
+      if (!raw) return null;
+      const g = JSON.parse(raw);
+      if (!g || !g.data || !g.n) return null;
+      if (kind === 'daily' && g.date !== dayKey()) return null;   /* yesterday's sheet haunts nobody */
+      const pts = g.data.split(';').map(fr => {
+        const a = fr.split(',');
+        return [ +a[0], +a[1], +a[2] ];
+      });
+      if (pts.length < 4) return null;
+      return { wave: g.wave | 0, score: g.score | 0, kills: g.kills | 0, hard: !!g.hard,
+               dt: g.dt || GHOST_DT, pts,
+               t: 0, i: 1, x: pts[0][1], y: pts[0][2],
+               dead: false, deathT: pts[pts.length - 1][0],
+               deathX: pts[pts.length - 1][1], deathY: pts[pts.length - 1][2] };
+    } catch (e) { return null; }
+  }
+
+  function ghostAdvance(dt) {
+    const gh = S.ghost;
+    if (!gh || gh.dead) return;
+    gh.t += dt;
+    const pts = gh.pts;
+    while (gh.i < pts.length && pts[gh.i][0] <= gh.t) {
+      gh.x = pts[gh.i][1]; gh.y = pts[gh.i][2];
+      gh.i++;
+    }
+    if (gh.i >= pts.length) {
+      gh.dead = true;
+      gh.x = gh.deathX; gh.y = gh.deathY;
+      return;
+    }
+    /* glide between the recorded strokes */
+    const a = pts[gh.i - 1], b = pts[gh.i];
+    const span = Math.max(0.0001, b[0] - a[0]);
+    const k = Math.min(1, Math.max(0, (gh.t - a[0]) / span));
+    gh.x = a[1] + (b[1] - a[1]) * k;
+    gh.y = a[2] + (b[2] - a[2]) * k;
+  }
+
   /* ---------------- flow ---------------- */
   function startRun(mode, opts = {}) {
     const prevWave = S.stats ? (S.stats.wave | 0) : 0;   /* where the last run fell */
-    S.runMode = mode === 'endless' ? 'endless' : 'journey';
+    S.runMode = mode === 'endless' ? 'endless' : mode === 'daily' ? 'daily' : 'journey';
+    /* the daily deals one fixed paper: the same seed, the same beasts,
+       the same luck for every scribe who unrolls today's sheet */
+    if (S.runMode === 'daily') {
+      RNG = mulberry32(seedOf(dailyState().day));
+      S.dailyCounting = !dailyState().played;
+    } else {
+      RNG = Math.random;
+      S.dailyCounting = false;
+    }
+    /* the ghost's scribe dips its pen: endless and daily runs record
+       their strokes (the journey's scenes are too short to race) */
+    S.rec = S.runMode === 'journey' ? null : { t: 0, acc: 0, frames: [] };
+    S.ghost = S.runMode === 'journey' ? null : ghostLoad(S.runMode === 'daily' ? 'daily' : 'endless');
     S.brush = getBrush();
     S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
@@ -783,7 +909,7 @@ const G = (() => {
 
     UI.show(null);
     UI.hud(true);
-    UI.setMode(S.runMode);
+    UI.setMode(S.runMode, S.runMode === 'daily' ? dailyLabel(dailyState().day) : '');
     UI.setScore(0);
     UI.setHp(S.stats.hp, S.stats.maxHp);
     UI.setLoadout({});
@@ -822,6 +948,14 @@ const G = (() => {
         (clamped - 1) * CFG.wave.wavesPerLevel + 1);
       return;
     }
+    if (qaDaily && qaWave < 1) {
+      if (qaPower > 0) applyQAPower(qaPower);
+      UI.setHp(S.stats.hp, S.stats.maxHp);
+      UI.setLoadout(S.stats.levels);
+      UI.setXp(0, S.stats.xpLevel);
+      startWave(1, { runStart: true });
+      return;
+    }
     if (qaWave > 1) {
       if (qaPower > 0) applyQAPower(qaPower);
       UI.setHp(S.stats.hp, S.stats.maxHp);
@@ -836,7 +970,7 @@ const G = (() => {
   function continueEndless() {
     if (S.mode !== 'over') return;
     S.runMode = 'endless';
-    UI.setMode(S.runMode);
+    UI.setMode(S.runMode);   /* a daily continue becomes an endless sheet */
     UI.show(null);
     UI.hud(true);
     /* the hand takes the brush back: the field the scribe fell on is
@@ -977,7 +1111,7 @@ const G = (() => {
       UI.hud(false);
       CUT.start('scroll', {
         area: nxt.area, cycle: nxt.cycle,
-        deep: S.runMode === 'endless' && nxt.cycle >= AREAS.length,
+        deep: S.runMode !== 'journey' && nxt.cycle >= AREAS.length,
       });
       return;
     }
@@ -1034,10 +1168,31 @@ const G = (() => {
     const nb = st.score > (best ? best.score : 0);
     if (nb) store.set('om_best_v1', { score: st.score, wave: cleared });
     if (victory) SFX.victory();
+    /* the daily sheet files its one true entry on the day it is walked
+       (declared before the over sheet reads it — no ink before its name) */
+    let dailyDay = null, dailyCounting = false;
+    if (S.runMode === 'daily') {
+      const ds = dailyState();
+      dailyDay = ds.day; dailyCounting = !!S.dailyCounting;
+      if (S.dailyCounting) {
+        store.set(DAILY_KEY, {
+          day: ds.day, wave: Math.max(1, st.wave | 0), score: st.score | 0,
+          kills: st.kills | 0, time: st.time || 0, hard: S.hardMode,
+        });
+        ghostSave('daily', st);   /* today's counting sheet becomes tomorrow's rival */
+        if (UI.setDailyChip) UI.setDailyChip(dailyState());
+      }
+    } else if (S.runMode === 'endless') {
+      /* the endless echo only turns over when the carry went further */
+      const prev = ghostLoad('endless');
+      if (!prev || (st.score | 0) > prev.score) ghostSave('endless', st);
+    }
     UI.showOver({
       run: getRuns(), waves: cleared, kills: st.kills,
       time: st.time, score: st.score, rank, newBest: nb,
       mode: S.runMode, victory: !!victory, hard: S.hardMode,
+      day: dailyDay, practice: S.runMode === 'daily' && !dailyCounting,
+      ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score } : null,
     });
     UI.hud(false);
     UI.show('over');
@@ -1050,6 +1205,7 @@ const G = (() => {
         mode: S.runMode, victory: !!victory, hard: S.hardMode,
         wave: Math.max(1, st.wave | 0), score: st.score | 0,
         kills: st.kills | 0, time: st.time || 0,
+        day: dailyDay, counting: dailyCounting,
       });
     }
   }
@@ -1568,7 +1724,7 @@ const G = (() => {
     }
     const critCh = CFG.crit.chance(st.crit);
     let d = dmg;
-    if (critCh > 0 && Math.random() < critCh) {
+    if (critCh > 0 && RNG() < critCh) {
       d *= 2;
       S.popups.push({ x: e.x, y: e.y - e.r - 6, txt: '×2', life: 0.55, max: 0.55, red: true });
     }
@@ -2967,6 +3123,16 @@ const G = (() => {
   }
 
   function update(dt) {
+    /* the ghost's scribe writes its stroke, a breath behind the hand */
+    if (S.rec && S.rec.frames.length < GHOST_MAX) {
+      S.rec.acc += dt;
+      if (S.rec.acc >= GHOST_DT) {
+        S.rec.acc -= GHOST_DT;
+        S.rec.t += GHOST_DT;
+        S.rec.frames.push(S.rec.t.toFixed(1) + ',' + Math.round(S.player.x) + ',' + Math.round(S.player.y));
+      }
+    }
+    if (S.ghost && S.mode === 'playing') ghostAdvance(dt);
     const st = S.stats;
     if (!st) return;
     st.time += dt;
@@ -3122,6 +3288,7 @@ const G = (() => {
     startRun, continueEndless, abandon, deploy, pickAt, clearNext, clearHome,
     update, updateDying, updateIdle, initAttract,
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
-    getHard, setHard,
+    getHard, setHard, dailyState,
+    get qaDaily() { return qaDaily; },
   };
 })();

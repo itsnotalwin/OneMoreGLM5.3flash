@@ -104,11 +104,18 @@ const CFG = {
   /* ---- per-level KEEPERS ----
      Every level's tenth wave is a boss fight: the scene's Keeper —
      a red-sealed beast, lesser kin of the sheet's Guardian — walks
-     the paper with a halved honor guard. Bases are tuned so each
-     debut is a ~14-second duel against the power a scribe truly
-     carries at that wave (measured, not guessed); repeats grow
-     gently and stay capped, so a keeper is a boss, never a wall. */
-  keeper: { hpGrow: 0.012, hpGrowCap: 1.8 },
+     the paper with a halved honor guard. Bases are measured against
+     the scribe's NATURAL build at each debut (the XP ladder, not the
+     shelf kit) so a debut duel runs ~20–35s of honest fighting;
+     hpGrow carries repeats deeper into the sheet. */
+  keeper: { hpGrow: 0.014, hpGrowCap: 2.4 },
+
+  /* ---- BOSS INK — the named beasts stand taller than any horde.
+     Every boss (Guardians and Keepers alike) is born with this much
+     more ink in its body: the duel is the point of the scene, and a
+     Guardian is a set piece, not a big minion. Tuned against the
+     scribe's true measured builds, not the paper's mercy. */
+  boss: { hp: 1.75, keeperHp: 1.45 },
 
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
@@ -206,27 +213,30 @@ const ENEMIES = {
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
   /* ---- the five Guardians, one per sheet, on its tenth level ----
-     Bases ride the scribe's real measured power at each sheet's
-     close — early sheets climb hard, late sheets sit heavy — so
-     every Guardian is a thirty-to-fifty-second set piece. */
-  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 775,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
-  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 700,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
-  b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 880,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
-  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 1000, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
-  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 1050, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+     Bases are the beast's own ink mass, measured against the
+     NATURAL build a scribe carries at each sheet's gate — the sheet
+     multipliers (hp 1 → 6.6) do the climbing across the journey, so
+     these fall as the papers darken on purpose: every Guardian is a
+     ~35–60s set piece, and the First Brush is the longest fight in
+     the game. In the endless paper the wave growth re-tallens them. */
+  b_wheel:   { name: 'THE STAIN',       trait: 'GUARDIAN I',   cost: 0, intro: 100, hp: 1400,  r: 34, speed: 46, score: 500, shape: 'boss', boss: 1 },
+  b_mother:  { name: 'THE NIGHT MOTHER',trait: 'GUARDIAN II',  cost: 0, intro: 200, hp: 800,  r: 30, speed: 52, score: 800, shape: 'boss', boss: 1 },
+  b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 820,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
+  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 620, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
+  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 700, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
 
   /* ---- the five Keepers, one per sheet, on EVERY tenth wave ----
      lesser bosses cut from the same ink as their Guardian — they
      share its body and its hunger, thinned for a scene's climax.
-     Bases are measured against the scribe's true power at each
-     sheet's gate (the ladder is flatter than it looks: the brush
-     grows faster than the sheets do). boss: 2 marks the keeper
-     tier (red, named, bar-worn). */
-  k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 90,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
-  k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 340, r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
-  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 285, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
-  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 300, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
-  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 285, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
+     Bases are measured against the scribe's natural build at each
+     sheet's gate — a debut duel runs twenty-to-thirty honest
+     seconds; growth + the boss levy carry repeats deeper.
+     boss: 2 marks the keeper tier (red, named, bar-worn). */
+  k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 240,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
+  k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 470, r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
+  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 540, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
+  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 620, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
+  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 520, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */

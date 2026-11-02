@@ -2571,6 +2571,64 @@ const R = (() => {
     c.restore();
   }
 
+  /* ---------------- the ghost scribe ----------------
+     a past run's echo walking beside the living brush: the same
+     silhouette, drawn as a breath of pale ink — no eye, no shadow,
+     no trail. Where it fell, a small 終 keeps the place. */
+  function drawGhost(c, t) {
+    const S = G.S;
+    const gh = S.ghost;
+    if (!gh) return;
+    const gx = gh.x, gy = gh.y;
+    c.save();
+    c.translate(gx, gy);
+    const breathe = 1 + Math.sin(t * 2.1) * 0.03;
+    c.scale(breathe, breathe);
+    c.globalAlpha = gh.dead ? 0.1 : 0.16;
+    c.fillStyle = INK;
+    /* the robe, simplified: one ragged cone */
+    c.beginPath();
+    c.moveTo(0, -13);
+    c.quadraticCurveTo(9, -6, 7, 11);
+    c.quadraticCurveTo(0, 14, -7, 11);
+    c.quadraticCurveTo(-9, -6, 0, -13);
+    c.fill();
+    /* the kasa: one pale arc */
+    c.globalAlpha = gh.dead ? 0.12 : 0.19;
+    c.strokeStyle = INK;
+    c.lineWidth = 2.4;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(0, -13, 8.5, Math.PI * 1.08, Math.PI * 1.92);
+    c.stroke();
+    /* the brush, riding low and still */
+    c.globalAlpha = 0.13;
+    c.lineWidth = 2.2;
+    c.beginPath();
+    c.moveTo(6, -2);
+    c.quadraticCurveTo(14, 2, 19, 9);
+    c.stroke();
+    c.restore();
+    /* where the echo fell: the place-keeping seal */
+    if (gh.dead) {
+      const dx = gh.deathX, dy = gh.deathY;
+      c.save();
+      c.translate(dx, dy);
+      c.globalAlpha = 0.2 + Math.sin(t * 1.6) * 0.05;
+      c.strokeStyle = INK;
+      c.lineWidth = 1.4;
+      c.beginPath();
+      c.arc(0, 0, 13, 0, Math.PI * 2);
+      c.stroke();
+      c.fillStyle = INK;
+      c.font = '10px "Zen Antique", serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText('終', 0, 0.5);
+      c.restore();
+    }
+  }
+
   /* ---------------- player: the brush spirit ----------------
      A living drop of ink that carries the chosen brush.
      It leans into the run, squashes on each stroke, and
@@ -4497,6 +4555,8 @@ const R = (() => {
     for (const mt of S.motes) drawMote(ctx, mt, t);
     for (const pk of S.pickups) drawPickup(ctx, pk, t);
     for (const sp of S.spirits) drawSpirit(ctx, sp);
+    /* the echo walks under the living brush — a pale elder stroke */
+    if (playing) drawGhost(ctx, t);
     /* the player stands only where the first stroke has already passed */
     const washHides = S.beginT > 0 && washTipX(S.beginT) < S.W / 2 + S.player.x - S.cam.x;
     if (playing && !washHides) drawPlayer(ctx, t);

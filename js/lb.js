@@ -28,6 +28,7 @@ const LB = (() => {
     posting: false,
     debug: false,      // QA: a paper cloud — no network, fake rows
     rows: null,        // cached board rows
+    tab: 'all',        // the board's eye: 'all' time, or today's 'day' sheet
   };
 
   const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
@@ -75,7 +76,8 @@ const LB = (() => {
           renderAuth();
           if (u && ST.pending) {           /* the sign-in answered the pending post */
             const run = ST.pending; ST.pending = null;
-            postRun(run);
+            if (run.mode === 'daily') postDailyRun(run);
+            else postRun(run);
           } else {
             refreshOverStrip();
           }
@@ -180,6 +182,52 @@ const LB = (() => {
     return (s.data().count || 0) + 1;
   }
 
+  /* ---------------- the daily ledger ----------------
+     a collection a day — om_daily_YYYYMMDD — one page per scribe on
+     it; the day's own sheet keeps the query single-field (score desc)
+     so no composite index is ever owed to the cloud. */
+
+  const dailyCol = day => 'om_daily_' + String(day || '').replace(/[^0-9]/g, '');
+
+  async function submitDailyRun(run) {
+    if (ST.debug) return { ok: true, rank: ST.debugRank || 4 };
+    const f = ST.fb;
+    if (!f || !ST.user) return { ok: false, reason: 'signed-out' };
+    await f.F.setDoc(f.F.doc(f.db, dailyCol(run.day), ST.user.uid), {
+      name: String(ST.user.displayName || 'INK DRIFTER').slice(0, 24),
+      photo: ST.user.photoURL || '',
+      wave: run.wave | 0,
+      score: run.score | 0,
+      kills: run.kills | 0,
+      hard: !!run.hard,
+      v: 1,
+      ts: f.F.serverTimestamp(),
+    }, { merge: true });
+    return { ok: true };
+  }
+
+  async function fetchDailyTop(day) {
+    if (ST.debug) return debugRows().slice(0, 8).map(r => ({ ...r, wave: Math.min(r.wave, 40) }));
+    const f = ST.fb;
+    if (!f) throw new Error('unconfigured');
+    const q = f.F.query(f.F.collection(f.db, dailyCol(day)),
+      f.F.orderBy('score', 'desc'), f.F.limit(60));
+    const snap = await f.F.getDocs(q);
+    const rows = snap.docs.map(d => d.data());
+    rows.sort((a, b) => ((b.score | 0) - (a.score | 0)) || ((b.wave | 0) - (a.wave | 0)));
+    return rows.slice(0, 50);
+  }
+
+  async function fetchDailyRank(day, score) {
+    if (ST.debug) return ST.debugRank || 4;
+    const f = ST.fb;
+    if (!f) return null;
+    const q = f.F.query(f.F.collection(f.db, dailyCol(day)),
+      f.F.where('score', '>', score | 0));
+    const s = await f.F.getCountFromServer(q);
+    return (s.data().count || 0) + 1;
+  }
+
   /* ---------------- the over sheet's post strip ---------------- */
 
   function overBox() { return document.getElementById('overBoard'); }
@@ -189,7 +237,15 @@ const LB = (() => {
     const box = overBox();
     if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
     ST.pending = null; ST.posting = false;
-    if (!run || run.mode !== 'endless' || run.victory) return;
+    if (!run) return;
+    if (run.mode === 'daily') {
+      /* practice sheets carry no ink to the ledger */
+      if (!run.counting || run.victory) { renderDailyStrip(null); return; }
+      if (!configured()) return;
+      init().then(() => renderDailyStrip(run, null)).catch(() => renderDailyStrip(run, null));
+      return;
+    }
+    if (run.mode !== 'endless' || run.victory) return;
     if (!configured()) return;
 
     /* the device remembers the hand's furthest carry either way */
@@ -266,6 +322,62 @@ const LB = (() => {
     });
   }
 
+  /* the daily sheet's own strip: quieter words, the same honesty */
+  function renderDailyStrip(run, state) {
+    const box = overBox();
+    if (!box) return;
+    if (!run) {
+      box.classList.remove('hidden');
+      box.innerHTML = `<span class="ob-line">PRACTICE SHEET — TODAY'S INK IS ALREADY ON THE LEDGER</span>`;
+      return;
+    }
+    box.classList.remove('hidden');
+    if (state === 'posting') {
+      box.innerHTML = `<span class="ob-line">POSTING TODAY'S INK…</span>`;
+      return;
+    }
+    if (typeof state === 'string') {
+      box.innerHTML = `<span class="ob-line ob-err">${esc(state)}</span>`;
+      return;
+    }
+    if (typeof state === 'number') {
+      box.innerHTML = `<span class="ob-line">TODAY'S INK — POSTED${state ? ` · RANK #${state}` : ''}</span>` +
+        `<button id="obViewBtn" class="ghost-btn small" type="button">VIEW BOARD</button>`;
+      const b = document.getElementById('obViewBtn');
+      if (b) b.addEventListener('click', () => { SFX.ensure(); open('over', 'day'); });
+      return;
+    }
+    if (signedIn()) { postDailyRun(run); return; }
+    box.innerHTML = `<span class="ob-line">TODAY'S SHEET — WAVE ${run.wave | 0}</span>` +
+      gBtn(`SIGN IN WITH GOOGLE — POST TODAY'S INK`, true);
+    const g = box.querySelector('.g-btn');
+    if (g) g.addEventListener('click', () => {
+      ST.pending = run;
+      renderDailyStrip(run, 'posting');
+      signIn().then(() => postDailyRun(run)).catch(() => { ST.pending = null; renderDailyStrip(run, null); });
+    });
+  }
+
+  async function postDailyRun(run) {
+    if (ST.posting) return;
+    ST.posting = true;
+    renderDailyStrip(run, 'posting');
+    try {
+      const res = await submitDailyRun(run);
+      ST.posting = false;
+      if (res.ok) {
+        let rank = null;
+        try { rank = await fetchDailyRank(run.day, run.score); } catch (e) {}
+        renderDailyStrip(run, rank);
+      } else {
+        renderDailyStrip(run, null);
+      }
+    } catch (e) {
+      ST.posting = false;
+      renderDailyStrip(run, (e && e.message) || 'post failed');
+    }
+  }
+
   /* the strip re-renders when the sign-in state changes underneath it */
   function refreshOverStrip() {
     const box = overBox();
@@ -278,25 +390,91 @@ const LB = (() => {
 
   /* ---------------- the board screen ---------------- */
 
-  function open(returnTo) {
+  function open(returnTo, tab) {
     const over = document.getElementById('screenOver');
     ST.returnTo = returnTo || (over && !over.classList.contains('hidden') ? 'over' : 'title');
+    if (tab === 'day' || tab === 'all') ST.tab = tab;
     UI.show('board');
+    renderTabs();
     renderAuth();
     const rows = document.getElementById('boardRows');
     const mine = document.getElementById('boardMine');
     if (mine) mine.textContent = '';
+    const day = todayKey();
     if (!configured()) {
-      if (rows) rows.innerHTML = `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (FIREBASE)</li>`;
+      if (ST.tab === 'day') {
+        const rec = dailyLocal();
+        rows.innerHTML = rec
+          ? `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>YOUR SHEET TODAY: WAVE ${rec.wave | 0} · ${(rec.score | 0).toLocaleString('en-US')}</li>`
+          : `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (FIREBASE)</li>`;
+      } else {
+        rows.innerHTML = `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (FIREBASE)</li>`;
+      }
       return;
     }
     if (rows) rows.innerHTML = `<li class="board-note board-loading"><span class="brush-spin"></span>UNROLLING THE LEDGER…</li>`;
     init()
-      .then(() => fetchTop())
-      .then(list => { renderRows(list); })
+      .then(() => (ST.tab === 'day' ? fetchDailyTop(day) : fetchTop()))
+      .then(list => { if (ST.tab === 'day') renderDailyRows(list); else renderRows(list); })
       .catch(e => {
         if (rows) rows.innerHTML = `<li class="board-note">THE CLOUD IS UNREACHABLE —<br>${esc(ST.loadErr || (e && e.message) || 'TRY AGAIN')}</li>`;
       });
+  }
+
+  /* today's key, matching the game's own calendar (local midnight turns the sheet) */
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dailyLocal() {
+    try {
+      const rec = JSON.parse(localStorage.getItem('om_daily_v1') || 'null');
+      return rec && rec.day === todayKey() ? rec : null;
+    } catch (e) { return null; }
+  }
+
+  function renderTabs() {
+    const all = document.getElementById('boardTabAll');
+    const day = document.getElementById('boardTabDay');
+    const lab = document.getElementById('boardDayLabel');
+    if (!all || !day) return;
+    all.classList.toggle('is-on', ST.tab === 'all');
+    day.classList.toggle('is-on', ST.tab === 'day');
+    all.setAttribute('aria-selected', ST.tab === 'all' ? 'true' : 'false');
+    day.setAttribute('aria-selected', ST.tab === 'day' ? 'true' : 'false');
+    if (lab) lab.textContent = 'TODAY';
+  }
+
+  function setTab(tab) {
+    if (ST.tab === tab) return;
+    ST.tab = tab;
+    open(ST.returnTo, tab);
+  }
+
+  function renderDailyRows(list) {
+    const rows = document.getElementById('boardRows');
+    if (!rows) return;
+    if (!list.length) {
+      rows.innerHTML = `<li class="board-note">TODAY'S PAPER IS BLANK —<br>BE THE FIRST INK OF THE DAY</li>`;
+      return;
+    }
+    const me_ = ST.debug ? ST.debugUser : ST.user;
+    const uid = me_ ? me_.uid : null;
+    rows.innerHTML = list.map((r, i) => {
+      const rank = i + 1;
+      const top = rank <= 3;
+      const me = uid && r.__uid === uid;
+      const ava = r.photo
+        ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
+        : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
+      return `<li class="board-row${top ? ` top${rank}` : ''}${me ? ' me' : ''}">
+        <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
+        ${ava}
+        <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This sheet was REALLY HARD">難</i>' : ''}</span>
+        <span class="r-wave">${r.wave | 0}</span>
+        <span class="r-score">${(r.score | 0).toLocaleString('en-US')}</span>
+      </li>`;
+    }).join('');
   }
 
   function close() {
@@ -401,7 +579,7 @@ const LB = (() => {
 
   /* ---------------- api ---------------- */
   return {
-    onRunEnd, open, close, signIn, signOut,
+    onRunEnd, open, close, signIn, signOut, setTab,
     get user() { return ST.debug ? ST.debugUser : ST.user; },
     get debug() { return ST.debug; },
     debugFill,
