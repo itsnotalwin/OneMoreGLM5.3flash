@@ -1,5 +1,7 @@
 # ONE MORE
 
+> **Updating the repository manually?** Read [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md) **before replacing files**. The preserved Supabase integration is on branch [`backup/supabase-integration-2026-11-02`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02), and the [read-only Actions guard](https://github.com/itsnotalwin/OneMoreGLM5.3flash/actions/workflows/supabase-integration-guard.yml) checks that core wiring survives new uploads. Google OAuth and Anonymous provider settings are external; the last observed Google Client Secret error still requires dashboard correction and retesting.
+
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
