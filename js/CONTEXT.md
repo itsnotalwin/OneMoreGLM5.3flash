@@ -14,5 +14,8 @@ Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderbo
 
 Before overwriting this folder via manual upload, compare with the preserved branch and [root recovery runbook](../SUPABASE-RECOVERY.md). The read-only Actions guard checks essential markers but cannot test live Google OAuth. Retain the new game's gameplay changes and selectively merge this folder's Auth/leaderboard logic.
 
+## v12 compatibility (3 Nov 2026)
+v12 extended `lb.js` to include weekly `om_weekly` scores, `ghost`/`has_ghost` replay columns and `fetchEcho`/ghost racing. Its OAuth callback restoration now also remembers `week` tabs; the restored main bootstrap preserves the new `om_intro_seen` once-per-session cinematic, Inkstone, charm shop and Guardians' Hall. Public Supabase config restored; `sw.js` uses `v12.0-supabase-1` and includes new Inkstone/charm assets. The [manual v12 upload is backed up](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v12-manual-upload-2026-11-03); see [root recovery runbook](../SUPABASE-RECOVERY.md). The new weekly table/ghost columns were migrated to the existing Pinpoint Supabase project with RLS; **do not rerun fresh-project SQL**. Browser Google sign-in is still pending verification.
+
 ## Change & verify
 Review database grants and ownership-based RLS before API changes. Bump `sw.js` cache version for any updated cached JS. Smoke-test anonymous sign-in, all-time/daily upsert, board reads, offline fallback and PWA refresh; do not infer hosted success from database-only checks.
