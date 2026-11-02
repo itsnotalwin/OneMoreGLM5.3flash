@@ -12,7 +12,12 @@ Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, render
 ## Run / test / deploy
 Serve with `python3 -m http.server 8000`. Use the built-in GitHub Pages `pages build and deployment` Action on `main` and check its conclusion. Test leaderboard open, anonymous sign-in, all-time/daily score submission, browser refresh, and offline gameplay separately. Manual browser smoke test remains necessary.
 
-## Current state (2 Nov 2026)
+## v12 manual upload integration (3 Nov 2026)
+Owner uploaded v12 on main at `fb908350` with major **Inkstone, charms, weekly ledger, replay ghosts, history/Hall, gameplay balance and audio** additions. That exact new source is safely preserved in [`backup/v12-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v12-manual-upload-2026-11-03). Original Supabase integration backup remains separately at `backup/supabase-integration-2026-11-02`. Only the overwritten public Supabase config, Google OAuth return handling and PWA cache version were merged back into v12. New `om_weekly` plus `ghost` and `has_ghost` columns were migrated into the existing **shared Pinpoint Supabase** project with owner-only RLS, and Pinpoint's game tables were untouched. Updated integration guard now includes weekly/ghost/charms/Inkstone. JavaScript OAuth return harness and GitHub guard checks passed. This confirms source code and database shape, **not real browser OAuth or score posting**. Google Client Secret and Anonymous Auth availability require fresh verification.
+
+**For every future manual upload:** review [`SUPABASE-RECOVERY.md`](SUPABASE-RECOVERY.md), preserve new game features, and compare to both backup branches. Never use the older full JS files as blind replacements over v12.
+
+## Earlier state (2 Nov 2026)
 Supabase config committed to shared **Pinpoint** project `sffpyvxbgmhepftxoesy` using a publishable browser key. The two separate leaderboard tables `public.om_scores` and `public.om_daily` have scoped RLS and proper role grants; authenticated owner insert/upsert and cross-owner rejection were validated in rolled-back transactions. Pinpoint's two pre-existing app tables and their rows were preserved. `sw.js` cache version `v8.6-supabase-oauth-3` forces updated JavaScript after the Google login return fix. `LB.consumeOAuthReturn()` now bypasses the opening and restores the leaderboard/tab after Google OAuth navigation; unit harness tested seven normal/return/error/expiry scenarios, syntax and startup guards. Hosted Google sign-in and score posting still need a manual confirmation. See README for database migrations. Real hosted browser authentication/gameplay posting is not independently verified yet.
 
 ## Decisions / next actions
