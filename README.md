@@ -227,7 +227,7 @@ This variant is connected to the existing **Pinpoint** Supabase project `sffpyvx
 - To test: open LEADERBOARD → OR USE GOOGLE → sign in → the app should **return directly to the leaderboard**, show the signed-in Google profile and retain the selected tab. A normal cold launch must still play the intro. Then play an Endless run and verify its score posts.
 - This is not needed for anonymous score posting.
 - This is a **shared Supabase project**: user authentication and project quotas are shared, even though the application tables and RLS are separate.
-- PWA players should reload after the `v8.6-supabase-1` service-worker update so the cached configuration refreshes.
+- PWA players should reload after the `v8.6-supabase-oauth-2` service-worker update so cached JavaScript refreshes. On an installed PWA, close and reopen it after the deploy, and refresh if it still shows the previous behavior.
 
 **Fresh-project setup (only for a different Supabase project)**
 
