@@ -6,6 +6,9 @@ An ink-brush survival browser game with journey, endless, and daily modes. This 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
 
+## Manual update / recovery
+**Preserve:** [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md), a source snapshot at [backup/supabase-integration-2026-11-02](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02) and the read-only `.github/workflows/supabase-integration-guard.yml` Actions check. Merge backend/OAuth code into later gameplay sources instead of replacing whole newer JS files from the backup. The last observed Google provider client-secret error and disabled anonymous sign-in setting are external Supabase/Auth blockers, not verified fixed.
+
 ## Run / test / deploy
 Serve with `python3 -m http.server 8000`. Use the built-in GitHub Pages `pages build and deployment` Action on `main` and check its conclusion. Test leaderboard open, anonymous sign-in, all-time/daily score submission, browser refresh, and offline gameplay separately. Manual browser smoke test remains necessary.
 
