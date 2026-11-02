@@ -9,21 +9,19 @@
 
    To raise the cloud:
 
-   1) https://supabase.com → New project (free tier is plenty)
-   2) SQL Editor → New query → paste the SQL from README.md
-      → Run (two tables: om_scores, om_daily)
-   3) Authentication → Sign In / Up → enable ANONYMOUS
-      sign-ins → Save
-   4) Project Settings → API → copy the Project URL and the
-      anon public key into the object below
-   5) Authentication → URL Configuration → Site URL → your
-      GitHub Pages address
+   1) Uses the existing Pinpoint Supabase project, but separate
+      public.om_scores / public.om_daily tables and RLS policies.
+   2) Schema installed via Supabase migration on 2026-11-02.
+   3) Requires ANONYMOUS sign-ins enabled for Supabase Auth.
+   4) Public publishable key only. Never use service_role or secret keys.
+   5) For Google login, allow the actual deployment URL in
+      Authentication → URL Configuration
 
    Until the object below is filled, the leaderboard stays
    quietly offline — the game plays exactly as before.
    ============================================================ */
 
 window.OM_SUPABASE = {
-  url: '',       /* e.g. 'https://your-project.supabase.co' */
-  anonKey: '',   /* the anon public key — safe to ship, RLS is the lock */
+  url: 'https://sffpyvxbgmhepftxoesy.supabase.co',       /* e.g. 'https://your-project.supabase.co' */
+  anonKey: 'sb_publishable___dIulfnvx74SjfXuyFXZg_LPnlZv7I',   /* the anon public key — safe to ship, RLS is the lock */
 };
