@@ -142,9 +142,7 @@ remembered.
 
 ## Deploy to GitHub Pages
 
-The repo ships with a ready-made workflow at
-`.github/workflows/deploy.yml` that publishes the site on every push to
-`main` using the official GitHub Pages Actions pipeline.
+This repository currently uses GitHub's built-in **pages build and deployment** workflow for pushes to `main` (rather than a committed `.github/workflows/deploy.yml`). Check the Actions tab for the latest run before considering a new deployment live.
 
 1. Create a new repository on GitHub (e.g. `one-more`).
 2. Push this folder's contents to the `main` branch:
@@ -217,7 +215,19 @@ as before — the ledger sits quietly offline.
   scroll alone (a journey victory that walks INTO THE ENDLESS posts from
   then on, carrying the whole run's depth).
 
-**One-time setup (about five minutes)**
+**Current shared-backend setup (verified 2 November 2026)**
+
+This variant is connected to the existing **Pinpoint** Supabase project `sffpyvxbgmhepftxoesy`, not a new project. Only the ONE MORE tables `public.om_scores` and `public.om_daily` were created (plus their indexes and RLS policies). The Pinpoint tables `public.scores` and `public.pinpoint_profiles` retain their own schemas, rows, and access policies.
+
+- Migration: `20261102155646_onemore_glm_flash_isolated_leaderboards`; follow-up `onemore_daily_uid_foreign_key_index`.
+- `js/supabase-config.js` contains the project URL and **public publishable key**. Never put a Supabase secret/service-role key in browser code.
+- Database checks passed: simulated authenticated inserts and upserts to both game tables, denial of a different player's insert, and rollback of test rows.
+- Pending real-browser check: **Authentication → Sign In / Up / Providers → Anonymous sign-ins** must be enabled; open LEADERBOARD, sign the page and submit an endless/daily run. Browser-hosted sign-in and posting have not yet been independently demonstrated.
+- For optional Google login, also configure the OAuth provider and authorized redirect URL. This is not needed for anonymous score posting.
+- This is a **shared Supabase project**: user authentication and project quotas are shared, even though the application tables and RLS are separate.
+- PWA players should reload after the `v8.6-supabase-1` service-worker update so the cached configuration refreshes.
+
+**Fresh-project setup (only for a different Supabase project)**
 
 1. Create a project at [supabase.com](https://supabase.com) — the free
    tier is plenty for a board of scribes.
@@ -233,8 +243,7 @@ quota, far beyond what a board of honest scribes spends); this ledger
 costs a read when the board opens and a write only when a scribe beats
 their own best.
 
-**The ledger's SQL** — two tables, one page per scribe, checks that cap
-any damage a mischievous brush could try. Paste all of it:
+**Reference bootstrap SQL (fresh empty database only):** The following is the original setup example, **not** the already-applied production migration. Do **not** re-run it inside the shared Pinpoint project: it attempts to recreate tables and policies. The actual shared-project migration uses explicit `anon`/`authenticated` grants and scoped `om_*` RLS policies with the same application data columns.
 
 ```sql
 -- ONE MORE — the endless ledger (榜)
