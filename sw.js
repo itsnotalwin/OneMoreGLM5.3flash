@@ -3,7 +3,7 @@
    Core shell + every brush asset are precached on install; images get
    cached at runtime as they are first painted. Page navigations go
    network-first with the cached shell as the offline fall. Same-origin
-   only — Firebase and the Google-Fonts CDN pass straight through.
+   only — Supabase and the Google-Fonts CDN pass straight through.
 
    Everything is SCOPE-RELATIVE (`./`, `css/…`, `js/…`) so the worker is
    honest wherever the game is hosted: a user site root or a project
@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v8.5';
+const VER = 'v8.6';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -23,7 +23,7 @@ const CORE = [
   'js/audio.js',
   'js/config.js',
   'js/cutscene.js',
-  'js/firebase-config.js',
+  'js/supabase-config.js',
   'js/game.js',
   'js/intro.js',
   'js/lb.js',
@@ -90,7 +90,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // Firebase / fonts CDN: untouched
+  if (url.origin !== self.location.origin) return; // Supabase / fonts CDN: untouched
 
   /* page navigations: network-first, cached shell as the offline fall */
   if (req.mode === 'navigate') {

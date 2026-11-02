@@ -463,6 +463,17 @@
     playIntro();
   }
 
+  /* QA: ?lbdebug=1 — the paper cloud, so the board can be E2E'd without a
+     real ledger. Placed after the boot decision: the intro's enterTitle
+     would otherwise cover the board the moment the opening ends. */
+  try {
+    if (new URLSearchParams(location.search).get('lbdebug') === '1') {
+      const prevIntroEnd = INTRO.onEnd;
+      INTRO.onEnd = () => { if (prevIntroEnd) prevIntroEnd(); LB.debugFill(); };
+      if (G.mode !== 'intro') LB.debugFill();   /* no intro this boot — open at once */
+    }
+  } catch (e) {}
+
   /* ---------------- main loop ---------------- */
   let last = performance.now();
   let prevM = '';

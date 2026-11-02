@@ -1,28 +1,34 @@
 'use strict';
 /* ============================================================
    ONE MORE — the endless ledger (榜)
-   Google sign-in + a Firestore ledger of endless runs.
+   A Supabase Postgres ledger behind sign-the-page identity.
 
    Design of the ledger:
-   · one page per scribe — om_scores/{uid} — so the board reads
-     a roster of ink-carriers, never one hand repeated;
+   · one page per scribe — om_scores, keyed by uid — so the
+     board reads a roster of ink-carriers, never one hand
+     repeated; a page a day — om_daily, keyed (day, uid);
+   · identity is a sign, not an account: anonymous sign-ins
+     (one toggle in the dashboard) + a mark the scribe picks.
+     Google stays as an optional second door.
    · a run is posted only when it carries further than the hand
      has ever carried before (local best, om_lb_best_v1);
-   · rank counts the pages that reached further, +1.
+   · rank counts the pages that reached further, +1;
+   · row-level security is the lock: the world may read, only
+     the signed scribe may raise their own page.
 
    The cloud is raised lazily: until the board is opened or an
    endless run ends, no network breath is spent. Without config
-   (js/firebase-config.js) the ledger stays quietly offline.
+   (js/supabase-config.js) the ledger stays quietly offline.
    ============================================================ */
 
 const LB = (() => {
 
   /* ---------------- state ---------------- */
   const ST = {
-    fb: null,          // { app, auth, db, A, F } once the SDK lands
+    sb: null,          // { client, M } once the SDK lands
     initing: null,     // the in-flight load promise
     loadErr: '',       // why the cloud could not be raised
-    user: null,        // the signed-in scribe
+    user: null,        // the signed-in scribe (a supabase user)
     returnTo: 'title', // where RETURN leads
     pending: null,     // an endless run awaiting a sign-in before its post
     posting: false,
@@ -31,14 +37,39 @@ const LB = (() => {
     tab: 'all',        // the board's eye: 'all' time, or today's 'day' sheet
   };
 
-  const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
+  const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
   const cfg = () => {
-    const c = window.OM_FIREBASE_CONFIG || {};
-    return (c.apiKey && c.projectId && c.appId) ? c : null;
+    const c = window.OM_SUPABASE || {};
+    return (c.url && c.anonKey) ? c : null;
   };
   const configured = () => ST.debug || !!cfg();
   const signedIn = () => ST.debug ? !!ST.debugUser : !!ST.user;
+
+  /* the scribe's face, whatever the cloud said about them */
+  function me() {
+    if (ST.debug) return ST.debugUser;
+    const u = ST.user;
+    if (!u) return null;
+    const m = u.user_metadata || {};
+    return {
+      uid: u.id,
+      name: String(m.name || m.full_name || m.user_name || '').slice(0, 24),
+      photo: m.avatar_url || m.picture || '',
+    };
+  }
+  const myName = () => { const m = me(); return (m && m.name) || getName(); };
+
+  /* the scribe's mark, chosen on the page and kept on this device */
+  const nameKey = 'om_lb_name_v1';
+  const cleanName = n => String(n == null ? '' : n).replace(/\s+/g, ' ').trim().slice(0, 24);
+  const getName = () => {
+    try { return String(JSON.parse(localStorage.getItem(nameKey) || '""') || ''); }
+    catch (e) { return ''; }
+  };
+  const setName = n => {
+    try { localStorage.setItem(nameKey, JSON.stringify(cleanName(n))); } catch (e) {}
+  };
 
   /* the hand's furthest endless carry, kept on this device */
   const bestKey = 'om_lb_best_v1';
@@ -57,24 +88,26 @@ const LB = (() => {
 
   /* ---------------- the cloud ---------------- */
   function init() {
-    if (ST.fb || ST.debug) return Promise.resolve(ST.fb);
+    if (ST.sb || ST.debug) return Promise.resolve(ST.sb);
     if (!cfg()) return Promise.reject(new Error('unconfigured'));
     if (ST.initing) return ST.initing;
     ST.initing = (async () => {
       try {
-        const [appM, authM, fsM] = await Promise.all([
-          import(`${SDK}/firebase-app.js`),
-          import(`${SDK}/firebase-auth.js`),
-          import(`${SDK}/firebase-firestore.js`),
-        ]);
-        const app = appM.initializeApp(window.OM_FIREBASE_CONFIG);
-        const auth = authM.getAuth(app);
-        const db = fsM.getFirestore(app);
-        ST.fb = { app, auth, db, A: authM, F: fsM };
-        authM.onAuthStateChanged(auth, u => {
-          ST.user = u || null;
+        const M = await import(SDK);
+        const client = M.createClient(cfg().url, cfg().anonKey, {
+          auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' },
+        });
+        ST.sb = { client, M };
+        /* a returning scribe keeps their seat */
+        try {
+          const { data } = await client.auth.getSession();
+          ST.user = (data && data.session && data.session.user) || null;
+        } catch (e) { ST.user = null; }
+        client.auth.onAuthStateChange((evt, session) => {
+          if (session && session.user) ST.user = session.user;
+          else if (evt === 'SIGNED_OUT') ST.user = null;
           renderAuth();
-          if (u && ST.pending) {           /* the sign-in answered the pending post */
+          if (ST.user && ST.pending) {     /* the sign answered the pending post */
             const run = ST.pending; ST.pending = null;
             if (run.mode === 'daily') postDailyRun(run);
             else postRun(run);
@@ -82,7 +115,7 @@ const LB = (() => {
             refreshOverStrip();
           }
         });
-        return ST.fb;
+        return ST.sb;
       } catch (e) {
         ST.loadErr = (e && e.message) || 'the cloud could not be raised';
         ST.initing = null;
@@ -93,41 +126,77 @@ const LB = (() => {
   }
 
   function authFail(e) {
-    const c = (e && e.code) || '';
-    if (c === 'auth/popup-blocked' || c === 'auth/popup-closed-by-user' || c === 'auth/cancel-popup-request')
-      return 'THE WINDOW CLOSED — ALLOW POPUPS AND TRY AGAIN';
-    if (c === 'auth/unauthorized-domain')
-      return 'THIS DOMAIN IS NOT AUTHORIZED — ADD IT UNDER FIREBASE AUTHENTICATION → SETTINGS';
-    if (c === 'auth/operation-not-allowed')
-      return 'THE GOOGLE PROVIDER IS NOT ENABLED IN FIREBASE AUTHENTICATION';
-    if (c === 'auth/network-request-failed')
+    const s = String((e && (e.message || e.msg)) || e || '');
+    const c = String((e && e.code) || '').toLowerCase();
+    if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
+      return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
+    if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
+      return 'THE GOOGLE DOOR IS NOT CONFIGURED YET — SEE README · OPTIONAL: GOOGLE SIGN-IN';
+    if (/failed to fetch|network|fetch failed/i.test(s + ' ' + c))
       return 'THE NETWORK REFUSED THE STROKE — TRY AGAIN';
-    if (c.startsWith('auth/')) return c.replace('auth/', '').replace(/-/g, ' ').toUpperCase();
+    if (/redirect|site url/i.test(s))
+      return 'THE RETURN ADDRESS IS OFF — SET SITE URL UNDER AUTHENTICATION → URL CONFIGURATION';
     return 'THE SIGN-IN FAILED — TRY AGAIN';
   }
 
-  async function signIn() {
+  function postFail(e) {
+    const s = String((e && (e.message || e.msg)) || e || '');
+    if (/row-level security|permission denied|policy/i.test(s))
+      return 'THE LEDGER ONLY TAKES YOUR OWN PAGE — TRY SIGNING AGAIN';
+    if (/check constraint/i.test(s))
+      return 'THE LEDGER REFUSED THOSE NUMBERS — TRY AGAIN';
+    if (/failed to fetch|network|fetch failed/i.test(s))
+      return 'THE NETWORK REFUSED THE STROKE — TRY AGAIN';
+    return 'THE LEDGER REFUSED THE STROKE — TRY AGAIN';
+  }
+
+  /* sign the page: a mark, no account — anonymous sign-in */
+  async function signIn(name) {
     SFX.ensure();
-    if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', displayName: 'QA SCRIBE', photoURL: '' }; renderAuth(); refreshOverStrip(); return null; }
-    const f = await init();
-    if (!f) throw new Error('unconfigured');
-    try {
-      const prov = new f.A.GoogleAuthProvider();
-      prov.setCustomParameters({ prompt: 'select_account' });
-      const res = await f.A.signInWithPopup(f.auth, prov);
-      ST.user = res.user;
-      return ST.user;
-    } catch (e) {
-      const msg = authFail(e);
+    if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' }; renderAuth(); refreshOverStrip(); return me(); }
+    const s = await init();
+    if (!s) throw new Error('unconfigured');
+    const { data, error } = await s.client.auth.signInAnonymously();
+    if (error) {
+      const msg = authFail(error);
       renderAuth(msg);
       throw new Error(msg);
     }
+    ST.user = data.user || null;
+    const n = cleanName(name);
+    if (n) {
+      setName(n);
+      /* the mark travels with the identity, wherever it sits */
+      try { await s.client.auth.updateUser({ data: { name: n } }); } catch (e) {}
+    }
+    renderAuth();
+    refreshOverStrip();
+    return ST.user;
+  }
+
+  /* the optional second door: Google, once it is configured */
+  async function signInGoogle() {
+    SFX.ensure();
+    if (ST.debug) return signIn();
+    const s = await init();
+    if (!s) throw new Error('unconfigured');
+    const { error } = await s.client.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname },
+    });
+    if (error) {
+      const msg = authFail(error);
+      renderAuth(msg);
+      throw new Error(msg);
+    }
+    /* the page redirects; the session lands back here and the
+       auth listener consumes any pending post */
   }
 
   async function signOut() {
     if (ST.debug) { ST.debugUser = null; renderAuth(); refreshOverStrip(); return; }
-    if (!ST.fb) return;
-    await ST.fb.A.signOut(ST.fb.auth);
+    if (!ST.sb) return;
+    try { await ST.sb.client.auth.signOut(); } catch (e) {}
     ST.user = null;
     renderAuth();
     refreshOverStrip();
@@ -138,94 +207,107 @@ const LB = (() => {
   /* one page per scribe; a post only when the run carried further */
   async function submitRun(run) {
     if (ST.debug) return { ok: true, rank: ST.debugRank || 7 };
-    const f = ST.fb;
-    if (!f || !ST.user) return { ok: false, reason: 'signed-out' };
-    const ref = f.F.doc(f.db, 'om_scores', ST.user.uid);
-    const snap = await f.F.getDoc(ref);
-    if (snap.exists()) {
-      const old = snap.data();
-      if ((old.wave | 0) > run.wave || ((old.wave | 0) === run.wave && (old.score | 0) >= run.score))
-        return { ok: true, kept: true };
-    }
-    await f.F.setDoc(ref, {
-      name: String(ST.user.displayName || 'INK DRIFTER').slice(0, 24),
-      photo: ST.user.photoURL || '',
+    const s = ST.sb;
+    if (!s || !ST.user) return { ok: false, reason: 'signed-out' };
+    const uid = ST.user.id;
+    const { data: old, error: readErr } = await s.client.from('om_scores')
+      .select('wave,score').eq('uid', uid).maybeSingle();
+    if (readErr) throw new Error(readErr.message || 'post failed');
+    if (old && ((old.wave | 0) > run.wave ||
+        ((old.wave | 0) === run.wave && (old.score | 0) >= run.score)))
+      return { ok: true, kept: true };
+    const { error } = await s.client.from('om_scores').upsert({
+      uid,
+      name: cleanName(myName()) || 'INK DRIFTER',
       wave: run.wave | 0,
       score: run.score | 0,
       kills: run.kills | 0,
-      time: Math.max(0, Math.round(run.time || 0)),
+      time: Math.max(0, Math.round(run.time || 0)) | 0,
       hard: !!run.hard,
       v: 1,
-      ts: f.F.serverTimestamp(),
-    }, { merge: true });
+    });
+    if (error) throw new Error(error.message || 'post failed');
     return { ok: true };
   }
 
   async function fetchTop() {
     if (ST.debug) return debugRows();
-    const f = ST.fb;
-    if (!f) throw new Error('unconfigured');
-    const q = f.F.query(f.F.collection(f.db, 'om_scores'),
-      f.F.orderBy('wave', 'desc'), f.F.limit(60));
-    const snap = await f.F.getDocs(q);
-    const rows = snap.docs.map(d => d.data());
-    rows.sort((a, b) => ((b.wave | 0) - (a.wave | 0)) || ((b.score | 0) - (a.score | 0)));
-    return rows.slice(0, 50);
+    const s = ST.sb;
+    if (!s) throw new Error('unconfigured');
+    const { data, error } = await s.client.from('om_scores')
+      .select('uid,name,wave,score,kills,hard')
+      .order('wave', { ascending: false }).order('score', { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message || 'the board would not unroll');
+    const rows = (data || []).map(r => ({
+      name: r.name, wave: r.wave | 0, score: r.score | 0,
+      kills: r.kills | 0, hard: !!r.hard, __uid: r.uid,
+    }));
+    rows.sort((a, b) => (b.wave - a.wave) || (b.score - a.score));
+    return rows;
   }
 
   async function fetchRank(wave) {
     if (ST.debug) return ST.debugRank || 7;
-    const f = ST.fb;
-    if (!f) return null;
-    const q = f.F.query(f.F.collection(f.db, 'om_scores'), f.F.where('wave', '>', wave | 0));
-    const s = await f.F.getCountFromServer(q);
-    return (s.data().count || 0) + 1;
+    const s = ST.sb;
+    if (!s) return null;
+    const { count, error } = await s.client.from('om_scores')
+      .select('uid', { count: 'exact', head: true }).gt('wave', wave | 0);
+    if (error) return null;
+    return (count || 0) + 1;
   }
 
   /* ---------------- the daily ledger ----------------
-     a collection a day — om_daily_YYYYMMDD — one page per scribe on
-     it; the day's own sheet keeps the query single-field (score desc)
-     so no composite index is ever owed to the cloud. */
-
-  const dailyCol = day => 'om_daily_' + String(day || '').replace(/[^0-9]/g, '');
+     one table, one key a day — om_daily(day, uid) — a page a
+     day per scribe; the (day, score) index keeps the sheet's
+     order single-stroke. */
 
   async function submitDailyRun(run) {
     if (ST.debug) return { ok: true, rank: ST.debugRank || 4 };
-    const f = ST.fb;
-    if (!f || !ST.user) return { ok: false, reason: 'signed-out' };
-    await f.F.setDoc(f.F.doc(f.db, dailyCol(run.day), ST.user.uid), {
-      name: String(ST.user.displayName || 'INK DRIFTER').slice(0, 24),
-      photo: ST.user.photoURL || '',
+    const s = ST.sb;
+    if (!s || !ST.user) return { ok: false, reason: 'signed-out' };
+    const { error } = await s.client.from('om_daily').upsert({
+      day: String(run.day || '').replace(/[^0-9-]/g, ''),
+      uid: ST.user.id,
+      name: cleanName(myName()) || 'INK DRIFTER',
       wave: run.wave | 0,
       score: run.score | 0,
       kills: run.kills | 0,
       hard: !!run.hard,
       v: 1,
-      ts: f.F.serverTimestamp(),
-    }, { merge: true });
+    });
+    if (error) throw new Error(error.message || 'post failed');
     return { ok: true };
   }
 
   async function fetchDailyTop(day) {
     if (ST.debug) return debugRows().slice(0, 8).map(r => ({ ...r, wave: Math.min(r.wave, 40) }));
-    const f = ST.fb;
-    if (!f) throw new Error('unconfigured');
-    const q = f.F.query(f.F.collection(f.db, dailyCol(day)),
-      f.F.orderBy('score', 'desc'), f.F.limit(60));
-    const snap = await f.F.getDocs(q);
-    const rows = snap.docs.map(d => d.data());
-    rows.sort((a, b) => ((b.score | 0) - (a.score | 0)) || ((b.wave | 0) - (a.wave | 0)));
-    return rows.slice(0, 50);
+    const s = ST.sb;
+    if (!s) throw new Error('unconfigured');
+    const { data, error } = await s.client.from('om_daily')
+      .select('uid,name,wave,score,kills,hard')
+      .eq('day', String(day || '').replace(/[^0-9-]/g, ''))
+      .order('score', { ascending: false }).order('wave', { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message || 'the day would not unroll');
+    const rows = (data || []).map(r => ({
+      name: r.name, wave: r.wave | 0, score: r.score | 0,
+      kills: r.kills | 0, hard: !!r.hard, __uid: r.uid,
+    }));
+    rows.sort((a, b) => (b.score - a.score) || (b.wave - a.wave));
+    return rows;
   }
 
   async function fetchDailyRank(day, score) {
     if (ST.debug) return ST.debugRank || 4;
-    const f = ST.fb;
-    if (!f) return null;
-    const q = f.F.query(f.F.collection(f.db, dailyCol(day)),
-      f.F.where('score', '>', score | 0));
-    const s = await f.F.getCountFromServer(q);
-    return (s.data().count || 0) + 1;
+    const s = ST.sb;
+    if (!s) return null;
+    const { count, error } = await s.client.from('om_daily')
+      .select('uid', { count: 'exact', head: true })
+      .eq('day', String(day || '').replace(/[^0-9-]/g, ''))
+      .gt('score', score | 0);
+    if (error) return null;
+    return (count || 0) + 1;
   }
 
   /* ---------------- the over sheet's post strip ---------------- */
@@ -276,7 +358,7 @@ const LB = (() => {
       }
     } catch (e) {
       ST.posting = false;
-      renderOverStrip(run, (e && e.message) || 'post failed');
+      renderOverStrip(run, postFail(e));
     }
   }
 
@@ -284,6 +366,21 @@ const LB = (() => {
     return `<button class="g-btn${small ? ' small' : ''}" type="button">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C36.9 40.4 44 35 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
       <span>${esc(label)}</span></button>`;
+  }
+
+  /* the scribe's mark + the sign — the paper's own door */
+  function signWidget(btnLabel, small) {
+    return `<span class="lb-sign">` +
+      `<input class="lb-name" maxlength="24" autocomplete="off" spellcheck="false" ` +
+        `placeholder="YOUR MARK — OPTIONAL" value="${esc(getName())}">` +
+      `<button class="ink-btn${small ? ' small' : ''}" type="button">${esc(btnLabel)}</button>` +
+    `</span>`;
+  }
+  function readMark(scope) {
+    const input = scope.querySelector('.lb-name');
+    const n = cleanName(input ? input.value : '');
+    setName(n);
+    return n;
   }
 
   function renderOverStrip(run, state) {
@@ -313,12 +410,17 @@ const LB = (() => {
     /* awaiting: signed in → post at once; signed out → offer the seal */
     if (signedIn()) { postRun(run); return; }
     box.innerHTML = `<span class="ob-line">YOUR FURTHEST CARRY — ${waveTxt}</span>` +
-      gBtn(`SIGN IN WITH GOOGLE — POST ${waveTxt}`, true);
-    const g = box.querySelector('.g-btn');
+      signWidget(`SIGN THE PAGE — POST ${waveTxt}`, true);
+    const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
+      const nm = readMark(box);
       ST.pending = run;
       renderOverStrip(run, 'posting');
-      signIn().catch(() => { ST.pending = null; renderOverStrip(run, null); });
+      signIn(nm).then(() => {
+        /* the auth listener usually consumes the pending post first;
+           the debug paper cloud has no listener — this is its door */
+        if (ST.pending) { ST.pending = null; postRun(run); }
+      }).catch(() => { ST.pending = null; renderOverStrip(run, null); });
     });
   }
 
@@ -349,12 +451,13 @@ const LB = (() => {
     }
     if (signedIn()) { postDailyRun(run); return; }
     box.innerHTML = `<span class="ob-line">TODAY'S SHEET — WAVE ${run.wave | 0}</span>` +
-      gBtn(`SIGN IN WITH GOOGLE — POST TODAY'S INK`, true);
-    const g = box.querySelector('.g-btn');
+      signWidget(`SIGN THE PAGE — POST TODAY'S INK`, true);
+    const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
+      const nm = readMark(box);
       ST.pending = run;
       renderDailyStrip(run, 'posting');
-      signIn().then(() => postDailyRun(run)).catch(() => { ST.pending = null; renderDailyStrip(run, null); });
+      signIn(nm).then(() => postDailyRun(run)).catch(() => { ST.pending = null; renderDailyStrip(run, null); });
     });
   }
 
@@ -374,7 +477,7 @@ const LB = (() => {
       }
     } catch (e) {
       ST.posting = false;
-      renderDailyStrip(run, (e && e.message) || 'post failed');
+      renderDailyStrip(run, postFail(e));
     }
   }
 
@@ -406,9 +509,9 @@ const LB = (() => {
         const rec = dailyLocal();
         rows.innerHTML = rec
           ? `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>YOUR SHEET TODAY: WAVE ${rec.wave | 0} · ${(rec.score | 0).toLocaleString('en-US')}</li>`
-          : `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (FIREBASE)</li>`;
+          : `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (SUPABASE)</li>`;
       } else {
-        rows.innerHTML = `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (FIREBASE)</li>`;
+        rows.innerHTML = `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (SUPABASE)</li>`;
       }
       return;
     }
@@ -458,16 +561,16 @@ const LB = (() => {
       rows.innerHTML = `<li class="board-note">TODAY'S PAPER IS BLANK —<br>BE THE FIRST INK OF THE DAY</li>`;
       return;
     }
-    const me_ = ST.debug ? ST.debugUser : ST.user;
-    const uid = me_ ? me_.uid : null;
+    const m_ = me();
+    const uid = m_ ? m_.uid : null;
     rows.innerHTML = list.map((r, i) => {
       const rank = i + 1;
       const top = rank <= 3;
-      const me = uid && r.__uid === uid;
+      const isMe = uid && r.__uid === uid;
       const ava = r.photo
         ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
         : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
-      return `<li class="board-row${top ? ` top${rank}` : ''}${me ? ' me' : ''}">
+      return `<li class="board-row${top ? ` top${rank}` : ''}${isMe ? ' me' : ''}">
         <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
         ${ava}
         <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This sheet was REALLY HARD">難</i>' : ''}</span>
@@ -491,16 +594,16 @@ const LB = (() => {
       rows.innerHTML = `<li class="board-note">THE PAPER IS BLANK —<br>BE THE FIRST TO CARRY THE INK</li>`;
       return;
     }
-    const me_ = ST.debug ? ST.debugUser : ST.user;
-    const uid = me_ ? me_.uid : null;
+    const m_ = me();
+    const uid = m_ ? m_.uid : null;
     rows.innerHTML = list.map((r, i) => {
       const rank = i + 1;
       const top = rank <= 3;
-      const me = uid && r.__uid === uid;
+      const isMe = uid && r.__uid === uid;
       const ava = r.photo
         ? `<img class="r-ava" src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">`
         : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
-      return `<li class="board-row${top ? ` top${rank}` : ''}${me ? ' me' : ''}">
+      return `<li class="board-row${top ? ` top${rank}` : ''}${isMe ? ' me' : ''}">
         <span class="r-rank${top ? ' seal' : ''}">${top ? `<i>${RANK_KANJI[rank]}</i>` : rank}</span>
         ${ava}
         <span class="r-name">${esc(r.name || 'INK DRIFTER')}${r.hard ? '<i class="r-hard" title="This run was REALLY HARD">難</i>' : ''}</span>
@@ -539,9 +642,10 @@ const LB = (() => {
       return;
     }
     if (ST.user) {
-      const n = String(ST.user.displayName || 'INK DRIFTER').slice(0, 24);
-      const ava = ST.user.photoURL
-        ? `<img class="r-ava" src="${esc(ST.user.photoURL)}" alt="" referrerpolicy="no-referrer">`
+      const m_ = me() || {};
+      const n = String(m_.name || 'INK DRIFTER').slice(0, 24);
+      const ava = m_.photo
+        ? `<img class="r-ava" src="${esc(m_.photo)}" alt="" referrerpolicy="no-referrer">`
         : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
       box.innerHTML = `<span class="board-user">${ava}<b>${esc(n)}</b></span>
         <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
@@ -549,18 +653,26 @@ const LB = (() => {
       if (o) o.addEventListener('click', () => signOut().catch(() => {}));
       return;
     }
-    box.innerHTML = gBtn('SIGN IN WITH GOOGLE') + (err ? `<span class="auth-err">${esc(err)}</span>` : '');
-    const g = box.querySelector('.g-btn');
+    box.innerHTML = signWidget('SIGN THE PAGE') +
+      gBtn('OR USE GOOGLE', true) +
+      (err ? `<span class="auth-err">${esc(err)}</span>` : '');
+    const g = box.querySelector('.ink-btn');
     if (g) g.addEventListener('click', () => {
       g.disabled = true;
-      signIn().catch(() => { if (g) g.disabled = false; });
+      const nm = readMark(box);
+      signIn(nm).catch(() => { if (g) g.disabled = false; });
+    });
+    const gg = box.querySelector('.g-btn');
+    if (gg) gg.addEventListener('click', () => {
+      gg.disabled = true;
+      signInGoogle().catch(() => { if (gg) gg.disabled = false; });
     });
   }
 
   /* ---------------- QA: a paper cloud ---------------- */
   function debugFill() {
     ST.debug = true;
-    ST.debugUser = { uid: 'qa-scribe', displayName: 'QA SCRIBE', photoURL: '' };
+    ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' };
     ST.debugRank = 12;
     open('title');
   }
@@ -579,8 +691,8 @@ const LB = (() => {
 
   /* ---------------- api ---------------- */
   return {
-    onRunEnd, open, close, signIn, signOut, setTab,
-    get user() { return ST.debug ? ST.debugUser : ST.user; },
+    onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
+    get user() { return me(); },
     get debug() { return ST.debug; },
     debugFill,
   };

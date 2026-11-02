@@ -2052,6 +2052,40 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .g-btn.small{ padding: 7px 14px 7px 11px; font-size: 9px; }
 .g-btn.small svg{ width: 14px; height: 14px; }
 
+/* ---- the scribe's mark: a name and the sign, the paper's own door ---- */
+.lb-sign{
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 10px;
+}
+.lb-name{
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  color: var(--ink);
+  background: transparent;
+  border: none; border-bottom: 1px solid var(--ink-25);
+  padding: 6px 2px; width: 190px; max-width: 56vw;
+  text-align: center;
+  outline: none;
+  transition: border-color .15s ease;
+}
+.lb-name::placeholder{ color: var(--ink-45); }
+.lb-name:focus{ border-bottom-color: var(--ink); }
+.ink-btn{
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 18px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .12em;
+  color: #f4efe6;
+  background: #1a1714;
+  border: 1px solid #1a1714;
+  cursor: pointer;
+  box-shadow: 2.5px 2.5px 0 rgba(26,23,20,.16);
+  transform: rotate(-.4deg);
+  transition: transform .13s ease, box-shadow .13s ease, opacity .13s ease;
+}
+.ink-btn:hover{ transform: rotate(-.4deg) translateY(-1px); box-shadow: 3.5px 3.5px 0 rgba(26,23,20,.2); }
+.ink-btn:disabled{ opacity: .55; cursor: wait; transform: none; }
+.ink-btn.small{ padding: 7px 14px; font-size: 9px; }
+.over-board .lb-sign{ margin-top: 7px; }
+
 /* ---- the roster ---- */
 .board-cols{
   display: grid;
