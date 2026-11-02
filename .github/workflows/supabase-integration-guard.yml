@@ -20,6 +20,9 @@ jobs:
           node --check js/supabase-config.js
           node --check js/lb.js
           node --check js/main.js
+          node --check js/game.js
+          node --check js/charms.js
+          node --check js/inkstone.js
           node --check sw.js
       - name: Detect overwritten Supabase and Google OAuth wiring
         shell: bash
@@ -58,6 +61,21 @@ jobs:
             'Actionable token-exchange error handling missing');
           assert(main.includes('LB.consumeOAuthReturn()') && main.includes('LB.open('),
             'Startup no longer restores the leaderboard after Google OAuth');
+          assert(lb.includes("from('om_weekly')") && lb.includes('has_ghost') &&
+            lb.includes('fetchEcho(') && lb.includes('raceEcho('),
+            'v12 weekly leaderboard or ghost-racing integration missing');
+          assert(lb.includes("'week'") && lb.includes('om_lb_google_return_v1'),
+            'v12 weekly tab must survive Google OAuth navigation');
+          assert(main.includes('LB.launchRun') && main.includes('CH.open()') &&
+            main.includes('G.getInk()'),
+            'v12 echo launch, charm room or inkstone integration missing');
+          assert(index.includes('id="boardTabWeek"') && index.includes('id="stoneBtn"'),
+            'v12 weekly board tab or inkstone title button missing');
+          for (const file of ['inkstone.html', 'css/inkstone.css',
+            'js/inkstone.js', 'js/charms.js']) {
+            assert(sw.includes("'" + file + "'"),
+              'v12 PWA cache no longer includes ' + file);
+          }
 
           const scripts = ['js/supabase-config.js', 'js/lb.js', 'js/main.js'];
           const scriptPositions = scripts.map(s => index.indexOf('src="./' + s + '"'));
