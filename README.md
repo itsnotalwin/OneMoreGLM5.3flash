@@ -223,7 +223,9 @@ This variant is connected to the existing **Pinpoint** Supabase project `sffpyvx
 - `js/supabase-config.js` contains the project URL and **public publishable key**. Never put a Supabase secret/service-role key in browser code.
 - Database checks passed: simulated authenticated inserts and upserts to both game tables, denial of a different player's insert, and rollback of test rows.
 - Pending real-browser check: **Authentication → Sign In / Up / Providers → Anonymous sign-ins** must be enabled; open LEADERBOARD, sign the page and submit an endless/daily run. Browser-hosted sign-in and posting have not yet been independently demonstrated.
-- For optional Google login, also configure the OAuth provider and authorized redirect URL. This is not needed for anonymous score posting.
+- Google OAuth is now configured separately in the shared Supabase Auth project and its Google Cloud Web OAuth client; never expose the Google Client Secret. The game stores only a short-lived per-tab return intent before redirecting, and resumes the leaderboard (including the Daily tab) on the PKCE callback instead of replaying the opening. Verified in a local JavaScript callback-state harness; a live browser sign-in still needs confirmation.
+- To test: open LEADERBOARD → OR USE GOOGLE → sign in → the app should **return directly to the leaderboard**, show the signed-in Google profile and retain the selected tab. A normal cold launch must still play the intro. Then play an Endless run and verify its score posts.
+- This is not needed for anonymous score posting.
 - This is a **shared Supabase project**: user authentication and project quotas are shared, even though the application tables and RLS are separate.
 - PWA players should reload after the `v8.6-supabase-1` service-worker update so the cached configuration refreshes.
 
