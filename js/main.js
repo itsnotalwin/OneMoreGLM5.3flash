@@ -136,6 +136,90 @@
     LB.close();
   }
 
+  /* ---------------- settings — 設 ----------------
+     the paper's habits: sound, the ghost rival, REALLY HARD,
+     and the wipe. A quiet room behind the title. */
+  const settingsOpen = () => {
+    const s = document.getElementById('screenSettings');
+    return s && !s.classList.contains('hidden');
+  };
+  let wipeArmed = false, wipeTimer = null;
+  function refreshSettings() {
+    const on = (id, v) => {
+      const row = document.getElementById(id);
+      const st = document.getElementById(id + 'State');
+      if (row) row.classList.toggle('is-on', !!v);
+      if (st) st.textContent = v ? 'ON' : 'OFF';
+    };
+    /* the mute button's own class is the one truth for sound */
+    const muted = document.getElementById('muteBtn').classList.contains('muted');
+    on('setSound', !muted);
+    on('setGhost', localStorage.getItem('om_ghost_off_v1') !== '1');
+    on('setHard', G.getHard());
+    const wipe = document.getElementById('setWipe');
+    const wst = document.getElementById('setWipeState');
+    if (wipe) wipe.classList.toggle('armed', wipeArmed);
+    if (wst) wst.textContent = wipeArmed ? 'SURE?' : 'WIPE';
+  }
+  function openSettings() {
+    SFX.ensure();
+    wipeArmed = false;
+    refreshSettings();
+    UI.show('settings');
+    UI.hud(false);
+  }
+  function closeSettings() {
+    wipeArmed = false;
+    clearTimeout(wipeTimer);
+    UI.show('title');
+  }
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('setBackBtn').addEventListener('click', () => { SFX.pick(1); closeSettings(); });
+  document.getElementById('setSound').addEventListener('click', () => {
+    toggleMute();
+    refreshSettings();
+  });
+  document.getElementById('setGhost').addEventListener('click', () => {
+    SFX.ensure();
+    const off = localStorage.getItem('om_ghost_off_v1') === '1';
+    if (off) localStorage.removeItem('om_ghost_off_v1');
+    else localStorage.setItem('om_ghost_off_v1', '1');
+    SFX.pick(1);
+    refreshSettings();
+  });
+  document.getElementById('setHard').addEventListener('click', () => {
+    SFX.ensure();
+    G.setHard(!G.getHard());
+    UI.setHard(G.getHard());
+    SFX.pick(1);
+    refreshSettings();
+  });
+  document.getElementById('setWipe').addEventListener('click', () => {
+    SFX.ensure();
+    if (!wipeArmed) {
+      /* the first press only asks: the ink cannot return */
+      wipeArmed = true;
+      refreshSettings();
+      SFX.thud ? SFX.thud() : SFX.pick(0);
+      clearTimeout(wipeTimer);
+      wipeTimer = setTimeout(() => { wipeArmed = false; refreshSettings(); }, 4000);
+      return;
+    }
+    /* the second press closes the book */
+    clearTimeout(wipeTimer);
+    try {
+      const kill = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('om_') === 0) kill.push(k);
+      }
+      kill.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    wipeArmed = false;
+    try { UI.show('title'); } catch (e) {}
+    location.reload();
+  });
+
   /* the journey answers the shelf: a scene-strip pressed begins the
      run at that scene's first wave; a scroll-strip pressed unrolls
      the scroll to its ten scenes. The title's strip of seals walks
@@ -172,6 +256,11 @@
     if (m === 'clear') {
       if (k === 'Enter') clearNext();
       else if (k === 'Escape') clearHome();
+      return;
+    }
+    /* the settings room answers only its own return keys */
+    if (settingsOpen()) {
+      if (k === 'Enter' || k === 'Escape') closeSettings();
       return;
     }
     /* the ledger overlay answers only its own return keys —

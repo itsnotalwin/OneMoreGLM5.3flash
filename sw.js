@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v8.0';
+const VER = 'v8.5';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -29,6 +29,7 @@ const CORE = [
   'js/lb.js',
   'js/main.js',
   'js/render.js',
+  'js/share.js',
   'js/ui.js',
   'img/icons/icon-32.png',
   'img/icons/icon-180.png',

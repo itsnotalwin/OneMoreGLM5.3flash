@@ -83,6 +83,17 @@ const CFG = {
     cap: 240,          // max motes on the sheet
   },
 
+  /* fx budget: a flood may kill hundreds of beasts a second — without
+     a ceiling the ink storm buries the frame (6k live particles
+     measured at ~12 fps headless). Over the soft budget every burst
+     thins; past the hard cap the oldest flecks are recycled. */
+  fx: {
+    particleCap: 900,  // hard ceiling on live flecks
+    softCap: 600,      // bursts begin thinning here
+    ringCap: 80,       // shockwave rings
+    popupCap: 60,      // floating score words
+  },
+
   /* combo: chained kills multiply the score */
   combo: {
     decay: 2.3,        // s before the chain breaks

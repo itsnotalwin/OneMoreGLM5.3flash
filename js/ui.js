@@ -6,6 +6,8 @@
 const UI = (() => {
   const $ = id => document.getElementById(id);
 
+  let lastOver = null;   /* the most recent over-sheet report — the share card reads it */
+
   const el = {
     hardBtn: $('hardBtn'), hudHard: $('hudHard'),
     hud: $('hud'), hudWave: $('hudWave'), waveFill: $('waveFill'), hudHp: $('hudHp'),
@@ -16,7 +18,7 @@ const UI = (() => {
     screens: {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
-      board: $('screenBoard'),
+      board: $('screenBoard'), settings: $('screenSettings'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
@@ -904,6 +906,7 @@ const UI = (() => {
   }
 
   function showOver(d) {
+    lastOver = d;   /* the share card presses this same report (v8.3) */
     setGhostVerdict(d);
     const vict = !!d.victory;
     el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
@@ -963,6 +966,7 @@ const UI = (() => {
     get onOpenScroll() { return onOpenScroll; },
     set onOpenScroll(fn) { onOpenScroll = fn; },
     get scrollsLadder() { return ladderSheet; },
+    get lastOver() { return lastOver; },
     get onScrollsBack() { return onScrollsBack; },
     set onScrollsBack(fn) { onScrollsBack = fn; },
   };

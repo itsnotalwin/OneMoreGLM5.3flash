@@ -24,7 +24,7 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
-  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '';
+  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false;
   try {
     const q = new URLSearchParams(location.search);
     qaWave = Math.max(0, Math.min(999, parseInt(q.get('wave'), 10) || 0));
@@ -32,6 +32,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaHard = q.get('hard') === '1';
     qaDaily = q.get('daily') === '1';
     qaDay = (q.get('day') || '').slice(0, 10);
+    qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
+                                       must outlive a wave-300 instant swarm */
   } catch (e) {}
 
   const store = {
@@ -300,7 +302,12 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   function burst(x, y, r, big, red) {
-    const n = big ? 26 : Math.round(clamp(r, 6, 14)) + 4;
+    /* the fx budget: past the soft cap every burst thins, past the
+       hard cap the oldest flecks are recycled — the storm keeps its
+       look and can never bury the frame (v8.2 perf sweep) */
+    const over = S.particles.length - CFG.fx.softCap;
+    let n = big ? 26 : Math.round(clamp(r, 6, 14)) + 4;
+    if (over > 0) n = Math.max(1, Math.round(n * Math.max(0.15, 1 - over / CFG.fx.particleCap)));
     for (let i = 0; i < n; i++) {
       const a = rand(0, Math.PI * 2);
       const sp = rand(50, big ? 340 : 240);
@@ -316,6 +323,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       const p = S.particles[S.particles.length - 1];
       p.max = p.life;
     }
+    const excess = S.particles.length - CFG.fx.particleCap;
+    if (excess > 0) S.particles.splice(0, excess);
   }
 
   /* ---------------- enemies ---------------- */
@@ -818,6 +827,7 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   function ghostLoad(kind) {
     try {
+      if (store.get('om_ghost_off_v1', false)) return null;   /* settings: the rival rests */
       const raw = localStorage.getItem(kind === 'daily' ? GHOST_DAILY_KEY : GHOST_ENDLESS_KEY);
       if (!raw) return null;
       const g = JSON.parse(raw);
@@ -1211,6 +1221,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   function takeHit() {
+    if (qaGod) return;   /* ?god=1 — the paper cannot be cut: probes outlive swarms */
     const st = S.stats;
     /* the paper ward drinks the blow */
     if (st.ward && st.wardCd <= 0) {
@@ -3163,6 +3174,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     updateSpawning(dt);
     updateFx(dt);
 
+    /* the fx budget: rings and score words keep their caps too */
+    if (S.rings.length > CFG.fx.ringCap) S.rings.splice(0, S.rings.length - CFG.fx.ringCap);
+    if (S.popups.length > CFG.fx.popupCap) S.popups.splice(0, S.popups.length - CFG.fx.popupCap);
+
     UI.setXp(st.xp / CFG.xp.req(st.xpLevel), st.xpLevel);
 
     /* the red beast's seal, worn on the top of the sheet */
@@ -3290,5 +3305,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     getHard, setHard, dailyState,
     get qaDaily() { return qaDaily; },
+    /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
+    qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },
   };
 })();

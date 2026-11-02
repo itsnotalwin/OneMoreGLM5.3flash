@@ -156,9 +156,13 @@
     <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
 
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V8.0.1</span></div>
+      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V8.5</span></div>
     </div>
 
+    <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the sound, the ghost rival, REALLY HARD, and the paper itself">
+      <span class="opening-kanji" aria-hidden="true">設</span>
+      <span class="opening-label">SETTINGS</span>
+    </button>
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
       <span class="opening-kanji" aria-hidden="true">序</span>
       <span class="opening-label">OPENING</span>
@@ -284,9 +288,49 @@
       <div class="over-actions">
         <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
         <button id="againBtn" class="block-btn big">ONE MORE</button>
+        <button id="shareBtn" class="ghost-btn" type="button" title="Press this run's report into a paper card">SHARE THE INK</button>
         <button id="menuBtn" class="ghost-btn">MENU</button>
       </div>
       <div class="over-board hidden" id="overBoard"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS — 設 ============ -->
+  <section id="screenSettings" class="screen screen-settings hidden">
+    <span class="wm wm-settings" aria-hidden="true">設</span>
+    <div class="set-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE PAPER'S HABITS — <span class="kanji-inline">設</span></div>
+        <h2 class="set-title">SETTINGS</h2>
+        <p class="set-sub">FOUR SMALL TRUTHS ABOUT HOW THE SHEET BEHAVES</p>
+      </div>
+      <div class="set-rows">
+        <button id="setSound" class="set-row" type="button">
+          <span class="set-kanji" aria-hidden="true">音</span>
+          <span class="set-name">SOUND</span>
+          <span class="set-desc">THE BRUSH'S VOICE, THE SEALS, THE TIDE</span>
+          <span class="set-state" id="setSoundState">ON</span>
+        </button>
+        <button id="setGhost" class="set-row" type="button">
+          <span class="set-kanji" aria-hidden="true">影</span>
+          <span class="set-name">THE GHOST RIVAL</span>
+          <span class="set-desc">YOUR BEST RUN WALKS BESIDE THE LIVING BRUSH</span>
+          <span class="set-state" id="setGhostState">ON</span>
+        </button>
+        <button id="setHard" class="set-row" type="button">
+          <span class="set-kanji" aria-hidden="true">難</span>
+          <span class="set-name">REALLY HARD</span>
+          <span class="set-desc">EVERY BEAST TALLER, FASTER, THICKER — THE LEDGER PAYS DOUBLE</span>
+          <span class="set-state" id="setHardState">OFF</span>
+        </button>
+        <button id="setWipe" class="set-row set-danger" type="button">
+          <span class="set-kanji" aria-hidden="true">墨</span>
+          <span class="set-name">WIPE THE PAPER</span>
+          <span class="set-desc">EVERY SCROLL, SEAL, RECORD AND GHOST — GONE</span>
+          <span class="set-state" id="setWipeState">WIPE</span>
+        </button>
+      </div>
+      <button id="setBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
     </div>
   </section>
 
@@ -307,6 +351,7 @@
 <script src="./js/intro.js"></script>
 <script src="./js/firebase-config.js"></script>
 <script src="./js/lb.js"></script>
+<script src="./js/share.js"></script>
 <script src="./js/main.js"></script>
 </body>
 </html>
