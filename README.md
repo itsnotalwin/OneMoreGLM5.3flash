@@ -1,5 +1,7 @@
 # ONE MORE
 
+> **Manual-update safety, v12:** This public game is already connected to the existing **Pinpoint** Supabase project with **isolated** `om_scores`, `om_daily`, and `om_weekly` tables. **Do not create a new Supabase project or paste the fresh-setup SQL into this shared project.** If uploading new game files, merge the auth/ledger sections rather than replacing them. Follow [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md). Your untouched v12 upload is backed up at [`backup/v12-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v12-manual-upload-2026-11-03), and the earlier integration source at [`backup/supabase-integration-2026-11-02`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02). The [integration guard](https://github.com/itsnotalwin/OneMoreGLM5.3flash/actions/workflows/supabase-integration-guard.yml) checks source wiring after pushes, not live OAuth provider credentials.
+
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
@@ -227,6 +229,8 @@ as before — the ledger sits quietly offline.
 - The journey's own deaths never post — the ledger belongs to the endless
   scroll alone (a journey victory that walks INTO THE ENDLESS posts from
   then on, carrying the whole run's depth).
+
+**Existing production setup:** The shared project's v12 schema was applied through migrations `onemore_v12_weekly_ghost_leaderboards` and `onemore_v12_weekly_restrict_public_grants`, in addition to the earlier two-table migrations. The `om_weekly` table has RLS and owner-only writes; `ghost` and `has_ghost` were added to the two existing ONE MORE tables. This is **not** a new project and the SQL below is reference material for fresh installs only. Google OAuth and Anonymous Auth are dashboard settings; inspect them separately if logins fail.
 
 **One-time setup (about five minutes)**
 
