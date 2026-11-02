@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v8.6-supabase-oauth-2';
+const VER = 'v8.6-supabase-oauth-3';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
