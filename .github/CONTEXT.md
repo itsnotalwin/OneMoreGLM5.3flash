@@ -4,7 +4,7 @@
 Repository automation and safeguards for manual GitHub uploads, commits and pull requests.
 
 ## Key files
-`workflows/` contains the maintained GitHub Actions workflows and local `CONTEXT.md`.
+`workflows/` contains the integration guard and the read-only/check-then-draft repair workflow. `supabase-auto-repair.cjs` plans narrowly scoped source recovery from pinned known-good/known-bad Git snapshots. Its self-tests intentionally reject unfamiliar auth edits.
 
 ## Connections
 GitHub Pages uses GitHub's built-in publishing workflow. The supplementary Supabase integration guard is independent of Pages publishing.
