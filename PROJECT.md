@@ -6,6 +6,9 @@ An ink-brush survival browser game with journey, endless, and daily modes. This 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
 
+## Latest v16 integration check (3 Nov 2026)
+After manual uploads `5f9b7c0` and `94267ab9`, GitHub Pages deployed but the Supabase guard detected cleared public connection settings and missing OAuth return handling. The entire last manual upload was preserved on [`backup/v16-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v16-manual-upload-2026-11-03). Only `js/supabase-config.js`, `js/lb.js`, `js/main.js` and `sw.js` were repaired, preserving v16's Google login in Settings, new audio intro gate and gameplay. The original Google-linked Supabase account last signed in on 2 Nov; **live v16 sign-in remains unverified**. The database's three RLS-protected `om_*` tables still work. See [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md) for current changes and safe update procedure.
+
 ## Manual update / recovery
 **Preserve:** [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md), a source snapshot at [backup/supabase-integration-2026-11-02](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02) and the read-only `.github/workflows/supabase-integration-guard.yml` Actions check. Merge backend/OAuth code into later gameplay sources instead of replacing whole newer JS files from the backup. The last observed Google provider client-secret error and disabled anonymous sign-in setting are external Supabase/Auth blockers, not verified fixed.
 
