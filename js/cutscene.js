@@ -11,13 +11,14 @@ const CUT = (() => {
   const RED = '#b23a2b';
   const PALE = '#ede7d9';           /* the eternal sheet the credits land on */
 
-  /* the five sheets, as paint */
+  /* the six sheets, as paint */
   const SHEET = {
     pale:  { paper: '#ede7d9', ink: '#1a1714' },
     dark:  { paper: '#17130f', ink: '#e9e2d2' },
     red:   { paper: '#eadbc4', ink: '#1a1714' },
     storm: { paper: '#c7cdc9', ink: '#161c1f' },
     gilt:  { paper: '#e7d6ad', ink: '#241c12' },
+    silk:  { paper: '#f3eee1', ink: '#201d24' },
   };
 
   /* the sheets' kanji, in order, for the finale's row of keepers */
@@ -56,7 +57,7 @@ const CUT = (() => {
   let splats = [];          /* splatter at the kanji's landing */
   let sealSplats = [];      /* red splatter at the hanko */
   let motes = [];           /* rising ink motes (finale) */
-  let sheetMarks = [];      /* the five strokes + kanji of the finale */
+  let sheetMarks = [];      /* the six strokes + kanji of the finale */
   let rnd = mulberry(1);
 
   function plan() {
@@ -99,13 +100,13 @@ const CUT = (() => {
       });
     }
     sheetMarks = [];
-    const five = ['一', '夜', '紅', '嵐', '金'];
-    for (let i = 0; i < 5; i++) {
+    const six = ['一', '夜', '紅', '嵐', '金', '素'];
+    for (let i = 0; i < 6; i++) {
       sheetMarks.push({
-        x: W * (0.5 + (i - 2) * 0.115),
+        x: W * (0.5 + (i - 2.5) * 0.105),
         y: H * 0.40,
-        kanji: SHEET_KANJI[i] || five[i],
-        t0: 4.65 + i * 0.52,
+        kanji: SHEET_KANJI[i] || six[i],
+        t0: 4.65 + i * 0.48,
         seed: 40 + i,
       });
     }
@@ -253,24 +254,6 @@ const CUT = (() => {
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillText(ch, 0, sz * 0.03);
-    c.restore();
-  }
-
-  /* a pressed brushstroke drawn as overlapping dabs (pressure by profile) */
-  function dabStroke(c, pts, widths, color, alpha, t0, t1, T) {
-    const p = clamp01((T - t0) / (t1 - t0));
-    if (p <= 0) return;
-    const steps = Math.max(2, Math.floor(pts.length * p));
-    c.save();
-    c.fillStyle = color;
-    for (let i = 0; i < steps; i++) {
-      const q = pts[i];
-      const w = widths[i];
-      c.globalAlpha = alpha * (0.16 + 0.1 * w);
-      c.beginPath();
-      c.arc(q.x, q.y, w, 0, TAU);
-      c.fill();
-    }
     c.restore();
   }
 
@@ -741,9 +724,9 @@ const CUT = (() => {
   }
 
   /* ================= THE JOURNEY'S END ================= */
-  /* the ink stills, the five keepers bow, the brush closes the circle */
+  /* the ink stills, the six keepers bow, the brush closes the circle */
   function drawFinale(c) {
-    const th = SHEET.gilt;
+    const th = SHEET.silk;
     const paper = PALE;                 /* everything lands on the eternal sheet */
     const ink = '#1a1714';
 
@@ -766,7 +749,7 @@ const CUT = (() => {
     }
 
     /* caption A/B over the stilling world */
-    caption(c, 'THE FIFTH GUARDIAN FALLS.', W / 2, H * 0.3, clamp01((T - 0.55) / 0.5) * (1 - clamp01((T - 2.5) / 0.5)), th.ink, th.paper);
+    caption(c, 'THE SIXTH GUARDIAN FALLS.', W / 2, H * 0.3, clamp01((T - 0.55) / 0.5) * (1 - clamp01((T - 2.5) / 0.5)), th.ink, th.paper);
     caption(c, 'THE INK STILLS.', W / 2, H * 0.37, clamp01((T - 2.55) / 0.45) * (1 - clamp01((T - 3.35) / 0.6)), th.ink, th.paper);
 
     /* ---- beat 2: the world washes to the eternal sheet (2.9 → 4.4) ---- */
@@ -778,7 +761,7 @@ const CUT = (() => {
       c.globalAlpha = 1;
     }
 
-    /* ---- beat 3: the five sheets, remembered (4.6 → 7.2) ---- */
+    /* ---- beat 3: the six sheets, remembered (4.6 → 7.2) ---- */
     for (const m of sheetMarks) {
       const kA = clamp01((T - m.t0) / 0.42);
       if (kA <= 0) continue;
@@ -802,7 +785,7 @@ const CUT = (() => {
       stampGlyph(c, m.kanji, m.x, m.y, 40 * Math.max(0.8, u) * (0.9 + 0.1 * pop), ink, 0.92 * fade, (rr() - 0.5) * 0.06, m.seed * 13);
     }
 
-    caption(c, 'FIVE SHEETS. FIVE KEEPERS.', W / 2, H * 0.62,
+    caption(c, 'SIX SHEETS. SIX KEEPERS.', W / 2, H * 0.62,
       clamp01((T - 7.15) / 0.5) * (1 - clamp01((T - 9.2) / 0.7)), ink, paper);
 
     /* ---- beat 4: the brush spirit closes the circle (8.6 → 12.6) ---- */
@@ -944,7 +927,7 @@ const CUT = (() => {
         { t: 'ONE MORE', f: `700 ${Math.round(42 * Math.max(0.8, u))}px "Zen Antique", serif`, col: ink, gap: 14 },
         { t: 'A MONOCHROME SURVIVAL', f: `500 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
         { t: 'INK · PAPER · BEASTS — ONE BRUSH', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 12 },
-        { t: 'FIVE SHEETS · FIVE KEEPERS · NO ENDINGS', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
+        { t: 'SIX SHEETS · SIX KEEPERS · NO ENDINGS', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
         { t: 'EVERY STROKE STAYS ON THE SHEET', f: `400 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 10 },
         { t: 'THE PAPER KEEPS WHAT YOU PAINTED', f: `400 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 40 },
         { t: 'for every player who asked for one more', f: `italic ${Math.round(14 * Math.max(0.8, u))}px "Zen Antique", serif`, col: ink, gap: 40 },

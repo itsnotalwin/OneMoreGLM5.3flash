@@ -1,7 +1,5 @@
 # ONE MORE
 
-> **Manual upload reminder:** This game already uses our shared **Pinpoint Supabase** project with separate `om_scores`, `om_daily`, and `om_weekly` tables. Keep `js/supabase-config.js` and the OAuth account-return functions in `js/lb.js` / `js/main.js` when uploading new versions. Read [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md) first and use the [v16 upload backup](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v16-manual-upload-2026-11-03) to preserve gameplay. **Do not create a fresh Supabase project or rerun fresh-project SQL.**
-
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
@@ -10,10 +8,10 @@ paper — Vampire-Survivors style, the camera follows you and the paper never
 ends. Your brush fires ink at the nearest threat on its own; your only job
 is to *not be erased*.
 
-The journey is **five scrolls of ten waves**, each sheet a different paper
-with its own weather, each ruled by a **named Guardian**. Clear the fifth
+The journey is **six scrolls of ten waves**, each sheet a different paper
+with its own weather, each ruled by a **named Guardian**. Clear the sixth
 sheet and the scroll offers itself forever: **THE ENDLESS SCROLL**, where
-the paper cycles through all five faces and the difficulty never stops
+the paper cycles through all six faces and the difficulty never stops
 compounding.
 
 Every kill spills **ink motes** — gather them to fill the ink gauge and
@@ -35,15 +33,15 @@ or replay it anytime from the title screen — the button marked 序.
 The loop closes like a film. **When a sheet is cleared the scroll literally
 turns**: the next sheet of paper rolls in over the world, stamps its kanji,
 its name and its temperament, and presses its red hanko before the first
-wave crawls in. **Clear the fifth sheet and THE JOURNEY'S END plays** —
-the ink stills, the five keepers are remembered, your brush spirit paints
+wave crawls in. **Clear the sixth sheet and THE JOURNEY'S END plays** —
+the ink stills, the six keepers are remembered, your brush spirit paints
 one last great ensō around the run and seals it, and the credits roll
 before the victory sheet offers the endless paper. Both films can be
 skipped with any key or tap.
 
 ---
 
-## The five scrolls
+## The six scrolls
 
 | Sheet | Paper & weather | The beasts that live there | Guardian |
 |---|---|---|---|
@@ -52,6 +50,7 @@ skipped with any key or tap.
 | 三 CINNABAR FIELD | Vermillion wash; falling petals | BRUTE, SPIT, ONI, CRANE, DRIP, TITAN, KAGE, GATE | THE CINNABAR ONI |
 | 四 STORM SHEET | Storm-gray paper; driving rain and lightning | CRANE, SPEAR, KAGE, STILT, WISP, KOI, WARDEN, MOTH, POPPER | THE STORM EYE |
 | 五 GILT SCROLL | Aged gold leaf; drifting flakes | ONI, BRUTE, GOLEM, GATE, SPIT, WARDEN, TITAN, KAGE, KOI | THE FIRST BRUSH |
+| 素 THE BLANK SILK | Bright cool silk; drifting threads | SKETCH, STITCH, RESEAL, SIZING, BINDER, WEFT, THE TRACE, KAGE, CRANE, GATE, WARDEN, TITAN, GOLEM | THE UNWRITTEN |
 
 Each sheet runs ten waves; the tenth summons its **Guardian** — a boss with
 its own patterns, a named seal at the top of the screen, and a red arrow at
@@ -108,7 +107,7 @@ remembered.
 | GOLEM | A folded colossus that breaks into two brutes |
 | BLIP | A fast shard, born from deaths and titans |
 
-**The five Guardians**
+**The six Guardians**
 
 | Guardian | Pattern |
 |---|---|
@@ -117,6 +116,7 @@ remembered.
 | THE CINNABAR ONI | Bulldozer charges and 7-glob spreads — enrages at half health |
 | THE STORM EYE | Orbits you, drags you inward, spirals needles, calls lightning bolts |
 | THE FIRST BRUSH | Three phases: radial volleys, summoned brood, furious charges |
+| THE UNWRITTEN | A walking blank page: erase pulses sweep your droplets and scatter your ink, telegraphed seal slams press where you stand, and its margin burns through three phases |
 
 **The brush arts — 26 upgrades**, including seven weapons:
 
@@ -403,7 +403,7 @@ one-more/
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
 │   ├── ui.js                   # DOM screens, HUD, ink gauge, guardian seal, brush picker
 │   ├── game.js                 # camera, areas, waves, xp/motes, guardians, weapons, flow
-│   ├── render.js               # sumi-e renderer: five paper themes, weather, brush
+│   ├── render.js               # sumi-e renderer: six paper themes, weather, brush
 │   │                           #   strokes, line boil, world-space stain layer
 │   ├── cutscene.js             # the scroll-turn interludes & the journey's-end
 │   │                           #   finale (credits, closing ensō) — skippable films
@@ -423,13 +423,13 @@ one-more/
 
 All balance knobs live in `js/config.js`:
 
-- `AREAS` — the five sheets: name, kanji, paper theme, difficulty multipliers,
+- `AREAS` — the six sheets: name, kanji, paper theme, difficulty multipliers,
   spawn roster and each sheet's Guardian
 - `CFG.wave` — waves per sheet, spawn budgets, surge cadence, elite scaling
 - `CFG.xp` — mote values, level curve, gathering radius, magnet duration
 - `CFG.combo` — chain decay and the score-multiplier ceiling
 - `CFG.brushes` — the three starting brushes and their stat mods
-- `CFG.endless` — how fast the endless paper grows teeth after sheet five
+- `CFG.endless` — how fast the endless paper grows teeth after sheet six
 - `ENEMIES` — hp, speed, size, score and the wave each type enters
 - `UPGRADES` — the pool of strokes and weapons, and their level caps
 - `CFG.world` — spawn padding, stain cap and fade, ambient mark density
@@ -457,7 +457,7 @@ Example: `index.html?wave=49&power=14`.
   a slamming seal — skippable, replayable, reduced-motion aware
 - In-run cutscenes on the same ink engine: the scroll-turn interlude
   (rolling sheet edge, kanji stamp, hanko) and the journey's-end finale
-  (stilling, the five keepers, the closing ensō, credits roll)
+  (stilling, the six keepers, the closing ensō, credits roll)
 - Procedural brush rendering: tapered strokes, wobbling blobs, splatter
   stamps, dry-brush streaks, line-boil animation — no image assets
 - Unbounded world: camera-follow, rectangle-accurate off-screen spawning,

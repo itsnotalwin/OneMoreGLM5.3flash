@@ -1,7 +1,7 @@
 'use strict';
 /* ============================================================
    ONE MORE — tuning constants, ink-beast roster, upgrade pool,
-   the five scrolls (areas), their Guardians, and the endless
+   the six scrolls (areas), their Guardians, and the endless
    paper. Edit this file to rebalance the world.
    ============================================================ */
 
@@ -44,12 +44,17 @@ const CFG = {
       mods: { hanko: 1, fireCdMult: 1.16, moveMult: 0.95 } },
   },
 
-  /* the world is unbounded — the brush walks an endless sheet */
+  /* the world is unbounded — the brush walks an endless sheet.
+     THE JOURNEY and the daily sheet are different papers: they live
+     INSIDE a fixed arena (a page with margins), the same size on
+     every screen; only THE ENDLESS SCROLL keeps the unbroken sheet. */
   world: {
     spawnPad: 90,      // how far beyond the screen edge beasts are born
     stainCap: 430,     // max dried stains kept on the paper
     stainFade: 0.075,  // alpha lost per second (dried ink fades)
     decoCell: 260,     // world-cell size for ambient paper marks
+    arena: { w: 2240, h: 1600, inset: 26 },  // the bounded page (journey/daily)
+    arenaSpawnGap: 420, // beasts never walk in closer than this to the brush
   },
 
   /* ---- THE 10-WAVE SYSTEM, THE 10-LEVEL SYSTEM ----
@@ -59,7 +64,7 @@ const CFG = {
      climbs twice — wave by wave inside a level, and level by level
      inside the sheet, so the tenth level of a sheet always bites
      far harder than its first — and the sheets themselves climb,
-     so the fifth paper is a storm no first-paper hand survives.
+     so the last paper is a silk no first-paper hand survives.
      Each wave of the ten has a shape:
        1 opening   — a light trickle to read the page
        2 press     — the ordinary weight of the sheet
@@ -132,19 +137,19 @@ const CFG = {
   /* ---- THE INKSTONE (硯) — what the runs press out ----
      When a run ends, the press squeezes its ink back into the stone:
      a currency that survives the paper, spent on CHARMS between runs.
-     Every wave survived presses 6 drops (waves past the five sheets
+     Every wave survived presses 6 drops (waves past the six sheets
      press double — the endless loops go deeper than the journey ever
-     asked); each Guardian felled this run adds 80; the five sheets
+     asked); each Guardian felled this run adds 80; the six sheets
      signed adds 300, once ever. A new personal best presses 1.25×,
      REALLY HARD presses the ledger's own double, and a practiced
      daily sheet presses only a fifth — practice is for the hand,
      not the stone. Checked in scripts/economy_calc.js. */
   charmEarn: {
     perWave: 6,        // ink pressed per wave survived
-    loopFrom: 500,     // waves past the five sheets pay double
+    loopFrom: 600,     // waves past the six sheets pay double
     loopMult: 2,
     sheetFall: 80,     // per Guardian felled this run
-    victoryFeat: 300,  // the five sheets signed — once, ever
+    victoryFeat: 300,  // the six sheets signed — once, ever
     bestMult: 1.25,    // a new personal best presses deeper
     hardMult: 2,       // REALLY HARD — the ledger's own law
     practiceMult: 0.2, // a practiced sheet presses a fifth
@@ -177,7 +182,7 @@ const CFG = {
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
 
   /* brush skills */
-  orbit:   { radius: lv => 40 + lv * 5, speed: 2.7, dmgCd: 0.45 },
+  orbit:   { radius: lv => 96 + lv * 28, speed: 2.9, dmgCd: 0.4, flingEvery: 4 },
   nova:    { period: lv => 6.6 - 0.9 * (lv - 1), radius: lv => 165 + lv * 38, knock: 330, stun: 0.4 },
   ward:    { cd: 22 },
   slow:    { dur: 1.6, mult: 0.55 },
@@ -190,7 +195,7 @@ const CFG = {
   trail:  { gap: lv => 0.5 - 0.08 * (lv - 1), radius: lv => 26 + lv * 7, life: 2.7, tick: 0.42, dmg: 1 },
   spirit: { period: lv => 3.1 - 0.3 * (lv - 1), count: lv => 1 + lv, speed: 300, turn: 7.5, life: 3.2, dmg: 1 },
   hanko:  { period: lv => 11.5 - 1.1 * (lv - 1), radius: lv => 84 + lv * 10, dmg: lv => 3 + lv, stun: 0.4 },
-  arc:    { period: lv => 2.5 - 0.22 * (lv - 1), jumps: lv => 2 + lv, range: 210, dmg: lv => 1 + Math.ceil(lv / 2) },
+  arc:    { period: lv => 2.5 - 0.22 * (lv - 1), jumps: lv => 2 + lv, range: 210, maxRange: 270, dmg: lv => 1 + Math.ceil(lv / 2) },
   boomer: { period: lv => 2.9 - 0.25 * (lv - 1), speed: 620, dist: lv => 300 + lv * 40, dmg: lv => 1 + lv, life: 3 },
   vortex: { period: lv => 7.5 - 0.7 * (lv - 1), radius: lv => 90 + lv * 24, dur: lv => 2 + 0.25 * lv, pull: 340, tick: 0.36, dmg: 1 },
 
@@ -198,8 +203,8 @@ const CFG = {
   glob:   { speed: 215, life: 2.4, r: 5 },
   needle: { speed: 470, life: 1.7, r: 3 },
 
-  // total waves cleared → rank, else 'D' (the journey is five hundred waves)
-  ranks: [[420, 'S+'], [340, 'S'], [250, 'A'], [160, 'B'], [60, 'C']],
+  // total waves cleared → rank, else 'D' (the journey is six hundred waves)
+  ranks: [[500, 'S+'], [400, 'S'], [300, 'A'], [190, 'B'], [70, 'C']],
 
   /* ---- ink engine knobs (consumed by render.js) ---- */
   ink: {
@@ -257,6 +262,22 @@ const ENEMIES = {
   maelstrom: { name: 'MAELSTROM',  trait: 'UNDERTOW', cost: 4, intro: 351, hp: 7,  r: 14, speed: 26,  score: 60, shape: 'maelstrom' },
   crest:     { name: 'WAVE CREST', trait: 'SWELL',    cost: 3, intro: 356, hp: 6,  r: 15, speed: 88,  score: 55, shape: 'crest'   },
 
+  /* ---- SHEET VI · THE BLANK SILK — cool ink on unstained silk ---- */
+  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
+  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
+  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
+  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
+  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
+  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
+
+  /* ---- SHEET VI · THE BLANK SILK — cool ink on unstained silk ---- */
+  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
+  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
+  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
+  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
+  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
+  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
+
   /* ---- SHEET V · GILT SCROLL — gold-dusted ink ---- */
   gildling:  { name: 'GILDLING',   trait: 'GILDED',   cost: 3, intro: 401, hp: 6,  r: 13, speed: 52,  score: 50, shape: 'gildling' },
   phoenix:   { name: 'PHOENIX',    trait: 'DIVING',   cost: 3, intro: 406, hp: 3,  r: 12, speed: 235, score: 55, shape: 'phoenix' },
@@ -276,6 +297,7 @@ const ENEMIES = {
   s_mender:  { name: 'THE MENDER',   trait: 'STITCHER',  cost: 3, intro: 236, hp: 6,  r: 12, speed: 76,  score: 85, shape: 'mender', special: 1 },
   s_toller:  { name: 'THE TOLLER',   trait: 'BELL',      cost: 3, intro: 361, hp: 7,  r: 15, speed: 36,  score: 95, shape: 'toller', special: 1 },
   s_ledger:  { name: 'THE LEDGER',   trait: 'USURER',    cost: 3, intro: 446, hp: 9,  r: 14, speed: 64,  score: 115, shape: 'ledger', special: 1 },
+  s_trace:   { name: 'THE TRACE',    trait: 'TRACER',    cost: 3, intro: 546, hp: 8,  r: 14, speed: 58,  score: 95, shape: 'trace', special: 1 },
 
   /* ---- CAPTAINS — the horde's officers, one cut from each sheet's
      ink. They quicken the pack around them, call fresh beasts into
@@ -286,8 +308,9 @@ const ENEMIES = {
   c_banner:  { name: 'THE BANNER',     trait: 'CAPTAIN · MARCH',  cost: 4, intro: 231, hp: 11, r: 16, speed: 48, score: 125, shape: 'captain', captain: 1, summon: 'ashigaru' },
   c_gale:    { name: 'THE STORMCALLER',trait: 'CAPTAIN · STORM',  cost: 4, intro: 346, hp: 9,  r: 15, speed: 60, score: 155, shape: 'captain', captain: 1, summon: 'ember' },
   c_gild:    { name: 'THE PAYMASTER',  trait: 'CAPTAIN · GREED',  cost: 4, intro: 426, hp: 8,  r: 17, speed: 42, score: 185, shape: 'captain', captain: 1, summon: 'gildling' },
+  c_hush:    { name: 'THE HUSH',       trait: 'CAPTAIN · SILENCE',cost: 4, intro: 516, hp: 8,  r: 16, speed: 46, score: 185, shape: 'captain', captain: 1, summon: 'sketch' },
 
-  /* ---- the five Guardians, one per sheet, on its tenth level ----
+  /* ---- the six Guardians, one per sheet, on its tenth level ----
      Bases are the beast's own ink mass, measured against the
      NATURAL build a scribe carries at each sheet's gate — the sheet
      multipliers (hp 1 → 6.6) do the climbing across the journey, so
@@ -299,8 +322,9 @@ const ENEMIES = {
   b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 820,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
   b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 620, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
   b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 700, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+  b_blank:   { name: 'THE UNWRITTEN',   trait: 'GUARDIAN VI',  cost: 0, intro: 600, hp: 660, r: 32, speed: 50, score: 2600, shape: 'boss', boss: 1 },
 
-  /* ---- the five Keepers, one per sheet, on EVERY tenth wave ----
+  /* ---- the six Keepers, one per sheet, on EVERY tenth wave ----
      lesser bosses cut from the same ink as their Guardian — they
      share its body and its hunger, thinned for a scene's climax.
      Bases are measured against the scribe's natural build at each
@@ -312,6 +336,7 @@ const ENEMIES = {
   k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 540, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
   k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 620, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
   k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 520, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
+  k_edge:   { name: 'THE MARGIN',   trait: 'KEEPER VI',  cost: 0, intro: 510, hp: 640, r: 24, speed: 60, score: 600, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -327,16 +352,19 @@ const ENEMY_WEIGHTS = {
   stamper: 1.0, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85,
   shiki: 1.1, crest: 1.4, cask: 0.9,
   /* the officers and the odd mechanics — present, never flooding */
-  c_drum: 0.75, c_choir: 0.75, c_banner: 0.75, c_gale: 0.75, c_gild: 0.75,
-  s_nest: 0.9, s_mender: 0.8, s_toller: 0.9, s_ledger: 0.8,
+  c_drum: 0.75, c_choir: 0.75, c_banner: 0.75, c_gale: 0.75, c_gild: 0.75, c_hush: 0.75,
+  s_nest: 0.9, s_mender: 0.8, s_toller: 0.9, s_ledger: 0.8, s_trace: 0.8,
+  /* the blank silk's own half-drawn things */
+  sketch: 1.5, stitch: 1.4, reseal: 0.9, sizing: 1.2, binder: 0.9, weft: 1.3,
 };
 
 /* ------------------------------------------------------------
-   THE FIVE SCROLLS — each sheet is a different paper washed in
+   THE SIX SCROLLS — each sheet is a different paper washed in
    its own ink: 淡 pale wash, 濃 lamp-black, 朱 vermillion,
-   雨 rain-grey, 金 gold-dust. Ten levels a sheet; the tenth
-   level bears the Guardian. Each level debuts a beast of its
-   own (order) and paints the next scene of the page (names).
+   雨 rain-grey, 金 gold-dust, 素 the blank silk. Ten levels a
+   sheet; the tenth level bears the Guardian. Each level debuts
+   a beast of its own (order) and paints the next scene of the
+   page (names).
    ------------------------------------------------------------ */
 const AREAS = [
   {
@@ -389,6 +417,16 @@ const AREAS = [
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
   },
+  {
+    id: 'VI', name: 'THE BLANK SILK', kanji: '素', theme: 'silk',
+    ink: '素墨',                                     // cool ink on unstained silk
+    desc: 'The silk the first stroke landed on. Some things are still only drawn.',
+    mult: { hp: 7.9, sp: 1.26, budget: 4.1 },
+    roster: ['sketch', 'stitch', 'reseal', 'sizing', 'binder', 'weft', 'kage', 'crane', 'gate', 'warden', 'titan', 'golem', 's_trace', 'c_hush'],
+    order: ['sketch', 'stitch', 'reseal', 'sizing', 'binder', 'weft', 'gate', 'titan', 'golem'],
+    names: ['素紙', '下絵', '糸影', '糊染', '再印', '織端', '絹目', '古鏡', '無字', '落款'],
+    elite: 'sketch', boss: 'b_blank', keeper: 'k_edge',
+  },
 ];
 
 const UPGRADES = [
@@ -402,7 +440,8 @@ const UPGRADES = [
   { id: 'adren',  name: 'Red Seal',     desc: 'Every kill presses a seal: a short 1.2× stride surge.',      max: 3, apply: s => { s.adren += 1; } },
   { id: 'shock',  name: 'Ink Burst',    desc: 'Taking a hit splashes everything nearby away. Once per hit.', max: 1, apply: s => { s.shock = true; } },
   { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored volley answers behind your back. +1 droplet.',    max: 2, apply: s => { s.echo += 1; } },
-  { id: 'orbit',  name: 'Ink Orbit',    desc: 'A droplet circles the brush, grinding what it touches.',     max: 3, apply: s => { s.orb += 1; } },
+  { id: 'orbit',  name: 'Ink Orbit',    desc: 'Droplets circle the brush in a wide ring, grinding all they graze.', max: 3, apply: s => { s.orb += 1; },
+    maxSpec: 'THE GRAVE RING — an orbital hunts what it sees, every few breaths' },
   { id: 'nova',   name: 'Black Tide',   desc: 'Every few breaths the ink surges outward, shoving all back.', max: 3, apply: s => { s.nova += 1; } },
   { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',  max: 2, apply: s => { s.slow += 1; } },
   { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',    max: 2, apply: s => { s.crit += 1; } },
@@ -411,13 +450,20 @@ const UPGRADES = [
   { id: 'mends',  name: 'Paper Mends',  desc: 'The sheet heals itself: +1 integrity every so often.',       max: 2, apply: s => { s.mends += 1; s.mendsT = CFG.mends.period(s.mends); } },
   { id: 'well',   name: 'Deep Well',    desc: 'Every mote of ink is worth +25% more to the brush.',         max: 2, apply: s => { s.well += 1; } },
   /* ---- weapons ---- */
-  { id: 'fan',    name: 'Folded Fan',   desc: 'Every few breaths the fan snaps open — a spray of paper blades.', max: 4, weapon: true, apply: s => { s.fan += 1; } },
-  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, weapon: true, apply: s => { s.trailW += 1; } },
-  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, weapon: true, apply: s => { s.spirit += 1; } },
-  { id: 'hanko',  name: 'Crimson Hanko',desc: 'Every eleventh breath a great red seal slams the nearest horde — elites bend it, few break it.', max: 3, weapon: true, apply: s => { s.hanko += 1; } },
-  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, weapon: true, apply: s => { s.arc += 1; } },
-  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, weapon: true, apply: s => { s.boomer += 1; } },
-  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, weapon: true, apply: s => { s.vortex += 1; } },
+  { id: 'fan',    name: 'Folded Fan',   desc: 'Every few breaths the fan snaps open — a spray of paper blades.', max: 4, weapon: true, apply: s => { s.fan += 1; },
+    maxSpec: 'THE FULL BLOOM — every fourth cast snaps open full-circle' },
+  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, weapon: true, apply: s => { s.trailW += 1; },
+    maxSpec: 'THE LINGERING POOL — the ink bites twice as fast and pools deeper' },
+  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, weapon: true, apply: s => { s.spirit += 1; },
+    maxSpec: 'THE LITANY — spirits run through up to three bodies and fly faster' },
+  { id: 'hanko',  name: 'Crimson Hanko',desc: 'Every eleventh breath a great red seal slams the nearest horde — elites bend it, few break it.', max: 3, weapon: true, apply: s => { s.hanko += 1; },
+    maxSpec: 'THE TWIN STAMP — a second, lighter seal follows the first' },
+  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, weapon: true, apply: s => { s.arc += 1; },
+    maxSpec: 'THE LIVING LINE — the stroke leaps three links farther' },
+  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, weapon: true, apply: s => { s.boomer += 1; },
+    maxSpec: 'THE MIRROR RETURN — the homing stroke bursts into an ink ring' },
+  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, weapon: true, apply: s => { s.vortex += 1; },
+    maxSpec: 'THE WHORL TEETH — the closing whirlpool bites what remains' },
 ];
 
 /* ---- CHARMS (符) — what the inkstone buys ----
@@ -472,4 +518,6 @@ const BOSS_TAUNTS = {
   k_veil:    'THE STORM LEAVES ITS VEIL BEHIND.',
   b_origin:  'THE FIRST STROKE IS STILL WET.',
   k_nib:     'THE OLD BRUSH\u2019S TIP — IT REMEMBERS YOUR HAND.',
+  b_blank:   'THE PAGE IS STILL BLANK. IT WANTS YOUR HAND.',
+  k_edge:    'THE MARGIN HOLDS WHAT THE BRUSH FORGOT.',
 };

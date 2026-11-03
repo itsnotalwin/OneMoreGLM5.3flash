@@ -23,6 +23,7 @@ const R = (() => {
     red:   { paper: '#eadbc4', ink: '#1a1714', tint: '#4a211a', vig: '122,42,26', wash: '178,58,43',   washA: 0.031, fiber: [70,62,48],  speck: '50,45,36',    weather: 'petals' },
     storm: { paper: '#c7cdc9', ink: '#161c1f', tint: '#1e3240', vig: '26,38,44',  wash: '58,74,84',    washA: 0.03,  fiber: [56,66,70],  speck: '40,52,58',    weather: 'rain'   },
     gilt:  { paper: '#e7d6ad', ink: '#241c12', tint: '#4a360e', vig: '96,70,20',  wash: '166,124,44',  washA: 0.035, fiber: [96,78,44],  speck: '120,92,40',   weather: 'gold'   },
+    silk:  { paper: '#f3eee1', ink: '#201d24', tint: '#3c3648', vig: '64,58,74',  wash: '118,108,132', washA: 0.024, fiber: [96,88,108], speck: '84,76,96',    weather: 'silk'   },
   };
   let INK = THEMES.pale.ink;
   let PAPER = THEMES.pale.paper;
@@ -223,12 +224,34 @@ const R = (() => {
         p.stroke();
       }
     }
+    /* the blank silk: a faint woven weave and a few stray threads */
+    if (key === 'silk') {
+      /* the warp — every fourteenth thread a hair darker, like laid silk */
+      p.strokeStyle = 'rgba(84,76,96,0.05)';
+      p.lineWidth = 1;
+      for (let x = 7; x < TILE; x += 14) {
+        p.beginPath();
+        p.moveTo(x + (rnd() - 0.5), 0);
+        p.lineTo(x + (rnd() - 0.5), TILE);
+        p.stroke();
+      }
+      /* stray threads that escaped the loom */
+      for (let i = 0; i < 4; i++) {
+        const y = rnd() * TILE, x0 = rnd() * TILE, l = 60 + rnd() * 120;
+        p.strokeStyle = `rgba(${th.speck},${0.05 + rnd() * 0.05})`;
+        p.lineWidth = 0.8;
+        p.beginPath();
+        p.moveTo(x0, y);
+        p.bezierCurveTo(x0 + l * 0.3, y + (rnd() - 0.5) * 10, x0 + l * 0.7, y + (rnd() - 0.5) * 10, x0 + l, y + (rnd() - 0.5) * 6);
+        p.stroke();
+      }
+    }
     return c;
   }
 
   function ensureTiles(ctx, dpr) {
     ensurePatterns(ctx);
-    if (tileDpr === dpr && tiles.pale && tiles.storm && tiles.gilt) return;
+    if (tileDpr === dpr && tiles.pale && tiles.storm && tiles.gilt && tiles.silk) return;
     tileDpr = dpr;
     tiles = {
       pale: buildTile('pale', dpr),
@@ -236,6 +259,7 @@ const R = (() => {
       red: buildTile('red', dpr),
       storm: buildTile('storm', dpr),
       gilt: buildTile('gilt', dpr),
+      silk: buildTile('silk', dpr),
     };
   }
 
@@ -833,6 +857,18 @@ const R = (() => {
       [el('rockS', 0.30, 1, 1.4, 0.70), wash('shore', 990, 1270, 0.22, 0.32, '汀')],
       [seal(), mist(0.12), el('crane', 0.30, 1, 1.3, 0.58)],
     ],
+    silk: [   /* THE BLANK SILK — the underdrawing wakes on unstained silk */
+      [el('reeds', 0.22, 0.85, 1.2, 0.5)],
+      [wash('hab2', 900, 1140, 0.16, 0.22, '遠山')],
+      [el('rockS', 0.22, 0.85, 1.15, 0.6, null, { bend: 0 })],
+      [wash('trees', 1050, 1320, 0.13, 0.2, '下絵')],
+      [mist(0.2)],
+      [wash('guo2', 990, 1270, 0.15, 0.22, '無字')],
+      [el('deadTree', 0.2, 0.9, 1.2, 0.62, '古木'), el('crane', 0.22, 0.9, 1.2, 0.5)],
+      [wash('kuan', 1050, 1380, 0.14, 0.21, '絹目')],
+      [el('rockS', 0.24, 1, 1.35, 0.58), wash('shore', 990, 1270, 0.16, 0.24, '汀')],
+      [seal(), mist(0.14)],
+    ],
   };
 
   /* a poem-title: vertical kanji with a small red seal beneath —
@@ -1074,6 +1110,8 @@ const R = (() => {
     c.strokeStyle = isBoss ? BOSS_INK : INK;
     c.lineJoin = 'round';
     c.lineCap = 'round';
+    /* the tracer's copies are only half-inked — faint as a remembered shadow */
+    if (e.trace) c.globalAlpha = 0.55;
 
     let silhouette = null; /* path fn for hit-flash overlay */
 
@@ -2170,6 +2208,246 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.12, 12);
         break;
       }
+
+      /* ============ THE BLANK SILK — the half-drawn things ============ */
+      case 'sketch': { /* SKETCH — an outline of a beast, not always there */
+        const faint = !!e.faint;
+        c.save();
+        /* faint: a ghost of a drawing — dashes and stray construction marks */
+        if (faint) {
+          c.globalAlpha = 0.28;
+          c.setLineDash([7, 6]);
+          c.lineWidth = 1.6;
+          c.rotate(Math.sin(e.t * 0.9 + e.seed) * 0.15);
+          blobPath(c, 0, 0, r, sd, 0.2, 10);
+          c.stroke();
+          /* construction cross beneath — the drawing's scaffolding */
+          c.beginPath();
+          c.moveTo(-r * 0.5, -r * 0.1); c.lineTo(r * 0.5, r * 0.1);
+          c.moveTo(-r * 0.1, r * 0.5); c.lineTo(r * 0.1, -r * 0.5);
+          c.stroke();
+          c.setLineDash([]);
+        } else {
+          /* solid: the ink catches up with its own outline — hatched body,
+             the dashes still visible at the rim where the ink has not reached */
+          blobPath(c, 0, 0, r, sd, 0.2, 10);
+          c.fill();
+          c.save(); c.globalAlpha = 0.35; c.fillStyle = patHatch; c.fill(); c.restore();
+          c.save();
+          c.globalAlpha = 0.55;
+          c.setLineDash([6, 5]);
+          c.lineWidth = 1.5;
+          blobPath(c, 0, 0, r * 1.12, sd ^ 31, 0.24, 10);
+          c.stroke();
+          c.setLineDash([]);
+          c.restore();
+        }
+        c.restore();
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        if (!faint) eyeSlits(c, ang2, r * 0.8, 0.7);
+        silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.2, 10);
+        break;
+      }
+      case 'stitch': { /* STITCH — a running seam, a line of held breath */
+        const st3 = e.state;
+        c.save();
+        c.rotate(e.ang);
+        if (st3 === 'dash') c.scale(1.7, 0.55);
+        /* the thread: a long thin stroke with a knot at the eye */
+        c.lineWidth = st3 === 'dash' ? 2.6 : 2;
+        c.beginPath();
+        c.moveTo(-r * 1.5, 0);
+        c.lineTo(r * 1.1, 0);
+        c.stroke();
+        c.globalAlpha = 0.4;
+        c.beginPath();
+        c.moveTo(-r * 1.5, 0);
+        c.lineTo(-r * 2.1, Math.sin(e.t * 9 + e.seed) * 2);
+        c.stroke();
+        c.globalAlpha = 1;
+        /* the needle head: a small solid drop */
+        c.beginPath();
+        c.ellipse(r * 0.55, 0, r * 0.42, r * 0.3, 0, 0, TAU);
+        c.fill();
+        if (st3 === 'tele') {
+          c.globalAlpha = 0.5;
+          c.lineWidth = 1.4;
+          c.beginPath();
+          c.arc(0, 0, r * 1.3, 0, TAU);
+          c.stroke();
+          c.globalAlpha = 1;
+        }
+        c.restore();
+        silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.ellipse(0, 0, r * 1.5, r * 0.6, 0, 0, TAU); c.restore(); };
+        break;
+      }
+      case 'reseal': { /* RESEAL — a stamp that refuses its first ending */
+        const rose = !!e.rose;
+        c.save();
+        c.rotate(Math.sin(e.t * 1.8 + e.seed) * 0.06 - 0.05);
+        /* the body: a rounded seal-stone */
+        const rw = r * 0.94, rr2 = r * 0.28;
+        blobPath(c, 0, 0, r * 0.9, sd, 0.09, 12);
+        c.fill();
+        c.save(); c.globalAlpha = 0.4; c.fillStyle = patHatch; c.fill(); c.restore();
+        c.lineWidth = 2.2;
+        blobPath(c, 0, 0, r * 0.9, sd, 0.09, 12);
+        c.stroke();
+        /* the red stamp face — one seal calm, two seals risen */
+        c.fillStyle = RED;
+        const s4 = r * 0.34;
+        c.fillRect(-s4 - r * 0.14, -s4, s4 * 2, s4 * 2);
+        if (rose) {
+          c.globalAlpha = 0.85;
+          c.fillRect(s4 * 0.5, s4 * 0.6, s4 * 1.1, s4 * 1.1);
+          c.globalAlpha = 1;
+        }
+        c.fillStyle = INK;
+        /* the paper shows through the stamp: its mark, unread */
+        c.strokeStyle = PAPER;
+        c.lineWidth = 1.2;
+        c.strokeRect(-s4 - r * 0.14 + s4 * 0.3, -s4 + s4 * 0.3, s4 * 1.4, s4 * 1.4);
+        c.restore();
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang2, r * 0.7, 0.7);
+        silhouette = () => blobPath(c, 0, 0, r * 1.02, sd, 0.09, 12);
+        break;
+      }
+      case 'sizing': { /* SIZING — a slow dollop of glue, glossy and patient */
+        const breathe = 1 + Math.sin(e.t * 1.7 + e.seed) * 0.06;
+        c.save();
+        c.scale(breathe, 2 - breathe);
+        blobPath(c, 0, 0, r, sd, 0.22, 11);
+        c.fill();
+        /* the glaze: a wet highlight that slides as it breathes */
+        c.save();
+        c.globalAlpha = 0.22;
+        c.fillStyle = PAPER;
+        c.beginPath();
+        c.ellipse(-r * 0.25 + Math.sin(e.t * 0.8) * 3, -r * 0.3, r * 0.3, r * 0.16, -0.5, 0, TAU);
+        c.fill();
+        c.restore();
+        c.lineWidth = 2;
+        c.globalAlpha = 0.8;
+        blobPath(c, 0, 0, r * 0.94, sd, 0.24, 11);
+        c.stroke();
+        c.globalAlpha = 1;
+        c.restore();
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang2, r * 0.75, 0.55);
+        silhouette = () => blobPath(c, 0, 0, r * 1.06, sd, 0.22, 11);
+        break;
+      }
+      case 'binder': { /* BINDER — the mount that herds the page's strays */
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        c.save();
+        c.rotate(ang2);
+        /* a broad bracket of a body — the edge that gathers the loose ink */
+        c.lineWidth = 3.4;
+        c.beginPath();
+        c.moveTo(-r * 0.55, -r);
+        c.lineTo(r * 0.4, -r);
+        c.quadraticCurveTo(r * 0.95, -r, r * 0.95, -r * 0.4);
+        c.lineTo(r * 0.95, r * 0.4);
+        c.quadraticCurveTo(r * 0.95, r, r * 0.4, r);
+        c.lineTo(-r * 0.55, r);
+        c.stroke();
+        c.globalAlpha = 0.35;
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(-r * 0.2, -r * 0.62);
+        c.lineTo(-r * 0.2, r * 0.62);
+        c.stroke();
+        c.globalAlpha = 1;
+        c.restore();
+        /* the herd-marks: three faint arrows on its face, pointing ahead */
+        c.save();
+        c.rotate(ang2);
+        c.strokeStyle = PAPER;
+        c.lineWidth = 1.3;
+        c.globalAlpha = 0.75;
+        for (let i = -1; i <= 1; i++) {
+          c.beginPath();
+          c.moveTo(r * 0.1, i * r * 0.42);
+          c.lineTo(r * 0.5, i * r * 0.42);
+          c.lineTo(r * 0.34, i * r * 0.42 - 2.6);
+          c.moveTo(r * 0.5, i * r * 0.42);
+          c.lineTo(r * 0.34, i * r * 0.42 + 2.6);
+          c.stroke();
+        }
+        c.restore();
+        silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.14, 10);
+        break;
+      }
+      case 'weft': { /* WEFT — a loom-shuttle that throws the cross-weave */
+        const st3 = e.state;
+        c.save();
+        c.rotate(e.ang);
+        /* the shuttle: a lens with a thread wound round it */
+        c.beginPath();
+        c.ellipse(0, 0, r * 1.05, r * 0.55, 0, 0, TAU);
+        c.fill();
+        c.save(); c.globalAlpha = 0.38; c.fillStyle = patHatch; c.fill(); c.restore();
+        c.strokeStyle = PAPER;
+        c.lineWidth = 1.1;
+        c.globalAlpha = 0.7;
+        for (let i = -2; i <= 2; i++) {
+          c.beginPath();
+          c.moveTo(-r * 0.7, i * r * 0.2);
+          c.lineTo(r * 0.7, i * r * 0.2);
+          c.stroke();
+        }
+        c.restore();
+        c.save();
+        /* the woven threads it trails */
+        c.strokeStyle = INK;
+        c.globalAlpha = st3 === 'tele' ? 0.6 : 0.25;
+        c.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const ta = e.t * 2 + i * 2.1 + e.seed;
+          c.beginPath();
+          c.moveTo(Math.cos(ta) * r * 1.2, Math.sin(ta) * r * 1.2);
+          c.lineTo(Math.cos(ta + 2.6) * r * 1.9, Math.sin(ta + 2.6) * r * 1.9);
+          c.stroke();
+        }
+        c.globalAlpha = 1;
+        c.restore();
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang2, r * 0.7, 0.6);
+        silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.65, 0, 0, TAU); c.restore(); };
+        break;
+      }
+      case 's_trace': { /* THE TRACE — a hound of half-ink that copies what it sees */
+        c.save();
+        c.rotate(Math.sin(e.t * 1.1 + e.seed) * 0.12);
+        /* a sketched hound: outline body, dashed legs, a trailing copy-line */
+        c.setLineDash([8, 5]);
+        c.lineWidth = 2.2;
+        blobPath(c, 0, 0, r * 0.8, sd, 0.18, 12);
+        c.stroke();
+        c.globalAlpha = 0.5;
+        blobPath(c, 0, 0, r * 0.8, sd, 0.18, 12);
+        c.fill();
+        c.globalAlpha = 1;
+        c.setLineDash([]);
+        /* the copy-line: wherever it has traced, a thread still runs */
+        c.globalAlpha = 0.3;
+        c.lineWidth = 1.2;
+        for (let i = 0; i < 2; i++) {
+          const ta = e.t * 1.4 + i * 3.1;
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.quadraticCurveTo(Math.cos(ta) * r * 1.6, Math.sin(ta) * r * 1.6 - 6, Math.cos(ta) * r * 2.3, Math.sin(ta) * r * 2.3);
+          c.stroke();
+        }
+        c.globalAlpha = 1;
+        c.restore();
+        const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang2, r * 0.7, 0.7);
+        silhouette = () => blobPath(c, 0, 0, r * 0.9, sd, 0.18, 12);
+        break;
+      }
+
       case 'b_wheel': case 'k_blight': { /* THE STAIN / THE BLIGHT — a rolling sea of ink */
         const st2 = e.state;
         const swell = st2 === 'windup' ? 1 + Math.min(1, e.stateT / 0.7) * 0.24 : 1;
@@ -2359,6 +2637,78 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 0.86, sd, 0.14, 14);
         break;
       }
+      case 'b_blank': case 'k_edge': { /* THE UNWRITTEN / THE MARGIN — a blank page that walks */
+        const phase = e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+        const eraseWind = e.state === 'erase';
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        /* the body: a tall page of silk, its edges lifted by the wind of itself */
+        c.save();
+        const sway = Math.sin(e.t * 1.6 + e.seed) * 0.06 + (eraseWind ? Math.sin(e.stateT * 24) * 0.05 : 0);
+        c.rotate(sway);
+        c.fillStyle = PAPER;
+        c.strokeStyle = BOSS_INK;
+        /* the page: a tall rounded sheet, drawn as one pressed rectangle */
+        const pw = r * 0.78, ph2 = r * 1.18, corner = r * 0.14;
+        c.lineWidth = 2.6;
+        c.beginPath();
+        c.moveTo(-pw + corner, -ph2);
+        c.lineTo(pw - corner, -ph2); c.quadraticCurveTo(pw, -ph2, pw, -ph2 + corner);
+        c.lineTo(pw, ph2 - corner); c.quadraticCurveTo(pw, ph2, pw - corner, ph2);
+        c.lineTo(-pw + corner, ph2); c.quadraticCurveTo(-pw, ph2, -pw, ph2 - corner);
+        c.lineTo(-pw, -ph2 + corner); c.quadraticCurveTo(-pw, -ph2, -pw + corner, -ph2);
+        c.closePath();
+        c.fill();
+        c.globalAlpha = 0.85;
+        c.stroke();
+        c.globalAlpha = 1;
+        /* the underdrawing that haunts its own surface — faint marks that
+           surface with every phase, the page remembering what it erased */
+        c.strokeStyle = BOSS_INK;
+        c.globalAlpha = 0.16 + phase * 0.12;
+        c.lineWidth = 1.2;
+        const ur = mulberry(sd >> 2);
+        for (let i = 0; i < 4 + phase * 2; i++) {
+          const ux2 = (ur() - 0.5) * pw * 1.3, uy2 = (ur() - 0.5) * ph2 * 1.4;
+          c.beginPath();
+          c.moveTo(ux2, uy2);
+          c.quadraticCurveTo(ux2 + (ur() - 0.5) * 14, uy2 + (ur() - 0.5) * 14, ux2 + (ur() - 0.5) * 22, uy2 + (ur() - 0.5) * 22);
+          c.stroke();
+        }
+        c.globalAlpha = 1;
+        /* the red margin: a corner seal pressed on the page's lower right —
+           it deepens through the phases until the whole edge burns */
+        c.fillStyle = phase === 2 ? BOSS_INK : RED;
+        c.globalAlpha = 0.55 + phase * 0.2;
+        const ms = r * 0.16 + phase * r * 0.05;
+        c.fillRect(pw - ms - 3, ph2 - ms - 3, ms, ms);
+        c.globalAlpha = 1;
+        /* the eyes: two slits torn where a face was almost drawn */
+        c.strokeStyle = BOSS_INK;
+        c.fillStyle = BOSS_INK;
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(-pw * 0.32, -ph2 * 0.28, r * 0.13, Math.PI * 1.15, Math.PI * 1.85);
+        c.stroke();
+        c.beginPath();
+        c.arc(pw * 0.32, -ph2 * 0.28, r * 0.13, Math.PI * 1.15, Math.PI * 1.85);
+        c.stroke();
+        c.restore();
+        /* the erase wind: stray flecks streaming off the page's edge */
+        if (eraseWind) {
+          c.save();
+          c.fillStyle = PAPER;
+          for (let i = 0; i < 5; i++) {
+            const fa = e.stateT * 9 + i * 1.26;
+            c.globalAlpha = 0.5;
+            c.beginPath();
+            c.arc(Math.cos(fa) * r * 1.5, Math.sin(fa) * r * 1.8, 2.2, 0, TAU);
+            c.fill();
+          }
+          c.restore();
+        }
+        silhouette = () => { c.beginPath(); c.rect(-r * 0.8, -r * 1.2, r * 1.6, r * 2.4); };
+        break;
+      }
       /* ============ THE SPECIALS — the paper's odd mechanics ============ */
       case 's_nest': { /* THE NEST — a woven cocoon that breathes and hums with brood */
         const br = 1 + Math.sin(e.t * 2.2 + e.seed) * 0.05;
@@ -2440,9 +2790,9 @@ const R = (() => {
       }
 
       /* ============ THE CAPTAINS — the horde's officers ============ */
-      case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': {
+      case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': case 'c_hush': {
         /* a plump blot under a tall flag — the sheet's own kanji flies above it */
-        const K = ({ c_drum: '一', c_choir: '夜', c_banner: '紅', c_gale: '嵐', c_gild: '金' })[e.type] || '旗';
+        const K = ({ c_drum: '一', c_choir: '夜', c_banner: '紅', c_gale: '嵐', c_gild: '金', c_hush: '素' })[e.type] || '旗';
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         const bob = Math.sin(e.t * 3.1 + e.seed) * r * 0.06;
         /* the pole rises behind the body, the flag hangs to its right */
@@ -2495,6 +2845,17 @@ const R = (() => {
           c.strokeStyle = '#8a6a1f'; c.fillStyle = '#8a6a1f'; c.lineWidth = 1.4;
           c.beginPath(); c.arc(0, 0, r * 0.34, 0, TAU); c.stroke();
           c.beginPath(); c.arc(0, 0, r * 0.12, 0, TAU); c.fill();
+          c.restore();
+        } else if (e.type === 'c_hush') {
+          /* the hush: two closed eyes — the officer that speaks nothing */
+          c.save();
+          c.strokeStyle = PAPER; c.lineWidth = 1.6; c.globalAlpha = 0.85;
+          c.beginPath();
+          c.arc(-r * 0.3, -r * 0.05, r * 0.16, Math.PI * 0.12, Math.PI * 0.88);
+          c.stroke();
+          c.beginPath();
+          c.arc(r * 0.3, -r * 0.05, r * 0.16, Math.PI * 0.12, Math.PI * 0.88);
+          c.stroke();
           c.restore();
         }
         eyeSlits(c, ang, r);
@@ -3132,28 +3493,47 @@ const R = (() => {
 
     const st = S.stats;
 
-    /* ink orbit: droplets circling the brush */
+    /* ink orbit: droplets circling the brush in a wide, living ring */
     if (st && st.orb > 0) {
       const orbR = CFG.orbit.radius(st.orb);
       const base = S.clockT || t;
+      const maxed = st.orb >= 3;
       c.save();
-      c.globalAlpha = (blink ? 0.5 : 1) * 0.1;
+      /* the guide ring: a dashed circle that breathes with the hand */
+      c.globalAlpha = (blink ? 0.5 : 1) * (0.12 + 0.035 * Math.sin(t * 2.1));
       c.strokeStyle = INK;
       c.lineWidth = 1;
+      c.setLineDash([7, 9]);
       c.beginPath(); c.arc(0, 0, orbR, 0, TAU); c.stroke();
+      c.setLineDash([]);
       c.restore();
       for (let i = 0; i < st.orb; i++) {
         const a = base * CFG.orbit.speed + (i / st.orb) * TAU;
         const ox = Math.cos(a) * orbR, oy = Math.sin(a) * orbR;
+        /* the wet arc each droplet leaves behind it on the ring */
+        c.save();
+        c.globalAlpha = (blink ? 0.45 : 1) * 0.3;
+        c.strokeStyle = INK;
+        c.lineWidth = 2.2;
+        c.beginPath();
+        c.arc(0, 0, orbR, a - 0.85, a - 0.12);
+        c.stroke();
+        c.restore();
         c.save();
         c.translate(ox, oy);
         c.rotate(a + Math.PI / 2);
         c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
         c.fillStyle = INK;
-        teardrop(c, 3.6);
+        teardrop(c, 4.6);
         c.fill();
+        if (maxed) {
+          /* THE GRAVE RING: the hunters wear the red tip */
+          c.globalAlpha = (blink ? 0.6 : 1) * 0.9;
+          c.fillStyle = RED;
+          c.beginPath(); c.arc(3.4, 0, 1.7, 0, TAU); c.fill();
+        }
         c.globalAlpha = (blink ? 0.5 : 1) * 0.3;
-        inkStroke(c, [{ x: -6, y: 0 }, { x: -13, y: 0.4 }], 1.8, { alpha: 1 });
+        inkStroke(c, [{ x: -7, y: 0 }, { x: -16, y: 0.5 }], 2.2, { alpha: 1 });
         c.restore();
       }
     }
@@ -3231,8 +3611,44 @@ const R = (() => {
       c.fillStyle = INK;
       teardrop(c, 4.2);
       c.fill();
-      inkStroke(c, [{ x: -5, y: 0 }, { x: -14 - b.age * 8, y: 0.6 }], 2.6, { alpha: 0.4 });
+      /* a curling tail, drying as it flies */
+      c.globalAlpha = 0.4;
+      inkStroke(c, [
+        { x: -5, y: 0 }, { x: -11, y: 2.2 }, { x: -17 - b.age * 8, y: -1.2 },
+      ], 2.4, { alpha: 1 });
     }
+    c.restore();
+  }
+
+  /* the bounded page's margins: a hand-pressed border so the eye
+     reads where the paper ends (journey and daily only) */
+  function drawArenaEdge(c) {
+    const S = G.S;
+    if (S.runMode !== 'journey' && S.runMode !== 'daily') return;
+    const A = CFG.world.arena, ins = A.inset;
+    const x0 = -A.w / 2 + ins, y0 = -A.h / 2 + ins;
+    const w = A.w - ins * 2, h = A.h - ins * 2;
+    c.save();
+    c.globalAlpha = 0.5;
+    c.strokeStyle = INK;
+    c.lineWidth = 3.2;
+    c.lineCap = 'round';
+    /* four pressed strokes, each a hair out of register */
+    c.beginPath();
+    c.moveTo(x0 + 6, y0); c.lineTo(x0 + w - 10, y0 + 1.5);
+    c.moveTo(x0 + w, y0 + 6); c.lineTo(x0 + w - 1.5, y0 + h - 10);
+    c.moveTo(x0 + w - 6, y0 + h); c.lineTo(x0 + 10, y0 + h - 1.5);
+    c.moveTo(x0, y0 + h - 6); c.lineTo(x0 + 1.5, y0 + 10);
+    c.stroke();
+    /* the inner hairline */
+    c.globalAlpha = 0.16;
+    c.lineWidth = 1;
+    c.strokeRect(x0 + 7, y0 + 7, w - 14, h - 14);
+    /* the corner marks: four red seal dots */
+    c.globalAlpha = 0.55;
+    c.fillStyle = RED;
+    const cs = [[x0, y0], [x0 + w, y0], [x0 + w, y0 + h], [x0, y0 + h]];
+    for (const [kx, ky] of cs) { c.beginPath(); c.arc(kx, ky, 3, 0, TAU); c.fill(); }
     c.restore();
   }
 
@@ -3273,6 +3689,25 @@ const R = (() => {
     c.save();
     c.translate(pd.x, pd.y);
     c.scale(1, 0.62);
+    if (pd.hostile) {
+      /* the sizing's glue — a pale glossy sheen that holds the brush */
+      c.globalAlpha = 0.2 * fade;
+      c.fillStyle = '#a89ab8';
+      blobPath(c, 0, 0, pd.r * grow, pd.seed, 0.3, 12);
+      c.fill();
+      c.globalAlpha = 0.3 * fade;
+      c.strokeStyle = INK;
+      c.lineWidth = 1.2;
+      blobPath(c, 0, 0, pd.r * grow * 0.92, pd.seed, 0.3, 12);
+      c.stroke();
+      c.globalAlpha = 0.28 * fade;
+      c.fillStyle = PAPER;
+      c.beginPath();
+      c.ellipse(-pd.r * 0.2, -pd.r * 0.12, pd.r * 0.26 * grow, pd.r * 0.1 * grow, -0.4, 0, TAU);
+      c.fill();
+      c.restore();
+      return;
+    }
     c.globalAlpha = 0.34 * fade;
     c.fillStyle = INK;
     blobPath(c, 0, 0, pd.r * grow, pd.seed, 0.34, 12);
@@ -3315,11 +3750,20 @@ const R = (() => {
     c.translate(sp.x, sp.y);
     c.rotate(sp.ang);
     c.fillStyle = INK;
+    /* a brush-hair swirl behind: two breathing hairs */
     c.globalAlpha = 0.35;
-    inkStroke(c, [{ x: -5, y: 0 }, { x: -15, y: Math.sin(sp.age * 12 + sp.seed) * 2.5 }], 1.8, { alpha: 1 });
+    const wag = Math.sin(sp.age * 12 + sp.seed) * 2.5;
+    inkStroke(c, [{ x: -5, y: 0 }, { x: -15, y: wag }], 1.8, { alpha: 1 });
+    inkStroke(c, [{ x: -4, y: 1.4 }, { x: -13, y: -wag * 0.8 }], 1.2, { alpha: 0.7 });
     c.globalAlpha = 0.9;
-    teardrop(c, 3.4);
+    teardrop(c, sp.grave ? 4.1 : 3.4);
     c.fill();
+    if (sp.pierce > 0 || sp.grave) {
+      /* THE LITANY / THE GRAVE RING: a red tip the paper can read */
+      c.globalAlpha = 0.85;
+      c.fillStyle = RED;
+      c.beginPath(); c.arc(2.6, 0, 1.5, 0, TAU); c.fill();
+    }
     c.restore();
   }
 
@@ -3327,7 +3771,16 @@ const R = (() => {
   function drawBoomer(c, b) {
     c.save();
     c.translate(b.x, b.y);
-    c.rotate(b.ang + (b.phase === 'back' ? -1 : 1) * b.age * 7);
+    const spinDir = b.phase === 'back' ? -1 : 1;
+    c.rotate(b.ang + spinDir * b.age * 7);
+    /* a ribbon of the air the stroke has already bitten */
+    c.globalAlpha = 0.2;
+    c.strokeStyle = INK;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(-14 * spinDir, 0, 16, -1.05, 1.05);
+    c.stroke();
+    c.globalAlpha = 1;
     inkStroke(c, [{ x: 19, y: 0 }, { x: 0, y: 3.6 }, { x: -17, y: 0.4 }], 7.4, { alpha: 0.95, taper: 0.85, seed: 11 });
     c.globalAlpha = 0.28;
     inkStroke(c, [{ x: 10, y: 0 }, { x: -12, y: 0.3 }], 10, { alpha: 1, taper: 1 });
@@ -3460,9 +3913,9 @@ const R = (() => {
     c.strokeStyle = INK;
     c.lineWidth = 2.3;
     c.lineCap = 'round';
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       c.beginPath();
-      const a0 = vz.spin + i * TAU / 3;
+      const a0 = vz.spin + i * TAU / 4;
       for (let k = 0; k <= 14; k++) {
         const rr = vz.r * (1 - k / 14) * 0.95;
         const aa = a0 + k * 0.42;
@@ -3471,6 +3924,11 @@ const R = (() => {
       }
       c.stroke();
     }
+    /* the eye: a stillness at the center the drowners circle around */
+    c.globalAlpha = 0.45;
+    c.strokeStyle = PAPER;
+    c.lineWidth = 1.6;
+    c.beginPath(); c.arc(0, 0, vz.r * 0.16, 0, TAU); c.stroke();
     c.restore();
   }
 
@@ -3479,6 +3937,21 @@ const R = (() => {
     const bc = bo.red ? RED : INK;
     c.save();
     c.translate(bo.x, bo.y);
+    if (bo.seal && !bo.struck) {
+      /* the unwritten's stamp: a red seal hanging over the spot, filling */
+      const pr = 1 - Math.max(0, bo.t) / 0.9;
+      const s = bo.r * 0.62;
+      c.rotate(-0.08 + pr * 0.1);
+      c.globalAlpha = 0.4;
+      c.strokeStyle = RED;
+      c.lineWidth = 2.6;
+      c.strokeRect(-s, -s, s * 2, s * 2);
+      c.globalAlpha = 0.14 + 0.3 * Math.min(1, Math.max(0, pr));
+      c.fillStyle = RED;
+      c.fillRect(-s * pr, -s * pr, s * 2 * pr, s * 2 * pr);
+      c.restore();
+      return;
+    }
     if (!bo.struck) {
       const pr = 1 - Math.max(0, bo.t) / 1.45;
       c.globalAlpha = 0.55;
@@ -3599,6 +4072,24 @@ const R = (() => {
       c.rotate(ang);
       teardrop(c, 6.5);
       c.fill();
+      c.restore();
+    } else if (tg.kind === 'seal') {
+      /* a red seal is about to press here — the stamp's outline fills as it nears */
+      c.setLineDash([]);
+      const s = tg.r * 0.62;
+      const sx2 = e.x, sy2 = e.y - 26 - 14 * k;   /* it hangs above the paper, dropping */
+      c.globalAlpha = (0.5 + 0.4 * (1 - k)) * (S.reduced ? 0.55 : 1);
+      c.lineWidth = 3;
+      c.save();
+      c.translate(sx2, sy2);
+      c.rotate(-0.06);
+      c.strokeRect(-s, -s, s * 2, s * 2);
+      c.globalAlpha *= 0.34;
+      c.fillRect(-s, -s, s * 2, s * 2);
+      c.globalAlpha = 0.75;
+      c.font = Math.round(s * 1.1) + 'px "Zen Antique", serif';
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('印', 0, 2);
       c.restore();
     } else {
       c.beginPath();
@@ -3814,6 +4305,14 @@ const R = (() => {
         d.y += d.v * dt; d.sway += dt * 1.1; d.x += Math.sin(d.sway) * 16 * dt; d.rot += dt * 1.6;
         if (d.y > H + 12) { d.y = -12; d.x = Math.random() * W; }
       }
+    } else if (kind === 'silk') {
+      /* the blank silk's sky: stray threads drift across, rising and swaying */
+      while (wx.length < 18) wx.push({ x: Math.random() * W, y: Math.random() * H, v: 7 + Math.random() * 12, sway: Math.random() * 6.28, l: 18 + Math.random() * 30, drift: (Math.random() - 0.5) * 10 });
+      for (const d of wx) {
+        d.y -= d.v * dt; d.sway += dt * 0.9; d.x += Math.sin(d.sway) * 12 * dt + d.drift * dt;
+        if (d.y < -14) { d.y = H + 12; d.x = Math.random() * W; }
+        if (d.x < -40) d.x = W + 30; else if (d.x > W + 40) d.x = -30;
+      }
     } else { /* motes */
       while (wx.length < 16) wx.push({ x: Math.random() * W, y: Math.random() * H, v: 8 + Math.random() * 14, sway: Math.random() * 6.28, s: 0.8 + Math.random() * 1.4 });
       for (const d of wx) {
@@ -3857,6 +4356,19 @@ const R = (() => {
         c.globalAlpha = 0.24;
         c.beginPath(); c.moveTo(0, -d.s); c.lineTo(d.s * 0.7, 0); c.lineTo(0, d.s); c.lineTo(-d.s * 0.7, 0); c.closePath(); c.fill();
         c.restore();
+      }
+      c.globalAlpha = 1;
+    } else if (kind === 'silk') {
+      /* loose threads — long, thin, breathing */
+      c.strokeStyle = INK;
+      c.lineCap = 'round';
+      for (const d of wx) {
+        c.globalAlpha = 0.07 + 0.05 * Math.sin(d.sway * 1.7);
+        c.lineWidth = 0.9;
+        c.beginPath();
+        c.moveTo(d.x, d.y);
+        c.quadraticCurveTo(d.x + d.l * 0.5, d.y - 4 + Math.sin(d.sway) * 3, d.x + d.l, d.y + Math.sin(d.sway) * 2);
+        c.stroke();
       }
       c.globalAlpha = 1;
     } else {
@@ -4808,6 +5320,9 @@ const R = (() => {
 
     /* the painting itself — grown wave by wave across the sheet */
     drawLandscape(ctx, vx0, vy0, vx1, vy1, t);
+
+    /* the bounded page's margins (journey and daily) */
+    drawArenaEdge(ctx);
 
     /* on the title the sheet rests: a living handscroll panorama */
     if (S.mode === 'title') drawTitlePanorama(ctx, t, dt);

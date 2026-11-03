@@ -222,7 +222,7 @@ const SFX = (() => {
       tone({ f: 72, f2: 30, type: 'sine', dur: 1.1, vol: 0.22, delay: 0.35 });
     },
 
-    /* ---- v4: the five scrolls ---- */
+    /* ---- v4: the scrolls ---- */
     /* a mote of ink finds the brush */
     pickup: rate('pickup', 40, () => {
       tone({ f: 1560, f2: 2100, type: 'sine', dur: 0.045, vol: 0.022 });

@@ -50,7 +50,7 @@ const INTRO = (() => {
 
   /* the ending is one move, not five: the hanko bleeds, the frame
      goes vermilion, and the pale washi floods back for the title.
-     The five scrolls announce themselves in their own films — the
+     The scrolls announce themselves in their own films — the
      opening spends its last breath on a single continuous shot. */
 
   /* ---------------- state ---------------- */

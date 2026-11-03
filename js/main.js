@@ -242,7 +242,6 @@
     SFX.ensure();
     SFX.page();               /* the study door slides */
     settingsReturn = (from === 'board' || from === 'over') ? from : 'title';
-    if (typeof LB !== 'undefined') LB.authReturnTo = settingsReturn;
     wipeArmed = false;
     refreshSettings();
     if (typeof LB !== 'undefined' && LB.renderAccount) LB.renderAccount();
@@ -605,17 +604,7 @@
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   UI.setInkLine(G.getInk());                        /* the stone reads itself */
   if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
-  /* The Google sign-in door lives in v16 Settings. Resume the account
-     room on OAuth return, not the intro gate. If the player came from
-     the weekly/daily/all-time ledger, prepare that board behind Settings
-     so BACK returns to the correct tab. Normal intro/QA stays unchanged. */
-  const oauthReturn = LB.consumeOAuthReturn();
-  if (oauthReturn) {
-    enterTitle();
-    if (oauthReturn.from === 'board') LB.open('title', oauthReturn.tab);
-    openSettings(oauthReturn.from);
-    LB.initAuth().catch(() => {});
-  } else if (G.S.reduced || introSeen()) {
+  if (G.S.reduced || introSeen()) {
     enterTitle();          /* the opening is a film — stillness and repeat visits go straight to the title */
   } else if (location.search.length > 1) {
     enterTitle();          /* a URL that asks questions is QA — the gate would hold the probes */

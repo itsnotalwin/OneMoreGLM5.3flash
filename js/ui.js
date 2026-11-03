@@ -172,15 +172,16 @@ const UI = (() => {
   /* each sheet's ink, ground for the DOM: every seal chip in the
      band is a small sheet of its own paper, carrying its own ink —
      淡 pale warm, 濃 lamp-black, 朱 vermillion, 雨 rain-grey,
-     金 gold-dust — so the journey reads as five hung sheets */
+     金 gold-dust, 素 the blank silk — so the journey reads as six hung sheets */
   const BAND_TONES = {
     pale:  { ink: '#4a3d28', rgba: '74,61,40',    paper: '#ede7d9' },
     dark:  { ink: '#e9e2d2', rgba: '233,226,210', paper: '#17130f' },
     red:   { ink: '#a2321f', rgba: '162,50,31',   paper: '#eadbc4' },
     storm: { ink: '#31485a', rgba: '49,72,90',    paper: '#c7cdc9' },
     gilt:  { ink: '#8a6420', rgba: '138,100,32',  paper: '#e7d6ad' },
+    silk:  { ink: '#5a5068', rgba: '90,80,104',   paper: '#f3eee1' },
   };
-  const toneOf = a => BAND_TONES[a.theme] || BAND_TONES.pale;
+  const SHEET_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   /* the shelf re-inks a whole subtree with a sheet's tones: every
      strip is a small sheet of its own paper, so the ink tiers it
      prints with must be the sheet's ink, not the page's */
@@ -226,18 +227,6 @@ const UI = (() => {
      page's own ink before it touches the air */
   const hex2rgb = h => { const p = parseInt(h.slice(1), 16); return [p >> 16 & 255, p >> 8 & 255, p & 255]; };
   const mixRGB = (a, b, k) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * k));
-  function pageAdjusted(tone) {
-    const pageDark = document.body && document.body.dataset && document.body.dataset.theme === 'dark';
-    const page = pageDark ? [233, 226, 210] : [26, 23, 20];
-    const k = pageDark ? 0.5 : 0.12;
-    const adj = mixRGB(hex2rgb(tone.ink), page, k);
-    return {
-      rgb: `rgb(${adj[0]},${adj[1]},${adj[2]})`,
-      soft: `rgba(${adj[0]},${adj[1]},${adj[2]},${pageDark ? 0.5 : 0.34})`,
-      faint: `rgba(${adj[0]},${adj[1]},${adj[2]},0.15)`,
-      ring: `rgba(${mixRGB(hex2rgb(tone.ink), page, pageDark ? 0.62 : 0.15).join(',')},0.30)`,
-    };
-  }
 
   function show(name) {
     for (const k in el.screens) el.screens[k].classList.toggle('hidden', k !== name);
@@ -527,7 +516,7 @@ const UI = (() => {
   /* the SCENES door: the shelf of scrolls answers here. THE JOURNEY
      took over the quick-start (v15 — the button stopped disagreeing
      with ENTER), so this line now always offers the journey by hand:
-     a fresh scribe reads FIVE SCROLLS, a returning one wears the
+     a fresh scribe reads SIX SCROLLS, a returning one wears the
      scroll the brush last walked. */
   function setSheetContinue(n) {
     const btn = document.getElementById('sheetBtn');
@@ -536,11 +525,11 @@ const UI = (() => {
     const area = AREAS[Math.min(AREAS.length, Math.max(1, n || 1)) - 1];
     btn.innerHTML = n >= 2
       ? `<span class="sheet-kanji" aria-hidden="true">續</span>SCENES — SCROLL <span class="kanji-inline">${area ? area.kanji : toKanji(n)}</span> ONWARD`
-      : `<span class="sheet-kanji" aria-hidden="true">章</span>SCENES — FIVE SCROLLS`;
+      : `<span class="sheet-kanji" aria-hidden="true">章</span>SCENES — SIX SCROLLS`;
   }
 
   /* ---------------- the shelf of scrolls ----------------
-     five tanzaku strips hang from a beam: one per sheet. A strip
+     six tanzaku strips hang from a beam: one per sheet. A strip
      unrolled may be entered; a strip sealed waits until the scroll
      before it lies finished — ten levels, ten waves each. */
   let onScrollPick = null;      /* main.js answers with a journey run */
@@ -548,8 +537,8 @@ const UI = (() => {
   let onScrollsBack = null;     /* main.js answers with the title */
   let ladderSheet = 0;          /* 0 = the shelf; n = the ten scenes of scroll n */
   const SCROLLS_HEAD = {
-    kick: 'THE JOURNEY — FIVE SCROLLS · FIFTY SCENES',
-    title: 'FIVE SCROLLS',
+    kick: 'THE JOURNEY — SIX SCROLLS · SIXTY SCENES',
+    title: 'SIX SCROLLS',
     sub: "Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.",
   };
   function setScrollsHead(kick, title, sub) {
@@ -590,7 +579,7 @@ const UI = (() => {
     const row = document.getElementById('scrollRow');
     if (!row) return;
     /* the shelf view returns: the scene ladder folds away, and the
-       screen wears no single sheet — five papers hang here */
+       screen wears no single sheet — six papers hang here */
     ladderSheet = 0;
     const scr = document.getElementById('screenScrolls');
     if (scr) scr.removeAttribute('data-wear');
@@ -637,7 +626,7 @@ const UI = (() => {
         : '<span class="strip-state is-wait"><span class="strip-wait">筆</span>IN PROGRESS</span>';
       card.innerHTML =
         `<span class="strip-string" aria-hidden="true"></span>` +
-        `<span class="strip-no">SCROLL ${['I', 'II', 'III', 'IV', 'V'][i]}</span>` +
+        `<span class="strip-no">SCROLL ${SHEET_ROMAN[i]}</span>` +
         `<span class="strip-kanji" aria-hidden="true">${a.kanji}</span>` +
         `<span class="strip-name">${a.name}</span>` +
         `<span class="strip-ink">${a.ink} ink</span>` +
@@ -667,7 +656,7 @@ const UI = (() => {
       setScrollsHint(done
         ? 'EVERY SCROLL LIES FINISHED — THE ENDLESS SCROLL 無 STILL ASKS FOR MORE'
         : cleared > 0
-        ? `SCROLL ${['I', 'II', 'III', 'IV', 'V'][cur - 1]} IS UNROLLED — BREAK ITS GUARDIAN FOR THE NEXT`
+        ? `SCROLL ${SHEET_ROMAN[cur - 1]} IS UNROLLED — BREAK ITS GUARDIAN FOR THE NEXT`
         : '');
     }
   }
@@ -697,7 +686,7 @@ const UI = (() => {
     setBackLabel('ALL SCROLLS');
     retraceHead();
     setScrollsHead(
-      `SCROLL ${['I', 'II', 'III', 'IV', 'V'][n - 1]} — ${a.kanji} · TEN SCENES`,
+      `SCROLL ${SHEET_ROMAN[n - 1]} — ${a.kanji} · TEN SCENES`,
       a.name,
       isCleared
         ? 'The scroll lies finished. Every scene stays open — walk any of them again.'
@@ -772,7 +761,7 @@ const UI = (() => {
   /* the guardian's fall unrolls the next scroll — cried across the sheet */
   function unlockBanner(area, nextArea, isLast) {
     el.bannerKicker.textContent = isLast
-      ? `THE FIFTH GUARDIAN FALLS — SCROLL ${area.kanji} IS PAINTED`
+      ? `THE FINAL GUARDIAN FALLS — SCROLL ${area.kanji} IS PAINTED`
       : `SCROLL ${area.kanji} ${area.name} — CLEARED IN FULL`;
     el.bannerTitle.innerHTML = isLast
       ? `<span class="ban-kanji">終</span><span class="ban-lat">THE JOURNEY IS COMPLETE</span>`
@@ -809,11 +798,15 @@ const UI = (() => {
         `<i class="pip${k < lv ? ' on' : ''}"></i>`).join('');
       const isNew = !u.patch && lv === 0 ? '<span class="up-new">NEW</span>' : '';
       const isWpn = u.weapon ? '<span class="up-wpn">WEAPON</span>' : '';
+      /* the final pick earns its name on the card: the special it wakes */
+      const maxLine = (!u.patch && u.maxSpec && lv === u.max - 1)
+        ? `<span class="up-maxspec">${u.maxSpec}</span>` : '';
       card.innerHTML =
         `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
         `<svg class="up-glyph" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg>` +
         `<h3 class="up-name">${u.name}</h3>` +
         `<p class="up-desc">${u.desc}</p>` +
+        (maxLine ? maxLine : '') +
         `<span class="up-check" aria-hidden="true"></span>`;
       card.addEventListener('click', () => G.pickAt(i));
       el.upgradeGrid.appendChild(card);
@@ -904,7 +897,7 @@ const UI = (() => {
     const vict = !!d.victory;
     el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
     el.overSub.textContent = vict
-      ? 'Five sheets painted, every guardian felled. The paper asks for more.'
+      ? 'Six sheets painted, every guardian felled. The paper asks for more.'
       : d.mode === 'daily' && d.practice
         ? 'Practice sheet — today\u2019s ink is already on the ledger.'
         : 'The paper keeps every stroke. Even this one.';
@@ -957,12 +950,13 @@ const UI = (() => {
     badge.classList.toggle('hidden', t <= 0);
   }
 
-  /* the brush's current loadout, worn on the wrist */
+  /* the brush's current loadout, worn on the wrist — a completed
+     weapon wears MAX instead of a number */
   function setLoadout(levels) {
     if (!el.hudLoadout) return;
     el.hudLoadout.innerHTML = UPGRADES
       .filter(u => (levels[u.id] || 0) > 0)
-      .map(u => `<span class="load-item" title="${u.name}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg><b>${levels[u.id]}</b></span>`)
+      .map(u => `<span class="load-item${levels[u.id] >= u.max ? ' load-max' : ''}" title="${u.name}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg><b>${levels[u.id] >= u.max ? 'MAX' : levels[u.id]}</b></span>`)
       .join('');
   }
 

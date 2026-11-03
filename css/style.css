@@ -85,6 +85,20 @@ body[data-theme="gilt"]{
   --ink-25: rgba(52, 39, 16, 0.25);
   --ink-12: rgba(52, 39, 16, 0.12);
 }
+/* the blank silk — the brightest paper, its ink cool and violet-grey */
+body[data-theme="silk"]{
+  --paper: #f3eee1;
+  --paper-92: rgba(243, 238, 225, 0.94);
+  --paper-80: rgba(243, 238, 225, 0.82);
+  --paper-55: rgba(243, 238, 225, 0.6);
+  --ink: #2a2532;
+  --ink-70: rgba(42, 37, 50, 0.7);
+  --ink-62: rgba(42, 37, 50, 0.62);
+  --ink-55: rgba(42, 37, 50, 0.55);
+  --ink-45: rgba(42, 37, 50, 0.45);
+  --ink-25: rgba(42, 37, 50, 0.25);
+  --ink-12: rgba(42, 37, 50, 0.12);
+}
 
 *, *::before, *::after{ box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1429,6 +1443,23 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
     radial-gradient(ellipse at 82% 88%, rgba(138,100,32,.13), transparent 60%),
     linear-gradient(rgba(231,214,173,.93), rgba(231,214,173,.93));
 }
+#screenScrolls[data-wear="silk"]{
+  --paper: #f3eee1;
+  --paper-92: rgba(243, 238, 225, 0.94);
+  --paper-80: rgba(243, 238, 225, 0.82);
+  --paper-55: rgba(243, 238, 225, 0.6);
+  --ink: #2a2532;
+  --ink-70: rgba(42, 37, 50, 0.7);
+  --ink-62: rgba(42, 37, 50, 0.62);
+  --ink-55: rgba(42, 37, 50, 0.55);
+  --ink-45: rgba(42, 37, 50, 0.45);
+  --ink-25: rgba(42, 37, 50, 0.25);
+  --ink-12: rgba(42, 37, 50, 0.12);
+  background:
+    radial-gradient(ellipse at 22% 14%, rgba(255,253,246,.5), transparent 55%),
+    radial-gradient(ellipse at 82% 88%, rgba(90,80,104,.1), transparent 60%),
+    linear-gradient(rgba(243,238,225,.93), rgba(243,238,225,.93));
+}
 /* a sheet's own light: the wordmark's hard shadow follows its ink */
 #screenScrolls[data-wear] .scrolls-title{
   text-shadow: 4px 4px 0 rgba(0,0,0,.06);
@@ -1497,6 +1528,12 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .scroll-strip:nth-child(3){ --i: 2; --tilt: -.5deg; margin-top: -4px; }
 .scroll-strip:nth-child(4){ --i: 3; --tilt: .9deg; margin-top: 5px; }
 .scroll-strip:nth-child(5){ --i: 4; --tilt: -.8deg; }
+.scroll-strip:nth-child(6){ --i: 5; --tilt: .6deg; margin-top: -5px; }
+/* six strips on the beam: a touch narrower so the sixth keeps its
+   seat on the desk instead of wrapping to an orphan row */
+.scroll-strip-row:has(.scroll-strip:nth-child(6)) .scroll-strip{
+  width: clamp(132px, 14.2vw, 158px);
+}
 /* the brushed edge, on a filter layer so text stays crisp */
 .scroll-strip::before{
   content: '';
@@ -2507,8 +2544,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 #screenScrolls[data-wear="red"]   .scrolls-foot{ background: linear-gradient(rgba(234,219,196,0), rgba(234,219,196,.94) 36%, #eadbc4); }
 #screenScrolls[data-wear="storm"] .scrolls-foot{ background: linear-gradient(rgba(199,205,201,0), rgba(199,205,201,.94) 36%, #c7cdc9); }
 #screenScrolls[data-wear="gilt"]  .scrolls-foot{ background: linear-gradient(rgba(231,214,173,0), rgba(231,214,173,.94) 36%, #e7d6ad); }
+#screenScrolls[data-wear="silk"]  .scrolls-foot{ background: linear-gradient(rgba(243,238,225,0), rgba(243,238,225,.94) 36%, #f3eee1); }
 
-/* ---- the shelf on the phone: shorter tanzaku, so the fifth strip
+/* ---- the shelf on the phone: shorter tanzaku, so the later strips
    and the RETURN door share the first screen instead of hiding ---- */
 @media (max-width: 720px){
   .scrolls-head{ gap: 2px; }
@@ -2642,4 +2680,20 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
     left: -1000px; right: -1000px; top: -10px; bottom: -90px;
     background: linear-gradient(to bottom, rgba(237,231,217,0), var(--paper) 42%);
   }
+}
+
+/* ==== v18 — THE FORGE: maxed weapons wear their special's name ====
+   the final pick's card shows the ability it wakes; the wrist badge
+   reads MAX once a weapon is complete */
+.up-maxspec{
+  flex: 0 0 auto;
+  font-size: clamp(10px, 1.6vh, 12.5px); line-height: 1.45; letter-spacing: .03em;
+  color: var(--red);
+  border-top: 1px dashed var(--red-45, rgba(178,58,43,.45));
+  padding-top: 5px; margin-top: 2px;
+}
+.up-maxspec::before{ content: '印 '; font-family: var(--display); }
+.load-item.load-max b{
+  color: var(--red);
+  letter-spacing: .06em;
 }

@@ -36,7 +36,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
                                        must outlive a wave-300 instant swarm */
     if (q.get('charms') != null) qaCharms = Math.max(0, parseInt(q.get('charms'), 10) || 0);
-    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(50, parseInt(q.get('scenes'), 10) || 0));
+    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(60, parseInt(q.get('scenes'), 10) || 0));
   } catch (e) {}
 
   const store = {
@@ -127,7 +127,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- the inkstone (硯) — v8.8 ----------------
      what the runs press out, kept between runs. om_charms_v1
      carries the ink, every charm's rank, and the one-time feats
-     (the five sheets signed). The settings room's WIPE already
+     (the six sheets signed). The settings room's WIPE already
      sweeps every om_* key — the stone empties with the rest. */
   const CHARMS_KEY = 'om_charms_v1';
   function charmsSave() {
@@ -379,9 +379,39 @@ const rand = (a, b) => a + RNG() * (b - a);
              isLevelEnd, isGuardianWave, isSurge, isElite: isLevelEnd };
   }
 
+  /* the bounded page: THE JOURNEY and the daily sheet live inside a
+     fixed arena — the same paper on every screen. THE ENDLESS SCROLL
+     alone keeps the unbroken sheet. */
+  function arenaOn() { return S.runMode === 'journey' || S.runMode === 'daily'; }
+  function clampArena(o, pad) {
+    const A = CFG.world.arena;
+    const ix = A.w / 2 - pad, iy = A.h / 2 - pad;
+    if (o.x < -ix) o.x = -ix; else if (o.x > ix) o.x = ix;
+    if (o.y < -iy) o.y = -iy; else if (o.y > iy) o.y = iy;
+  }
+
   /* a birth point just past the edge of the eye — measured to the
-     view RECTANGLE, so spawns always land off-screen on every side */
+     view RECTANGLE, so spawns always land off-screen on every side.
+     On a bounded page the beasts walk in from the page's own margin,
+     never closer to the brush than the margin's honest distance. */
   function edgePoint(sideHint) {
+    if (arenaOn()) {
+      const A = CFG.world.arena, gap = CFG.world.arenaSpawnGap;
+      const ix = A.w / 2 - 64, iy = A.h / 2 - 64;
+      let best = null, bestD = -1;
+      for (let tries = 0; tries < 12; tries++) {
+        const side = (sideHint != null && tries < 3) ? sideHint : (Math.random() * 4) | 0;
+        let x, y;
+        if (side === 0) { x = ix; y = rand(-iy, iy); }       /* east */
+        else if (side === 1) { x = rand(-ix, ix); y = iy; }  /* south */
+        else if (side === 2) { x = -ix; y = rand(-iy, iy); } /* west */
+        else { x = rand(-ix, ix); y = -iy; }                 /* north */
+        const d = Math.hypot(x - S.player.x, y - S.player.y);
+        if (d >= gap) return { x, y };
+        if (d > bestD) { bestD = d; best = { x, y }; }
+      }
+      return best;
+    }
     const pad = CFG.world.spawnPad;
     for (let tries = 0; tries < 10; tries++) {
       const a = (sideHint != null && tries < 2)
@@ -463,6 +493,19 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   function killEnemy(e) {
     if (e.dead && e._killed) return;   /* one death, one harvest */
+    /* the reseal's first death only re-presses the stamp — it walks
+       again at less than half its ink, and only the second stroke ends it */
+    if (e.type === 'reseal' && !e.rose) {
+      e.rose = true;
+      e.dead = false; e._killed = false;
+      e.hp = Math.max(1, Math.round(e.maxHp * 0.45));
+      e.hitFlash = 0.25;
+      S.enemies.push(e);
+      S.rings.push({ x: e.x, y: e.y, max: e.r * 3.2, life: 0.5, maxLife: 0.5, red: true });
+      S.popups.push({ x: e.x, y: e.y - e.r - 10, txt: 'RESTAMPED', life: 1.0, max: 1.0, red: true });
+      SFX.elite();
+      return;
+    }
     e.dead = true;
     e._killed = true;
     const def = ENEMIES[e.type];
@@ -589,6 +632,11 @@ const rand = (a, b) => a + RNG() * (b - a);
       const back = Math.min(10, Math.ceil(e.ate / 2));
       for (let i = 0; i < back; i++) dropMote(e.x + rand(-22, 22), e.y + rand(-22, 22), moteValue(2), 1);
       S.popups.push({ x: e.x, y: e.y - e.r - 8, txt: 'THE TAX REFUNDED', life: 0.9, max: 0.9, red: true });
+    }
+    /* the sizing bursts — a puddle of glue soaks the hand's road */
+    if (e.type === 'sizing') {
+      S.puddles.push({ x: e.x, y: e.y, r: 62, life: 4.2, max: 4.2, tickT: 9, seed: (RNG() * 1e9) | 0, hostile: 1 });
+      S.popups.push({ x: e.x, y: e.y - e.r - 8, txt: 'THE GLUE SPILLS', life: 0.8, max: 0.8 });
     }
 
     if (e.type === 'split') {
@@ -727,6 +775,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const p = (x == null) ? S.player : { x, y };
     let best = null, bd = maxD != null ? maxD * maxD : Infinity;
     for (const e of S.enemies) {
+      if (e.faint) continue;   /* the underdrawing is not there to aim at */
       const dx = e.x - p.x, dy = e.y - p.y, d = dx * dx + dy * dy;
       if (d < bd) { bd = d; best = e; }
     }
@@ -1291,8 +1340,19 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.mode !== 'upgrade' || S.selected == null) return;
     const kind = S.upKind;
     const u = S.choices[S.selected];
+    const lvBefore = u.patch ? 0 : (S.stats.levels[u.id] || 0);
     u.apply(S.stats);
-    if (!u.patch) S.stats.levels[u.id] = (S.stats.levels[u.id] || 0) + 1;
+    if (!u.patch) {
+      S.stats.levels[u.id] = lvBefore + 1;
+      /* the weapon completes itself — a maxed stroke earns its own name,
+         and the paper cries it once across the sheet */
+      if (u.maxSpec && lvBefore + 1 === u.max) {
+        S.popups.push({ x: S.player.x, y: S.player.y - 26, txt: u.maxSpec.split(' — ')[0], life: 1.9, max: 1.9, red: true });
+        S.rings.push({ x: S.player.x, y: S.player.y, max: 190, life: 0.65, maxLife: 0.65, red: true });
+        S.shake = Math.max(S.shake, 5);
+        SFX.elite();
+      }
+    }
     UI.setHp(S.stats.hp, S.stats.maxHp);
     UI.setLoadout(S.stats.levels);
     SFX.deploy();
@@ -1497,42 +1557,90 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- weapons: the new strokes ---------------- */
   function fireFan() {
     const p = S.player, st = S.stats;
+    S.fanCasts = (S.fanCasts || 0) + 1;
+    const fullBloom = st.fan >= 4 && S.fanCasts % 4 === 0;
     const n = CFG.fan.count(st.fan);
     const spread = CFG.fan.spread;
-    for (let i = 0; i < n; i++) {
-      const off = n === 1 ? 0 : -spread / 2 + (spread * i) / (n - 1);
-      const a = p.aim + off;
-      S.bullets.push({
-        x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
-        vx: Math.cos(a) * CFG.fan.speed, vy: Math.sin(a) * CFG.fan.speed,
-        ang: a, dmg: CFG.fan.dmg, hits: 2, age: 0, life: CFG.fan.life,
-        kind: 'blade', spin: (i % 2 ? 1 : -1) * rand(9, 14),
-      });
+    if (fullBloom) {
+      /* THE FULL BLOOM: the fan snaps open all the way around */
+      const n2 = n * 2;
+      for (let i = 0; i < n2; i++) {
+        const a = (i / n2) * TAU + (S.fanCasts % 8 === 0 ? Math.PI / n2 : 0);
+        S.bullets.push({
+          x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+          vx: Math.cos(a) * CFG.fan.speed, vy: Math.sin(a) * CFG.fan.speed,
+          ang: a, dmg: CFG.fan.dmg, hits: 2, age: 0, life: CFG.fan.life,
+          kind: 'blade', spin: (i % 2 ? 1 : -1) * rand(9, 14), bloom: true,
+        });
+      }
+      S.rings.push({ x: p.x, y: p.y, max: 118, life: 0.4, maxLife: 0.4 });
+      S.shake = Math.max(S.shake, 3);
+    } else {
+      for (let i = 0; i < n; i++) {
+        const off = n === 1 ? 0 : -spread / 2 + (spread * i) / (n - 1);
+        const a = p.aim + off;
+        S.bullets.push({
+          x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+          vx: Math.cos(a) * CFG.fan.speed, vy: Math.sin(a) * CFG.fan.speed,
+          ang: a, dmg: CFG.fan.dmg, hits: 2, age: 0, life: CFG.fan.life,
+          kind: 'blade', spin: (i % 2 ? 1 : -1) * rand(9, 14),
+        });
+      }
     }
     SFX.fan();
   }
 
   function dropTrail() {
     const st = S.stats;
+    const maxed = st.trailW >= 3;
     S.puddles.push({
       x: S.player.x + rand(-4, 4), y: S.player.y + rand(-4, 4),
       r: CFG.trail.radius(st.trailW), life: CFG.trail.life, max: CFG.trail.life,
       tickT: 0.1, seed: (Math.random() * 1e9) | 0,
+      /* THE LINGERING POOL: a maxed trail's ink bites twice as fast */
+      tickPeriod: maxed ? CFG.trail.tick * 0.5 : CFG.trail.tick,
     });
-    if (S.puddles.length > 26) S.puddles.shift();
+    if (S.puddles.length > (maxed ? 40 : 26)) S.puddles.shift();
   }
 
   function fireSpirits() {
     const st = S.stats;
+    const litany = st.spirit >= 3;   /* THE LITANY: spirits run bodies through */
     for (let i = 0; i < CFG.spirit.count(st.spirit); i++) {
       const a = rand(0, TAU);
       S.spirits.push({
         x: S.player.x + Math.cos(a) * 12, y: S.player.y + Math.sin(a) * 12,
-        ang: a, speed: CFG.spirit.speed * rand(0.9, 1.1),
+        ang: a, speed: CFG.spirit.speed * rand(0.9, 1.1) * (litany ? 1.4 : 1),
         age: 0, life: CFG.spirit.life, seed: (Math.random() * 1e9) | 0,
+        pierce: litany ? 3 : 0,
       });
     }
     SFX.spirit();
+  }
+
+  /* the seal falls: one great red stamp, shared by the hanko and its twin */
+  function stampStrike(x, y, rad, dmg, slowT) {
+    S.stamps.push({ x, y, r: rad, life: 0.62, max: 0.62, seed: (Math.random() * 1e9) | 0 });
+    S.rings.push({ x, y, max: rad, life: 0.4, maxLife: 0.4, red: true });
+    S.stainQueue.push({ x, y, r: rad * 0.34, alpha: 0.34, red: true });
+    S.shake = Math.max(S.shake, 6);
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const e = S.enemies[k];
+      const dx = e.x - x, dy = e.y - y;
+      if (dx * dx + dy * dy <= rad * rad) {
+        /* great beasts respect the seal — half the bite for elites
+           and Guardians, so one stamp can never clear the sheet */
+        const d2 = (e.elite || ENEMIES[e.type].boss)
+          ? Math.max(1, Math.ceil(dmg * 0.45))
+          : dmg;
+        e.hp -= d2;
+        e.hitFlash = 0.09;
+        e.stun = Math.max(e.stun, CFG.hanko.stun);
+        e.slowT = Math.max(e.slowT, slowT);
+        if (e.hp <= 0) { S.enemies.splice(k, 1); killEnemy(e); }
+      }
+    }
+    SFX.hanko();
   }
 
   function fireHanko() {
@@ -1544,27 +1652,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (!tgt) { S.hankoT = 0.8; return; }
     const rad = CFG.hanko.radius(st.hanko);
     const dmg = CFG.hanko.dmg(st.hanko);
-    S.stamps.push({ x: tgt.x, y: tgt.y, r: rad, life: 0.62, max: 0.62, seed: (Math.random() * 1e9) | 0 });
-    S.rings.push({ x: tgt.x, y: tgt.y, max: rad, life: 0.4, maxLife: 0.4, red: true });
-    S.stainQueue.push({ x: tgt.x, y: tgt.y, r: rad * 0.34, alpha: 0.34, red: true });
-    S.shake = Math.max(S.shake, 6);
-    for (let k = S.enemies.length - 1; k >= 0; k--) {
-      const e = S.enemies[k];
-      const dx = e.x - tgt.x, dy = e.y - tgt.y;
-      if (dx * dx + dy * dy <= rad * rad) {
-        /* great beasts respect the seal — half the bite for elites
-           and Guardians, so one stamp can never clear the sheet */
-        const d2 = (e.elite || ENEMIES[e.type].boss)
-          ? Math.max(1, Math.ceil(dmg * 0.45))
-          : dmg;
-        e.hp -= d2;
-        e.hitFlash = 0.09;
-        e.stun = Math.max(e.stun, CFG.hanko.stun);
-        e.slowT = Math.max(e.slowT, 0.8);
-        if (e.hp <= 0) { S.enemies.splice(k, 1); killEnemy(e); }
-      }
+    stampStrike(tgt.x, tgt.y, rad, dmg, 0.8);
+    /* THE TWIN STAMP: a maxed hanko's seal is followed by a lighter echo */
+    if (st.hanko >= 3) {
+      (S.hankoQueue = S.hankoQueue || []).push({ t: 0.32, dmg: Math.max(1, Math.ceil(dmg * 0.6)) });
     }
-    SFX.hanko();
   }
 
   /* sumi arc: a live stroke that leaps from beast to beast */
@@ -1572,7 +1664,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     const st = S.stats;
     const first = nearestEnemy(S.player.x, S.player.y, 560);
     if (!first) { S.arcT = 0.5; return; }
-    const jumps = CFG.arc.jumps(st.arc);
+    /* THE LIVING LINE: a maxed arc leaps three links farther afield */
+    const maxed = st.arc >= 4;
+    const jumps = CFG.arc.jumps(st.arc) + (maxed ? 3 : 0);
+    const range = maxed ? CFG.arc.maxRange : CFG.arc.range;
     const dmg = CFG.arc.dmg(st.arc);
     let from = { x: S.player.x, y: S.player.y };
     let cur = first;
@@ -1587,7 +1682,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         if (dead) { /* killEnemy already ran; keep the point for the stroke */ }
       }
       /* find the next link */
-      let next = null, nd = CFG.arc.range * CFG.arc.range;
+      let next = null, nd = range * range;
       for (const e of S.enemies) {
         if (hitSet.has(e)) continue;
         const dx = e.x - cur.x, dy = e.y - cur.y;
@@ -1597,7 +1692,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (!next) break;
       cur = next;
     }
-    S.arcs.push({ pts, life: 0.16, max: 0.16, seed: (Math.random() * 1e9) | 0 });
+    S.arcs.push({ pts, life: 0.16, max: 0.16, seed: (Math.random() * 1e9) | 0, living: maxed });
     SFX.arc();
   }
 
@@ -1672,7 +1767,14 @@ const rand = (a, b) => a + RNG() * (b - a);
     p.vy += (iy * sp - p.vy) * k;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
-    /* the sheet is endless — nothing clamps the brush */
+    /* the endless sheet is boundless — but a bounded page has margins,
+       and the brush stops at them (journey and daily only) */
+    if (arenaOn()) {
+      clampArena(p, p.r + 12);
+      const A = CFG.world.arena, ix = A.w / 2 - (p.r + 12), iy = A.h / 2 - (p.r + 12);
+      if (p.x <= -ix || p.x >= ix) p.vx = 0;
+      if (p.y <= -iy || p.y >= iy) p.vy = 0;
+    }
 
     /* the storm eye drags everything toward its center;
        the maelstrom's undertow is smaller, and only near */
@@ -1701,6 +1803,13 @@ const rand = (a, b) => a + RNG() * (b - a);
     const ck = 1 - Math.exp(-7.5 * dt);
     S.cam.x += (p.x + S.look.x - S.cam.x) * ck;
     S.cam.y += (p.y + S.look.y - S.cam.y) * ck;
+    /* the bounded page: the eye never looks past the margins */
+    if (arenaOn()) {
+      const A = CFG.world.arena;
+      const mx = Math.max(0, A.w / 2 - S.W / 2), my = Math.max(0, A.h / 2 - S.H / 2);
+      S.cam.x = clamp(S.cam.x, -mx, mx);
+      S.cam.y = clamp(S.cam.y, -my, my);
+    }
 
     if (S.adrenT > 0) S.adrenT -= dt;
     if (S.invulnT > 0) S.invulnT -= dt;
@@ -1735,6 +1844,18 @@ const rand = (a, b) => a + RNG() * (b - a);
 
     /* crimson hanko: the great seal falls */
     if (st.hanko > 0) {
+      /* THE TWIN STAMP: the echo seal lands its own moment later */
+      if (S.hankoQueue && S.hankoQueue.length) {
+        for (let i = S.hankoQueue.length - 1; i >= 0; i--) {
+          const hq = S.hankoQueue[i];
+          hq.t -= dt;
+          if (hq.t <= 0) {
+            S.hankoQueue.splice(i, 1);
+            const t2 = nearestEnemy(S.player.x, S.player.y, 720);
+            if (t2) stampStrike(t2.x, t2.y, CFG.hanko.radius(st.hanko), hq.dmg, 0.6);
+          }
+        }
+      }
       S.hankoT -= dt;
       if (S.hankoT <= 0) fireHanko();
     }
@@ -1772,10 +1893,12 @@ const rand = (a, b) => a + RNG() * (b - a);
       }
     }
 
-    /* ink orbit: droplets grind what they graze */
+    /* ink orbit: droplets circle in a wide ring, grinding ALL they graze */
     if (st.orb > 0) {
       const orbR = CFG.orbit.radius(st.orb);
       const base = G_time();
+      /* the ring bites with the brush's own ink — Bitter Ink deepens it */
+      const odmg = 1 + Math.ceil(st.dmg * 0.5);
       for (let i = 0; i < st.orb; i++) {
         const a = base * CFG.orbit.speed + (i / st.orb) * TAU;
         const ox = p.x + Math.cos(a) * orbR, oy = p.y + Math.sin(a) * orbR;
@@ -1783,17 +1906,35 @@ const rand = (a, b) => a + RNG() * (b - a);
           const e = S.enemies[kk];
           if (e.orbCd > 0) continue;
           const dx = e.x - ox, dy = e.y - oy;
-          const rr = e.r + 5.5;
+          const rr = e.r + 6.5;
           if (dx * dx + dy * dy <= rr * rr) {
-            e.hp -= 1;
+            e.hp -= odmg;
             e.orbCd = CFG.orbit.dmgCd;
             e.hitFlash = 0.08;
             const d = Math.hypot(dx, dy) || 1;
             e.kbx += (dx / d) * 170; e.kby += (dy / d) * 170;
             SFX.hit();
             if (e.hp <= 0) { S.enemies.splice(kk, 1); killEnemy(e); }
-            break;
+            /* no break — the ring grinds every body it touches this breath */
           }
+        }
+      }
+      /* THE GRAVE RING: a maxed ring sends an orbital hunting */
+      if (st.orb >= 3) {
+        S.orbFlingT = (S.orbFlingT == null ? CFG.orbit.flingEvery : S.orbFlingT) - dt;
+        if (S.orbFlingT <= 0) {
+          const tgt = nearestEnemy(p.x, p.y, 720);
+          if (tgt) {
+            S.orbFlingT = CFG.orbit.flingEvery;
+            const fa = base * CFG.orbit.speed;
+            S.spirits.push({
+              x: p.x + Math.cos(fa) * orbR, y: p.y + Math.sin(fa) * orbR,
+              ang: Math.atan2(tgt.y - p.y, tgt.x - p.x),
+              speed: 460, age: 0, life: 2.4, seed: (Math.random() * 1e9) | 0,
+              dmg: odmg * 2, pierce: 0, grave: true,
+            });
+            SFX.spirit();
+          } else S.orbFlingT = 0.8;
         }
       }
     }
@@ -1886,6 +2027,22 @@ const rand = (a, b) => a + RNG() * (b - a);
           b.ang = Math.atan2(dy, dx);
           if (d < 20) {
             S.stainQueue.push({ x: b.x, y: b.y, r: 4, alpha: 0.3 });
+            /* THE MIRROR RETURN: a maxed stroke bursts into an ink ring at home */
+            if (S.stats.boomer >= 4) {
+              S.rings.push({ x: b.x, y: b.y, max: 150, life: 0.45, maxLife: 0.45 });
+              S.shake = Math.max(S.shake, 5);
+              for (let j = S.enemies.length - 1; j >= 0; j--) {
+                const e = S.enemies[j];
+                const dx = e.x - b.x, dy = e.y - b.y;
+                const dd = Math.hypot(dx, dy) || 1;
+                if (dd <= 150) {
+                  e.hp -= 2; e.hitFlash = 0.08;
+                  e.kbx += (dx / dd) * 300; e.kby += (dy / dd) * 300;
+                  if (e.hp <= 0) { S.enemies.splice(j, 1); killEnemy(e); }
+                }
+              }
+              SFX.nova();
+            }
             S.bullets.splice(i, 1);
             continue;
           }
@@ -1910,6 +2067,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (e.dead) return false;
     /* the koi swims beneath the sheet — strokes pass over it */
     if (e.diving) return false;
+    /* the sketch is only drawn — while faint, every stroke passes through */
+    if (e.faint) return false;
     /* the blotter drinks frontal strokes — three, and it bursts */
     if (e.type === 'blotter' && proj && !e.bloat) {
       e.soak = (e.soak || 0) + 1;
@@ -2033,6 +2192,7 @@ const rand = (a, b) => a + RNG() * (b - a);
           for (let m = 0; m < arr.length; m++) {
             const e = arr[m];
             if (e.dead) continue;
+            if (e.faint) continue;   /* the droplet sails through the underdrawing */
             const dx = e.x - b.x, dy = e.y - b.y;
             const rr = e.r + br;
             if (dx * dx + dy * dy <= rr * rr) {
@@ -2171,6 +2331,21 @@ const rand = (a, b) => a + RNG() * (b - a);
       vz.dur -= dt;
       vz.spin += dt * 4.4;
       if (vz.dur <= 0) {
+        /* THE WHORL TEETH: a maxed whirlpool bites what remains inside */
+        if (st.vortex >= 3) {
+          for (let j = S.enemies.length - 1; j >= 0; j--) {
+            const e = S.enemies[j];
+            const dx = e.x - vz.x, dy = e.y - vz.y;
+            if (dx * dx + dy * dy < vz.r * vz.r) {
+              e.hp -= 3; e.hitFlash = 0.1;
+              e.stun = Math.max(e.stun, 0.6);
+              if (e.hp <= 0) { S.enemies.splice(j, 1); killEnemy(e); }
+            }
+          }
+          S.rings.push({ x: vz.x, y: vz.y, max: vz.r * 1.25, life: 0.45, maxLife: 0.45, red: true });
+          S.shake = Math.max(S.shake, 6);
+          SFX.hanko();
+        }
         S.stainQueue.push({ x: vz.x, y: vz.y, r: vz.r * 0.4, alpha: 0.3 });
         S.vortices.splice(i, 1);
         continue;
@@ -2220,7 +2395,7 @@ const rand = (a, b) => a + RNG() * (b - a);
           S.stainQueue.push({ x: bo.x, y: bo.y, r: bo.r * 0.4, alpha: 0.4, red: !!bo.red });
           const dx = p.x - bo.x, dy = p.y - bo.y;
           if (dx * dx + dy * dy < bo.r * bo.r) takeHit();
-          SFX.thunder();
+          if (bo.seal) SFX.hanko(); else SFX.thunder();
         }
       } else {
         bo.life -= dt;
@@ -2233,6 +2408,20 @@ const rand = (a, b) => a + RNG() * (b - a);
     for (let i = S.puddles.length - 1; i >= 0; i--) {
       const pd = S.puddles[i];
       pd.life -= dt;
+      if (pd.hostile) {
+        /* the sizing's glue — it does not bite the horde, it holds the HAND */
+        if (pd.life <= 0) {
+          S.stainQueue.push({ x: pd.x, y: pd.y, r: pd.r * 0.55, alpha: 0.12 });
+          S.puddles.splice(i, 1);
+          continue;
+        }
+        const q = S.player;
+        const qx = q.x - pd.x, qy = q.y - pd.y;
+        if (qx * qx + qy * qy < pd.r * pd.r) {
+          S.playerSlowT = Math.max(S.playerSlowT, 0.3);
+        }
+        continue;
+      }
       pd.tickT -= dt;
       if (pd.life <= 0) {
         S.stainQueue.push({ x: pd.x, y: pd.y, r: pd.r * 0.5, alpha: 0.16 });
@@ -2240,7 +2429,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         continue;
       }
       if (pd.tickT <= 0) {
-        pd.tickT = CFG.trail.tick;
+        pd.tickT = pd.tickPeriod || CFG.trail.tick;
         let bit = false;
         for (let j = S.enemies.length - 1; j >= 0; j--) {
           const e = S.enemies[j];
@@ -2281,14 +2470,22 @@ const rand = (a, b) => a + RNG() * (b - a);
       sp.x += Math.cos(sp.ang) * sp.speed * dt;
       sp.y += Math.sin(sp.ang) * sp.speed * dt;
       if (sp.age < 0.12) continue; /* grace period after leaving the brush */
+      if (sp.lastHitT > 0) sp.lastHitT -= dt;
       for (let j = S.enemies.length - 1; j >= 0; j--) {
         const e = S.enemies[j];
+        if (e === sp.lastHit && sp.lastHitT > 0) continue;
         const dx = e.x - sp.x, dy = e.y - sp.y;
         const rr = e.r + 4;
         if (dx * dx + dy * dy <= rr * rr) {
-          damageEnemy(e, j, CFG.spirit.dmg, true, sp.ang, true);
-          burst(sp.x, sp.y, 4, false);
-          S.spirits.splice(i, 1);
+          damageEnemy(e, j, sp.dmg || CFG.spirit.dmg, true, sp.ang, true);
+          burst(sp.x, sp.y, sp.pierce > 0 ? 3 : 4, false);
+          if (sp.pierce > 0) {
+            /* THE LITANY: the spirit runs the body through and flies on */
+            sp.pierce--;
+            sp.lastHit = e; sp.lastHitT = 0.22;
+          } else {
+            S.spirits.splice(i, 1);
+          }
           break;
         }
       }
@@ -2306,6 +2503,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     b_warlord: 'THE HORNS SHARPEN',  k_cinder: 'THE CINDER ROARS',
     b_tempest: 'THE EYE TURNS',      k_veil: 'THE VEIL THINS',
     b_origin: 'THE OLD INK REMEMBERS', k_nib: 'THE NIB RE-DIPS',
+    b_blank: 'THE PAGE TURNS',       k_edge: 'THE MARGIN WIDENS',
   };
   function bossPhaseOf(e) {
     return e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
@@ -2728,6 +2926,107 @@ const rand = (a, b) => a + RNG() * (b - a);
             break;
           }
 
+          /* ---------- the blank silk's own half-drawn things ---------- */
+          case 'sketch': { /* the underdrawing — it is not always THERE */
+            const cyc = (e.t + e.seed) % 5.2;
+            const nowFaint = cyc > 2.7;
+            if (nowFaint !== !!e.faint && nowFaint) {
+              S.popups.push({ x: e.x, y: e.y - e.r - 6, txt: 'UNDRAWN', life: 0.55, max: 0.55 });
+            }
+            e.faint = nowFaint;
+            const drift = e.faint ? 0.45 : 1;
+            vx = ux * e.speed * drift * sm; vy = uy * e.speed * drift * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          }
+          case 'stitch': { /* the seam — it holds, aims, and runs its line */
+            if (e.state === 'cruise') {
+              vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+              e.ang = Math.atan2(uy, ux);
+              e.stateT += dt;
+              if (d < 340 && e.stateT > 1.3) { e.state = 'tele'; e.stateT = 0; }
+            } else if (e.state === 'tele') {
+              e.stateT += dt;
+              if (e.stateT > 0.32) { e.state = 'dash'; e.stateT = 0; SFX.wind(); }
+            } else if (e.state === 'dash') {
+              e.stateT += dt;
+              vx = Math.cos(e.ang) * 400; vy = Math.sin(e.ang) * 400;
+              if (Math.random() < 0.25) S.stainQueue.push({ x: e.x, y: e.y, r: 3.5, alpha: 0.22 });
+              if (e.stateT > 0.5) { e.state = 'rest'; e.stateT = 0; }
+            } else { /* rest */
+              e.stateT += dt;
+              if (e.stateT > 0.55) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
+          case 'reseal': /* the twice-stamped — slow, and it refuses the first death */
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          case 'sizing': /* the glue — a slow soak that spills where it dies */
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            break;
+          case 'binder': { /* the mount — it herds the horde toward the brush */
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            e.herdT = (e.herdT == null ? 0.8 : e.herdT) - dt;
+            if (e.herdT <= 0) {
+              e.herdT = 0.7;
+              const hr2 = 190 * 190;
+              for (const o of S.enemies) {
+                if (o === e || o.dead || ENEMIES[o.type].boss) continue;
+                const ox = o.x - e.x, oy = o.y - e.y;
+                if (ox * ox + oy * oy < hr2) {
+                  const hx = p.x - o.x, hy = p.y - o.y;
+                  const hd = Math.hypot(hx, hy) || 1;
+                  o.kbx += (hx / hd) * 120; o.kby += (hy / hd) * 120;
+                }
+              }
+            }
+            break;
+          }
+          case 'weft': { /* the loom — it holds its distance and throws the cross-weave */
+            if (e.state === 'cruise') {
+              e.ang = Math.atan2(uy, ux);
+              if (d > 300) { vx = ux * e.speed * sm; vy = uy * e.speed * sm; }
+              else {
+                const sdir = Math.sin(e.seed + e.t * 0.6) > 0 ? 1 : -1;
+                vx = -uy * e.speed * 0.8 * sm * sdir;
+                vy = ux * e.speed * 0.8 * sm * sdir;
+              }
+              e.stateT += dt;
+              if (d < 380 && e.stateT > 2.1) { e.state = 'tele'; e.stateT = 0; SFX.wind(); }
+            } else if (e.state === 'tele') {
+              e.stateT += dt;
+              if (e.stateT > 0.45) {
+                e.state = 'rest'; e.stateT = 0;
+                const base = Math.atan2(p.y - e.y, p.x - e.x);
+                for (const off of [-0.34, 0.34]) {
+                  const a = base + off;
+                  S.ebullets.push({
+                    kind: 'needle',
+                    x: e.x + Math.cos(a) * (e.r + 4), y: e.y + Math.sin(a) * (e.r + 4),
+                    vx: Math.cos(a) * CFG.needle.speed * 0.62, vy: Math.sin(a) * CFG.needle.speed * 0.62,
+                    ang: a, age: 0, life: CFG.needle.life * 1.15,
+                  });
+                }
+                /* the warp line: a third thread runs straight at the hand */
+                S.ebullets.push({
+                  kind: 'needle',
+                  x: e.x + Math.cos(base) * (e.r + 4), y: e.y + Math.sin(base) * (e.r + 4),
+                  vx: Math.cos(base) * CFG.needle.speed * 0.5, vy: Math.sin(base) * CFG.needle.speed * 0.5,
+                  ang: base, age: 0, life: CFG.needle.life * 1.3,
+                });
+                SFX.needle();
+              }
+            } else { /* rest */
+              e.stateT += dt;
+              if (e.stateT > 0.9) { e.state = 'cruise'; e.stateT = 0; }
+            }
+            break;
+          }
+
           /* ---------- the papers' own specials, born of their ink ---------- */
           case 'washling': { /* pale wash that breathes as it drifts */
             const breath = 0.5 + 0.7 * Math.abs(Math.sin(e.t * 1.15 + e.seed));
@@ -3131,9 +3430,35 @@ const rand = (a, b) => a + RNG() * (b - a);
             }
             break;
           }
+          case 's_trace': { /* the tracer — it inks faint copies of whatever walks the paper */
+            vx = ux * e.speed * sm * 0.8; vy = uy * e.speed * sm * 0.8;
+            e.ang = Math.atan2(uy, ux);
+            e.traceT = (e.traceT == null ? 3.5 : e.traceT) - dt;
+            if (e.traceT <= 0 && S.enemies.length < broodCap) {
+              /* a live ordinary beast to remember — never bosses, never its own kind */
+              let pick = null;
+              for (let tries = 0; tries < 6 && !pick; tries++) {
+                const o = S.enemies[(RNG() * S.enemies.length) | 0];
+                if (o && !o.dead && o !== e && !o.trace &&
+                    !ENEMIES[o.type].boss && !ENEMIES[o.type].special && ENEMIES[o.type].cost > 0) pick = o.type;
+              }
+              if (pick) {
+                e.traceT = 7;
+                const a = rand(0, TAU);
+                const c = spawnEnemy(pick, e.x + Math.cos(a) * (e.r + 12), e.y + Math.sin(a) * (e.r + 12));
+                c.hp = Math.max(1, Math.round(c.maxHp * 0.55));
+                c.trace = 1;
+                c.kbx = Math.cos(a) * 150; c.kby = Math.sin(a) * 150;
+                S.rings.push({ x: c.x, y: c.y, max: c.r * 2.4, life: 0.4, maxLife: 0.4, red: true });
+                S.popups.push({ x: e.x, y: e.y - e.r - 10, txt: 'TRACED', life: 0.8, max: 0.8, red: true });
+                SFX.elite();
+              } else e.traceT = 2;
+            }
+            break;
+          }
 
           /* ============ THE CAPTAINS — the horde's officers ============ */
-          case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': {
+          case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': case 'c_hush': {
             e.stateT += dt;
             const hurt = e.hp < e.maxHp * 0.5;
             /* the Paymaster sidesteps like the coin it is; the rest march at you */
@@ -3227,7 +3552,9 @@ const rand = (a, b) => a + RNG() * (b - a);
                 }
                 SFX.wind();
               }
-            } else { /* c_gild — the paymaster flings its gold back at the hand */
+            } else if (e.type === 'c_gild') { /* the paymaster flings its gold back at the hand */
+              /* (the hush carries no attack of its own — it only rallies,
+                 and the silence around it IS its officer's voice) */
               e.atkT = (e.atkT == null ? rand(1.4, 2.4) : e.atkT) - dt;
               if (e.atkT <= 0 && d < 440) {
                 e.atkT = hurt ? 3.0 : 4.2;
@@ -3578,6 +3905,67 @@ const rand = (a, b) => a + RNG() * (b - a);
             }
             break;
           }
+          case 'b_blank': case 'k_edge': { /* THE UNWRITTEN / THE MARGIN — it erases, re-stamps, and redraws */
+            const mini = ENEMIES[e.type].boss === 2;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            e.stateT += dt;
+            /* the erase pulse — a breath of blank that sweeps the hand's ink
+               back off the page: droplets burst, motes are pushed outward */
+            e.eT = (e.eT == null ? (mini ? 3.4 : 2.8) : e.eT) - dt;
+            if (e.eT <= 0) {
+              e.eT = ph === 2 ? (mini ? 3.6 : 3.0) : mini ? 5.2 : 4.4;
+              e.state = 'erase'; e.stateT = 0;
+              S.telgs.push({ e, kind: 'ring', r: 240, life: 0.8, maxLife: 0.8 });
+              SFX.wind();
+            }
+            if (e.state === 'erase' && e.stateT > 0.8) {
+              e.state = 'cruise'; e.stateT = 0;
+              for (let i = S.bullets.length - 1; i >= 0; i--) {
+                const b = S.bullets[i];
+                const dx = b.x - e.x, dy = b.y - e.y;
+                if (dx * dx + dy * dy < 240 * 240) { burst(b.x, b.y, 3, false); S.bullets.splice(i, 1); }
+              }
+              for (const mt of S.motes) {
+                const dx = mt.x - e.x, dy = mt.y - e.y;
+                const dd = Math.hypot(dx, dy);
+                if (dd < 260 && dd > 0.01) { mt.x = e.x + (dx / dd) * 260; mt.y = e.y + (dy / dd) * 260; }
+              }
+              if (d < 250) { p.vx += ux * 300; p.vy += uy * 300; }
+              S.rings.push({ x: e.x, y: e.y, max: 240, life: 0.45, maxLife: 0.45, red: true });
+              S.shake = Math.max(S.shake, 8);
+              S.popups.push({ x: e.x, y: e.y - e.r - 12, txt: 'ERASED', life: 0.9, max: 0.9, red: true });
+              SFX.nova();
+            }
+            /* the seal slams — telegraphed stamps pressed where you stand (phase one) */
+            if (ph >= 1 && e.state === 'cruise') {
+              e.sT2 = (e.sT2 == null ? 2.4 : e.sT2) - dt;
+              if (e.sT2 <= 0 && d < 560) {
+                e.sT2 = ph === 2 ? 3.0 : 4.4;
+                const n = (ph === 2 && !mini) ? 2 : 1;
+                for (let i = 0; i < n; i++) {
+                  const ba = rand(0, TAU), bd = i === 0 ? rand(10, 60) : rand(70, 150);
+                  S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.9, r: 62, struck: false, life: 0, red: true, seal: 1 });
+                }
+                SFX.wind();
+              }
+            }
+            /* the brood — the page redraws its underdrawing (phase two) */
+            if (ph === 2 && !mini) {
+              e.bT = (e.bT == null ? 3.0 : e.bT) - dt;
+              if (e.bT <= 0 && S.enemies.length < broodCap + 8) {
+                e.bT = 8;
+                for (const s of [-1, 1]) {
+                  const c = spawnEnemy('sketch', e.x + s * 55, e.y + rand(-40, 40));
+                  c.kbx = s * 150; c.kby = rand(-70, 70);
+                }
+                S.rings.push({ x: e.x, y: e.y, max: 120, life: 0.45, maxLife: 0.45, red: true });
+                SFX.elite();
+              }
+            }
+            break;
+          }
         }
         /* a wounded Guardian moves like something cornered */
         if (ENEMIES[e.type].boss && e.hp < e.maxHp * 0.35) {
@@ -3632,6 +4020,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     /* contact damage */
     if (S.invulnT <= 0) {
       for (const e of S.enemies) {
+        if (e.faint) continue;   /* the underdrawing has no body to touch */
         const dx = e.x - p.x, dy = e.y - p.y;
         const rr = e.r + p.r - 2;
         if (dx * dx + dy * dy < rr * rr) {
@@ -3644,6 +4033,9 @@ const rand = (a, b) => a + RNG() * (b - a);
         }
       }
     }
+
+    /* the bounded page holds its beasts: nothing wanders past the margins */
+    if (arenaOn()) for (const e of S.enemies) clampArena(e, e.r);
   }
 
   /* the spitter's ink and the sniper's needles, flying back at you */
@@ -3694,7 +4086,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.spawnTimer <= 0 && S.markers.length < 6 && alive < cap) {
       const group = Math.min(CFG.wave.groupSize(as.waveInLevel, as.depth), S.queue.length, cap - alive);
       if (S.spawnPattern === 'ring') {
-        /* a ring closes around the brush — the surge encircles */
+        /* a ring closes around the brush — the surge encircles.
+           On a bounded page the ring flattens against the margins. */
         const off = Math.random() * Math.PI * 2;
         for (let i = 0; i < group; i++) {
           const type = S.queue.pop();
@@ -3703,7 +4096,9 @@ const rand = (a, b) => a + RNG() * (b - a);
           const ax = Math.abs(Math.cos(a)) > 1e-4 ? (S.W / 2 + pad) / Math.abs(Math.cos(a)) : Infinity;
           const ay = Math.abs(Math.sin(a)) > 1e-4 ? (S.H / 2 + pad) / Math.abs(Math.sin(a)) : Infinity;
           const t2 = Math.min(ax, ay) + rand(20, 110);
-          S.markers.push({ type, x: S.player.x + Math.cos(a) * t2, y: S.player.y + Math.sin(a) * t2, t: 0.62 });
+          const mk = { type, x: S.player.x + Math.cos(a) * t2, y: S.player.y + Math.sin(a) * t2, t: 0.62 };
+          if (arenaOn()) clampArena(mk, 70);
+          S.markers.push(mk);
         }
       } else if (S.spawnPattern === 'flood') {
         /* two opposite banks empty themselves into the page */
