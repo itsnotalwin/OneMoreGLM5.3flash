@@ -2,6 +2,22 @@
 
 > **Read this before manually replacing or uploading game files.** This is the canonical *source-repository recovery runbook*. A separate short BRAIN project record links here instead of duplicating the implementation. Last verified: **2026-11-03**. Source v12 restoration tested and committed; full real-browser OAuth still needs confirmation. This repo is **not** `itsnotalwin/ONE_MORE`.
 
+## v18 manual-upload recovery (3 November 2026, 23:07 SAST)
+
+**Source snapshot protected:** [`backup/v18-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v18-manual-upload-2026-11-03) is the owner's exact new [`e4f63bda`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/e4f63bda480a1c199900c77b8dfeb58ed8938e53) upload, containing the sixth scroll/silk and 60-scene gameplay/rendering additions. **Do not replace these new assets or game logic with older versions.**
+
+The upload unintentionally reverted the *same three* integration files to their exact pre-recovery v16 source hashes: `js/supabase-config.js` was blank; `js/lb.js` and `js/main.js` lacked Google OAuth callback restoration. The source guard correctly failed even though the game deployed.
+
+**Recovery:** Verified all three broken files matched the older pre-fix baseline byte-for-byte, then restored only the previously tested versions from [last good integrated v16 commit `b24d194c`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/b24d194c18f0d7d234a6c19ad096c97d48a4eb27), using current file SHAs. The public Supabase publishable key was independently matched against currently active Pinpoint project keys; no secrets were placed in Git. Commits:
+- [`1ccf9d15`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/1ccf9d15eadb9e4755054ad8d6b770181c4d9bfb): Supabase URL/publishable config.
+- [`915e0367`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/915e0367845f0580f2c85f0de421a603e5a7494b): OAuth state tracking, error feedback, Google Settings return and pending post handling.
+- [`96cc637c`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/96cc637c9a7f25a55639fe914d00ed97f6c55c27): resume Settings/board on PKCE return without replaying intro.
+- [`d6110553`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/d61105532803ceaac86a894b568b1ec21f0a14ef): service-worker cache `v18-supabase-1`, retaining new v18 assets.
+
+**Verified:** only these **four files** changed versus the owner upload; all six-scroll gameplay, art, render, audio, UI and CSS are untouched. 20/20 isolated JavaScript/OAuth/state/syntax tests passed. [GitHub source guard](https://github.com/itsnotalwin/OneMoreGLM5.3flash/actions/runs/41719264286) and [GitHub Pages deploy](https://github.com/itsnotalwin/OneMoreGLM5.3flash/actions/runs/41719264297) both passed at commit `d6110553`. Existing Supabase project `sffpyvxbgmhepftxoesy` ACTIVE_HEALTHY, isolated `om_scores`/`om_daily`/`om_weekly` tables, RLS and per-role privileges unchanged; no database migration performed. Supabase recorded Google sign-in on **3 Nov 2026 20:08:11 UTC** (before the 21:06 UTC v18 upload); this supports recent Google provider functionality but does **not** establish browser Google sign-in or live score posting on repaired v18. Require an owner device sign-in and post test to confirm.
+
+**Next agent:** treat this v18 integration snapshot as the current recovery baseline. Compare new pushes against current `main` and the v18 upload branch; preserve the newest feature changes. A green code guard cannot attest to live OAuth. Never run fresh-project SQL or alter Pinpoint's tables just to recover a blank frontend config.
+
 ## Latest v16 manual upload recovery (3 November 2026)
 
 **Latest owner's unmodified source snapshot:** [`backup/v16-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v16-manual-upload-2026-11-03), pinned to commit [`94267ab9`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/94267ab9d0789f0f7f65dcf2e62f0a1fae68bea1). The previous v12 and initial integration backup branches remain independent. Two owner uploads, [`5f9b7c0`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/5f9b7c0a6faf31ef064da771b28511107da6d51c) and [`94267ab9`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/94267ab9d0789f0f7f65dcf2e62f0a1fae68bea1), introduced substantial v16 presentation/gameplay improvements but removed the shared project's public URL/key and Google OAuth return handling. The source guard correctly failed on both while Pages still deployed.
