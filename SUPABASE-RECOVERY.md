@@ -2,7 +2,20 @@
 
 > **Read this before manually replacing or uploading game files.** This is the canonical *source-repository recovery runbook*. A separate short BRAIN project record links here instead of duplicating the implementation. Last verified: **2026-11-03**. Source v12 restoration tested and committed; full real-browser OAuth still needs confirmation. This repo is **not** `itsnotalwin/ONE_MORE`.
 
-## v18.1 upload protection and recovery (3 November 2026, ~23:38 SAST)
+## Automated draft recovery PR for repeat manual uploads (3 November 2026)
+
+**Implemented and source self-tested:** [`.github/supabase-auto-repair.cjs`](.github/supabase-auto-repair.cjs) + [`supabase-auto-repair.yml`](.github/workflows/supabase-auto-repair.yml) minimize recurring Supabase/Google login breakage **without automatically changing `main`**. On each `main` push the workflow runs read-only simulation tests; once the existing integration guard finishes **failed** after a main push, a separate workflow examines the latest `main` source and may propose a **DRAFT review pull request**.
+
+The recovery engine pins:
+- Verified working integrated source commit `365697c8dde79e6fe1a6edeea1e5cf289229564c`.
+- Known broken manual-upload source commit `8def891bc3adccb2c4018f84f5618fbfcd22bbfe`.
+- **Exact-byte matching required** before replacing any missing integration file. Unknown or refactored `js/supabase-config.js`, `js/lb.js`, or `js/main.js` is deliberately **rejected with a failed workflow**, not silently replaced.
+- Only `js/supabase-config.js`, `js/lb.js`, `js/main.js` and the **current `sw.js` version string** may be proposed. All newer gameplay, other scripts, HTML, CSS, art, PWA cached asset lists, shared Supabase project and existing Pinpoint scores remain untouched.
+- It verifies JavaScript syntax, script load order, PWA cache paths, narrow file scope and seven read-only failure/normal/novel-source scenarios before proposing. The PR is created on a separate `automation/supabase-repair-<base-SHA>` branch **without force pushing or merging `main`**. Review the diff before marking it ready and merging.
+
+**Setup prerequisite:** GitHub repository **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests** must be enabled by the owner; otherwise draft PR creation can fail even though the read-only self-tests pass. The workflow requests write permissions only for the separate draft-PR job. This GitHub setting has **not yet been confirmed** through the connected tools. A live failing-upload-to-draft-PR run has **not yet occurred**; do not confuse tested simulation with proven PR creation. No personal access token or privileged Supabase key is required. Live real-browser OAuth and score posting remain separately unverified.
+
+
 
 - **Exact owner-upload backup:** [`backup/v18-1-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v18-1-manual-upload-2026-11-03), verified pinned to [`8def891b`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/8def891bc3adccb2c4018f84f5618fbfcd22bbfe). Keep the v18.1 game/HTML/Inkstone/config changes. The prior `backup/v18-manual-upload-2026-11-03` remains a separate older snapshot.
 - Latest manual upload passed Pages but failed the integration guard because it blanked `js/supabase-config.js` and removed Google PKCE callback/Settings restoration from `js/lb.js` and `js/main.js`. **All three source files exactly matched earlier, already-diagnosed broken v18 source blobs.** The previously validated versions from `365697c8` were restored with SHA-protected updates, and the Supabase **public** publishable key was matched against the current shared project. No privileged key or database change was involved.
