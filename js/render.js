@@ -23,9 +23,6 @@ const R = (() => {
     red:   { paper: '#eadbc4', ink: '#1a1714', tint: '#4a211a', vig: '122,42,26', wash: '178,58,43',   washA: 0.031, fiber: [70,62,48],  speck: '50,45,36',    weather: 'petals' },
     storm: { paper: '#c7cdc9', ink: '#161c1f', tint: '#1e3240', vig: '26,38,44',  wash: '58,74,84',    washA: 0.03,  fiber: [56,66,70],  speck: '40,52,58',    weather: 'rain'   },
     gilt:  { paper: '#e7d6ad', ink: '#241c12', tint: '#4a360e', vig: '96,70,20',  wash: '166,124,44',  washA: 0.035, fiber: [96,78,44],  speck: '120,92,40',   weather: 'gold'   },
-    /* the blank sheet: the paper before ink — the brightest and the
-       stillest sheet, barely tinted, dust adrift on an unwritten page */
-    blank: { paper: '#f4f1e6', ink: '#26221c', tint: '#3a3630', vig: '86,84,70',  wash: '150,146,130', washA: 0.012, fiber: [122,118,102], speck: '132,128,112', weather: 'motes' },
   };
   let INK = THEMES.pale.ink;
   let PAPER = THEMES.pale.paper;
@@ -835,19 +832,6 @@ const R = (() => {
       [wash('shu2', 935, 1210, 0.21, 0.29), el('crane', 0.28, 0.9, 1.2, 0.64)],
       [el('rockS', 0.30, 1, 1.4, 0.70), wash('shore', 990, 1270, 0.22, 0.32, '汀')],
       [seal(), mist(0.12), el('crane', 0.30, 1, 1.3, 0.58)],
-    ],
-    blank: [  /* THE BLANK SCROLL — nothing is painted here. Almost nothing:
-                 nine empty scenes of unwritten paper, then the one seal */
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [seal(), mist(0.08)],
     ],
   };
 
@@ -2375,6 +2359,148 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 0.86, sd, 0.14, 14);
         break;
       }
+      /* ============ THE SPECIALS — the paper's odd mechanics ============ */
+      case 's_nest': { /* THE NEST — a woven cocoon that breathes and hums with brood */
+        const br = 1 + Math.sin(e.t * 2.2 + e.seed) * 0.05;
+        c.save(); c.scale(br, 2 - br);
+        blobPath(c, 0, 0, r, sd, 0.12, 12); c.fill();
+        c.restore();
+        /* the weave: two crossing bands, pale against the ink */
+        c.save();
+        c.globalAlpha = 0.85;
+        c.strokeStyle = PAPER; c.lineWidth = 1.6;
+        c.beginPath(); c.moveTo(-r * 0.8, -r * 0.45); c.quadraticCurveTo(0, -r * 0.1, r * 0.8, -r * 0.5); c.stroke();
+        c.beginPath(); c.moveTo(-r * 0.8, r * 0.35); c.quadraticCurveTo(0, r * 0.7, r * 0.8, r * 0.3); c.stroke();
+        /* the brood, circling the seam */
+        c.fillStyle = PAPER;
+        for (let i = 0; i < 3; i++) {
+          const a = e.t * 1.6 + (i / 3) * TAU;
+          c.beginPath(); c.arc(Math.cos(a) * r * 0.45, Math.sin(a) * r * 0.3, 1.6, 0, TAU); c.fill();
+        }
+        c.restore();
+        silhouette = () => blobPath(c, 0, 0, r * 1.06, sd, 0.12, 12);
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, ang, r, 0.8);
+        break;
+      }
+      case 's_mender': { /* THE MENDER — a small round beast carrying red thread */
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        const sq = 1 + Math.sin(e.t * 5 + e.seed) * 0.04;
+        c.save(); c.rotate(ang); c.scale(sq, 2 - sq); c.rotate(-ang);
+        blobPath(c, 0, 0, r, sd, 0.2, 10); c.fill();
+        c.restore();
+        /* the stitch: a small red cross of thread held out front */
+        c.save();
+        c.strokeStyle = RED; c.lineWidth = 2; c.lineCap = 'round';
+        const sx = Math.cos(ang) * (r * 0.6), sy = Math.sin(ang) * (r * 0.6);
+        c.beginPath(); c.moveTo(sx - 4, sy - 4); c.lineTo(sx + 4, sy + 4); c.stroke();
+        c.beginPath(); c.moveTo(sx + 4, sy - 4); c.lineTo(sx - 4, sy + 4); c.stroke();
+        c.restore();
+        silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.2, 10);
+        eyeSlits(c, ang, r);
+        break;
+      }
+      case 's_toller': { /* THE TOLLER — a bell of ink on a slow swing, a fast one when it tolls */
+        const swing = e.state === 'toll' ? Math.sin(e.t * 26) * 0.16 : Math.sin(e.t * 1.8 + e.seed) * 0.08;
+        c.save();
+        c.rotate(swing);
+        c.beginPath();
+        c.moveTo(-r * 0.85, r * 0.55);
+        c.quadraticCurveTo(-r * 0.95, -r * 0.4, 0, -r * 0.95);
+        c.quadraticCurveTo(r * 0.95, -r * 0.4, r * 0.85, r * 0.55);
+        c.closePath(); c.fill();
+        c.fillRect(-r * 0.95, r * 0.5, r * 1.9, r * 0.22);
+        c.beginPath(); c.arc(0, r * 0.85, r * 0.16, 0, TAU); c.fill();
+        c.restore();
+        silhouette = () => {
+          c.beginPath();
+          c.moveTo(-r * 0.85, r * 0.55);
+          c.quadraticCurveTo(-r * 0.95, -r * 0.4, 0, -r * 0.95);
+          c.quadraticCurveTo(r * 0.95, -r * 0.4, r * 0.85, r * 0.55);
+          c.closePath();
+        };
+        break;
+      }
+      case 's_ledger': { /* THE LEDGER — a bound book that walks, its pages full of other people's ink */
+        c.save();
+        c.rotate(Math.sin(e.t * 2.4 + e.seed) * 0.08);
+        c.beginPath(); c.rect(-r * 0.75, -r * 0.9, r * 1.5, r * 1.8); c.fill();
+        c.save();
+        c.strokeStyle = PAPER; c.fillStyle = PAPER; c.lineWidth = 1.4; c.globalAlpha = 0.72;
+        c.beginPath(); c.moveTo(-r * 0.75, -r * 0.9); c.lineTo(-r * 0.75, r * 0.9); c.stroke();
+        for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 2; gx++) {
+          c.beginPath(); c.arc(-r * 0.22 + gx * r * 0.52, -r * 0.5 + gy * r * 0.5, 1.8, 0, TAU); c.fill();
+        }
+        c.restore();
+        c.restore();
+        silhouette = () => c.rect(-r * 0.75, -r * 0.9, r * 1.5, r * 1.8);
+        const lang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        eyeSlits(c, lang, r * 0.9);
+        break;
+      }
+
+      /* ============ THE CAPTAINS — the horde's officers ============ */
+      case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': {
+        /* a plump blot under a tall flag — the sheet's own kanji flies above it */
+        const K = ({ c_drum: '一', c_choir: '夜', c_banner: '紅', c_gale: '嵐', c_gild: '金' })[e.type] || '旗';
+        const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+        const bob = Math.sin(e.t * 3.1 + e.seed) * r * 0.06;
+        /* the pole rises behind the body, the flag hangs to its right */
+        c.save();
+        c.lineWidth = 2;
+        c.beginPath(); c.moveTo(r * 0.15, r * 0.2); c.lineTo(r * 0.42, -r * 2.55); c.stroke();
+        const fw = r * 1.5, fh = r * 1.05;
+        c.fillStyle = PAPER;
+        c.strokeStyle = RED;
+        c.lineWidth = 1.6;
+        c.beginPath(); c.rect(r * 0.42, -r * 2.55 - fh, fw, fh); c.fill(); c.stroke();
+        c.fillStyle = RED;
+        c.font = Math.round(fh * 0.72) + 'px "Zen Antique", serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(K, r * 0.42 + fw / 2, -r * 2.55 - fh / 2 + 1);
+        c.restore();
+        /* the body: a marching blot, fattened with rank */
+        c.fillStyle = INK; c.strokeStyle = INK;
+        c.save();
+        c.translate(0, bob);
+        blobPath(c, 0, 0, r, sd, 0.16, 11);
+        c.fill();
+        c.restore();
+        silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.16, 11);
+        /* the officer's marks */
+        if (e.type === 'c_drum') {
+          c.save();
+          c.strokeStyle = PAPER; c.lineWidth = 1.8; c.globalAlpha = 0.8;
+          c.beginPath(); c.moveTo(-r * 0.7, -r * 0.5); c.lineTo(r * 0.7, r * 0.5); c.stroke();
+          c.beginPath(); c.moveTo(-r * 0.7, r * 0.5); c.lineTo(r * 0.7, -r * 0.5); c.stroke();
+          c.restore();
+        } else if (e.type === 'c_choir') {
+          c.save();
+          c.strokeStyle = PAPER; c.lineWidth = 1.3; c.globalAlpha = 0.8;
+          for (let i = -1; i <= 1; i++) {
+            c.beginPath();
+            c.arc(i * r * 0.45, r * 0.55, r * 0.16, Math.PI, TAU);
+            c.stroke();
+          }
+          c.restore();
+        } else if (e.type === 'c_gale') {
+          c.save();
+          c.strokeStyle = PAPER; c.lineWidth = 1.6; c.globalAlpha = 0.8;
+          c.beginPath();
+          c.moveTo(-r * 0.6, 0); c.lineTo(-r * 0.2, -r * 0.3); c.lineTo(r * 0.2, r * 0.05); c.lineTo(r * 0.6, -r * 0.25);
+          c.stroke();
+          c.restore();
+        } else if (e.type === 'c_gild') {
+          c.save();
+          c.strokeStyle = '#8a6a1f'; c.fillStyle = '#8a6a1f'; c.lineWidth = 1.4;
+          c.beginPath(); c.arc(0, 0, r * 0.34, 0, TAU); c.stroke();
+          c.beginPath(); c.arc(0, 0, r * 0.12, 0, TAU); c.fill();
+          c.restore();
+        }
+        eyeSlits(c, ang, r);
+        break;
+      }
+
       default: { /* BLIP — a shard of the drip */
         blobPath(c, 0, 0, r, sd, 0.24, 9);
         c.fill();
@@ -2405,6 +2531,19 @@ const R = (() => {
       c.strokeStyle = INK;
       c.lineWidth = 1.3;
       blobPath(c, 0, 0, r * 1.32, sd ^ 77, 0.2, 9);
+      c.stroke();
+      c.restore();
+    }
+
+    /* a captain's march: beasts under the flag wear a pale dashed halo */
+    if (e.auraT > 0) {
+      c.save();
+      c.globalAlpha = Math.min(0.5, e.auraT) * 0.9;
+      c.strokeStyle = INK;
+      c.lineWidth = 1.1;
+      c.setLineDash([4, 4]);
+      c.beginPath();
+      c.arc(0, 0, r * 1.42, 0, TAU);
       c.stroke();
       c.restore();
     }
@@ -2553,7 +2692,7 @@ const R = (() => {
       c.moveTo(3.6 * len, -2.1 * len);
       c.quadraticCurveTo(4.4 * len, 0, 3.6 * len, 2.1 * len);
       c.stroke();
-    } else {
+    } else if (!type || type === 'needle') {
       /* 細 — the needle: one long fine point that barely lifts */
       c.globalAlpha = A * 0.92;
       c.beginPath();
@@ -2575,6 +2714,125 @@ const R = (() => {
       /* the last hairs gather to the single point */
       c.globalAlpha = A * 0.65;
       hairs([{ x: 7 * len, y: -0.3 * len }, { x: 11.6 * len, y: 0 }], 0.8, 1, 97);
+    } else if (type === 'wisp') {
+      /* 幽 — the wisp: a fine tip whose last hairs curl like breath */
+      c.globalAlpha = A * 0.92;
+      c.beginPath();
+      c.moveTo(-2.4 * len, -1.8 * len);
+      c.quadraticCurveTo(2.4 * len, -1.5 * len, 6 * len, -0.6 * len);
+      c.quadraticCurveTo(8.6 * len, -0.1 * len, 9.6 * len, 0);
+      c.quadraticCurveTo(8.6 * len, 0.1 * len, 6 * len, 0.6 * len);
+      c.quadraticCurveTo(2.4 * len, 1.5 * len, -2.4 * len, 1.8 * len);
+      c.closePath();
+      c.fill();
+      c.globalAlpha = A * 0.8;
+      for (const hy of [-1, -0.34, 0.34, 1]) {
+        hairs([
+          { x: -1.5 * len, y: hy * 0.85 * len },
+          { x: 3 * len, y: hy * 0.6 * len },
+          { x: 8.8 * len, y: hy * 0.12 * len },
+        ], 0.85, 1, 101 + hy * 13);
+      }
+      /* the wisp: the tip's breath curls off the paper */
+      c.globalAlpha = A * 0.55;
+      c.lineWidth = 0.9;
+      c.beginPath();
+      c.moveTo(9.4 * len, 0);
+      c.quadraticCurveTo(10.8 * len, -0.9 * len, 10.2 * len, -2 * len);
+      c.quadraticCurveTo(9.8 * len, -2.8 * len, 10.7 * len, -3.4 * len);
+      c.stroke();
+      c.globalAlpha = A * 0.5;
+      c.beginPath();
+      c.arc(10.9 * len, -4.3 * len, 0.55 * len, 0, TAU);
+      c.fill();
+    } else if (type === 'fan') {
+      /* 扇 — the folded fan: a flat wedge of paper blades, ribbed */
+      c.globalAlpha = A * 0.9;
+      c.beginPath();
+      c.moveTo(-2.3 * len, -1.4 * len);
+      c.lineTo(8.8 * len, -3.6 * len);
+      c.quadraticCurveTo(10 * len, 0, 8.8 * len, 3.6 * len);
+      c.lineTo(-2.3 * len, 1.4 * len);
+      c.closePath();
+      c.fill();
+      /* the ribs: where the blades fold */
+      c.globalAlpha = A * 0.4;
+      c.strokeStyle = paper;
+      c.lineWidth = 0.8;
+      for (const ry of [-2.2, -1.1, 0, 1.1, 2.2]) {
+        c.beginPath();
+        c.moveTo(-1.6 * len, ry * 0.5 * len);
+        c.lineTo(8.4 * len, ry * 1.5 * len);
+        c.stroke();
+      }
+      c.strokeStyle = ink;
+      c.globalAlpha = A * 0.8;
+      hairs([{ x: 7.6 * len, y: -2.2 * len }, { x: 9.9 * len, y: 0 }], 0.9, 1, 113);
+      hairs([{ x: 7.6 * len, y: 2.2 * len }, { x: 9.9 * len, y: 0 }], 0.9, 1, 117);
+    } else if (type === 'tide') {
+      /* 潮 — the tide: a broad soft belly that dips like a swell */
+      c.globalAlpha = A * 0.92;
+      c.beginPath();
+      c.moveTo(-2.4 * len, -2.6 * len);
+      c.quadraticCurveTo(1.6 * len, -4.6 * len, 4.6 * len, -3 * len);
+      c.quadraticCurveTo(6.2 * len, -2 * len, 5.4 * len, -0.6 * len);
+      c.quadraticCurveTo(7.6 * len, 0.4 * len, 7.4 * len, 1.6 * len);
+      c.quadraticCurveTo(4.4 * len, 4.8 * len, -2.4 * len, 2.6 * len);
+      c.closePath();
+      c.fill();
+      c.globalAlpha = A * 0.75;
+      for (const hy of [-2, -0.7, 0.7, 2]) {
+        hairs([
+          { x: -1.6 * len, y: hy * 0.85 * len },
+          { x: 2.8 * len, y: hy * 1.05 * len },
+          { x: 7 * len, y: hy * 0.55 * len },
+        ], 1.05, 1, 121 + hy * 11);
+      }
+      /* the swell: a pale wave line through the belly */
+      c.globalAlpha = A * 0.32;
+      c.strokeStyle = paper;
+      c.lineWidth = 0.9;
+      c.beginPath();
+      c.moveTo(-1.2 * len, 0.2 * len);
+      c.quadraticCurveTo(1.6 * len, -1.2 * len, 3.4 * len, 0);
+      c.quadraticCurveTo(5 * len, 1 * len, 6.8 * len, 0.3 * len);
+      c.stroke();
+      c.strokeStyle = ink;
+    } else if (type === 'seal') {
+      /* 印 — the red seal: a short heavy shoe bound in red thread */
+      c.globalAlpha = A * 0.92;
+      c.beginPath();
+      c.moveTo(-2.5 * len, -2.7 * len);
+      c.quadraticCurveTo(3 * len, -3.2 * len, 4.7 * len, -1.3 * len);
+      c.quadraticCurveTo(5.8 * len, 0, 4.7 * len, 1.3 * len);
+      c.quadraticCurveTo(3 * len, 3.2 * len, -2.5 * len, 2.7 * len);
+      c.closePath();
+      c.fill();
+      c.globalAlpha = A * 0.88;
+      c.beginPath();
+      c.arc(4.3 * len, 0, 1.5 * len, 0, TAU);
+      c.fill();
+      c.globalAlpha = A * 0.8;
+      for (const hy of [-1.6, -0.5, 0.6, 1.7]) {
+        hairs([
+          { x: -1.4 * len, y: hy * 0.8 * len },
+          { x: 1.9 * len, y: hy * len },
+          { x: 4.6 * len, y: hy * 0.55 * len },
+        ], 1.15, 1, 131 + hy * 7);
+      }
+      /* the red thread: the seal's own wrap, the paper's one sacred colour */
+      c.globalAlpha = A * 0.85;
+      c.strokeStyle = '#b23a2b';
+      c.lineWidth = 1.1;
+      c.beginPath();
+      c.moveTo(-3.4 * len, -2.1 * len);
+      c.lineTo(-0.9 * len, 2.3 * len);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(-2.2 * len, -2.5 * len);
+      c.lineTo(0.3 * len, 2.5 * len);
+      c.stroke();
+      c.strokeStyle = ink;
     }
 
     /* wet ink gathering at the tip */
@@ -3257,10 +3515,7 @@ const R = (() => {
   function drawMarker(c, m) {
     const def = ENEMIES[m.type];
     const big = m.elite ? CFG.wave.eliteR : 1;
-    /* pr floors at zero: a late marker in a staggered wave (the hall's
-       honor guard waits turns of up to ~2.4s) must not fold its
-       teardrop through a negative radius — the arc throws (v11 fix) */
-    const pr = Math.max(0, 1 - m.t / (m.elite ? 1.7 : 0.62));
+    const pr = 1 - m.t / (m.elite ? 1.7 : 0.62);
     c.save();
     c.translate(m.x, m.y);
     /* puddle spreading */

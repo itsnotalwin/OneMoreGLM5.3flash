@@ -18,19 +18,30 @@ const CFG = {
   },
 
   /* starting brushes — choose one before the run begins.
-     The v11 balancing test (scripts/balance_probe.sh, seeded daily
-     sheets) measured the old trio: THE STONE cleared hordes 44% faster
-     than THE NEEDLE AND walked in with 7 integrity (mods add to the
-     base 3 — maxHp: 4 meant seven, not four) while losing every duel.
-     The triangle now: the needle outranges and outpaces, the broom
-     out-sweeps, the stone out-tanks and out-bites, one lane each. */
+     The sealed brushes open as the journey's scenes are SEALED
+     (a scene seals when its tenth wave's Keeper falls): three
+     scenes wake the Wisp, six the Fan, ten — one whole sheet —
+     the Tide, fourteen the Red Seal. Locked brushes cannot be
+     chosen; the shelf of seals is the key. */
   brushes: {
-    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. Fire comes fast, strokes stay light, and the droplets fly far.',
-      mods: { fireCdMult: 0.72, moveMult: 1.08, bulletLifeMult: 1.3 } },
-    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, a beat slower between strokes.',
-      mods: { shots: 2, fireCdMult: 1.12 } },
-    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. Every droplet bites deeper and the paper holds longer — the hand walks slower.',
-      mods: { dmg: 2, maxHp: 1, moveMult: 0.9, fireCdMult: 1.24 } },
+    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. Fire comes fast, strokes stay light.',
+      mods: { fireCdMult: 0.72, moveMult: 1.08 } },
+    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, slower between strokes.',
+      mods: { shots: 2, fireCdMult: 1.24 } },
+    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. Every droplet bites deeper and the paper holds longer.',
+      mods: { dmg: 2, maxHp: 4, moveMult: 0.9, fireCdMult: 1.08 } },
+    wisp:   { name: 'THE WISP', kanji: '幽', unlock: 3,
+      desc: 'The brush never fights alone: a lesser spirit wakes beside it and hunts on its own.',
+      mods: { spirit: 1, fireCdMult: 1.05, moveMult: 0.98 } },
+    fan:    { name: 'THE FAN', kanji: '扇', unlock: 6,
+      desc: 'Carries a folded fan. The volley comes slower; every few breaths the fan snaps open instead.',
+      mods: { fan: 1, fireCdMult: 1.14 } },
+    tide:   { name: 'THE TIDE', kanji: '潮', unlock: 10,
+      desc: 'The black tide answers it: every few breaths the ink surges outward and shoves the paper back.',
+      mods: { nova: 1, moveMult: 0.95 } },
+    seal:   { name: 'THE RED SEAL', kanji: '印', unlock: 14,
+      desc: 'A heavy hand and a great hanko. Every eleventh breath the stamp falls on the thickest horde.',
+      mods: { hanko: 1, fireCdMult: 1.16, moveMult: 0.95 } },
   },
 
   /* the world is unbounded — the brush walks an endless sheet */
@@ -155,20 +166,15 @@ const CFG = {
      scribe's true measured builds, not the paper's mercy. */
   boss: { hp: 1.75, keeperHp: 1.45 },
 
+  /* ---- CAPTAINS — the horde's officers ----
+     A captain walks INSIDE the pack (never alone, never a boss bar):
+     it quickens every beast near it, calls fresh ink into the paper,
+     and when it falls its whole fan stuns — break the officer and
+     the rank breaks with it. One per sheet, cut from that sheet's ink. */
+  captain: { auraR: 210, auraMult: 1.32, deathStun: 1.15, deathR: 235 },
+
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
-
-  /* ---- THE GUARDIANS' HALL (殿) — the boss rush (v11) ----
-     Five guardians, one life, the old master's kit (applyQAPower(30)
-     — the fifteen teachings, twice through). The sheet's climb stays
-     outside: each guardian fights at its OWN ink (def.hp × the boss
-     levy), a thin honor guard at its heels, +2 integrity between
-     gates. Score = the felled (500/800/1200/1700/2400, cumulative)
-     + the swift (+10 a breath under the seven-minute par, counting
-     down live) + the flawless (+500 untouched). REALLY HARD pays
-     the ledger's double. The hall presses no ink and keeps its own
-     ten best (om_hall_v1). */
-  hall: { par: 420, swift: 10, flawless: 500, guard0: 4 },
 
   /* brush skills */
   orbit:   { radius: lv => 40 + lv * 5, speed: 2.7, dmgCd: 0.45 },
@@ -262,22 +268,24 @@ const ENEMIES = {
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
-  /* ---- SHEET VI · THE BLANK SCROLL — the paper before ink ----
-     The secret act: the sheet the five inks never touched, walked
-     only once the five scrolls lie signed. Its beasts are PALE —
-     shapes the other sheets already know, born of the unwritten
-     paper, walking to their OWN first waves (fresh intros: the
-     sheet keeps its own climb, no borrowed growth). */
-  blankling:  { name: 'THE BLANK',     trait: 'DRIFTER',  cost: 1, intro: 501, hp: 3,  r: 12, speed: 84,  score: 40, shape: 'circle'  },
-  quill:      { name: 'THE QUILL',     trait: 'LUNGER',   cost: 2, intro: 506, hp: 2,  r: 9,  speed: 92,  score: 45, shape: 'tri'     },
-  eraser:     { name: 'THE ERASER',    trait: 'BOMBER',   cost: 2, intro: 511, hp: 3,  r: 10, speed: 132, score: 50, shape: 'popper'  },
-  palewing:   { name: 'PALEWING',      trait: 'SWOOPER',  cost: 2, intro: 516, hp: 3,  r: 11, speed: 205, score: 48, shape: 'crane'   },
-  stainlet:   { name: 'STAINLET',      trait: 'SWARM',    cost: 1, intro: 516, hp: 1,  r: 5,  speed: 150, score: 12, shape: 'gnat'    },
-  hush:       { name: 'THE HUSH',      trait: 'WEAVER',   cost: 2, intro: 521, hp: 3,  r: 11, speed: 100, score: 45, shape: 'ring'    },
-  flyleaf:    { name: 'THE FLYLEAF',   trait: 'SPONGE',   cost: 2, intro: 526, hp: 4,  r: 11, speed: 60,  score: 50, shape: 'blotter' },
-  undone:     { name: 'THE UNDONE',    trait: 'DIVIDER',  cost: 2, intro: 531, hp: 4,  r: 12, speed: 88,  score: 40, shape: 'diamond' },
-  palecolossus: { name: 'PALE COLOSSUS', trait: 'COLOSSUS', cost: 5, intro: 536, hp: 30, r: 24, speed: 28, score: 120, shape: 'golem' },
-  whitewisp:  { name: 'WHITE WISP',    trait: 'GUNNER',   cost: 3, intro: 541, hp: 3,  r: 11, speed: 66,  score: 60, shape: 'spit'    },
+  /* ---- SPECIALS — the paper's odd mechanics, one per sheet from
+     the second scroll on. Each bends the fight around itself:
+     breed, mend, toll, or tax. Kill them first, or fight the
+     horde they make. */
+  s_nest:    { name: 'THE NEST',     trait: 'BROODSITE', cost: 4, intro: 166, hp: 14, r: 17, speed: 0,   score: 70, shape: 'nest', special: 1 },
+  s_mender:  { name: 'THE MENDER',   trait: 'STITCHER',  cost: 3, intro: 236, hp: 6,  r: 12, speed: 76,  score: 85, shape: 'mender', special: 1 },
+  s_toller:  { name: 'THE TOLLER',   trait: 'BELL',      cost: 3, intro: 361, hp: 7,  r: 15, speed: 36,  score: 95, shape: 'toller', special: 1 },
+  s_ledger:  { name: 'THE LEDGER',   trait: 'USURER',    cost: 3, intro: 446, hp: 9,  r: 14, speed: 64,  score: 115, shape: 'ledger', special: 1 },
+
+  /* ---- CAPTAINS — the horde's officers, one cut from each sheet's
+     ink. They quicken the pack around them, call fresh beasts into
+     the paper, and when one falls its whole fan stuns. Walk the
+     wave, find the flag, break the rank. */
+  c_drum:    { name: 'THE DRUM',       trait: 'CAPTAIN · RALLY',  cost: 4, intro: 46,  hp: 15, r: 16, speed: 50, score: 75,  shape: 'captain', captain: 1, summon: 'pulse' },
+  c_choir:   { name: 'THE CHOIR',      trait: 'CAPTAIN · SONG',   cost: 4, intro: 146, hp: 13, r: 15, speed: 56, score: 95,  shape: 'captain', captain: 1, summon: 'shade' },
+  c_banner:  { name: 'THE BANNER',     trait: 'CAPTAIN · MARCH',  cost: 4, intro: 231, hp: 11, r: 16, speed: 48, score: 125, shape: 'captain', captain: 1, summon: 'ashigaru' },
+  c_gale:    { name: 'THE STORMCALLER',trait: 'CAPTAIN · STORM',  cost: 4, intro: 346, hp: 9,  r: 15, speed: 60, score: 155, shape: 'captain', captain: 1, summon: 'ember' },
+  c_gild:    { name: 'THE PAYMASTER',  trait: 'CAPTAIN · GREED',  cost: 4, intro: 426, hp: 8,  r: 17, speed: 42, score: 185, shape: 'captain', captain: 1, summon: 'gildling' },
 
   /* ---- the five Guardians, one per sheet, on its tenth level ----
      Bases are the beast's own ink mass, measured against the
@@ -304,15 +312,6 @@ const ENEMIES = {
   k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 540, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
   k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 620, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
   k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 520, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
-
-  /* ---- the SIXTH Guardian — the blank sheet's own ----
-     THE PAPER ITSELF: not a beast ON the paper but the paper,
-     awake. It wants the brush the way a blank page wants the
-     pen — it pulls, it breathes out everything the five sheets
-     taught, and under half its ink it stops waiting. Its keeper
-     THE MARGIN walks every tenth wave of the blank sheet. */
-  b_blank: { name: 'THE PAPER ITSELF', trait: 'GUARDIAN VI', cost: 0, intro: 600, hp: 800, r: 38, speed: 42, score: 3200, shape: 'boss', boss: 1 },
-  k_blank: { name: 'THE MARGIN',       trait: 'KEEPER VI',   cost: 0, intro: 501, hp: 640, r: 26, speed: 54, score: 640, shape: 'boss', boss: 2 },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -327,9 +326,9 @@ const ENEMY_WEIGHTS = {
   gnat: 2.6, blotter: 1.6, owl: 1.4, smother: 1.5, ashigaru: 1.9,
   stamper: 1.0, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85,
   shiki: 1.1, crest: 1.4, cask: 0.9,
-  /* the blank sheet's pale kin */
-  blankling: 2.4, quill: 2.2, eraser: 1.8, palewing: 1.6, stainlet: 2.4,
-  hush: 1.7, flyleaf: 1.4, undone: 1.8, palecolossus: 0.8, whitewisp: 1.5,
+  /* the officers and the odd mechanics — present, never flooding */
+  c_drum: 0.75, c_choir: 0.75, c_banner: 0.75, c_gale: 0.75, c_gild: 0.75,
+  s_nest: 0.9, s_mender: 0.8, s_toller: 0.9, s_ledger: 0.8,
 };
 
 /* ------------------------------------------------------------
@@ -345,7 +344,7 @@ const AREAS = [
     ink: '淡墨',                                     // pale warm wash
     desc: 'Fresh washi. The first strokes land soft.',
     mult: { hp: 1, sp: 1, budget: 1 },
-    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter'],
+    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter', 'c_drum'],
     order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith'],
     names: ['初描', '新樹', '遠山', '淡游', '霧起', '垂露', '鶴舞', '古松', '暮色', '落款'],
     elite: 'slab', boss: 'b_wheel', keeper: 'k_blight',
@@ -355,7 +354,7 @@ const AREAS = [
     ink: '濃墨',                                     // lamp-black, heavy
     desc: 'The ink deepens. Things move inside it.',
     mult: { hp: 1.7, sp: 1.06, budget: 1.45 },
-    roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother'],
+    roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother', 's_nest', 'c_choir'],
     order: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan'],
     names: ['入夜', '遠浦', '梟鳴', '夜影', '高軒', '蓮池', '墨霧', '旌旗', '母胎', '落款'],
     elite: 'shade', boss: 'b_mother', keeper: 'k_husk',
@@ -365,7 +364,7 @@ const AREAS = [
     ink: '朱墨',                                     // vermillion-stained
     desc: 'A vermillion wash dries underfoot. The last stroke is heaviest.',
     mult: { hp: 2.7, sp: 1.1, budget: 2.0 },
-    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper', 'shiki'],
+    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper', 'shiki', 'c_banner', 's_mender'],
     order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
     elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
@@ -375,7 +374,7 @@ const AREAS = [
     ink: '雨墨',                                     // rain-grey
     desc: 'Rain hammers the paper. The ink runs like rivers.',
     mult: { hp: 4.2, sp: 1.16, budget: 2.7 },
-    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom', 'crest'],
+    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom', 'crest', 'c_gale', 's_toller'],
     order: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
     elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
@@ -385,20 +384,10 @@ const AREAS = [
     ink: '金墨',                                     // gold-dusted
     desc: 'Old gold leaf underfoot. The last sheet is the heaviest.',
     mult: { hp: 6.6, sp: 1.22, budget: 3.4 },
-    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask'],
+    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask', 'c_gild', 's_ledger'],
     order: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
-  },
-  {
-    id: 'VI', name: 'THE BLANK SCROLL', kanji: '六', theme: 'blank',
-    ink: '白墨',                                     // the unwritten
-    desc: 'The paper before ink. It appears only for the hand that signed the five.',
-    mult: { hp: 10, sp: 1.28, budget: 4.3 },
-    roster: ['blankling', 'quill', 'eraser', 'palewing', 'stainlet', 'hush', 'flyleaf', 'undone', 'palecolossus', 'whitewisp'],
-    order: ['blankling', 'quill', 'eraser', 'palewing', 'stainlet', 'hush', 'flyleaf', 'undone', 'palecolossus'],
-    names: ['白紙', '無題', '空白', '未書', '静白', '余白', '虚白', '待墨', '終章', '落款'],
-    elite: 'palecolossus', boss: 'b_blank', keeper: 'k_blank',
   },
 ];
 
@@ -468,3 +457,19 @@ const CHARMS = [
     desc: 'Every run begins warded. A dry talisman swallows the first blow whole.',
     apply: s => { s.ward = true; } },
 ];
+
+/* ---- THE BOSS BANNER SPEAKS ----
+   Every named beast announces itself with one line — the duel's
+   tone set before the first stroke lands: hard, and glad of it. */
+const BOSS_TAUNTS = {
+  b_wheel:   'IT DRINKS THE SHEET. DRINK IT BACK.',
+  k_blight:  'THE STAIN SENDS ITS FIRST SERVANT.',
+  b_mother:  'THE DARK HAS A HEART. LISTEN TO IT BEAT.',
+  k_husk:    'A PIECE OF THE NIGHT, STILL HUNGRY.',
+  b_warlord: 'FOUR HORNS, ONE ROAD — AND THE ROAD IS BEHIND YOU.',
+  k_cinder:  'THE ONI\u2019S SHADOW, STILL BURNING.',
+  b_tempest: 'STAND IN THE RAIN. THEN STAND SOMEWHERE ELSE.',
+  k_veil:    'THE STORM LEAVES ITS VEIL BEHIND.',
+  b_origin:  'THE FIRST STROKE IS STILL WET.',
+  k_nib:     'THE OLD BRUSH\u2019S TIP — IT REMEMBERS YOUR HAND.',
+};

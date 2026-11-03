@@ -9,12 +9,13 @@
 
    To raise the cloud:
 
-   1) Shared Pinpoint project sffpyvxbgmhepftxoesy; do NOT create a new project
-   2) The isolated om_scores, om_daily, om_weekly tables and RLS
-      already exist via migrations. Do NOT rerun fresh-project SQL.
+   1) https://supabase.com → New project (free tier is plenty)
+   2) SQL Editor → New query → paste the SQL from README.md
+      → Run (three tables: om_scores, om_daily, om_weekly)
    3) Authentication → Sign In / Up → enable ANONYMOUS
       sign-ins → Save
-   4) The browser key below is PUBLIC; never commit Supabase secret keys
+   4) Project Settings → API → copy the Project URL and the
+      anon public key into the object below
    5) Authentication → URL Configuration → Site URL → your
       GitHub Pages address
 
@@ -23,6 +24,6 @@
    ============================================================ */
 
 window.OM_SUPABASE = {
-  url: 'https://sffpyvxbgmhepftxoesy.supabase.co',       /* e.g. 'https://your-project.supabase.co' */
-  anonKey: 'sb_publishable___dIulfnvx74SjfXuyFXZg_LPnlZv7I',   /* the anon public key — safe to ship, RLS is the lock */
+  url: '',       /* e.g. 'https://your-project.supabase.co' */
+  anonKey: '',   /* the anon public key — safe to ship, RLS is the lock */
 };

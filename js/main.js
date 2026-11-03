@@ -153,57 +153,6 @@
   document.getElementById('charmBtn').addEventListener('click', () => { SFX.ensure(); SFX.page(); CH.open(); });
   document.getElementById('charmBackBtn').addEventListener('click', () => { SFX.pick(1); CH.close(); });
 
-  /* ---------------- the runs — 史 ----------------
-     the paper's memory: the lifetime line and the last twenty
-     walks, opened from its own chip on the desk rail. */
-  const histOpen = () => {
-    const s = document.getElementById('screenHistory');
-    return s && !s.classList.contains('hidden');
-  };
-  function openHistory() {
-    SFX.ensure();
-    SFX.page();               /* the memory's cover lifts */
-    UI.buildHistory();
-    UI.show('history');
-    UI.hud(false);
-  }
-  function closeHistory() {
-    SFX.ensure();
-    SFX.page(0.7);            /* the cover falls shut */
-    UI.show('title');
-  }
-  document.getElementById('histBtn').addEventListener('click', openHistory);
-  document.getElementById('histBackBtn').addEventListener('click', closeHistory);
-
-  /* ---------------- the guardians' hall — 殿 (v11) ----------------
-     the boss rush's front door: the rules, the ten best, and the
-     walk in. Enter on the page starts the rush — the page IS the
-     mode's door, like the shelf's frontier. */
-  const hallOpen = () => {
-    const s = document.getElementById('screenHall');
-    return s && !s.classList.contains('hidden');
-  };
-  function openHall() {
-    SFX.ensure();
-    SFX.page();               /* the hall's doors part */
-    UI.buildHall();
-    UI.show('hall');
-    UI.hud(false);
-  }
-  function closeHall() {
-    SFX.ensure();
-    SFX.page(0.7);
-    UI.show('title');
-  }
-  document.getElementById('hallBtn').addEventListener('click', openHall);
-  document.getElementById('hallBackBtn').addEventListener('click', closeHall);
-  document.getElementById('hallEnterBtn').addEventListener('click', () => start('hall'));
-
-  /* the paper's pulse: a small tremor for the heavy moments —
-     the guardian's seal and the fall. The senses rest together:
-     a muted page keeps its hand still (M quiets both). */
-  G.buzz = p => { try { if (!SFX.muted && navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
-
   /* ---------------- settings — 設 ----------------
      the paper's habits: sound, the ghost rival, REALLY HARD,
      and the wipe. A quiet room behind the title. */
@@ -339,18 +288,6 @@
       if (k === 'Enter' || k === 'Escape' || k === 'KeyP') CH.close();
       return;
     }
-    /* the runs page likewise — ENTER must never start a run behind it */
-    if (histOpen()) {
-      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') closeHistory();
-      return;
-    }
-    /* the hall's door: Enter walks IN — Escape folds back to the title.
-       (unlike the reading rooms, this page is the mode's front door) */
-    if (hallOpen()) {
-      if (k === 'Enter') { start('hall'); return; }
-      if (k === 'Escape' || k === 'KeyP') closeHall();
-      return;
-    }
     /* the ledger overlay answers only its own return keys —
        ENTER must never start a run behind the open board */
     if (boardOpen()) {
@@ -460,6 +397,7 @@
   function enterTitle() {
     document.body.classList.remove('intro-live');
     setSkipPrompt(false);
+    markIntroSeen();               /* the film has been screened — skip and finale both land here */
     G.S.titlePar = { x: 0, y: 0 };
     G.initAttract();
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
@@ -484,6 +422,17 @@
   }
 
   INTRO.onEnd = enterTitle;
+
+  /* one screening per session: the opening earns its audience once,
+     then the title waits on the first paint — the film only returns
+     when the scribe asks for it (序) */
+  const INTRO_SEEN = 'om_intro_seen';
+  function introSeen() {
+    try { return sessionStorage.getItem(INTRO_SEEN) === '1'; } catch (e) { return false; }
+  }
+  function markIntroSeen() {
+    try { sessionStorage.setItem(INTRO_SEEN, '1'); } catch (e) {}
+  }
 
   /* ---------------- buttons ---------------- */
   document.getElementById('playBtn').addEventListener('click', openScrolls);
@@ -556,22 +505,9 @@
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   UI.setInkLine(G.getInk());                        /* the stone reads itself */
   if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
-  /* the opening is a film seen once a session — a reload is not
-     asked to sit through it again (序 replays it on demand) */
-  let introSeen = false;
-  try { introSeen = sessionStorage.getItem('om_intro_seen') === '1'; } catch (e) {}
-  /* Returning from Google OAuth is a navigation, not a new game.
-     Resume the exact leaderboard tab (including v12's weekly ledger)
-     without replaying the opening, while retaining normal v12 intros. */
-  const oauthReturn = LB.consumeOAuthReturn();
-  if (oauthReturn) {
-    try { sessionStorage.setItem('om_intro_seen', '1'); } catch (e) {}
-    enterTitle();
-    LB.open('title', oauthReturn.tab);
-  } else if (G.S.reduced || introSeen) {
-    enterTitle();          /* stillness — or this session has seen the film */
+  if (G.S.reduced || introSeen()) {
+    enterTitle();          /* the opening is a film — stillness and repeat visits go straight to the title */
   } else {
-    try { sessionStorage.setItem('om_intro_seen', '1'); } catch (e) {}
     playIntro();
   }
 

@@ -21,7 +21,6 @@
   function modeLine(d, day) {
     if (d.mode === 'daily') return 'DAILY INK — ' + day;
     if (d.mode === 'journey') return 'THE JOURNEY — SCROLL ' + (d.scroll || '一');
-    if (d.mode === 'hall') return 'THE GUARDIANS’ HALL';
     return 'THE ENDLESS SCROLL';
   }
 
@@ -108,14 +107,14 @@
     }
     c.restore();
 
-    /* the great number: waves survived — or the hall's gates cleared */
+    /* the great number: waves survived */
     c.fillStyle = INK;
     c.globalAlpha = 0.6;
     c.font = '500 30px ' + MONO;
-    c.fillText(d.hall ? 'G U A R D I A N S   F E L L E D' : 'W A V E S   S U R V I V E D', W / 2, 420);
+    c.fillText('W A V E S   S U R V I V E D', W / 2, 420);
     c.globalAlpha = 1;
-    c.font = '400 ' + (d.hall ? 200 : 258) + 'px ' + DISP;
-    c.fillText(d.hall ? (d.hall.felled > 0 ? ['I', 'II', 'III', 'IV', 'V'][Math.min(4, (d.hall.felled | 0) - 1)] : '0') + ' / V' : String(Math.max(1, d.waves | 0)), W / 2, 596);
+    c.font = '400 258px ' + DISP;
+    c.fillText(String(Math.max(1, d.waves | 0)), W / 2, 596);
 
     /* the ledger line */
     c.globalAlpha = 0.78;
@@ -136,9 +135,7 @@
     c.fillText(modeLine(d, day), W / 2, 876);
     let line2 = '';
     if (d.hard) line2 = 'REALLY HARD · 難';
-    else if (d.victory) line2 = (d.waves | 0) >= 599 ? 'THE SIXTH SCROLL IS SIGNED' : 'THE FIVE SCROLLS ARE SIGNED';
-    else if (d.hall) line2 = d.hall.victory ? 'ALL FIVE GUARDIANS FELLED'
-      : 'FELL AT GUARDIAN ' + (['I', 'II', 'III', 'IV', 'V'][Math.max(0, d.hall.felled | 0) - 1] || 'I');
+    else if (d.victory) line2 = 'THE FIVE SCROLLS ARE SIGNED';
     else if (d.practice) line2 = 'A PRACTICE SHEET';
     if (d.ghost && d.ghost.wave) {
       const gv = d.ghost.name

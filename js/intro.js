@@ -7,8 +7,12 @@
    then the ink stands up as the scribe: the same kasa-hatted
    figure who paints the title ring and walks the sheets wakes
    here, raises the brush in both hands, and stamps the first
-   mark onto the paper. Rendered entirely on canvas with the
-   game's ink language.
+   mark onto the paper. The seal bleeds — one continuous shot:
+   vermilion floods the frame from the mark, and the pale washi
+   floods back, the very sheet the title rises from. Cinema
+   bars frame the whole film; the camera breathes in slowly;
+   every beat carries a sound. Rendered entirely on canvas
+   with the game's ink language.
    ============================================================ */
 
 const INTRO = (() => {
@@ -33,10 +37,9 @@ const INTRO = (() => {
   const T_AWAKE = 14.9;       // its eye opens
   const T_STAMP = 15.75;      // it raises the brush
   const T_SLAM = 16.1;        // the mark lands
-  const T_PAPERS = 17.0;      // the five papers pass before the title
-  const PAPER_CYCLE = 0.36;   // s per paper's wipe-and-hold
-  const PAPER_WIPE = 0.30;    // the wipe itself, the rest is a hold
-  const DUR = 19.0;           // handoff (17.0 + 5 papers + a breath of washi)
+  const T_RED = 16.5;         // the seal's vermilion floods the sheet
+  const T_WASH = 17.6;        // the pale washi floods back — the title's sheet
+  const DUR = 18.5;           // handoff (a breath of clean washi at the end)
 
   const CAPTIONS = [
     { kanji: '墨', en: 'IN THE BEGINNING, THERE WAS INK.', t0: 3.9, t1: 6.1 },
@@ -45,17 +48,10 @@ const INTRO = (() => {
     { kanji: '生', en: 'AND THE INK BEGAN TO MOVE.', t0: 11.4, t1: 13.4 },
   ];
 
-  /* the five scrolls pass before the title — each paper wipes the
-     last away and stamps its kanji: 濃 the night scroll, 朱 the
-     cinnabar field, 雨 the storm sheet, 金 the gilt scroll, and
-     淡 the pale washi the journey begins on */
-  const PAPERS = [
-    { p: '#17130f', k: '濃', ink: '233,226,210' },
-    { p: '#eadbc4', k: '朱', ink: '162,50,31'  },
-    { p: '#c7cdc9', k: '雨', ink: '49,72,90'   },
-    { p: '#e7d6ad', k: '金', ink: '138,100,32' },
-    { p: '#ede7d9', k: '淡', ink: '74,61,40'   },
-  ];
+  /* the ending is one move, not five: the hanko bleeds, the frame
+     goes vermilion, and the pale washi floods back for the title.
+     The five scrolls announce themselves in their own films — the
+     opening spends its last breath on a single continuous shot. */
 
   /* ---------------- state ---------------- */
   let T = 0;
@@ -69,6 +65,7 @@ const INTRO = (() => {
   let strokes = [];      // { pts, w, t0, dur, flicks[] }
   let satellite = [];    // paper splats ahead of the flood edge
   let sealSplats = [];   // red splatter around the slam
+  let redEdge = [];      // red satellites tearing ahead of the vermilion flood
   let motes = [];        // dust breathing in the void
   let shakeAmp = 0;
   let sealSlammed = false;
@@ -400,6 +397,15 @@ const INTRO = (() => {
       });
     }
 
+    /* red satellites that tear ahead of the vermilion flood */
+    redEdge = [];
+    for (let i = 0; i < 6; i++) {
+      redEdge.push({
+        a: rnd() * TAU, d: (0.34 + rnd() * 0.5),
+        r: (7 + rnd() * 13) * u, seed: 2600 + i,
+      });
+    }
+
     /* dust motes breathing in the void */
     motes = [];
     for (let i = 0; i < 30; i++) {
@@ -436,10 +442,29 @@ const INTRO = (() => {
     if (onEnd) onEnd();
   }
 
+  /* has the timeline just crossed time t? (tolerant of hitches) */
+  let dt_last = 0;
+  function crossed(t) {
+    return T >= t && T - dt_last < t;
+  }
+
   function update(dt) {
     if (!live || ended) return;
+    dt_last = dt;
     T += dt;
     if (shakeAmp > 0) shakeAmp = Math.max(0, shakeAmp - dt * 34);
+    /* the film's voice — every beat carries a sound (silent while
+       the context still waits for its first gesture, loud on every
+       replay from the opening button) */
+    if (crossed(T_IMPACT)) SFX.thud();        // the drop bursts
+    if (crossed(T_FLOOD)) SFX.gong();         // the paper floods in
+    if (crossed(T_STROKES[0])) SFX.pick(0);   // the brush cuts
+    if (crossed(T_STROKES[1])) SFX.pick(1);
+    if (crossed(T_STROKES[2])) SFX.pick(2);
+    if (crossed(T_RISE)) SFX.nova();          // the beasts stir
+    if (crossed(T_STAND)) SFX.spirit();       // the ink stands
+    if (crossed(T_SLAM)) SFX.hanko();         // the mark lands
+    if (crossed(T_RED)) SFX.elite();          // the vermilion rises
     if (skipping) {
       skipT += dt;
       if (skipT >= 0.32) { finish(); return; }
@@ -663,6 +688,13 @@ const INTRO = (() => {
     if (shakeAmp > 0.3 && !S.reduced) {
       ctx.translate((Math.random() - 0.5) * shakeAmp, (Math.random() - 0.5) * shakeAmp);
     }
+    /* the camera breathes in — one slow push toward the mark,
+       settled by the slam (cinema's oldest trick, kept subtle) */
+    const cam = S.reduced ? 1 : 1 + 0.05 * easeInOut(clamp01(T / T_SLAM));
+    ctx.save();
+    ctx.translate(W / 2, H * 0.55);
+    ctx.scale(cam, cam);
+    ctx.translate(-W / 2, -H * 0.55);
 
     /* ===== the void ===== */
     ctx.fillStyle = VOID;
@@ -1001,64 +1033,113 @@ const INTRO = (() => {
       ctx.fillRect(0, 0, W, H);
     }
 
+    ctx.restore(); /* camera */
     ctx.restore(); /* shake */
 
-    /* ===== progress hairline (rests once the papers begin) ===== */
-    if (T <= T_PAPERS) {
-      const prog = clamp01(T / T_PAPERS);
+    /* ===== progress hairline (rests once the vermilion rises) ===== */
+    if (T <= T_RED) {
+      const prog = clamp01(T / T_RED);
       ctx.fillStyle = flooded ? 'rgba(26,23,20,0.3)' : 'rgba(237,231,217,0.35)';
       ctx.fillRect(0, H - 2, W * prog, 2);
     }
 
-    /* ===== skip fade / the five papers pass before the title ===== */
+    /* ===== the ending: one continuous shot =====
+       the hanko bleeds — vermilion floods the frame from the mark,
+       and the pale washi floods back from the centre: the very
+       sheet the title rises from. No paper parade; one breath, one
+       move, out. */
+    if (!skipping && T > T_RED) {
+      const sz = Math.min(W, H) * 0.115;
+      const sx = ix + 40 * u * 1.9 * 1.35;               /* the hanko's home */
+      const sy = H * 0.58 - 40 * u + 40 * u * 1.9 * 1.05 + sz * 0.42;
+      /* the bleed must reach every corner FROM THE SEAL — the mark
+         sits low-centre, so a centre-assumed radius strands the far
+         corners of a tall phone (measured, not guessed) */
+      const maxR = 1.02 * Math.max(
+        Math.hypot(sx, sy), Math.hypot(W - sx, sy),
+        Math.hypot(sx, H - sy), Math.hypot(W - sx, H - sy));
+
+      /* beat 1 — the vermilion bleeds out from the seal */
+      const rp = clamp01((T - T_RED) / 0.95);
+      if (rp > 0) {
+        const rr = easeOutCubic(rp) * maxR;
+        ctx.save();
+        ctx.beginPath();
+        const segs = 72;
+        for (let i = 0; i <= segs; i++) {
+          const a = (i / segs) * TAU;
+          const wob = Math.sin(a * 4 + T * 2.4) * 7 * u + Math.sin(a * 9 - T * 1.7) * 4 * u;
+          const x = sx + Math.cos(a) * (rr + wob), y = sy + Math.sin(a) * (rr + wob);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = RED;
+        ctx.fill();
+        if (rp < 1) {
+          /* the wet rim, lit pale against the paper it eats */
+          ctx.strokeStyle = 'rgba(237,231,217,0.65)';
+          ctx.lineWidth = 2.4 * u;
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(237,231,217,0.18)';
+          ctx.lineWidth = 8 * u;
+          ctx.stroke();
+          /* satellites tear ahead of the bleed */
+          for (const s of redEdge) {
+            const dT = s.d * maxR;
+            if (rr < dT) continue;
+            const ap = clamp01((rr - dT) / (46 * u));
+            splatPaint(ctx, sx + Math.cos(s.a) * dT, sy + Math.sin(s.a) * dT, s.r, s.seed, 0.9 * ap, RED);
+          }
+        }
+        ctx.restore();
+      }
+
+      /* beat 2 — the pale washi floods back from the centre */
+      const wp = clamp01((T - T_WASH) / 0.75);
+      if (wp > 0) {
+        const wr = easeOutCubic(wp) * Math.hypot(W, H) * 0.62;
+        ctx.save();
+        ctx.beginPath();
+        const segs = 72;
+        for (let i = 0; i <= segs; i++) {
+          const a = (i / segs) * TAU;
+          const wob = Math.sin(a * 5 + T * 2.0) * 6 * u + Math.sin(a * 11 - T * 1.3) * 3 * u;
+          const x = W / 2 + Math.cos(a) * (wr + wob), y = H * 0.52 + Math.sin(a) * (wr + wob);
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(paperC, 0, 0, W, H);
+        if (wp < 1) {
+          ctx.strokeStyle = 'rgba(178,58,43,0.5)';
+          ctx.lineWidth = 2.2 * u;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    /* ===== cinema bars frame the film =====
+       (they lift early in the vermilion flood — invisible against
+       the red, and never ghosting over the clean wash) */
+    if (!S.reduced) {
+      const aIn = easeInOut(clamp01((T - 0.15) / 1.25));
+      const aOut = 1 - clamp01((T - (T_RED + 0.1)) / 0.5);
+      const a = Math.min(aIn, aOut);
+      if (a > 0) {
+        const bh = Math.round(H * 0.072);
+        ctx.fillStyle = `rgba(8,6,4,${(0.96 * a).toFixed(3)})`;
+        ctx.fillRect(0, 0, W, bh);
+        ctx.fillRect(0, H - bh, W, bh);
+      }
+    }
+
+    /* ===== skip fade — the wash lifts the whole film away ===== */
     if (skipping) {
       const overA = clamp01(skipT / 0.32);
       if (overA > 0) {
         ctx.fillStyle = `rgba(237,231,217,${overA})`;
         ctx.fillRect(0, 0, W, H);
-      }
-    } else if (T > T_PAPERS) {
-      /* each paper wipes the last away left-to-right, a thin inked
-         edge pulling the new sheet across, then its kanji settles
-         into the centre like a seal pressed in that sheet's ink.
-         The last paper is the pale washi the journey begins on —
-         it holds a breath, and the title rises from the same sheet. */
-      for (let i = 0; i < PAPERS.length; i++) {
-        const pp = PAPERS[i];
-        const t0 = T_PAPERS + i * PAPER_CYCLE;
-        if (T <= t0) break;
-        const wp = clamp01((T - t0) / PAPER_WIPE);
-        const edge = W * easeInOut(wp);
-        /* the sheet, pulled across */
-        ctx.fillStyle = pp.p;
-        ctx.fillRect(0, 0, edge + 1, H);
-        if (wp < 1) {
-          /* the wet edge: a thin inked rod and its shadow */
-          const g = ctx.createLinearGradient(edge - 30, 0, edge, 0);
-          g.addColorStop(0, `rgba(${pp.ink},0)`);
-          g.addColorStop(1, `rgba(${pp.ink},0.12)`);
-          ctx.fillStyle = g;
-          ctx.fillRect(Math.max(0, edge - 30), 0, 30, H);
-          ctx.fillStyle = `rgba(${pp.ink},0.55)`;
-          ctx.fillRect(edge - 1.5, 0, 2.5, H);
-        }
-        /* the kanji pressed into the sheet once it lies still */
-        if (wp >= 1) {
-          const sp = clamp01((T - t0 - PAPER_WIPE) / 0.14);
-          const sz = Math.round(Math.max(120, Math.min(260, 190 * (Math.min(W, H) / 900))));
-          ctx.save();
-          ctx.translate(W / 2, H * 0.46);
-          ctx.rotate(-0.02);
-          const pop = 1 + (1 - easeOutBack(sp)) * 0.08;
-          ctx.scale(pop, pop);
-          ctx.globalAlpha = 0.2 * sp;
-          ctx.fillStyle = `rgb(${pp.ink})`;
-          ctx.font = `${sz}px "Zen Antique", "Hiragino Mincho ProN", serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(pp.k, 0, 0);
-          ctx.restore();
-        }
       }
     }
   }

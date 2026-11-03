@@ -296,6 +296,18 @@ const CUT = (() => {
     c.restore();
   }
 
+  /* cinema bars — the frame every film speaks in; eased by the caller */
+  function drawBars(c, a) {
+    if (a <= 0) return;
+    const bh = Math.round(H * 0.072);
+    c.save();
+    c.globalAlpha = Math.max(0, Math.min(1, a)) * 0.96;
+    c.fillStyle = '#0b0906';
+    c.fillRect(0, 0, W, bh);
+    c.fillRect(0, H - bh, W, bh);
+    c.restore();
+  }
+
   /* ================= THE SCROLL TURNS ================= */
   /* the new sheet rolls in from the right, announces itself, soaks in */
   function drawScroll(c) {
@@ -493,6 +505,9 @@ const CUT = (() => {
         }
       }
     }
+
+    /* ---- the bars ease in as the sheet covers the world, lift before it goes ---- */
+    drawBars(c, Math.min(clamp01((T - 0.95) / 0.45), clamp01((SCROLL_DUR - 0.7 - T) / 0.5)));
 
     /* ---- the skip veil ---- */
     if (skipping) {
@@ -948,6 +963,9 @@ const CUT = (() => {
       }
       c.restore();
     }
+
+    /* ---- cinema bars: in with the stilling world, out with the credits' last breath ---- */
+    drawBars(c, Math.min(clamp01((T - 0.25) / 1.2), clamp01((FINALE_DUR - 0.75 - T) / 0.55)));
 
     /* ---- the skip veil ---- */
     if (skipping) {

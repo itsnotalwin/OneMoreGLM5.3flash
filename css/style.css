@@ -244,6 +244,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
     radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.1), transparent 60%),
     var(--paper-92);
 }
+/* touch hygiene: no 300ms zoom-delay, no grey tap ghosts on the paper */
+.screen button, .intro-skip, .j-node{ touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 /* brushed-edged panel — the wobble lives on a ::before layer so text stays crisp */
 .roughable{ position: relative; }
@@ -1067,6 +1069,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
   /* touch hands need no key hints — and the band owns the bottom air */
   .title-foot{ display: none; }
+  /* the phone holds the whole menu in one breath: nothing pinned
+     over the flow, nothing clipped by the notch */
+  .screen-title{ padding: 14px 0 calc(38px + env(safe-area-inset-bottom)); }
+  .title-main{ margin-top: 0; padding: 0 10px; }
+  .best-line{ margin-top: 10px; }
   /* the three strokes stack, each an equal third of the page */
   .upgrade-grid{ grid-template-columns: 1fr; }
   .up-card{ min-height: 0; gap: 6px; }
@@ -1326,26 +1333,83 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 @media (max-width: 720px){
   .side-ins{ display: none; }
-  .enso-wrap{ width: min(50vh, 118vw, 400px); height: min(50vh, 118vw, 400px); top: 26%; }
+  .enso-wrap{ width: min(46vh, 118vw, 380px); height: min(46vh, 118vw, 380px); top: 27%; }
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
   .title-foot{ bottom: 66px; }
-  .brush-row{ gap: 9px; padding-top: 16px; margin-top: 14px; }
-  .brush-row::before{ left: 2%; right: 2%; }
-  .brush-card{ width: 30%; min-width: 104px; min-height: 0; padding: 10px 7px 9px; gap: 5px; }
-  .brush-card:nth-child(1), .brush-card:nth-child(2), .brush-card:nth-child(3){ margin-top: 0; }
-  .brush-card:nth-child(2){ margin-top: -4px; }
-  .brush-card::before{ top: -16px; height: 16px; }
-  .brush-kanji{ font-size: 24px; }
-  .brush-art{ width: 92px; height: 32px; }
-  .brush-desc{ display: none; }
-  .mode-row{ margin-top: 18px; }
+
+  /* --- the seven slips as a compact tile hand: four over three,
+         the last row centred — the whole selection read at a
+         glance, the thumb never leaving the lower half --- */
+  .brush-row{
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 8px; width: min(400px, 94vw);
+    padding-top: 12px; margin: 12px auto 0;
+  }
+  .brush-row::before{ left: 3%; right: 3%; height: 1.5px; }
+  .brush-card{
+    width: calc(25% - 6px); min-width: 0; height: 66px;
+    margin: 0; padding: 6px 3px 5px; gap: 3px;
+    justify-content: center;
+  }
+  /* the desktop nth-child hang (staggered heights) folds flat here */
+  .brush-row .brush-card:nth-child(n){ min-height: 0; margin: 0; }
+  /* no threads on the tiles — the beam alone carries the hand */
+  .brush-card::before{ display: none; }
+  .brush-kanji{ font-size: 20px; margin-top: 0; }
+  .brush-art{ display: none; }
+  .brush-name{ font-size: 7px; letter-spacing: .1em; text-indent: .1em; }
+  /* a sealed lid folds to its red count alone — 封, the name, 4 / 6 */
+  .brush-card .brush-desc{ display: block; font-size: 0; line-height: 0; }
+  .brush-prog{ font-size: 10px; line-height: 1.2; letter-spacing: .18em; }
+  .brush-pin{ width: 13px; height: 13px; top: -7px; }
+  /* the chosen tile wears the red edge — there is no hover to lean on */
+  .brush-card.selected{ border-color: var(--red); box-shadow: 2px 3px 0 rgba(178,58,43,.24); }
+
+  .mode-row{ margin-top: 14px; }
+  .mode-row .play-btn, .endless-btn{ padding: 12px 20px 12px 14px; }
+
   .xp-track{ width: 40vw; }
   .boss-bar{ width: 62vw; top: 64px; }
-  .intro-skip{ right: 12px; bottom: 12px; }
-  .opening-btn{ right: 12px; bottom: 12px; }
+  .intro-skip{ right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .opening-btn{ right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); }
   /* the two study corners: 設 keeps the empty bottom-left — stacking it
      over 序 let the opening chip swallow every tap meant for settings */
-  .settings-btn{ right: auto; left: 12px; bottom: 12px; }
+  .settings-btn{ right: auto; left: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
+
+/* a phone on its side: one row of seven kanji tiles, the stack
+   low-slung — the sheet is the star, the menu a single breath */
+@media (max-height: 500px) and (orientation: landscape){
+  .title-word{ font-size: clamp(30px, 7.5vh, 46px); }
+  .title-chip{ margin-top: 6px; }
+  .title-sub{ display: none; }
+  .brush-row{
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 6px; width: min(760px, 94vw);
+    padding-top: 8px; margin: 8px auto 0;
+  }
+  .brush-card{
+    width: calc(14.28% - 6px); min-width: 0; height: 52px;
+    margin: 0; padding: 5px 3px 4px; gap: 2px;
+    justify-content: center;
+  }
+  .brush-row .brush-card:nth-child(n){ min-height: 0; margin: 0; }
+  .brush-card::before{ display: none; }
+  .brush-kanji{ font-size: 19px; margin-top: 0; }
+  .brush-art{ display: none; }
+  .brush-name{ display: none; }
+  .brush-card .brush-desc{ display: block; font-size: 0; line-height: 0; }
+  .brush-prog{ font-size: 9px; line-height: 1.1; letter-spacing: .14em; }
+  .brush-unlock{ margin-top: 5px; }
+  .mode-row{ margin-top: 9px; gap: 10px; }
+  .mode-row .play-btn, .endless-btn{ width: auto; padding: 8px 16px; font-size: 11px; }
+  .minor-row{ margin-top: 8px; }
+  .journey-band{ position: static; margin-top: 9px; }
+  .j-kanji{ width: 22px; height: 22px; font-size: 12px; }
+  .j-link{ width: 14px; }
+  .best-line{ display: none; }
+  .sheet-btn{ margin-top: 8px; padding: 7px 16px; font-size: 10px; }
+  .enso-wrap{ width: 76vh; height: 76vh; top: 20%; opacity: .5; }
 }
 
 /* ============================================================
@@ -1799,7 +1863,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 
 @media (max-width: 720px){
-  .journey-band{ bottom: 56px; }   /* clears the opening button's corner */
+  /* the band joins the flow — nothing may pin itself over the buttons,
+     and it keeps clear of the 設/序 corners on short screens */
+  .journey-band{ position: static; margin-top: 13px; margin-bottom: calc(44px + env(safe-area-inset-bottom)); }
   .j-name{ display: none; }
   .j-ink{ display: none; }
 }
@@ -1974,24 +2040,6 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .daily-btn.is-done::before{ border: 1.5px solid rgba(178,58,43,.5); }
 .daily-btn.is-done .daily-kanji{ color: var(--red); }
 .daily-btn.is-done #dailyLabel{ color: var(--red); }
-
-/* the rail folds to kanji-only while the row is still one row.
-   This block lives AFTER every chip's base rule on purpose: a fold
-   that a base rule can out-rank is not a fold (the rail's own
-   v9.1 lesson — daily and hard never folded their padding until
-   the sixth chip made the raggedness visible). */
-@media (max-width: 860px){
-  .minor-row{ gap: 8px; }
-  .minor-row .board-btn, .minor-row .daily-btn, .minor-row .hard-btn{ padding: 9px 12px; font-size: 10px; letter-spacing: .26em; }
-  .minor-row .play-label{ display: none; }
-  .minor-row .board-kanji, .minor-row .daily-kanji, .minor-row .hard-kanji{ font-size: 16px; }
-  .chip-count{ bottom: -7px; right: -7px; font-size: 7.5px; }
-}
-/* the narrowest desks: the rail breathes in once more (320px holds six) */
-@media (max-width: 360px){
-  .minor-row{ gap: 6px; }
-  .minor-row .board-btn, .minor-row .daily-btn, .minor-row .hard-btn{ padding: 9px 10px; }
-}
 
 /* the ledger's two eyes: all time, and today's sheet */
 .board-tabs{
@@ -2427,87 +2475,79 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 @keyframes charmDeny{ 0%,100%{ transform: translateX(0);} 30%{ transform: translateX(-4px);} 60%{ transform: translateX(3px);} }
 @media (prefers-reduced-motion: reduce){ .charm-row.deny{ animation: none; } }
 
-
-/* ============ THE RUNS — 史 — the paper's memory (v9.3) ============ */
-.wm-history{ right: 4%; top: 6%; transform: rotate(-3deg); opacity: .045; }
-.hist-life{
-  display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px;
-  margin: 12px auto 4px; max-width: 560px;
+/* ============================================================
+   v12 — THE CAPTAINS RISE
+   the sealed brushes hang with a 封 lid; the unlock ledger line
+   lives under the row; the boss banner speaks its one line.
+   Placed last on purpose — these must outrank the base rules.
+   ============================================================ */
+.brush-card.locked{
+  border-style: dashed;
+  border-color: var(--ink-45);
+  background: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
 }
-.hist-life-cell{
-  border: 1px solid var(--ink-12); padding: 8px 6px 7px;
-  display: flex; flex-direction: column; gap: 4px; align-items: center;
-  background: var(--paper-55);
+.brush-card.locked::before{ background: var(--ink-45); opacity: .55; }
+.brush-card.locked .brush-kanji{ color: var(--ink-45); }
+.brush-card.locked .brush-art{ opacity: .2; filter: grayscale(1); }
+.brush-card.locked .brush-name{ color: var(--ink-70); }
+.brush-card.locked .brush-desc{ color: var(--ink-45); letter-spacing: .12em; line-height: 1.7; }
+.brush-card.locked .brush-prog{ color: var(--red); font-weight: 600; font-size: 11px; letter-spacing: .2em; }
+/* a sealed brush does not take the hand — the card shakes its head */
+.brush-card.denied{ animation: brushDeny .32s ease; }
+@keyframes brushDeny{
+  0%,100%{ transform: translateX(0) rotate(var(--tilt)); }
+  25%{ transform: translateX(-4px) rotate(var(--tilt)); }
+  65%{ transform: translateX(3px) rotate(var(--tilt)); }
 }
-.hl-k{ font-size: 7.5px; letter-spacing: .28em; text-indent: .28em; color: var(--ink-45); }
-.hl-v{
-  font-family: var(--mono); font-size: 12.5px; font-weight: 600;
-  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-}
-.hist-rows{
-  list-style: none; margin: 10px 0 12px; padding: 0;
-  max-height: min(40vh, 400px); overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: var(--ink-25) transparent;
-  border-top: 1px solid var(--ink-25);
-  animation: fadeIn .45s ease .1s backwards;
-}
-.hist-row{
-  display: grid; grid-template-columns: 34px minmax(0,1fr) auto;
-  gap: 10px; align-items: center;
-  padding: 8px 10px; border-bottom: 1px dotted var(--ink-12);
-}
-.hr-mode{
-  font-family: var(--display); font-size: 16px; line-height: 1;
-  color: var(--ink-70); text-align: center; transform: rotate(-3deg);
-}
-.hist-row.is-vict .hr-mode{ color: var(--red); }
-.hist-row.is-hard .hr-top{ color: var(--red); }
-.hr-main{ display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.hr-top{ font-size: 8px; letter-spacing: .22em; color: var(--ink-45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hr-out{ font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hist-vict{ color: var(--red); font-weight: 600; }
-.hr-num{ display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-.hr-score{ font-family: var(--mono); font-size: 11px; color: var(--ink-70); }
-.hr-ink{ font-family: var(--mono); font-size: 9px; color: var(--red); letter-spacing: .08em; }
-.hist-empty{
-  padding: 34px 12px; text-align: center;
-  font-size: 9.5px; letter-spacing: .3em; text-indent: .3em; line-height: 2.1;
+@media (prefers-reduced-motion: reduce){ .brush-card.denied{ animation: none; } }
+/* the ledger of seals beneath the row */
+.brush-unlock{
+  margin: 12px 0 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .24em;
   color: var(--ink-45);
+  text-align: center;
+  min-height: 12px;
 }
-@media (max-width: 740px){
-  .hist-life{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .hist-row{ grid-template-columns: 28px minmax(0,1fr) auto; padding: 7px 6px; gap: 8px; }
-  .hr-mode{ font-size: 14px; }
-  .hr-top{ letter-spacing: .14em; }
+.brush-unlock.is-live{ color: var(--ink-70); }
+/* the beast's one line, under its name */
+.banner-sub{
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .32em;
+  text-indent: .32em;
+  color: var(--ink-70);
+  text-align: center;
+  max-width: min(86vw, 560px);
 }
 
-/* ============ THE GUARDIANS' HALL — 殿 — the boss rush (v11) ============ */
-.wm-hall{ right: 4%; top: 6%; transform: rotate(2.5deg); opacity: .045; }
-.hall-rule{
-  max-width: 560px; margin: 10px auto 2px;
-  font-size: 8px; letter-spacing: .22em; line-height: 2;
-  color: var(--ink-45); text-align: center;
-}
-.hall-rows{
-  list-style: none; margin: 12px 0 14px; padding: 0;
-  max-height: min(38vh, 360px); overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: var(--ink-25) transparent;
-  border-top: 1px solid var(--ink-25);
-  animation: fadeIn .45s ease .1s backwards;
-}
-/* the rank numeral stands upright where the runs' kanji lean */
-.hr-rank{
-  font-family: var(--mono); font-size: 13px; font-weight: 600;
-  transform: none; color: var(--ink-45);
-}
-.hall-row.is-vict .hr-rank{ color: var(--red); }
-.hall-actions{
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  margin-top: 4px;
-}
-/* the over sheet's hall arithmetic line */
-.hall-line{
-  margin: 10px auto 0; max-width: 460px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
-  color: var(--red); text-align: center;
+/* ============================================================
+   THE RAIL, FOLDED — placed last so it outranks every base rule
+   above it (the v9.1 lesson: a media block that arrives early
+   loses the cascade and the fold dies)
+   ============================================================ */
+/* the rail folds below the belt line: chips go vertical — kanji
+   above its word — so a thumb reads every door with no tooltip */
+@media (max-width: 860px){
+  .minor-row{ gap: 7px; }
+  /* every chip goes vertical — kanji above its word — daily-btn
+     included (it wears its own class, so the row's children rule) */
+  .minor-row > *{ flex-direction: column; gap: 4px; }
+  .minor-row > *, .minor-row .board-btn, .hard-btn{ padding: 8px 10px 7px; }
+  .minor-row .play-label{
+    display: block; font-size: 6.5px; letter-spacing: .18em; text-indent: .18em;
+  }
+  /* the daily chip wears one word on the rail — TODAY lives in its own room */
+  .minor-row #dailyLabel{ display: none; }
+  /* REALLY HARD — OFF folds to HARD; the seal itself carries the state */
+  .hard-btn .play-label{ font-size: 0; }
+  .hard-btn .play-label::after{ content: 'HARD'; font-size: 6.5px; letter-spacing: .18em; text-indent: .18em; }
+  .hard-btn .hard-state{ display: none; }
+  .minor-row .board-kanji, .hard-btn .hard-kanji{ font-size: 16px; }
+  .chip-count{ bottom: -6px; right: -6px; font-size: 7px; }
 }

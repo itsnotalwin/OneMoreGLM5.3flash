@@ -25,6 +25,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
   let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false, qaCharms = -1;
+  let qaScenes = -1;   /* ?scenes=N — probe the sealed-brush gate without sealing scenes */
   try {
     const q = new URLSearchParams(location.search);
     qaWave = Math.max(0, Math.min(999, parseInt(q.get('wave'), 10) || 0));
@@ -35,6 +36,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
                                        must outlive a wave-300 instant swarm */
     if (q.get('charms') != null) qaCharms = Math.max(0, parseInt(q.get('charms'), 10) || 0);
+    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(50, parseInt(q.get('scenes'), 10) || 0));
   } catch (e) {}
 
   const store = {
@@ -73,7 +75,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     arcT: 2.0, boomerT: 1.5, vortexT: 3.0,
     combo: 0, comboT: 0, hitstop: 0, magnetT: 0, pendingSeal: false,
     pendingLevels: 0, pendingChests: 0, upKind: 'wave', vacuum: false,
-    hallIdx: 0, hallHits: 0,          /* the hall: which gate, how many blows taken */
     choices: [], selected: null,
 
     brush: 'needle',
@@ -85,10 +86,30 @@ const rand = (a, b) => a + RNG() * (b - a);
     inputVec: { x: 0, y: 0 },
   };
 
-  /* ---------------- starting brushes ---------------- */
+  /* ---------------- starting brushes ----------------
+     Three honest starters from the first stroke; four sealed
+     brushes wake as the journey's scenes are SEALED — a scene
+     seals when its Keeper falls on the tenth wave. The count is
+     the key; the title's cards show the lid. */
   const getBrush = () => store.get('om_brush_v1', 'needle');
+  /* every scene the journey has sealed, all sheets together —
+     a sheet counts at most its ten scenes */
+  function scenesSealed() {
+    if (qaScenes >= 0) return qaScenes;
+    const s = getSeals();
+    let n = 0;
+    for (let sheet = 1; sheet <= AREAS.length; sheet++) {
+      n += Math.min(s[sheet] || 0, CFG.wave.levelsPerArea);
+    }
+    return n;
+  }
+  function brushUnlocked(id) {
+    const b = CFG.brushes[id];
+    return !!b && (!b.unlock || scenesSealed() >= b.unlock);
+  }
   function setBrush(id) {
     if (!CFG.brushes[id]) return;
+    if (!brushUnlocked(id)) return;   /* a sealed brush does not take the hand */
     S.brush = id;
     store.set('om_brush_v1', id);
   }
@@ -116,8 +137,6 @@ const rand = (a, b) => a + RNG() * (b - a);
       : { ink: 0, earned: 0, lv: {}, feats: {} };
   }
   const getInk = () => charmsSave().ink;
-  /* the lifetime line: every drop any run has ever pressed (v8.8 shape) */
-  const getLifetimeInk = () => charmsSave().earned | 0;
   function setInk(n) {   /* QA probe: ?charms=1 seeds the stone */
     const c = charmsSave(); c.ink = Math.max(0, n | 0);
     store.set(CHARMS_KEY, c);
@@ -163,7 +182,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       fireCdMult: bm.fireCdMult || 1, dmg: bm.dmg || 1, shots: bm.shots || 1,
       pierce: 0, moveMult: bm.moveMult || 1,
       maxHp: CFG.player.hp + (bm.maxHp || 0), hp: CFG.player.hp + (bm.maxHp || 0),
-      bulletSpeedMult: 1, bulletLifeMult: bm.bulletLifeMult || 1,
+      bulletSpeedMult: 1,
       adren: 0, shock: false, levels: {},
       echo: 0, orb: 0, nova: 0, slow: 0, crit: 0, ward: false, wardCd: 0,
       fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0,
@@ -171,6 +190,13 @@ const rand = (a, b) => a + RNG() * (b - a);
       xp: 0, xpLevel: 0,
       score: 0, kills: 0, time: 0, wave: 0,
     };
+    /* a sealed brush may carry its first rank of a weapon already —
+       the Wisp's spirit, the Fan's spray, the Tide's shove, the
+       Red Seal's stamp all wake the moment the run does */
+    ret.spirit = bm.spirit || 0;
+    ret.fan = bm.fan || 0;
+    ret.nova = bm.nova || 0;
+    ret.hanko = bm.hanko || 0;
     /* the charms ride every fresh page — journey, endless, daily,
        the shelf's resumed scenes, the ONE MORE retry, all of them */
     applyCharms(ret);
@@ -263,66 +289,12 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- persistence ---------------- */
   const getBest = () => store.get('om_best_v1', null);
   const getRuns = () => store.get('om_runs_v1', 0);
-  /* ---------------- the memory — 史 (v9.3) ----------------
-     the paper remembers the last twenty true ends: where the brush
-     stood, what the walk pressed into the stone. One key,
-     om_history_v1 — the WIPE sweeps it with the rest. Abandoned
-     sheets stay unkept: only the ink drying or the scroll ending
-     presses a line. A walk revived INTO THE ENDLESS keeps walking
-     and keeps another line — the paper tells it as it happened. */
-  const HIST_KEY = 'om_history_v1';
-  const HIST_MAX = 20;
-  const historySave = () => {
-    const h = store.get(HIST_KEY, null);
-    return (h && Array.isArray(h.runs) && h.stats)
-      ? { runs: h.runs, stats: h.stats }
-      : { runs: [], stats: { runs: 0, felled: 0, victories: 0, deepest: null } };
-  };
-  function recordRun(rec) {
-    const h = historySave();
-    h.runs.push(rec);
-    if (h.runs.length > HIST_MAX) h.runs = h.runs.slice(-HIST_MAX);
-    const st = h.stats;
-    st.runs = (st.runs | 0) + 1;
-    st.felled = (st.felled | 0) + (rec.felled | 0);
-    if (rec.victory) st.victories = (st.victories | 0) + 1;
-    if (rec.deep) {
-      const cur = st.deepest;
-      if (!cur || (rec.deep | 0) > (cur.deep | 0))
-        st.deepest = { deep: rec.deep | 0, where: rec.where };
-    }
-    store.set(HIST_KEY, h);
-  }
-  const getHistory = () => historySave();
-  /* ---------------- the guardians' hall — 殿 (v11) ----------------
-     the boss rush keeps its own ten best: om_hall_v1, swept by the
-     WIPE like every om_ key. One line per true end — the fall or
-     the fifth felled guardian. Abandoned halls stay uncarved. */
-  const HALL_KEY = 'om_hall_v1';
-  const HALL_MAX = 10;
-  const hallSave = () => {
-    const h = store.get(HALL_KEY, null);
-    return (h && Array.isArray(h.rows)) ? { rows: h.rows.slice(0, HALL_MAX) } : { rows: [] };
-  };
-  function recordHall(rec) {
-    const h = hallSave();
-    h.rows.push(rec);
-    h.rows.sort((a, b) => (b.score | 0) - (a.score | 0));
-    if (h.rows.length > HALL_MAX) h.rows = h.rows.slice(0, HALL_MAX);
-    store.set(HALL_KEY, h);
-  }
-  const getHall = () => hallSave();
   /* the shelf of scrolls: what is unrolled, what lies finished.
      om_unlocked_v1 — the highest sheet the journey may enter (1-based).
      om_cleared_v1  — the highest sheet whose Guardian has fallen.
      om_prog_v1     — per sheet, the deepest level the brush has reached. */
   const getUnlocked = () => Math.max(1, store.get('om_unlocked_v1', 1), store.get('om_furthest_v1', 1));
   function setUnlocked(n) { if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
-  /* ---------------- the sixth scroll — 六 (v12) ----------------
-     the blank sheet waits behind the five inks: the shelf shows it
-     only when the five scrolls lie signed — the fifth Guardian
-     felled, or the victory feat pressed into the stone. */
-  const getSixthUnlocked = () => getCleared() >= SHEETS || !!charmsSave().feats.victory;
   const getCleared = () => store.get('om_cleared_v1', 0);
   function setCleared(n) { if (n > getCleared()) store.set('om_cleared_v1', n); }
   const getProg = () => store.get('om_prog_v1', {});
@@ -366,14 +338,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     return a;
   }
 
-  /* ---------------- the five inks and the sixth ----------------
-     THE JOURNEY is five scrolls — SHEETS is that five, and the
-     endless paper cycles and grows across the five inks exactly as
-     it always has (a sixth sheet must never shift the endless
-     ladder). AREAS[5] — THE BLANK SCROLL — is the secret act: it
-     joins the journey only for the hand that signed the five. */
-  const SHEETS = 5;
-
   /* which sheet, which level, which wave — the journey reads
      wave N as: sheet = N / 100, level = N / 10 within the sheet,
      wave = N within the level. Endless turns past sheet 五. */
@@ -384,7 +348,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const level = Math.floor(inCycle / CFG.wave.wavesPerLevel) + 1;   // 1..10
     const waveInLevel = (inCycle % CFG.wave.wavesPerLevel) + 1;       // 1..10
     const themeIdx = S.runMode !== 'journey'
-      ? cycle % SHEETS
+      ? cycle % AREAS.length
       : Math.min(cycle, AREAS.length - 1);
     const area = AREAS[themeIdx];
     let hp = area.mult.hp, sp = area.mult.sp, budget = area.mult.budget;
@@ -392,8 +356,8 @@ const rand = (a, b) => a + RNG() * (b - a);
        so a sheet's tenth level always bites far harder than its first */
     hp *= CFG.wave.levelHp(level);
     budget *= CFG.wave.levelBudget(level);
-    if (S.runMode !== 'journey' && cycle >= SHEETS) {
-      const k = cycle - (SHEETS - 1);   /* growth starts past the FIVE inks, sixth or no sixth */
+    if (S.runMode !== 'journey' && cycle >= AREAS.length) {
+      const k = cycle - (AREAS.length - 1);
       hp *= Math.pow(CFG.endless.hpGrowth, k);
       sp *= Math.pow(CFG.endless.spGrowth, k);
       budget *= Math.pow(CFG.endless.budgetGrowth, k);
@@ -471,14 +435,10 @@ const rand = (a, b) => a + RNG() * (b - a);
         CFG.boss.keeperHp;
     } else if (def.boss === 1) {
       /* Guardians: the same sheet pressure, then the full boss levy —
-         the sheet's closing duel is the longest stroke on the page.
-         THE HALL opts out of the climb: a guardian fights at its own
-         true ink (opts.trueInk), the sheet's mercy and climb outside */
+         the sheet's closing duel is the longest stroke on the page */
       hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp * CFG.boss.hp;
-      if (opts.trueInk) hp = def.hp * CFG.boss.hp;
     } else {
       hp = CFG.wave.hpScale(def.hp, w, def.intro) * st.hp;
-      if (opts.flatHp) hp = def.hp * opts.flatHp;   /* the hall's honor guard: sheet-native, sheet-thin */
     }
     let speed = def.speed * CFG.wave.spScale(w, def.intro) * st.sp;
     if (opts.elite) {
@@ -515,12 +475,12 @@ const rand = (a, b) => a + RNG() * (b - a);
       (S.hardMode ? CFG.hard.score : 1)) / 5) * 5;
     S.stats.score += pts;
     S.stats.kills++;
-    if (S.runMode !== 'hall') UI.setScore(S.stats.score);   /* the hall's score counts the felled, not the horde */
+    UI.setScore(S.stats.score);
     UI.setCombo(S.combo, comboMult());
     S.popups.push({
       x: e.x, y: e.y - e.r - 4,
-      txt: isBoss ? def.name + ' +' + pts : e.elite ? 'GUARDIAN +' + pts : '+' + pts,
-      life: isBoss || e.elite ? 1.4 : 0.7, max: isBoss || e.elite ? 1.4 : 0.7, red: e.elite || isBoss,
+      txt: isBoss ? def.name + ' +' + pts : e.elite ? 'GUARDIAN +' + pts : def.captain ? 'CAPTAIN +' + pts : '+' + pts,
+      life: isBoss || e.elite || def.captain ? 1.4 : 0.7, max: isBoss || e.elite || def.captain ? 1.4 : 0.7, red: e.elite || isBoss || def.captain,
     });
     const keeper = isBoss && def.boss === 2;
     burst(e.x, e.y, e.r, isBoss || e.type === 'titan' || e.elite, isBoss);
@@ -529,17 +489,15 @@ const rand = (a, b) => a + RNG() * (b - a);
       alpha: isBoss ? 0.65 : e.elite ? 0.6 : 0.5,
       red: isBoss || e.elite || e.type === 'oni',
     });
-    if (isBoss || e.type === 'slab' || e.type === 'titan' || e.type === 'oni' || e.type === 'golem' || e.elite) SFX.bigKill(); else SFX.kill();
+    if (isBoss || e.type === 'slab' || e.type === 'titan' || e.type === 'oni' || e.type === 'golem' || e.elite || def.captain || e.type === 's_nest' || e.type === 's_toller') SFX.bigKill(); else SFX.kill();
     /* hit-stop: the paper holds its breath on the heavy strokes */
     if (!S.reduced) {
       if (isBoss) S.hitstop = Math.max(S.hitstop, keeper ? 0.2 : 0.27);
-      else if (e.elite || e.type === 'titan' || e.type === 'golem') S.hitstop = Math.max(S.hitstop, 0.09);
+      else if (e.elite || def.captain || e.type === 'titan' || e.type === 'golem' || e.type === 's_nest') S.hitstop = Math.max(S.hitstop, 0.09);
       else if (e.type === 'slab' || e.type === 'oni') S.hitstop = Math.max(S.hitstop, 0.045);
     }
-    if (e.elite || isBoss) { S.shake = Math.max(S.shake, isBoss ? (keeper ? 15 : 19) : 9); }
+    if (e.elite || isBoss || def.captain) { S.shake = Math.max(S.shake, isBoss ? (keeper ? 15 : 19) : def.captain ? 10 : 9); }
     if (isBoss) {
-      S.felledRun = (S.felledRun | 0) + 1;   /* the memory counts the fell */
-      if (G.buzz) G.buzz(35);                /* the paper trembles under the seal */
       /* a boss dies in red: a flash across the eye, twin red novas,
          and the paper drinks a deep seal of vermilion */
       S.redFlash = Math.max(S.redFlash || 0, keeper ? 0.42 : 0.58);
@@ -572,12 +530,9 @@ const rand = (a, b) => a + RNG() * (b - a);
            death anywhere else never credits a sheet */
         if (asNow.isGuardianWave && sheet > getCleared()) {
           setCleared(sheet);
-          /* the unroll chain runs across the FIVE inks only — the fifth
-             Guardian's fall is the finale, not a sixth sheet's herald;
-             the blank act is entered from its own strip, never unrolled */
-          const next = sheet < SHEETS ? (AREAS[sheet] || null) : null;
+          const next = AREAS[sheet] || null;   /* sheet is 1-based; AREAS[sheet] is the next */
           if (next) {
-            setUnlocked(Math.min(AREAS.length, sheet + 1));
+            setUnlocked(sheet + 1);
             if (!S.reduced) unroll = { area: asNow.area, next };
             else UI.unlockBanner(asNow.area, next, false);
           }
@@ -597,10 +552,43 @@ const rand = (a, b) => a + RNG() * (b - a);
     } else {
       dropMote(e.x, e.y, moteValue(tier === 2 ? 4 : tier === 1 ? 2 : 1), tier);
       /* rare talismans from the heavy bodies */
-      const heavy = e.type === 'slab' || e.type === 'titan' || e.type === 'oni' || e.type === 'golem';
+      const heavy = e.type === 'slab' || e.type === 'titan' || e.type === 'oni' || e.type === 'golem' || def.captain;
       if (heavy && RNG() < 0.05) dropPickup('pot', e.x, e.y);
       else if (RNG() < 0.006) dropPickup('magnet', e.x, e.y);
       else if (RNG() < 0.006) dropPickup('bomb', e.x, e.y);
+    }
+
+    /* ---- the officers' fall: the rank breaks with them ---- */
+    if (def.captain) {
+      /* the banner drops: a breath of stillness for every beast that marched under it */
+      const R2 = CFG.captain.deathR * CFG.captain.deathR;
+      let felled = 0;
+      for (const o of S.enemies) {
+        const dx = o.x - e.x, dy = o.y - e.y;
+        if (dx * dx + dy * dy <= R2 && !ENEMIES[o.type].boss) {
+          o.stun = Math.max(o.stun, CFG.captain.deathStun);
+          felled++;
+        }
+      }
+      S.rings.push({ x: e.x, y: e.y, max: CFG.captain.deathR * 1.35, life: 0.5, maxLife: 0.5, red: true });
+      if (felled > 0) S.popups.push({ x: e.x, y: e.y - e.r - 20, txt: 'THE RANK BREAKS', life: 1.0, max: 1.0, red: true });
+      /* the captain's purse: officers pay better than the rank */
+      for (let i = 0; i < 4; i++) dropMote(e.x + rand(-18, 18), e.y + rand(-18, 18), moteValue(3), 2);
+    }
+    /* the nest bursts — its last brood scatters */
+    if (e.type === 's_nest') {
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * TAU + rand(-0.3, 0.3);
+        const c = spawnEnemy('gnat', e.x + Math.cos(a) * (e.r + 6), e.y + Math.sin(a) * (e.r + 6));
+        c.kbx = Math.cos(a) * 210; c.kby = Math.sin(a) * 210;
+      }
+      S.popups.push({ x: e.x, y: e.y - e.r - 8, txt: 'THE BROOD SCATTERS', life: 0.9, max: 0.9 });
+    }
+    /* the ledger spills what it taxed back onto the paper */
+    if (e.type === 's_ledger' && (e.ate || 0) > 0) {
+      const back = Math.min(10, Math.ceil(e.ate / 2));
+      for (let i = 0; i < back; i++) dropMote(e.x + rand(-22, 22), e.y + rand(-22, 22), moteValue(2), 1);
+      S.popups.push({ x: e.x, y: e.y - e.r - 8, txt: 'THE TAX REFUNDED', life: 0.9, max: 0.9, red: true });
     }
 
     if (e.type === 'split') {
@@ -829,22 +817,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     let elites = 0;
     if (as.isGuardianWave) {
-      /* the hall keeps the horde out — the duel is the whole scene,
-         the queue the seal wave would have spent is struck from the page */
-      if (S.runMode === 'hall') S.queue.length = 0;
-      /* the Guardian of the sheet enters — a beast with a name.
-         In the hall it fights at its own true ink, and a thin honor
-         guard walks with it — the sheet's climb stays outside */
+      /* the Guardian of the sheet enters — a beast with a name */
       const pt = edgePoint();
-      S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true, hall: S.runMode === 'hall' });
+      S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
       elites = 1;
-      if (S.runMode === 'hall') {
-        const n = CFG.hall.guard0 + S.hallIdx;
-        for (let i = 0; i < n; i++) {
-          const gp = edgePoint(i % 4);
-          S.markers.push({ type: as.area.elite, x: gp.x, y: gp.y, t: 0.55 + i * 0.22, elite: false, flatHp: 3 });
-        }
-      }
     } else if (as.isLevelEnd) {
       /* the seal wave is a BOSS FIGHT: the scene's Keeper — the
          Guardian's lesser red kin — walks the paper, a halved
@@ -868,7 +844,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (paperStart) {
       /* the scroll turns — a new sheet of paper. A run's first page
          names the run itself: THE JOURNEY — RUN 007. */
-      UI.areaBanner(as.area, as.cycle, S.runMode !== 'journey' && as.cycle >= SHEETS,
+      UI.areaBanner(as.area, as.cycle, S.runMode !== 'journey' && as.cycle >= AREAS.length,
         opts.runStart ? getRuns() : 0);
       SFX.gong();
       if (opts.runStart && S.hardMode) {
@@ -887,10 +863,10 @@ const rand = (a, b) => a + RNG() * (b - a);
       SFX.wave(as.isSurge || as.isLevelEnd);
     }
     if (as.isGuardianWave) {
-      UI.bossBanner(as.area, ENEMIES[as.area.boss].name, false, as.level);
+      UI.bossBanner(as.area, ENEMIES[as.area.boss].name, false, as.level, as.area.boss);
       SFX.gong();
     } else if (as.isLevelEnd) {
-      UI.bossBanner(as.area, ENEMIES[as.area.keeper].name, true, as.level);
+      UI.bossBanner(as.area, ENEMIES[as.area.keeper].name, true, as.level, as.area.keeper);
       SFX.gong();
     }
   }
@@ -1084,8 +1060,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* ---------------- flow ---------------- */
   function startRun(mode, opts = {}) {
     const prevWave = S.stats ? (S.stats.wave | 0) : 0;   /* where the last run fell */
-    S.runMode = mode === 'endless' ? 'endless' : mode === 'daily' ? 'daily'
-      : mode === 'hall' ? 'hall' : 'journey';
+    S.runMode = mode === 'endless' ? 'endless' : mode === 'daily' ? 'daily' : 'journey';
     /* the daily deals one fixed paper: the same seed, the same beasts,
        the same luck for every scribe who unrolls today's sheet */
     if (S.runMode === 'daily') {
@@ -1096,12 +1071,13 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.dailyCounting = false;
     }
     /* the ghost's scribe dips its pen: endless and daily runs record
-       their strokes (the journey's scenes and the hall's duels are
-       too short — and the hall race is its own paper) */
-    S.rec = (S.runMode === 'endless' || S.runMode === 'daily') ? { t: 0, acc: 0, frames: [] } : null;
-    S.ghost = (S.runMode === 'endless' || S.runMode === 'daily')
-      ? ghostLoad(S.runMode === 'daily' ? 'daily' : 'endless') : null;
+       their strokes (the journey's scenes are too short to race) */
+    S.rec = S.runMode === 'journey' ? null : { t: 0, acc: 0, frames: [] };
+    S.ghost = S.runMode === 'journey' ? null : ghostLoad(S.runMode === 'daily' ? 'daily' : 'endless');
     S.brush = getBrush();
+    /* a wiped shelf can strand a sealed brush on the title — the
+       hand falls back to the needle rather than carry a stolen kit */
+    if (!brushUnlocked(S.brush)) S.brush = 'needle';
     S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
     S.inkWave = 0;   /* the stone counts this run's waves from zero */
@@ -1116,13 +1092,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.combo = 0; S.comboT = 0; S.hitstop = 0; S.magnetT = 0; S.playerSlowT = 0;
     S.redFlash = 0;   /* the red wash that bleeds across the eye when a boss dies */
     S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
-    S.hallIdx = 0; S.hallHits = 0;   /* the hall's gates, reset */
-    S.sixthWalk = false;             /* a fresh page is never the blank act */
     S.arrived = S.reduced; S.washStamp = S.reduced;   // reduced motion: no entrance rite
     S.choices = []; S.selected = null; S.idle = [];
     S.levelMarks = []; S.inklings = []; S.spawnPattern = 'flank';
     S.areaIdx = 0;
-    S.felledRun = 0; S.felledMarked = 0;   /* the memory's fresh ledger */
     S.landscapeWave = 1;
     S.waveRevealT = performance.now() / 1000;
     S.beginT = S.reduced ? 0.01 : 1.7;   // the brush paints the run in
@@ -1151,24 +1124,9 @@ const rand = (a, b) => a + RNG() * (b - a);
        the brush arrives with the kit a run that far would carry —
        and the shelf opens a scroll to any scene the ink has reached
        or sealed, never past the frontier (the kit grows with the road) */
-    /* THE GUARDIANS' HALL — the boss rush: five gates, one life,
-       the old master's whole teaching as the kit (every rank of the
-       QA power ladder, twice through — fifteen teachings, twice).
-       The brush choice still flavors the hand; the hall keeps its
-       own ten best; the score is the hall's own arithmetic. */
-    if (S.runMode === 'hall') {
-      applyQAPower(30);
-      S.hallIdx = 1; S.hallHits = 0;
-      UI.setHp(S.stats.hp, S.stats.maxHp);
-      UI.setLoadout(S.stats.levels);
-      UI.setXp(0, S.stats.xpLevel);
-      startWave(CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea, { runStart: true });
-      return;
-    }
     if (opts.sheet && S.runMode === 'journey' && qaWave < 1) {
       /* the shelf answers only what is unrolled — a locked scroll cannot open */
-      const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, Math.max(getUnlocked(), getSixthUnlocked() ? AREAS.length : 0)))) ;
-      S.sixthWalk = sheet > SHEETS;   /* the blank act remembers its own */
+      const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, getUnlocked())));
       const level = Math.max(1, Math.min(frontierLevel(sheet),
         Math.min(CFG.wave.levelsPerArea, (opts.level | 0) || 1)));
       applyQAPower(checkpointPower(sheet, level));
@@ -1184,7 +1142,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (opts.retry && S.runMode === 'journey' && qaWave < 1 && prevWave > 1) {
       const sheet = Math.max(1, Math.min(AREAS.length,
         Math.floor((prevWave - 1) / (CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea)) + 1));
-      S.sixthWalk = sheet > SHEETS;   /* ONE MORE returns to the blank act if that is where the ink dried */
       const clamped = Math.max(1, Math.min(frontierLevel(sheet), areaStateFor(prevWave).level));
       applyQAPower(checkpointPower(sheet, clamped));
       UI.setHp(S.stats.hp, S.stats.maxHp);
@@ -1204,7 +1161,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     if (qaWave > 1) {
       if (qaPower > 0) applyQAPower(qaPower);
-      if (S.runMode === 'journey' && qaWave > SHEETS * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea) S.sixthWalk = true;
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
@@ -1242,58 +1198,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.arrived = false; S.washStamp = false;
     S.mode = 'playing';
     startWave(S.stats.wave + 1);
-  }
-
-  /* ---------------- the guardians' hall — the gate turns ----------------
-     a guardian lies felled: the hall grants a breath (+2 integrity),
-     washes the page, and opens the next gate. Past the fifth, the
-     over sheet speaks the hall's own arithmetic. */
-  function hallAdvance() {
-    const st = S.stats;
-    S.pendingSeal = false;
-    st.hp = Math.min(st.maxHp, st.hp + 2);   /* the hall grants a breath */
-    UI.setHp(st.hp, st.maxHp);
-    S.hallIdx = (S.hallIdx | 0) + 1;
-    if (S.hallIdx > SHEETS) { showOver(true); return; }   /* the hall is five gates, sixth or no sixth */
-    S.bullets.length = 0; S.ebullets.length = 0; S.enemies.length = 0; S.markers.length = 0;
-    S.telgs.length = 0;
-    S.motes.length = 0; S.pickups.length = 0; S.arcs.length = 0; S.vortices.length = 0;
-    S.bolts.length = 0; S.particles.length = 0; S.popups.length = 0; S.rings.length = 0;
-    S.spirits.length = 0; S.stamps.length = 0; S.puddles.length = 0;
-    S.queue.length = 0; S.waveInitial = 0; S.waveActive = false;
-    S.invulnT = 1.4; S.adrenT = 0; S.shake = 0; S.hitstop = 0; S.magnetT = 0;
-    S.playerSlowT = 0; S.novaT = 0; S.combo = 0; S.comboT = 0;
-    S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
-    S.levelMarks = []; S.inklings = []; S.spawnPattern = 'flank';
-    if (R.resetStains) R.resetStains();   /* a washed page for the next duel */
-    const p = S.player;
-    p.vx = 0; p.vy = 0; p.fireT = 0.35; p.recoil = 0;
-    S.beginT = S.reduced ? 0.01 : 0.9;    /* a short wash — the gate, not the journey */
-    S.arrived = S.reduced; S.washStamp = S.reduced;
-    UI.show(null);
-    UI.hud(true);
-    UI.setLoadout(S.stats.levels);
-    S.mode = 'playing';
-    startWave(S.hallIdx * CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea);
-  }
-
-  /* the hall's own arithmetic: the felled, the swift, the flawless.
-     Live it counts what has already fallen and the breath still left
-     under the par; at the end it also pays the flawless purse. */
-  const HALL_CUM = [0, 500, 1300, 2500, 4200, 6600];
-  function hallParts(felled, time, hits, final) {
-    const hm = S.hardMode ? CFG.hard.score : 1;
-    const guardians = Math.round((HALL_CUM[Math.min(SHEETS, Math.max(0, felled | 0))] || 0) * hm);
-    const swift = Math.round(Math.max(0, CFG.hall.par - Math.round(time)) * CFG.hall.swift * hm);
-    const flawless = (final && (hits | 0) === 0) ? Math.round(CFG.hall.flawless * hm) : 0;
-    return { guardians, swift, flawless, total: guardians + swift + flawless };
-  }
-  function hallScoreLive() {
-    const st = S.stats;
-    const felled = Math.max(0, Math.min(SHEETS, (S.hallIdx | 0) - 1));
-    const p = hallParts(felled, st.time, S.hallHits, false);
-    st.score = p.total;
-    UI.setScore(p.total);
   }
 
   /* ---------------- the level-clear rest ----------------
@@ -1403,24 +1307,19 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (kind === 'wave') S.pendingSeal = false;
     UI.show(null);
     const nxt = areaStateFor(S.stats.wave + 1);
-    /* the hall answers to its own gate: a pick taken between duels
-       (the vacuum's last motes) hands control straight back — the
-       clearedT beat resumes and hallAdvance opens the next gate.
-       No scroll films, no wave count climbed, the seals stay unpressed */
-    if (S.runMode === 'hall') {
-      if (S.pendingLevels > 0 || S.pendingChests > 0) { openUpgrade('level'); return; }
-      UI.show(null);
-      S.mode = 'playing';
-      return;
-    }
-    if (kind === 'wave' && nxt.level === 1 && !S.reduced) {
-      /* the sheet turns on film — the new scroll announces itself */
+    if (kind === 'wave' && nxt.level === 1 && !S.reduced && S.runMode === 'journey') {
+      /* the sheet turns on film — the journey's new scroll announces
+         itself. THE ENDLESS never stops for a film: its seal pays its
+         stroke, the banner cries the new sheet, and the next wave
+         walks on — the film would only interrupt the flow the mode
+         lives for. (The area banner + gong remain: the quiet gap
+         between waves is where the hand plans, and it is brief.) */
       startWave(S.stats.wave + 1, { quiet: true });
       S.mode = 'cutscene';
       UI.hud(false);
       CUT.start('scroll', {
         area: nxt.area, cycle: nxt.cycle,
-        deep: S.runMode !== 'journey' && nxt.cycle >= SHEETS,
+        deep: S.runMode !== 'journey' && nxt.cycle >= AREAS.length,
       });
       return;
     }
@@ -1465,7 +1364,6 @@ const rand = (a, b) => a + RNG() * (b - a);
         r: 9 + Math.random() * 22, alpha: 0.6,
       });
     }
-    if (G.buzz) G.buzz(25);   /* the fall trembles the hand */
     SFX.over();
   }
 
@@ -1476,7 +1374,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     for (const [min, r] of CFG.ranks) { if (cleared >= min) { rank = r; break; } }
     const best = getBest();
     const nb = st.score > (best ? best.score : 0);
-    if (nb && S.runMode !== 'hall') store.set('om_best_v1', { score: st.score, wave: cleared });   /* the hall keeps its own ten — the endless best stays endless */
+    if (nb) store.set('om_best_v1', { score: st.score, wave: cleared });
     if (victory) SFX.victory();
     /* the daily sheet files its one true entry on the day it is walked
        (declared before the over sheet reads it — no ink before its name) */
@@ -1505,24 +1403,19 @@ const rand = (a, b) => a + RNG() * (b - a);
     let inkGain = 0, inkTotal = 0;
     {
       const cs = charmsSave();
-      if (S.runMode === 'hall') {
-        /* the hall is honor, not labor — it presses no ink into the stone */
-        inkTotal = cs.ink | 0;
-      } else {
-        inkGain = inkForRun(cleared, S.inkWave | 0, {
-          victory: !!victory, victoryPaid: !!cs.feats.victory,
-          practice: S.runMode === 'daily' && !S.dailyCounting,
-          hard: !!S.hardMode, best: !!nb,
-        });
-        if (inkGain > 0) {
-          cs.ink = (cs.ink | 0) + inkGain;
-          cs.earned = (cs.earned | 0) + inkGain;
-          if (victory && !cs.feats.victory) cs.feats.victory = true;
-          store.set(CHARMS_KEY, cs);
-        }
-        S.inkWave = cleared;
+      inkGain = inkForRun(cleared, S.inkWave | 0, {
+        victory: !!victory, victoryPaid: !!cs.feats.victory,
+        practice: S.runMode === 'daily' && !S.dailyCounting,
+        hard: !!S.hardMode, best: !!nb,
+      });
+      if (inkGain > 0) {
+        cs.ink = (cs.ink | 0) + inkGain;
+        cs.earned = (cs.earned | 0) + inkGain;
+        if (victory && !cs.feats.victory) cs.feats.victory = true;
+        store.set(CHARMS_KEY, cs);
       }
-      inkTotal = inkTotal || (cs.ink | 0);
+      S.inkWave = cleared;
+      inkTotal = cs.ink | 0;
     }
     /* the brush's last recording rides to the ledger — the echo another
        scribe may race (a death inside a breath leaves too few strokes) */
@@ -1531,58 +1424,15 @@ const rand = (a, b) => a + RNG() * (b - a);
           hard: !!S.hardMode, date: dayKey(), dt: GHOST_DT,
           n: S.rec.frames.length, data: S.rec.frames.join(';') }
       : null;
-    /* ---- the memory: the walk presses its line (v9.3) ----
-       the fell count rides as a per-line delta — a walk revived
-       INTO THE ENDLESS keeps its ledger honest, never doubled */
-    {
-      const per = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea;
-      const isJ = S.runMode === 'journey';
-      const s = isJ ? Math.floor((st.wave - 1) / per) + 1 : 0;
-      const l = isJ ? areaStateFor(st.wave).level : 0;
-      const wIn = isJ ? ((st.wave - 1) % CFG.wave.wavesPerLevel) + 1 : 0;
-      const felledNow = S.felledRun | 0;
-      const felledDelta = Math.max(0, felledNow - (S.felledMarked | 0));
-      S.felledMarked = felledNow;
-      const isHall = S.runMode === 'hall';
-      const hallFelled = isHall ? Math.max(0, Math.min(SHEETS, (S.hallIdx | 0) - 1)) : 0;
-      recordRun({
-        run: getRuns(), mode: S.runMode, victory: !!victory, hard: !!S.hardMode,
-        waves: cleared, wave: st.wave | 0, s, l, wIn,
-        kills: st.kills | 0, time: st.time | 0, score: st.score | 0,
-        rank, ink: inkGain, felled: felledDelta, date: dayKey(),
-        deep: isJ ? s * 10000 + l * 100 + wIn
-          : isHall ? 60000 + hallFelled : (st.wave | 0),
-        where: isJ
-          ? `SCROLL ${['I', 'II', 'III', 'IV', 'V', 'VI'][s - 1] || s} · SCENE ${l} · WAVE ${wIn}`
-          : isHall
-            ? (victory ? 'THE HALL — ALL FIVE FELLED'
-              : 'THE HALL — GUARDIAN ' + (['I', 'II', 'III', 'IV', 'V'][hallFelled - 1] || '?') + ' STOOD')
-            : `WAVE ${st.wave | 0}`,
-      });
-    }
-    /* ---- the hall's own ledger: the ten best walks of the rush ----
-       its score is the hall's arithmetic — the felled, the swift,
-       the flawless — written over the horde's kill-points. */
-    let hallPay = null;
-    if (S.runMode === 'hall') {
-      const felled = Math.max(0, Math.min(AREAS.length, (S.hallIdx | 0) - 1));
-      const p = hallParts(felled, st.time, S.hallHits, true);
-      st.score = p.total;
-      hallPay = { felled, hits: S.hallHits | 0, victory: !!victory,
-                  guardians: p.guardians, swift: p.swift, flawless: p.flawless };
-      recordHall({ score: p.total, felled, time: st.time | 0, hard: !!S.hardMode,
-                   victory: !!victory, date: dayKey() });
-    }
     UI.showOver({
       run: getRuns(), waves: cleared, kills: st.kills,
-      time: st.time, score: st.score, rank, newBest: nb && S.runMode !== 'hall',
+      time: st.time, score: st.score, rank, newBest: nb,
       mode: S.runMode, victory: !!victory, hard: S.hardMode,
       day: dailyDay, practice: S.runMode === 'daily' && !dailyCounting,
       ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score,
                          name: S.ghost.name || null } : null,
       ink: inkGain, inkTotal,
       charms: charmRankCount(),
-      hall: hallPay,
     });
     UI.hud(false);
     UI.show('over');
@@ -1592,7 +1442,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     /* the endless ledger takes its entry when an endless run truly
        ends — the journey answers only to its own seals (LB is the
        ledger module; absent it, the game plays exactly as before) */
-    if (typeof LB !== 'undefined' && LB.onRunEnd && S.runMode !== 'hall') {
+    if (typeof LB !== 'undefined' && LB.onRunEnd) {
       LB.onRunEnd({
         mode: S.runMode, victory: !!victory, hard: S.hardMode,
         wave: Math.max(1, st.wave | 0), score: st.score | 0,
@@ -1617,7 +1467,6 @@ const rand = (a, b) => a + RNG() * (b - a);
       return;
     }
     st.hp--;
-    if (S.runMode === 'hall') S.hallHits = (S.hallHits | 0) + 1;   /* the flawless purse watches */
     S.invulnT = CFG.player.invuln;
     if (!S.reduced) S.shake = 8;
     for (let i = 0; i < 3; i++) {
@@ -1834,12 +1683,6 @@ const rand = (a, b) => a + RNG() * (b - a);
         const d = Math.hypot(dx, dy) || 1;
         p.x += (dx / d) * 52 * dt;
         p.y += (dy / d) * 52 * dt;
-      } else if (e.type === 'b_blank') {
-        /* the blank sheet pulls gently — the paper wants to be written on */
-        const dx = e.x - p.x, dy = e.y - p.y;
-        const d = Math.hypot(dx, dy) || 1;
-        p.x += (dx / d) * 30 * dt;
-        p.y += (dy / d) * 30 * dt;
       } else if (e.type === 'maelstrom') {
         const dx = e.x - p.x, dy = e.y - p.y;
         const d2 = dx * dx + dy * dy;
@@ -2005,8 +1848,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.bullets.push({
         x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
         vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
-        ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0,
-        life: CFG.player.bulletLife * st.bulletLifeMult,
+        ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0, life: CFG.player.bulletLife,
         kind: 'drop', brush: S.brush, seed: 100000 + ((Math.random() * 899999) | 0),
       });
     }
@@ -2020,8 +1862,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         S.bullets.push({
           x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
           vx: Math.cos(a) * spd * 0.92, vy: Math.sin(a) * spd * 0.92,
-          ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0,
-          life: CFG.player.bulletLife * st.bulletLifeMult,
+          ang: a, dmg: st.dmg, hits: 1 + st.pierce, age: 0, life: CFG.player.bulletLife,
           kind: 'drop', brush: S.brush, seed: 100000 + ((Math.random() * 899999) | 0),
         });
       }
@@ -2136,7 +1977,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     e.hitFlash = 0.08;
     if (knock) {
       const boss = ENEMIES[e.type].boss;
-      const kf = boss ? 0.06 : e.elite ? 0.15 : (e.type === 'slab' || e.type === 'oni' || e.type === 'golem' ? 0.12 : 0.55);
+      const kf = boss ? 0.06 : e.elite ? 0.15 : (e.type === 'slab' || e.type === 'oni' || e.type === 'golem' ||
+        e.type === 's_nest' || e.type === 's_toller' || ENEMIES[e.type].captain ? 0.12 : 0.55);
       e.kbx += Math.cos(ang) * 240 * kf;
       e.kby += Math.sin(ang) * 240 * kf;
     }
@@ -2221,6 +2063,22 @@ const rand = (a, b) => a + RNG() * (b - a);
       const mt = S.motes[i];
       mt.age += dt;
       if (mt.age > CFG.xp.moteLife) { S.motes.splice(i, 1); continue; }
+      /* the ledger's claimed ink flies to the ledger's mouth, not to the hand */
+      if (mt.ledger) {
+        const lg = mt.ledger;
+        if (lg.dead || lg.hp <= 0) { mt.ledger = null; }
+        else {
+          const lx = lg.x - mt.x, ly = lg.y - mt.y;
+          const ld = Math.hypot(lx, ly) || 1;
+          mt.vx = (lx / ld) * 250; mt.vy = (ly / ld) * 250;
+          mt.x += mt.vx * dt; mt.y += mt.vy * dt;
+          if (ld < 16) {
+            lg.ate = (lg.ate || 0) + 1;
+            S.motes.splice(i, 1);
+          }
+          continue;
+        }
+      }
       const dx = p.x - mt.x, dy = p.y - mt.y;
       const d2 = dx * dx + dy * dy;
       const d = Math.sqrt(d2) || 1;
@@ -2362,10 +2220,7 @@ const rand = (a, b) => a + RNG() * (b - a);
           S.rings.push({ x: bo.x, y: bo.y, max: bo.r * 1.5, life: 0.3, maxLife: 0.3, red: !!bo.red });
           S.stainQueue.push({ x: bo.x, y: bo.y, r: bo.r * 0.4, alpha: 0.4, red: !!bo.red });
           const dx = p.x - bo.x, dy = p.y - bo.y;
-          /* the bolt obeys the paper's grace like every other blow —
-             contact and flying ink check the grace; the thunder must too
-             (v11 fix: a guardian's marked strike hit straight through it) */
-          if (S.invulnT <= 0 && dx * dx + dy * dy < bo.r * bo.r) takeHit();
+          if (dx * dx + dy * dy < bo.r * bo.r) takeHit();
           SFX.thunder();
         }
       } else {
@@ -2441,6 +2296,35 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
   }
 
+  /* ---------------- the bosses' three phases ----------------
+     A duel climbs twice: at two-thirds ink and one-third ink the
+     beast TURNS — a cry pressed into the paper, a red ring, a hit
+     of stillness, and a faster, meaner rhythm. Hard by design,
+     fair by telegraph: every phase is readable, none is a trick. */
+  const ENRAGE_CRY = {
+    b_wheel: 'THE STAIN SPREADS',    k_blight: 'THE BLIGHT BLOOMS',
+    b_mother: 'THE BROOD WAKES',     k_husk: 'THE HUSK SPLITS',
+    b_warlord: 'THE HORNS SHARPEN',  k_cinder: 'THE CINDER ROARS',
+    b_tempest: 'THE EYE TURNS',      k_veil: 'THE VEIL THINS',
+    b_origin: 'THE OLD INK REMEMBERS', k_nib: 'THE NIB RE-DIPS',
+  };
+  function bossPhaseOf(e) {
+    return e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+  }
+  function enrageCheck(e, cry) {
+    const ph = bossPhaseOf(e);
+    if (ph > (e.pSeen || 0)) {
+      e.pSeen = ph;
+      S.popups.push({ x: e.x, y: e.y - e.r - 14, txt: cry, life: 1.3, max: 1.3, red: true });
+      S.rings.push({ x: e.x, y: e.y, max: e.r * 5, life: 0.55, maxLife: 0.55, red: true });
+      S.shake = Math.max(S.shake, 12);
+      if (!S.reduced) S.hitstop = Math.max(S.hitstop, 0.12);
+      SFX.elite();
+      e.state = 'cruise'; e.stateT = 0;   /* the old rhythm breaks */
+    }
+    return ph;
+  }
+
   function updateEnemies(dt) {
     const p = S.player;
     /* the true depth of the run, computed once — the brood-mothers
@@ -2451,6 +2335,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     /* wardens are few — gather them once instead of scanning per beast */
     let wardens = null;
     for (const w of S.enemies) if (w.type === 'warden') (wardens || (wardens = [])).push(w);
+    /* the captains likewise: few, and their aura is one pass */
+    let captains = null;
+    for (const w of S.enemies) if (ENEMIES[w.type].captain) (captains || (captains = [])).push(w);
     /* the swarm's heart: one centroid pass feeds every gnat */
     let gnatCx = 0, gnatCy = 0, gnatN = 0;
     for (const w of S.enemies) if (w.type === 'gnat') { gnatCx += w.x; gnatCy += w.y; gnatN++; }
@@ -2463,18 +2350,27 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (e.hitFlash > 0) e.hitFlash -= dt;
       if (e.orbCd > 0) e.orbCd -= dt;
       if (e.slowT > 0) e.slowT -= dt;
+      if (e.auraT > 0) e.auraT -= dt;
       if (e.stun > 0) {
         e.stun -= dt;
       } else {
         const dx = p.x - e.x, dy = p.y - e.y;
         const d = Math.hypot(dx, dy) || 1;
         const ux = dx / d, uy = dy / d;
-        /* soaked paper drags; the warden's herald-cry quickens the pack */
+        /* soaked paper drags; the warden's herald-cry quickens the pack;
+           a captain's march quickens it more, and its beasts wear the mark */
         let sm = e.slowT > 0 ? CFG.slow.mult : 1;
         if (wardens && e.type !== 'warden') {
           for (const w of wardens) {
             const wx = e.x - w.x, wy = e.y - w.y;
             if (wx * wx + wy * wy < 200 * 200) { sm *= 1.3; break; }
+          }
+        }
+        if (captains && !ENEMIES[e.type].captain) {
+          const aR2 = CFG.captain.auraR * CFG.captain.auraR;
+          for (const cpt of captains) {
+            const ax = e.x - cpt.x, ay = e.y - cpt.y;
+            if (ax * ax + ay * ay < aR2) { sm *= CFG.captain.auraMult; e.auraT = 0.3; break; }
           }
         }
         let vx = 0, vy = 0;
@@ -3137,21 +3033,242 @@ const rand = (a, b) => a + RNG() * (b - a);
             break;
           }
 
-          /* ============ THE GUARDIANS & THEIR KEEPERS ============ */
-          case 'b_wheel': case 'k_blight': { /* THE STAIN / THE BLIGHT — swells, then slams a ring of ink */
-            const mini = ENEMIES[e.type].boss === 2;
-            const enr = e.hp < e.maxHp * 0.5;
+          /* ============ THE SPECIALS — the paper's odd mechanics ============ */
+          case 's_nest': { /* roots itself and breeds gnats until it is broken */
+            vx = 0; vy = 0;
+            e.ang = Math.atan2(uy, ux);
+            e.broodT = (e.broodT == null ? 1.6 : e.broodT) - dt;
+            if (e.broodT <= 0 && S.enemies.length < broodCap) {
+              e.broodT = 2.6;
+              for (let i = 0; i < 2; i++) {
+                const a = rand(0, TAU);
+                const c = spawnEnemy('gnat', e.x + Math.cos(a) * (e.r + 7), e.y + Math.sin(a) * (e.r + 7));
+                c.kbx = Math.cos(a) * 170; c.kby = Math.sin(a) * 170;
+              }
+              S.rings.push({ x: e.x, y: e.y, max: e.r * 2.2, life: 0.4, maxLife: 0.4 });
+              SFX.blink();
+            }
+            break;
+          }
+          case 's_mender': { /* drifts with the pack and stitches the wounded back up */
             vx = ux * e.speed * sm; vy = uy * e.speed * sm;
             e.ang = Math.atan2(uy, ux);
+            e.stitchT = (e.stitchT == null ? 1.8 : e.stitchT) - dt;
+            if (e.stitchT <= 0) {
+              e.stitchT = 3.2;
+              let tgt = null, bd = 280 * 280;
+              for (const o of S.enemies) {
+                if (o === e || o.dead || o.hp >= o.maxHp || ENEMIES[o.type].boss) continue;
+                const ox = o.x - e.x, oy = o.y - e.y, o2 = ox * ox + oy * oy;
+                if (o2 < bd) { bd = o2; tgt = o; }
+              }
+              if (tgt) {
+                tgt.hp = Math.min(tgt.maxHp, tgt.hp + 7);
+                tgt.hitFlash = 0.12;
+                S.rings.push({ x: tgt.x, y: tgt.y, max: tgt.r * 2.4, life: 0.35, maxLife: 0.35, red: true });
+                S.popups.push({ x: tgt.x, y: tgt.y - tgt.r - 6, txt: 'STITCHED', life: 0.6, max: 0.6, red: true });
+                SFX.heal();
+              }
+            }
+            break;
+          }
+          case 's_toller': { /* the bell: it draws a ring on the paper, then the sound shoves you */
+            e.ang = Math.atan2(uy, ux);
+            if (e.state !== 'toll') {
+              vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+              e.tollT = (e.tollT == null ? 2.2 : e.tollT) - dt;
+              if (e.tollT <= 0 && d < 460) {
+                e.state = 'toll'; e.stateT = 0;
+                S.telgs.push({ e, kind: 'ring', r: 170, life: 0.55, maxLife: 0.55 });
+                SFX.wind();
+              }
+            } else {
+              e.stateT += dt;
+              vx = 0; vy = 0;
+              if (e.stateT > 0.55) {
+                e.state = 'cruise'; e.tollT = 4.4;
+                for (let i = 0; i < 6; i++) {
+                  const a = (i / 6) * TAU + rand(-0.15, 0.15);
+                  S.ebullets.push({
+                    kind: 'glob',
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * 165, vy: Math.sin(a) * 165,
+                    ang: a, age: 0, life: CFG.glob.life * 1.1,
+                  });
+                }
+                /* the sound-wave shoves the brush off its stroke */
+                if (d < 260) { p.vx += ux * 260; p.vy += uy * 260; }
+                S.rings.push({ x: e.x, y: e.y, max: 150, life: 0.4, maxLife: 0.4 });
+                SFX.nova();
+              }
+            }
+            break;
+          }
+          case 's_ledger': { /* the usurer — it eats the ink you spilled, then bites back */
+            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            e.ang = Math.atan2(uy, ux);
+            /* claim the motes that lie near its mouth */
+            const lr2 = 150 * 150;
+            for (const mt of S.motes) {
+              if (mt.ledger) continue;
+              const mx = mt.x - e.x, my = mt.y - e.y;
+              if (mx * mx + my * my < lr2) mt.ledger = e;
+            }
+            e.taxT = (e.taxT || 0) + dt;
+            if (e.ate >= 4 && e.taxT > 0.8) {
+              /* every fourth mouthful: a gold needle volley back at the hand */
+              e.ate -= 4; e.taxT = 0;
+              const base = Math.atan2(p.y - e.y, p.x - e.x);
+              for (let i = -1; i <= 1; i++) {
+                const a = base + i * 0.18;
+                S.ebullets.push({
+                  kind: 'needle', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 5), y: e.y + Math.sin(a) * (e.r + 5),
+                  vx: Math.cos(a) * CFG.needle.speed * 0.85, vy: Math.sin(a) * CFG.needle.speed * 0.85,
+                  ang: a, age: 0, life: CFG.needle.life,
+                });
+              }
+              SFX.needle();
+            }
+            break;
+          }
+
+          /* ============ THE CAPTAINS — the horde's officers ============ */
+          case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': {
             e.stateT += dt;
-            if (e.state === 'cruise' && e.stateT > (enr ? 1.9 : mini ? 3.3 : 2.9)) {
+            const hurt = e.hp < e.maxHp * 0.5;
+            /* the Paymaster sidesteps like the coin it is; the rest march at you */
+            if (e.type === 'c_gild') {
+              const sdir = Math.sin(e.seed + e.t * 0.6) > 0 ? 1 : -1;
+              vx = (ux * 0.6 - uy * 0.55 * sdir) * e.speed * sm;
+              vy = (uy * 0.6 + ux * 0.55 * sdir) * e.speed * sm;
+            } else {
+              vx = ux * e.speed * sm; vy = uy * e.speed * sm;
+            }
+            e.ang = Math.atan2(uy, ux);
+            /* the rally: fresh ink walks in under the flag */
+            e.rallyT = (e.rallyT == null ? rand(2.2, 3.6) : e.rallyT) - dt;
+            if (e.rallyT <= 0 && S.enemies.length < broodCap + 6) {
+              e.rallyT = e.type === 'c_choir' ? 7.5 : 6.5;
+              const kind = ENEMIES[e.type].summon;
+              const n = e.type === 'c_gild' ? 1 : 2;
+              for (let i = 0; i < n; i++) {
+                const a = rand(0, TAU);
+                const c = spawnEnemy(kind, e.x + Math.cos(a) * (e.r + 10), e.y + Math.sin(a) * (e.r + 10));
+                c.kbx = Math.cos(a) * 180; c.kby = Math.sin(a) * 180;
+              }
+              S.rings.push({ x: e.x, y: e.y, max: e.r * 2.8, life: 0.42, maxLife: 0.42, red: true });
+              S.popups.push({ x: e.x, y: e.y - e.r - 10, txt: 'RALLIED', life: 0.7, max: 0.7, red: true });
+              SFX.elite();
+            }
+            /* the command: each officer fights its own way */
+            if (e.type === 'c_drum') {
+              /* the drum beats — a red ring of slow ink when you press it */
+              e.atkT = (e.atkT == null ? rand(1.5, 2.5) : e.atkT) - dt;
+              if (e.atkT <= 0 && d < 380) {
+                e.atkT = hurt ? 3.2 : 4.4;
+                const n = hurt ? 8 : 6, off = rand(0, TAU);
+                for (let i = 0; i < n; i++) {
+                  const a = (i / n) * TAU + off;
+                  S.ebullets.push({
+                    kind: 'glob', red: true,
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * CFG.glob.speed * 0.8, vy: Math.sin(a) * CFG.glob.speed * 0.8,
+                    ang: a, age: 0, life: CFG.glob.life,
+                  });
+                }
+                S.rings.push({ x: e.x, y: e.y, max: 96, life: 0.3, maxLife: 0.3 });
+                SFX.nova();
+              }
+            } else if (e.type === 'c_choir') {
+              /* the choir sings — an aimed fan of five slow globs */
+              e.atkT = (e.atkT == null ? rand(1.5, 2.5) : e.atkT) - dt;
+              if (e.atkT <= 0 && d < 460) {
+                e.atkT = hurt ? 3.4 : 4.6;
+                const base = Math.atan2(p.y - e.y, p.x - e.x);
+                for (let i = -2; i <= 2; i++) {
+                  const a = base + i * 0.2;
+                  S.ebullets.push({
+                    kind: 'glob',
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * 185, vy: Math.sin(a) * 185,
+                    ang: a, age: 0, life: CFG.glob.life * 1.2,
+                  });
+                }
+                SFX.glob();
+              }
+            } else if (e.type === 'c_banner') {
+              /* the banner marches THROUGH you — a lesser charge, telegraphed */
+              if (e.state === 'cruise') {
+                e.atkT = (e.atkT == null ? rand(1.6, 2.6) : e.atkT) - dt;
+                if (e.atkT <= 0 && d < 400) {
+                  e.state = 'windup'; e.stateT = 0; SFX.wind();
+                  S.telgs.push({ e, kind: 'line', len: 280, life: 0.55, maxLife: 0.55 });
+                }
+              } else if (e.state === 'windup') {
+                vx = 0; vy = 0;
+                if (e.stateT > 0.55) {
+                  e.ang = Math.atan2(p.y - e.y, p.x - e.x);
+                  e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
+                  e.state = 'charge'; e.stateT = 0;
+                }
+              } else if (e.state === 'charge') {
+                vx = e.px * 440; vy = e.py * 440;
+                if (Math.random() < 0.3) S.stainQueue.push({ x: e.x, y: e.y, r: 5, alpha: 0.26, red: true });
+                if (e.stateT > 0.5) { e.state = 'cruise'; e.stateT = 0; e.atkT = hurt ? 2.4 : 3.4; }
+              }
+            } else if (e.type === 'c_gale') {
+              /* the stormcaller marks the paper where you stand */
+              e.atkT = (e.atkT == null ? rand(1.8, 2.8) : e.atkT) - dt;
+              if (e.atkT <= 0 && d < 520) {
+                e.atkT = hurt ? 4.2 : 5.6;
+                for (let i = 0; i < 2; i++) {
+                  const ba = rand(0, TAU), bd = rand(16, 120);
+                  S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.85 + i * 0.3, r: 48, struck: false, life: 0, red: true });
+                }
+                SFX.wind();
+              }
+            } else { /* c_gild — the paymaster flings its gold back at the hand */
+              e.atkT = (e.atkT == null ? rand(1.4, 2.4) : e.atkT) - dt;
+              if (e.atkT <= 0 && d < 440) {
+                e.atkT = hurt ? 3.0 : 4.2;
+                const base = Math.atan2(p.y - e.y, p.x - e.x);
+                for (let i = -1; i <= 1; i++) {
+                  const a = base + i * 0.22;
+                  S.ebullets.push({
+                    kind: 'glob', red: true,
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * 205, vy: Math.sin(a) * 205,
+                    ang: a, age: 0, life: CFG.glob.life,
+                  });
+                }
+                SFX.glob();
+              }
+            }
+            break;
+          }
+
+          /* ============ THE GUARDIANS & THEIR KEEPERS ============ */
+          /* Every duel climbs three phases: the beast's old habit,
+             a second habit laid over it, and the ENRAGED turn — a cry,
+             a ring, a hit of stillness, and a faster, meaner rhythm.
+             Hard by design, fair by telegraph. */
+          case 'b_wheel': case 'k_blight': { /* THE STAIN / THE BLIGHT — slam, spit, then SPREAD */
+            const mini = ENEMIES[e.type].boss === 2;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
+            const run = ph >= 1 ? 1.18 : 1;
+            vx = ux * e.speed * sm * run; vy = uy * e.speed * sm * run;
+            e.ang = Math.atan2(uy, ux);
+            e.stateT += dt;
+            /* the ring slam — the old drum, faster every phase */
+            if (e.state === 'cruise' && e.stateT > (ph === 2 ? 2.1 : ph === 1 ? 2.4 : mini ? 3.3 : 2.9)) {
               e.state = 'windup'; e.stateT = 0; SFX.wind();
               /* the paper blushes where the ring will land */
               S.telgs.push({ e, kind: 'ring', r: mini ? 165 : 205, life: 0.7, maxLife: 0.7 });
             }
             else if (e.state === 'windup' && e.stateT > 0.7) {
               e.state = 'cruise'; e.stateT = rand(0, 0.6);
-              const n = (mini ? 7 : 10) + (enr ? 3 : 0), off = rand(0, TAU);
+              const n = (mini ? 7 : 10) + (ph >= 1 ? 3 : 0) + (ph === 2 ? 3 : 0), off = rand(0, TAU);
               for (let i = 0; i < n; i++) {
                 const a = (i / n) * TAU + off;
                 S.ebullets.push({
@@ -3165,20 +3282,55 @@ const rand = (a, b) => a + RNG() * (b - a);
               S.shake = Math.max(S.shake, 8);
               SFX.nova();
             }
+            /* phase one: it spits between slams — an aimed three-fan */
+            e.fanT = (e.fanT == null ? 1.4 : e.fanT) - dt;
+            if (ph >= 1 && e.fanT <= 0 && e.state === 'cruise' && d < 430) {
+              e.fanT = ph === 2 ? 1.5 : 2.1;
+              const base = Math.atan2(p.y - e.y, p.x - e.x);
+              for (let i = -1; i <= 1; i++) {
+                const a = base + i * 0.24;
+                S.ebullets.push({
+                  kind: 'glob', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                  vx: Math.cos(a) * 210, vy: Math.sin(a) * 210,
+                  ang: a, age: 0, life: CFG.glob.life,
+                });
+              }
+              SFX.glob();
+            }
+            /* phase two: THE STAIN SPREADS — it bulldozes the page */
+            if (ph === 2 && e.state === 'cruise') {
+              e.chgT = (e.chgT == null ? 1.2 : e.chgT) - dt;
+              if (e.chgT <= 0 && d < 420) {
+                e.chgT = 3.4; e.state = 'chg-wind'; e.stateT = 0; SFX.wind();
+                S.telgs.push({ e, kind: 'line', len: 340, life: 0.5, maxLife: 0.5 });
+              }
+            }
+            if (e.state === 'chg-wind' && e.stateT > 0.5) {
+              e.ang = Math.atan2(p.y - e.y, p.x - e.x);
+              e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
+              e.state = 'chg'; e.stateT = 0;
+            } else if (e.state === 'chg') {
+              vx = e.px * 520; vy = e.py * 520;
+              if (Math.random() < 0.4) S.stainQueue.push({ x: e.x, y: e.y, r: 7, alpha: 0.3, red: true });
+              if (e.stateT > 0.45) { e.state = 'cruise'; e.stateT = 0; }
+            }
             break;
           }
-          case 'b_mother': case 'k_husk': { /* THE NIGHT MOTHER / THE HUSK — dissolves, blinks, fans needles, sheds shades */
+          case 'b_mother': case 'k_husk': { /* THE NIGHT MOTHER / THE HUSK — blink, fan, spiral, brood */
             const mini = ENEMIES[e.type].boss === 2;
-            const enr = e.hp < e.maxHp * 0.5;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
             e.stateT += dt;
             if (e.state === 'cruise') {
               vx = ux * e.speed * sm; vy = uy * e.speed * sm;
               e.ang = Math.atan2(uy, ux);
-              if (e.stateT > (enr ? 2.3 : mini ? 3.9 : 3.4)) { e.state = 'dissolve'; e.stateT = 0; }
+              if (e.stateT > (ph === 2 ? 1.7 : ph === 1 ? 2.5 : mini ? 3.9 : 3.4)) { e.state = 'dissolve'; e.stateT = 0; }
             } else if (e.state === 'dissolve') {
               if (e.stateT > 0.55) {
                 S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 0.9, alpha: 0.4 });
-                const ba = rand(0, TAU), bd = rand(140, 200);
+                /* enraged, she surfaces CLOSER — the night leans in */
+                const bd = ph === 2 ? rand(110, 160) : rand(140, 200);
+                const ba = rand(0, TAU);
                 e.x = p.x + Math.cos(ba) * bd; e.y = p.y + Math.sin(ba) * bd;
                 S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.1, alpha: 0.45 });
                 S.rings.push({ x: e.x, y: e.y, max: e.r * 2.4, life: 0.35, maxLife: 0.35 });
@@ -3188,7 +3340,7 @@ const rand = (a, b) => a + RNG() * (b - a);
             } else if (e.state === 'fan') {
               if (e.stateT > 0.42) {
                 const base = Math.atan2(p.y - e.y, p.x - e.x);
-                const half = mini ? (enr ? 2 : 1) : (enr ? 3 : 2);
+                const half = mini ? (ph >= 1 ? 2 : 1) : (ph === 2 ? 3 : 2);
                 for (let i = -half; i <= half; i++) {
                   const a = base + i * 0.17;
                   S.ebullets.push({
@@ -3199,8 +3351,9 @@ const rand = (a, b) => a + RNG() * (b - a);
                   });
                 }
                 SFX.needle();
+                /* the brood: every second fan sheds — enraged, EVERY fan sheds */
                 e.sheds = (e.sheds || 0) + 1;
-                if (e.sheds % 2 === 0 && S.enemies.length < broodCap + 8) {
+                if ((ph === 2 || e.sheds % 2 === 0) && S.enemies.length < broodCap + 8) {
                   for (const s of [-1, 1]) {
                     const c = spawnEnemy('shade', e.x + s * 40, e.y + rand(-30, 30));
                     c.kbx = s * 160; c.kby = rand(-80, 80);
@@ -3210,16 +3363,37 @@ const rand = (a, b) => a + RNG() * (b - a);
                 e.state = 'cruise'; e.stateT = 0;
               }
             }
+            /* phase one: the spiral — needles shed in a slow turning ring */
+            e.spinT = (e.spinT || 0) + dt;
+            if (ph >= 1 && e.spinT > (ph === 2 ? 2.0 : 2.7)) {
+              e.spinT = 0;
+              const nn = (mini ? 4 : 6) + (ph === 2 ? 2 : 0);
+              const base = e.t * 2.2;
+              for (let i = 0; i < nn; i++) {
+                const a = base + (i / nn) * TAU;
+                S.ebullets.push({
+                  kind: 'needle', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                  vx: Math.cos(a) * CFG.needle.speed * 0.72, vy: Math.sin(a) * CFG.needle.speed * 0.72,
+                  ang: a, age: 0, life: CFG.needle.life * 1.1,
+                });
+              }
+              SFX.needle();
+            }
             break;
           }
-          case 'b_warlord': case 'k_cinder': { /* THE CINNABAR ONI / THE CINDER — bulldozer charges and spread volleys */
+          case 'b_warlord': case 'k_cinder': { /* THE CINNABAR ONI / THE CINDER — charges that come AGAIN */
             const mini = ENEMIES[e.type].boss === 2;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
             e.stateT += dt;
-            const enraged = e.hp < e.maxHp * 0.5;
             if (e.state === 'cruise') {
               vx = ux * e.speed * sm; vy = uy * e.speed * sm;
               e.ang = Math.atan2(uy, ux);
-              if (e.stateT > (enraged ? 1.5 : mini ? 2.7 : 2.3)) { e.state = 'windup'; e.stateT = 0; SFX.wind(); S.telgs.push({ e, kind: 'line', len: mini ? 300 : 360, life: 0.6, maxLife: 0.6 }); }
+              if (e.stateT > (ph === 2 ? 1.2 : ph === 1 ? 1.7 : mini ? 2.7 : 2.3)) {
+                e.state = 'windup'; e.stateT = 0;
+                e.charges = ph === 2 ? 2 : ph === 1 ? 1 : 0;   /* the roads behind you */
+                SFX.wind(); S.telgs.push({ e, kind: 'line', len: mini ? 300 : 360, life: 0.6, maxLife: 0.6 });
+              }
             } else if (e.state === 'windup') {
               if (e.stateT > 0.6) {
                 e.ang = Math.atan2(p.y - e.y, p.x - e.x);
@@ -3227,84 +3401,129 @@ const rand = (a, b) => a + RNG() * (b - a);
                 e.state = 'charge'; e.stateT = 0;
               }
             } else if (e.state === 'charge') {
-              vx = e.px * (enraged ? 640 : 540); vy = e.py * (enraged ? 640 : 540);
+              vx = e.px * (ph === 2 ? 680 : ph === 1 ? 620 : 540); vy = e.py * (ph === 2 ? 680 : ph === 1 ? 620 : 540);
               if (Math.random() < 0.35) S.stainQueue.push({ x: e.x, y: e.y, r: 7, alpha: 0.3, red: true });
               if (e.stateT > 0.72) { e.state = 'skid'; e.stateT = 0; }
             } else if (e.state === 'skid') {
               vx = e.px * 110; vy = e.py * 110;
               if (e.stateT > 0.35) {
-                e.state = 'spit'; e.stateT = 0;
-                const base = Math.atan2(p.y - e.y, p.x - e.x);
-                const half = mini ? 2 : 3;
-                for (let i = -half; i <= half; i++) {
-                  const a = base + i * 0.15;
-                  S.ebullets.push({
-                    kind: 'glob', red: true,
-                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
-                    vx: Math.cos(a) * 230, vy: Math.sin(a) * 230,
-                    ang: a, age: 0, life: CFG.glob.life,
-                  });
-                }
-                SFX.glob();
-                if (enraged && !e.brood) {
-                  e.brood = true;
-                  const c = spawnEnemy('oni', e.x + rand(-60, 60), e.y + rand(-60, 60));
-                  S.rings.push({ x: c.x, y: c.y, max: 60, life: 0.4, maxLife: 0.4, red: true });
+                if (e.charges > 0) {
+                  /* ANOTHER road through: it re-plants and comes again */
+                  e.charges--;
+                  e.state = 'windup'; e.stateT = 0;
+                  SFX.wind(); S.telgs.push({ e, kind: 'line', len: mini ? 300 : 360, life: 0.45, maxLife: 0.45 });
+                } else {
+                  e.state = 'spit'; e.stateT = 0;
+                  const base = Math.atan2(p.y - e.y, p.x - e.x);
+                  const half = ph === 2 ? (mini ? 3 : 5) : mini ? 2 : 3;
+                  for (let i = -half; i <= half; i++) {
+                    const a = base + i * 0.15;
+                    S.ebullets.push({
+                      kind: 'glob', red: true,
+                      x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                      vx: Math.cos(a) * 230, vy: Math.sin(a) * 230,
+                      ang: a, age: 0, life: CFG.glob.life,
+                    });
+                  }
+                  SFX.glob();
                 }
               }
             } else { /* spit settle */
               if (e.stateT > 0.35) { e.state = 'cruise'; e.stateT = 0; }
             }
-            break;
-          }
-          case 'b_tempest': case 'k_veil': { /* THE STORM EYE / THE RAINVEIL — orbits, drags, spirals needles, calls bolts */
-            const mini = ENEMIES[e.type].boss === 2;
-            const enr = e.hp < e.maxHp * 0.5;
-            const ringD = 250;
-            const tangent = Math.atan2(uy, ux) + (e.seed > 3.14 ? 1 : -1) * Math.PI / 2;
-            const pull = clamp((d - ringD) * 2.2, -80, 80);
-            vx = (Math.cos(tangent) * e.speed + ux * pull) * sm;
-            vy = (Math.sin(tangent) * e.speed + uy * pull) * sm;
-            e.ang = Math.atan2(uy, ux);
-            e.stateT += dt;
-            e.spinT = (e.spinT || 0) + dt;
-            if (e.spinT > (enr ? 1.5 : mini ? 2.7 : 2.3)) {
-              e.spinT = 0;
-              const base = e.t * 1.9;
-              const nn = (mini ? 3 : 4) + (enr ? 2 : 0);
-              for (let i = 0; i < nn; i++) {
-                const a = base + (i / nn) * TAU;
-                S.ebullets.push({
-                  kind: 'needle', red: true,
-                  x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
-                  vx: Math.cos(a) * CFG.needle.speed * 0.78, vy: Math.sin(a) * CFG.needle.speed * 0.78,
-                  ang: a, age: 0, life: CFG.needle.life * 1.2,
-                });
+            /* phase two: the warlord calls its kin, every nine breaths */
+            if (ph === 2) {
+              e.kinT = (e.kinT == null ? 4.5 : e.kinT) - dt;
+              if (e.kinT <= 0 && S.enemies.length < broodCap + 8) {
+                e.kinT = 9;
+                const c = spawnEnemy('oni', e.x + rand(-60, 60), e.y + rand(-60, 60));
+                S.rings.push({ x: c.x, y: c.y, max: 60, life: 0.4, maxLife: 0.4, red: true });
+                SFX.elite();
               }
-              SFX.needle();
-            }
-            e.boltT = (e.boltT || 0) + dt;
-            if (e.boltT > (enr ? 3.6 : mini ? 6.2 : 5.2)) {
-              e.boltT = 0;
-              const nb = mini ? 2 : 3;
-              for (let i = 0; i < nb; i++) {
-                const ba = rand(0, TAU), bd = rand(20, 150);
-                S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.85 + i * 0.3, r: 54, struck: false, life: 0 });
-              }
-              SFX.wind();
             }
             break;
           }
-          case 'b_origin': case 'k_nib': { /* THE FIRST BRUSH / THE NIB — three phases: volleys, brood, fury */
+          case 'b_tempest': case 'k_veil': { /* THE STORM EYE / THE RAINVEIL — orbit, spiral, bolts, and the eye that STOPS */
             const mini = ENEMIES[e.type].boss === 2;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
+            if (e.state === 'still') {
+              /* phase two: THE EYE TURNS — it stops, the paper holds its breath */
+              vx = 0; vy = 0;
+              e.stateT += dt;
+              if (e.stateT > 0.9) {
+                e.state = 'cruise'; e.stateT = 0; e.spinT = 0;
+                const nn = (mini ? 8 : 12) + (ph === 2 ? 4 : 0);
+                const off = rand(0, TAU);
+                for (let i = 0; i < nn; i++) {
+                  const a = (i / nn) * TAU + off;
+                  S.ebullets.push({
+                    kind: 'needle', red: true,
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * CFG.needle.speed * 0.85, vy: Math.sin(a) * CFG.needle.speed * 0.85,
+                    ang: a, age: 0, life: CFG.needle.life * 1.2,
+                  });
+                }
+                S.rings.push({ x: e.x, y: e.y, max: 230, life: 0.5, maxLife: 0.5, red: true });
+                S.shake = Math.max(S.shake, 9);
+                SFX.nova();
+              }
+            } else {
+              const ringD = 250;
+              const tangent = Math.atan2(uy, ux) + (e.seed > 3.14 ? 1 : -1) * Math.PI / 2;
+              const pull = clamp((d - ringD) * 2.2, -80, 80);
+              vx = (Math.cos(tangent) * e.speed + ux * pull) * sm;
+              vy = (Math.sin(tangent) * e.speed + uy * pull) * sm;
+              e.ang = Math.atan2(uy, ux);
+              e.stateT += dt;
+              e.spinT = (e.spinT || 0) + dt;
+              if (e.spinT > (ph === 2 ? 1.4 : ph === 1 ? 1.8 : mini ? 2.7 : 2.3)) {
+                e.spinT = 0;
+                const base = e.t * 1.9;
+                const nn = (mini ? 3 : 4) + (ph >= 1 ? 2 : 0);
+                for (let i = 0; i < nn; i++) {
+                  const a = base + (i / nn) * TAU;
+                  S.ebullets.push({
+                    kind: 'needle', red: true,
+                    x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+                    vx: Math.cos(a) * CFG.needle.speed * 0.78, vy: Math.sin(a) * CFG.needle.speed * 0.78,
+                    ang: a, age: 0, life: CFG.needle.life * 1.2,
+                  });
+                }
+                SFX.needle();
+              }
+              e.boltT = (e.boltT || 0) + dt;
+              if (e.boltT > (ph === 2 ? 3.0 : ph === 1 ? 4.2 : mini ? 6.2 : 5.2)) {
+                e.boltT = 0;
+                const nb = mini ? 2 : ph >= 1 ? 4 : 3;
+                for (let i = 0; i < nb; i++) {
+                  const ba = rand(0, TAU), bd = rand(20, 150);
+                  S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.85 + i * 0.3, r: 54, struck: false, life: 0 });
+                }
+                SFX.wind();
+              }
+              /* phase two: the storm closes — telegraphed, then the ring breaks */
+              if (ph === 2) {
+                e.eyeT = (e.eyeT == null ? 3.5 : e.eyeT) - dt;
+                if (e.eyeT <= 0) {
+                  e.eyeT = 6.5; e.state = 'still'; e.stateT = 0;
+                  S.telgs.push({ e, kind: 'ring', r: 230, life: 0.9, maxLife: 0.9 });
+                  SFX.wind();
+                }
+              }
+            }
+            break;
+          }
+          case 'b_origin': case 'k_nib': { /* THE FIRST BRUSH / THE NIB — volleys, fan, brood, charge: the whole kit */
+            const mini = ENEMIES[e.type].boss === 2;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type]);
             vx = ux * e.speed * sm; vy = uy * e.speed * sm;
             e.ang = Math.atan2(uy, ux);
             e.stateT += dt;
-            const phase = e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+            /* the volley — its oldest habit, denser every phase */
             e.vT = (e.vT || 0) + dt;
-            if (e.vT > (phase === 2 ? 2.0 : phase === 1 ? 2.6 : mini ? 3.8 : 3.2)) {
+            if (e.vT > (ph === 2 ? 1.8 : ph === 1 ? 2.3 : mini ? 3.8 : 3.2)) {
               e.vT = 0;
-              const n = (mini ? 7 : 10) + (phase === 2 ? 4 : 0);
+              const n = (mini ? 7 : 10) + (ph === 1 ? 2 : 0) + (ph === 2 ? 4 : 0);
               const off = rand(0, TAU);
               for (let i = 0; i < n; i++) {
                 const a = (i / n) * TAU + off;
@@ -3317,19 +3536,37 @@ const rand = (a, b) => a + RNG() * (b - a);
               }
               SFX.glob();
             }
+            /* phase one: the aimed fan between volleys — the old brush takes aim */
+            e.aT = (e.aT || 0) + dt;
+            if (ph >= 1 && e.aT > (ph === 2 ? 1.8 : 2.4) && d < 460) {
+              e.aT = 0;
+              const base = Math.atan2(p.y - e.y, p.x - e.x);
+              for (let i = -2; i <= 2; i++) {
+                const a = base + i * 0.19;
+                S.ebullets.push({
+                  kind: 'drop', red: true,
+                  x: e.x + Math.cos(a) * (e.r + 8), y: e.y + Math.sin(a) * (e.r + 8),
+                  vx: Math.cos(a) * 235, vy: Math.sin(a) * 235,
+                  ang: a, age: 0, life: 2.2,
+                });
+              }
+              SFX.glob();
+            }
+            /* the brood — its students walk in phase two sooner */
             e.sT = (e.sT || 0) + dt;
-            if (e.sT > 7.5) {
+            if (e.sT > (ph === 2 ? 5.5 : 7.5)) {
               e.sT = 0;
               if (S.enemies.length < broodCap + 8) {
                 for (const s of [-1, 1]) {
-                  const c = spawnEnemy(phase === 2 ? 'oni' : 'slab', e.x + s * 55, e.y + rand(-40, 40));
+                  const c = spawnEnemy(ph === 2 ? 'oni' : 'slab', e.x + s * 55, e.y + rand(-40, 40));
                   c.kbx = s * 140; c.kby = rand(-70, 70);
                 }
                 S.rings.push({ x: e.x, y: e.y, max: 120, life: 0.45, maxLife: 0.45, red: true });
                 SFX.elite();
               }
             }
-            if (phase >= 1 && e.state === 'cruise' && e.stateT > 4.2) {
+            /* the charge */
+            if (ph >= 1 && e.state === 'cruise' && e.stateT > (ph === 2 ? 3.2 : 4.2)) {
               e.state = 'windup'; e.stateT = 0; SFX.wind();
               S.telgs.push({ e, kind: 'line', len: mini ? 300 : 360, life: 0.55, maxLife: 0.55 });
             } else if (e.state === 'windup' && e.stateT > 0.55) {
@@ -3337,85 +3574,8 @@ const rand = (a, b) => a + RNG() * (b - a);
               e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
               e.state = 'charge'; e.stateT = 0;
             } else if (e.state === 'charge') {
-              vx = e.px * 520; vy = e.py * 520;
+              vx = e.px * (ph === 2 ? 600 : 520); vy = e.py * (ph === 2 ? 600 : 520);
               if (e.stateT > 0.55) { e.state = 'cruise'; e.stateT = 0; }
-            }
-            break;
-          }
-          case 'b_blank': case 'k_blank': { /* THE PAPER ITSELF / THE MARGIN — the blank sheet breathes:
-              it pulls the brush the way a blank page pulls the pen, and every
-              beat is one of the five sheets' teachings turned back on the hand */
-            const mini = ENEMIES[e.type].boss === 2;
-            const enr = e.hp < e.maxHp * 0.5;
-            const phase = e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
-            vx = ux * e.speed * sm; vy = uy * e.speed * sm;
-            e.ang = Math.atan2(uy, ux);
-            e.stateT += dt;
-            /* beat one — the Stain's lesson: swell, then a ring of ink */
-            e.vT = (e.vT || 0) + dt;
-            if (e.vT > (mini ? 4.4 : enr ? 2.6 : phase === 2 ? 2.9 : 3.4)) {
-              e.vT = 0;
-              const n = (mini ? 7 : 10) + (enr ? 3 : 0), off = rand(0, TAU);
-              for (let i = 0; i < n; i++) {
-                const a = (i / n) * TAU + off;
-                S.ebullets.push({
-                  kind: 'glob', red: true,
-                  x: e.x + Math.cos(a) * (e.r + 8), y: e.y + Math.sin(a) * (e.r + 8),
-                  vx: Math.cos(a) * CFG.glob.speed * 0.85, vy: Math.sin(a) * CFG.glob.speed * 0.85,
-                  ang: a, age: 0, life: CFG.glob.life * 1.4,
-                });
-              }
-              S.rings.push({ x: e.x, y: e.y, max: 220, life: 0.5, maxLife: 0.5, red: true });
-              S.shake = Math.max(S.shake, 8);
-              SFX.nova();
-            }
-            /* beat two — the Storm Eye's lesson: a spiral of needles */
-            e.spinT = (e.spinT || 0) + dt;
-            if (e.spinT > (mini ? 3.6 : enr ? 1.9 : 2.5)) {
-              e.spinT = 0;
-              const base = e.t * 1.9;
-              const nn = (mini ? 3 : 4) + (enr ? 2 : 0);
-              for (let i = 0; i < nn; i++) {
-                const a = base + (i / nn) * TAU;
-                S.ebullets.push({
-                  kind: 'needle', red: true,
-                  x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
-                  vx: Math.cos(a) * CFG.needle.speed * 0.8, vy: Math.sin(a) * CFG.needle.speed * 0.8,
-                  ang: a, age: 0, life: CFG.needle.life * 1.25,
-                });
-              }
-              SFX.needle();
-            }
-            /* beat three — the Mother's lesson: it blinks behind the brush
-               and sheds its own pale kin (the full sheet only) */
-            e.sT = (e.sT || 0) + dt;
-            if (!mini && e.sT > (enr ? 6.5 : 8.5)) {
-              e.sT = 0;
-              S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 0.9, alpha: 0.4 });
-              const ba = rand(0, TAU), bd = rand(150, 210);
-              e.x = p.x + Math.cos(ba) * bd; e.y = p.y + Math.sin(ba) * bd;
-              S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.1, alpha: 0.45 });
-              S.rings.push({ x: e.x, y: e.y, max: e.r * 2.6, life: 0.4, maxLife: 0.4, red: true });
-              SFX.blink();
-              if (S.enemies.length < broodCap + 6) {
-                for (const s of [-1, 1]) {
-                  const c = spawnEnemy(phase === 2 ? 'stainlet' : 'blankling', e.x + s * 46, e.y + rand(-36, 36));
-                  c.kbx = s * 150; c.kby = rand(-70, 70);
-                }
-              }
-            }
-            /* beat four — the Warlord's lesson: mark a line, then charge it */
-            if (phase >= 1 && e.state === 'cruise' && e.stateT > (mini ? 5.5 : 4.4)) {
-              e.state = 'windup'; e.stateT = 0; SFX.wind();
-              S.telgs.push({ e, kind: 'line', len: mini ? 300 : 400, life: 0.6, maxLife: 0.6 });
-            } else if (e.state === 'windup' && e.stateT > 0.6) {
-              e.ang = Math.atan2(p.y - e.y, p.x - e.x);
-              e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
-              e.state = 'charge'; e.stateT = 0;
-            } else if (e.state === 'charge') {
-              vx = e.px * (enr ? 600 : 540); vy = e.py * (enr ? 600 : 540);
-              if (Math.random() < 0.3) S.stainQueue.push({ x: e.x, y: e.y, r: 8, alpha: 0.28, red: true });
-              if (e.stateT > 0.68) { e.state = 'cruise'; e.stateT = 0; }
             }
             break;
           }
@@ -3518,7 +3678,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (mk.t <= 0) {
         S.markers.splice(i, 1);
         S.stainQueue.push({ x: mk.x, y: mk.y, r: ENEMIES[mk.type].r * (mk.boss ? 2.4 : mk.elite ? 2 : 1.1), alpha: mk.boss || mk.elite ? 0.55 : 0.42, red: !!mk.elite });
-        spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss, trueInk: !!mk.hall, flatHp: mk.flatHp || 0 });
+        spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss });
         if (mk.boss) { S.shake = Math.max(S.shake, 10); SFX.elite(); }
         else if (mk.elite) { S.shake = Math.max(S.shake, 7); SFX.elite(); }
       }
@@ -3651,9 +3811,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.popups.length > CFG.fx.popupCap) S.popups.splice(0, S.popups.length - CFG.fx.popupCap);
 
     UI.setXp(st.xp / CFG.xp.req(st.xpLevel), st.xpLevel);
-    /* the hall's score breathes: the felled so far, and the swift
-       purse shrinking one part of ten a breath past the par */
-    if (S.runMode === 'hall') hallScoreLive();
 
     /* the red beast's seal, worn on the top of the sheet */
     let boss = null;
@@ -3677,9 +3834,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.waveActive = false;
       S.clearedT = 0.7;
       /* if the seal earned a pick and a mote-upgrade steals the screen,
-         the pick is still owed — remember it (the hall keeps its own
-         gates: no seal is pressed there, the next gate simply opens) */
-      S.pendingSeal = areaStateFor(st.wave).isLevelEnd && S.runMode !== 'hall';
+         the pick is still owed — remember it */
+      S.pendingSeal = areaStateFor(st.wave).isLevelEnd;
       /* the seal breaks — cry the scene complete before the counter
          climbs, so a new level never reads as the wave restarting */
       if (S.pendingSeal) {
@@ -3696,14 +3852,9 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.clearedT -= dt;
       if (S.clearedT <= 0) {
         S.vacuum = false;
-        /* the hall answers its own gate — the next guardian, or the truth */
-        if (S.runMode === 'hall') { hallAdvance(); return; }
         const as = areaStateFor(st.wave);
-        /* the fifth sheet, washed clean — the scroll ends on film.
-           THE BLANK ACT walks further: its true finale waits at wave 600 */
-        const finaleWave = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea *
-          (S.sixthWalk ? AREAS.length : SHEETS);
-        if (S.runMode === 'journey' && st.wave >= finaleWave) {
+        /* the fifth sheet, washed clean — the scroll ends on film */
+        if (S.runMode === 'journey' && st.wave >= CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea * AREAS.length) {
           if (S.reduced) { showOver(true); return; }
           S.mode = 'cutscene';
           UI.hud(false);
@@ -3787,11 +3938,10 @@ const rand = (a, b) => a + RNG() * (b - a);
     startRun, continueEndless, abandon, deploy, pickAt, clearNext, clearHome,
     update, updateDying, updateIdle, initAttract,
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
+    scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
-    getSixthUnlocked,
     /* the inkstone (v8.8): the charm room and the QA probes read these */
     getInk, setInk, charmLv, charmRankCount, buyCharm,
-    getHistory, getLifetimeInk, getHall,
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
     qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },
