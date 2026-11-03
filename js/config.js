@@ -262,22 +262,6 @@ const ENEMIES = {
   maelstrom: { name: 'MAELSTROM',  trait: 'UNDERTOW', cost: 4, intro: 351, hp: 7,  r: 14, speed: 26,  score: 60, shape: 'maelstrom' },
   crest:     { name: 'WAVE CREST', trait: 'SWELL',    cost: 3, intro: 356, hp: 6,  r: 15, speed: 88,  score: 55, shape: 'crest'   },
 
-  /* ---- SHEET VI · THE BLANK SILK — cool ink on unstained silk ---- */
-  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
-  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
-  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
-  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
-  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
-  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
-
-  /* ---- SHEET VI · THE BLANK SILK — cool ink on unstained silk ---- */
-  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
-  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
-  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
-  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
-  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
-  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
-
   /* ---- SHEET V · GILT SCROLL — gold-dusted ink ---- */
   gildling:  { name: 'GILDLING',   trait: 'GILDED',   cost: 3, intro: 401, hp: 6,  r: 13, speed: 52,  score: 50, shape: 'gildling' },
   phoenix:   { name: 'PHOENIX',    trait: 'DIVING',   cost: 3, intro: 406, hp: 3,  r: 12, speed: 235, score: 55, shape: 'phoenix' },
@@ -285,6 +269,14 @@ const ENEMIES = {
   mirror:    { name: 'MIRROR',     trait: 'REFLECT',  cost: 4, intro: 421, hp: 6,  r: 13, speed: 30,  score: 75, shape: 'mirror'  },
   koban:     { name: 'KOBAN',      trait: 'GREED',    cost: 2, intro: 436, hp: 3,  r: 10, speed: 148, score: 80, shape: 'koban'   },
   cask:      { name: 'RELIC CASK', trait: 'TREASURY', cost: 4, intro: 441, hp: 14, r: 18, speed: 34,  score: 70, shape: 'cask'    },
+
+  /* ---- SHEET VI · THE BLANK SILK — cool ink on unstained silk ---- */
+  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
+  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
+  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
+  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
+  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
+  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
 
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
