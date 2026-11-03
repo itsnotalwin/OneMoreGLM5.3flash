@@ -1,5 +1,7 @@
 # ONE MORE
 
+> **Manual upload reminder:** This game already uses our shared **Pinpoint Supabase** project with separate `om_scores`, `om_daily`, and `om_weekly` tables. Keep `js/supabase-config.js` and the OAuth account-return functions in `js/lb.js` / `js/main.js` when uploading new versions. Read [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md) first and use the [v16 upload backup](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v16-manual-upload-2026-11-03) to preserve gameplay. **Do not create a fresh Supabase project or rerun fresh-project SQL.**
+
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
