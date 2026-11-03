@@ -63,7 +63,7 @@
 
   /* ---------- the seven stages ---------- */
   const STAGES = [
-    { at: 0,    kanji: '顽石', name: 'ROUGH STONE',  flavor: 'a dull pebble. it remembers nothing.' },
+    { at: 0,    kanji: '頑石', name: 'ROUGH STONE',  flavor: 'a dull pebble. it remembers nothing.' },
     { at: 50,   kanji: '显纹', name: 'VEINED',       flavor: 'the first veins of ink show through.' },
     { at: 150,  kanji: '润',   name: 'SLEEK',        flavor: 'ground smooth by everything you survived.' },
     { at: 400,  kanji: '墨心', name: 'INK HEART',    flavor: 'a pool of still black at its center.' },
@@ -211,7 +211,7 @@
     s.hi = cur;
     saveStone(s);
     for (const i of crossed) {
-      journal(`${STAGES[i].kanji} — ${STAGES[i].name} · 硯 ${w.earned.toLocaleString('en-US')} pressed.`, 'stage');
+      journal(`${STAGES[i].name} · ${w.earned.toLocaleString('en-US')} INK pressed.`, 'stage');
     }
     stageFlash = 1.6;           /* the canvas celebration */
     SFX.chime();
@@ -244,14 +244,14 @@
     pf.style.transform = `scaleX(${f})`;
     pf.classList.toggle('is-full', st >= STAGES.length - 1);
     $('poolNext').textContent = st >= STAGES.length - 1
-      ? '满 · THE POOL RESTS'
-      : `${STAGES[st + 1].kanji} AT 硯 ${fmtN(STAGES[st + 1].at)}`;
+      ? 'THE POOL RESTS · FULL'
+      : `${STAGES[st + 1].name} AT ${fmtN(STAGES[st + 1].at)} INK`;
   }
   let gainPulse = 0;
 
   function renderName() {
     const s = stoneSave();
-    $('stoneNameLine').textContent = s.name ? `砚 — ${s.name}` : 'the unnamed stone';
+    $('stoneNameLine').textContent = s.name ? `${s.name} — THE INKSTONE` : 'the unnamed stone';
     const inp = $('stoneName');
     if (document.activeElement !== inp) inp.value = s.name;
     $('nameSeal').classList.toggle('is-set', !!s.name);
@@ -638,6 +638,9 @@
       holdTimer = setInterval(tryPop, 460);
     }
   });
+  /* the grind is a hold — a long-press must never become the browser's
+     context menu (Android fires it even with user-select none) */
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
     canvas.addEventListener(ev, () => { clearInterval(holdTimer); holdTimer = null; }));
   window.addEventListener('pointermove', (e) => {

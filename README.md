@@ -200,17 +200,23 @@ at a user-site root or a project subpath on GitHub Pages.
 The **ENDLESS LEADERBOARD** records the furthest wave every scribe has
 carried the ink in **THE ENDLESS SCROLL**. It runs on **Supabase**'s free
 tier: a Postgres ledger, row-level security as the lock, and
-**sign-the-page identity** — anonymous sign-ins with a mark the scribe
-picks, no account needed. Until it is connected the game plays exactly
+**sign-the-page identity** — the scribe signs in from the **settings
+room (印 — THE SCRIBE'S MARK)**: Google is the door, an anonymous
+mark the quiet second, and the name you stamp there is the name the
+board wears (the email stays home — it never reaches the ledger).
+Until it is connected the game plays exactly
 as before — the ledger sits quietly offline.
 
 **How it behaves when connected**
 
 - Endless runs post automatically on death — but only if the run carried
   further than your best on this device (one page per scribe, no spam).
-- Died without signing? The over sheet offers **SIGN THE PAGE — POST
-  WAVE n**; type a mark (or leave it blank and ride as INK DRIFTER), and
-  the pending run posts itself the moment the sign lands.
+- Died without signing? The over sheet offers **SIGN IN FROM SETTINGS —
+  THE RUN POSTS ITSELF**: the run waits while you sign (the trip to
+  Google and back included), and posts the moment the sign lands.
+- Your mark lives in the settings room: **STAMP** a custom name and it
+  travels — even onto the pages already written — so no email tag ever
+  shows on the board. Sign out there too.
 - Every endless run also raises your **WEEKLY** page — your best run of
   the ISO week, one page per scribe a week. The board wears three eyes:
   ALL-TIME, DAILY, WEEKLY.
@@ -233,11 +239,19 @@ as before — the ledger sits quietly offline.
 1. Create a project at [supabase.com](https://supabase.com) — the free
    tier is plenty for a board of scribes.
 2. **SQL Editor → New query** → paste the SQL below **→ Run**.
-3. **Authentication → Sign In / Up → Anonymous sign-ins → Enable → Save.**
-4. **Project Settings → API** → copy the **Project URL** and the **anon
+3. **Project Settings → API** → copy the **Project URL** and the **anon
    public key** into `js/supabase-config.js`.
+4. **Authentication → Sign In / Up → Google → Enable** — create the
+   OAuth client at [console.cloud.google.com](https://console.cloud.google.com)
+   (Web application, authorized redirect
+   `https://<your-project>.supabase.co/auth/v1/callback`), paste its ID
+   and secret, and add your GitHub Pages domain under
+   **Authentication → URL Configuration → Redirect URLs**.
 5. **Authentication → URL Configuration → Site URL** — set it to your
    GitHub Pages address (`https://<your-username>.github.io/<repo>/`).
+6. Optional, the quiet second door: **Anonymous sign-ins → Enable →
+   Save** — players who skip Google can still ink an anonymous mark
+   (this device only) from the same settings room.
 
 The free tier is generous (the anon key is rate-limited by a fair-use
 quota, far beyond what a board of honest scribes spends); this ledger
@@ -367,12 +381,13 @@ create policy "a scribe raises only their week" on om_weekly
 > by the recorder itself at ~28 minutes of strokes). That is the
 > right weight for a brush-and-paper arcade board.
 
-**Optional: the Google door** — if you want cross-device identity too:
-create an OAuth client at [console.cloud.google.com](https://console.cloud.google.com)
-(Web application, authorized redirect `https://<your-project>.supabase.co/auth/v1/callback`),
-then **Authentication → Sign In / Up → Google → enable** with that
-client ID and secret. The board's quiet **OR USE GOOGLE** button comes
-alive on its own — no further code.
+**The account room** — signing in, the custom mark, and sign-out live
+in the settings room (印 — THE SCRIBE'S MARK), not on the board: the
+board only reads the seat. Google is the primary door (cross-device
+identity); the anonymous mark stays for players who want no account at
+all. A stamped name always outranks the Google profile name on the
+ledger, and the email address is shown to its owner in the account room
+only — it is never written to a board row.
 
 ## Project structure
 

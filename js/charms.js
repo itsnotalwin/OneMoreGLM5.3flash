@@ -74,7 +74,7 @@ const CH = (() => {
         `<span class="set-kanji" aria-hidden="true">${c.kanji}</span>` +
         `<span class="set-name">${c.name}${pipsHtml(c.cost.length, rank)}</span>` +
         `<span class="set-desc">${c.desc}</span>` +
-        `<span class="set-state">${maxed ? '满 · SEALED' : '符 ' + price}</span>`;
+        `<span class="set-state">${maxed ? 'MAX · SEALED' : 'INK ' + price}</span>`;
       if (!maxed) {
         row.addEventListener('click', () => {
           SFX.ensure();

@@ -20,21 +20,21 @@ const UI = (() => {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
       board: $('screenBoard'), settings: $('screenSettings'), charms: $('screenCharms'),
+      brush: $('screenBrush'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
-    runNo: $('runNo'), bestLine: $('bestLine'),
     hudLoadout: $('hudLoadout'), hudXpFill: $('hudXpFill'), hudXpLv: $('hudXpLv'),
     hudBoss: $('hudBoss'), hudBossName: $('hudBossName'), hudBossFill: $('hudBossFill'),
     hudBossKick: $('hudBossKick'),
-    hudCombo: $('hudCombo'), brushRow: $('brushRow'),
+    runNo: $('runNo'), bestLine: $('bestLine'),
+    hudCombo: $('hudCombo'),
     upKicker: $('upKicker'), upNext: $('upNext'), upgradeGrid: $('upgradeGrid'), deployBtn: $('deployBtn'),
     overKicker: $('overKicker'), overRank: $('overRank'), overTitle: $('overTitle'), overSub: $('overSub'),
     continueBtn: $('continueBtn'),
     statWaves: $('statWaves'), statKills: $('statKills'), statTime: $('statTime'), statScore: $('statScore'),
     statInk: $('statInk'),
     newBestBadge: $('newBestBadge'), flash: $('flash'),
-    journeyBand: $('journeyBand'),
   };
 
   let bannerTimer = null;
@@ -99,51 +99,58 @@ const UI = (() => {
 
   const HP_DROP = '<svg viewBox="0 0 20 26" aria-hidden="true"><path class="hp-shape" d="M10 2.2c2.6 6 4.6 9.6 4.6 13.2 0 4.6-2 7.8-4.6 7.8s-4.6-3.2-4.6-7.8C5.4 11.8 7.4 8.2 10 2.2z"/></svg>';
 
-  /* the seven brushes, hung on the title sheet as tanzaku poem
-     slips — each carries its kanji, the tool itself, and its word.
-     The sealed brushes hang with a 封 lid: their word is the road
-     still owed (clear N scenes and the lid comes off). */
-  function buildBrushes(current) {
-    if (!el.brushRow) return;
-    el.brushRow.innerHTML = '';
-    const arts = [];
+  /* the starter brush — one entry on the title, one shelf behind it.
+     The entry carries the tool in the hand (kanji + name); tapping it
+     opens the brush room, where every brush hangs at full length:
+     kanji, name, its whole word — nothing abbreviated on the phone.
+     A sealed brush wears the 封 lid: its word is the road still owed
+     (clear N scenes and the lid comes off). */
+  function setBrushEntry(current) {
+    const k = document.getElementById('brushBtnKanji');
+    const n = document.getElementById('brushBtnName');
+    const b = CFG.brushes[current];
+    if (k) k.textContent = (b && G.brushUnlocked(current)) ? (b.kanji || '筆') : '封';
+    if (n && b) n.textContent = b.name;
+  }
+
+  function buildBrushRoom(current) {
+    const wrap = document.getElementById('brushRows');
+    if (!wrap) return;
+    wrap.innerHTML = '';
     const sealed = G.scenesSealed();
     for (const id in CFG.brushes) {
       const b = CFG.brushes[id];
       const locked = !G.brushUnlocked(id);
       const need = b.unlock || 0;
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'brush-card' + (id === current ? ' selected' : '') + (locked ? ' locked' : '');
-      card.title = locked ? 'SEALED — clear ' + need + ' scene' + (need === 1 ? '' : 's') + ' in the journey to open this brush'
-                          : 'Choose ' + b.name;
-      card.innerHTML =
-        `<span class="brush-kanji" aria-hidden="true">${locked ? '封' : (b.kanji || '')}</span>` +
-        `<canvas class="brush-art" width="128" height="44" aria-hidden="true"></canvas>` +
-        `<span class="brush-name">${b.name}</span>` +
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'set-row br-row' + (id === current ? ' is-chosen' : '') + (locked ? ' is-sealed' : '');
+      row.title = locked ? 'SEALED — clear ' + need + ' scene' + (need === 1 ? '' : 's') + ' in the journey to open this brush'
+                         : 'Take up ' + b.name;
+      row.innerHTML =
+        `<span class="set-kanji" aria-hidden="true">${locked ? '封' : (b.kanji || '筆')}</span>` +
+        `<span class="set-name">${b.name}</span>` +
+        `<span class="set-desc">${locked ? `SEALED — CLEAR ${need} SCENE${need === 1 ? '' : 'S'} IN THE JOURNEY TO WAKE THIS BRUSH` : b.desc}</span>` +
         (locked
-          ? `<span class="brush-desc">SEALED — CLEAR ${need} SCENE${need === 1 ? '' : 'S'}<br><b class="brush-prog">${Math.min(sealed, need)} / ${need}</b></span>`
-          : `<span class="brush-desc">${b.desc}</span>`) +
-        `<span class="brush-pin" aria-hidden="true"></span>`;
-      card.addEventListener('click', () => {
+          ? `<span class="set-state br-prog" aria-label="${Math.min(sealed, need)} of ${need} scenes sealed">${Math.min(sealed, need)} / ${need}</span>`
+          : `<span class="set-state br-state" aria-hidden="true">${id === current ? '印' : '—'}</span>`);
+      row.addEventListener('click', () => {
         SFX.ensure();
         if (locked) {
-          /* a sealed brush does not take the hand: the card shakes, the lid speaks */
-          SFX.ping();
-          card.classList.remove('denied');
-          void card.offsetWidth;
-          card.classList.add('denied');
+          /* a sealed brush does not take the hand: the row shakes,
+             the road speaks — the dull knock, the refusal's own voice */
+          SFX.thud();
+          row.classList.remove('denied'); void row.offsetWidth; row.classList.add('denied');
           return;
         }
         G.setBrush(id);
-        UI.buildBrushes(id);
+        UI.buildBrushes(id);      /* the stamp moves, the entry re-inks */
         SFX.pick(1);
       });
-      el.brushRow.appendChild(card);
-      if (!locked) arts.push({ cv: card.querySelector('.brush-art'), id });
+      wrap.appendChild(row);
     }
-    /* the seal count beneath the row: what opens next, and how far */
-    const hint = document.getElementById('brushUnlock');
+    /* the road still owed: what opens next, and how far */
+    const hint = document.getElementById('brushRoomHint');
     if (hint) {
       let next = null;
       for (const id in CFG.brushes) {
@@ -152,18 +159,14 @@ const UI = (() => {
       }
       hint.textContent = next
         ? `SCENES SEALED ${sealed} — ${next.name} OPENS AT ${next.unlock}`
-        : 'EVERY BRUSH WAKES — THE WHOLE ROW IS YOURS';
+        : 'EVERY BRUSH WAKES — THE WHOLE SHELF IS YOURS';
       hint.classList.toggle('is-live', !!next);
     }
-    /* the tools are painted once the display face is ready */
-    const paint = () => {
-      if (typeof R === 'undefined' || !R.drawBrushPreview) return;
-      for (const a of arts) R.drawBrushPreview(a.cv, a.id);
-    };
-    paint();
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(paint).catch(() => {});
-    }
+  }
+
+  function buildBrushes(current) {
+    setBrushEntry(current);
+    buildBrushRoom(current);
   }
 
   /* each sheet's ink, ground for the DOM: every seal chip in the
@@ -185,10 +188,12 @@ const UI = (() => {
     const t = BAND_TONES[theme] || BAND_TONES.pale;
     const o = opts || {};
     /* a sealed sheet shows its tone through the seal: the paper
-       pulls toward the desk and the ink toward the desk's ghost */
-    const PAPER_DESK = [237, 231, 217], INK_DESK = [26, 23, 20];
-    const pm = o.locked ? 0.52 : 0, im = o.locked ? 0.55 : 0;
-    const paper = mixRGB(hex2rgb(t.paper), PAPER_DESK, pm);
+       pulls toward the desk and the ink toward the desk's ghost —
+       pulled HARD enough to read (v15: the old desk tone was the
+       page's own paper, so the mute never showed) */
+    const PAPER_LOCK = [199, 192, 179], INK_DESK = [26, 23, 20];
+    const pm = o.locked ? 0.66 : 0, im = o.locked ? 0.62 : 0;
+    const paper = mixRGB(hex2rgb(t.paper), PAPER_LOCK, pm);
     const ink = mixRGB(hex2rgb(t.ink), INK_DESK, im);
     const ir = ink.join(',');
     const dark = theme === 'dark';
@@ -232,74 +237,6 @@ const UI = (() => {
       faint: `rgba(${adj[0]},${adj[1]},${adj[2]},0.15)`,
       ring: `rgba(${mixRGB(hex2rgb(tone.ink), page, pageDark ? 0.62 : 0.15).join(',')},0.30)`,
     };
-  }
-
-  /* the five scrolls as a strip of seals: red where the Guardian
-     lies felled, ink where the sheet is unrolled, ghost where the
-     paper is still sealed. Each seal wears its sheet's own paper
-     and ink; the links between them flow in the two inks they
-     join; hovering a seal breathes its ink into the title air. */
-  function buildJourney() {
-    const band = el.journeyBand;
-    if (!band || typeof AREAS === 'undefined') return;
-    const unlocked = (typeof G !== 'undefined' && G.getUnlocked) ? G.getUnlocked() : 1;
-    const cleared = (typeof G !== 'undefined' && G.getCleared) ? G.getCleared() : 0;
-    const wash = document.getElementById('toneWash');
-    if (wash) wash.classList.remove('on');
-    band.innerHTML = '';
-    AREAS.forEach((a, i) => {
-      const n = i + 1;
-      const isCleared = n <= cleared;
-      const isOpen = n <= unlocked;
-      const frontier = isOpen && !isCleared && n === unlocked;
-      const node = document.createElement('button');
-      node.type = 'button';
-      node.className = 'j-node tone-' + a.theme + ' ' +
-        (isCleared ? 'is-cleared' : isOpen ? 'is-open' : 'is-sealed') + (frontier ? ' is-frontier' : '');
-      const tone = toneOf(a);
-      const adj = pageAdjusted(tone);
-      node.style.setProperty('--pt', tone.ink);
-      node.style.setProperty('--pt-paper', tone.paper);
-      node.style.setProperty('--pt-name', adj.rgb);
-      node.style.setProperty('--pt-soft', adj.soft);
-      node.style.setProperty('--pt-ring', adj.ring);
-      node.innerHTML =
-        `<span class="j-kanji" aria-hidden="true">${a.kanji}</span>` +
-        `<span class="j-name">${a.name}</span>` +
-        `<span class="j-ink" aria-hidden="true">${a.ink}</span>`;
-      node.title = `${a.name} — ${a.ink}` +
-        (isCleared ? ' · 守 felled' : isOpen ? ' · unrolled — enter' : ' · the paper is sealed');
-      if (wash) {
-        node.addEventListener('mouseenter', () => {
-          wash.style.background =
-            `radial-gradient(ellipse 44% 32% at 50% 70%, ${adj.faint.replace('0.15', '0.18')}, transparent 70%)`;
-          wash.classList.add('on');
-        });
-        node.addEventListener('mouseleave', () => wash.classList.remove('on'));
-      }
-      if (isOpen) {
-        node.setAttribute('aria-label', `Enter ${a.name}`);
-        node.addEventListener('click', () => { if (UI.onJourneyPick) UI.onJourneyPick(n); });
-      } else {
-        node.setAttribute('aria-label', `${a.name} is still sealed`);
-        node.addEventListener('click', () => {
-          node.classList.remove('deny'); void node.offsetWidth; node.classList.add('deny');
-        });
-      }
-      band.appendChild(node);
-      if (i < AREAS.length - 1) {
-        const right = toneOf(AREAS[i + 1]);
-        const adjR = pageAdjusted(right);
-        const link = document.createElement('span');
-        link.className = 'j-link' + (n < unlocked ? ' flowed' : '');
-        link.style.setProperty('--pt-a', adj.rgb);
-        link.style.setProperty('--pt-b', adjR.rgb);
-        link.style.setProperty('--pt-a-soft', adj.faint);
-        link.style.setProperty('--pt-b-soft', adjR.faint);
-        link.setAttribute('aria-hidden', 'true');
-        band.appendChild(link);
-      }
-    });
   }
 
   function show(name) {
@@ -587,18 +524,19 @@ const UI = (() => {
 
   function setRunNo(n) { el.runNo.textContent = 'RUN ' + pad3(n); }
 
-  /* the paper remembers the furthest sheet — offer the journey from there */
+  /* the SCENES door: the shelf of scrolls answers here. THE JOURNEY
+     took over the quick-start (v15 — the button stopped disagreeing
+     with ENTER), so this line now always offers the journey by hand:
+     a fresh scribe reads FIVE SCROLLS, a returning one wears the
+     scroll the brush last walked. */
   function setSheetContinue(n) {
     const btn = document.getElementById('sheetBtn');
     if (!btn) return;
-    if (n && n >= 2) {
-      btn.classList.remove('hidden');
-      const area = AREAS[Math.min(AREAS.length, n) - 1];
-      btn.innerHTML =
-        `<span class="sheet-kanji" aria-hidden="true">續</span>FROM SCROLL <span class="kanji-inline">${area ? area.kanji : toKanji(n)}</span>`;
-    } else {
-      btn.classList.add('hidden');
-    }
+    btn.classList.remove('hidden');
+    const area = AREAS[Math.min(AREAS.length, Math.max(1, n || 1)) - 1];
+    btn.innerHTML = n >= 2
+      ? `<span class="sheet-kanji" aria-hidden="true">續</span>SCENES — SCROLL <span class="kanji-inline">${area ? area.kanji : toKanji(n)}</span> ONWARD`
+      : `<span class="sheet-kanji" aria-hidden="true">章</span>SCENES — FIVE SCROLLS`;
   }
 
   /* ---------------- the shelf of scrolls ----------------
@@ -913,13 +851,13 @@ const UI = (() => {
     if (kind === 'level') {
       el.upKicker.innerHTML =
         `THE INK RISES — INK LEVEL ${xpLevel}`;
-      el.upNext.innerHTML = '<span class="kanji-inline">墨</span>';
+      el.upNext.innerHTML = `LV&nbsp;${xpLevel + 1}`;
       return;
     }
     if (kind === 'chest') {
       el.upKicker.innerHTML =
         'THE CHEST OPENS — <span class="kanji-inline">宝</span> A GIFT FROM THE GUARDIAN';
-      el.upNext.innerHTML = '<span class="kanji-inline">宝</span>';
+      el.upNext.innerHTML = 'GIFT';
       return;
     }
     /* a level's seal was just broken */
@@ -998,7 +936,11 @@ const UI = (() => {
     const btn = document.getElementById('dailyBtn');
     if (!lab || !btn) return;
     const done = st && st.played;
-    lab.textContent = done ? `WAVE ${st.wave | 0} · ${(st.score | 0).toLocaleString('en-US')}` : 'TODAY';
+    /* the separator rides inside the label — the folded rail hides the
+       whole span, so no orphan dot is left behind on the phone */
+    lab.textContent = done
+      ? ` \u00B7 WAVE ${st.wave | 0} \u00B7 ${(st.score | 0).toLocaleString('en-US')}`
+      : ' \u00B7 TODAY';
     btn.classList.toggle('is-done', !!done);
     btn.classList.toggle('is-hard', !!st.hard);
   }
@@ -1026,7 +968,7 @@ const UI = (() => {
 
   return {
     show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
-    setRunNo, setBest, setSheetContinue, buildBrushes, buildJourney, fillUpgrades, markSelected,
+    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
     setInkLine,

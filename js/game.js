@@ -1284,7 +1284,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     UI.setBest(getBest());
     UI.setRunNo(getRuns() + 1);
     UI.setSheetContinue(getFurthest());
-    UI.buildJourney();
     initAttract();
   }
 
@@ -3889,16 +3888,23 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- attract mode (title backdrop) ----------------
-     a few light spirits drift through the valley band below the
-     ring — faint, slow, part of the landscape rather than noise */
+     a few light spirits drift through a band BELOW the menu's ink —
+     scenery, never a smear across the title's words (v15: the old
+     band sat exactly on the tagline and the rail). The band is cut
+     from the live viewport height so it holds on every paper. */
+  function attractBand() {
+    const top = Math.max(120, S.H * 0.30);
+    return [top, Math.max(top + 40, S.H * 0.44)];
+  }
   function initAttract() {
     S.idle = [];
     const types = ['pulse', 'dart', 'spit', 'split', 'moth', 'wraith'];
+    const [bandTop, bandBot] = attractBand();
     for (let i = 0; i < 5; i++) {
       const type = types[Math.floor(rand(0, types.length))];
       const r = ENEMIES[type].r * 0.62;
       const x = rand(-420, 420);
-      const y = rand(70, 300);
+      const y = rand(bandTop, bandBot);
       const ang = rand(0, 6.28);
       const sp = rand(9, 19);
       S.idle.push({
@@ -3911,12 +3917,13 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   function updateIdle(dt) {
+    const [bandTop, bandBot] = attractBand();
     for (const d of S.idle) {
       d.x += d.vx * dt; d.y += d.vy * dt; d.t += dt;
       d.ang += dt * 0.25;
-      /* the valley keeps them: a soft pull home, a band they don't leave */
+      /* the band keeps them: a soft pull home, below the words */
       if (d.x > 460) d.vx -= 30 * dt; else if (d.x < -460) d.vx += 30 * dt;
-      if (d.y > 330) d.vy -= 34 * dt; else if (d.y < 46) d.vy += 34 * dt;
+      if (d.y > bandBot) d.vy -= 34 * dt; else if (d.y < bandTop) d.vy += 34 * dt;
       const sp = Math.hypot(d.vx, d.vy);
       if (sp > 22) { d.vx *= 22 / sp; d.vy *= 22 / sp; }
     }

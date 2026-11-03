@@ -11,9 +11,11 @@
    · every page may carry its scribe's echo — the recorded
      strokes of the run that set it — and the board's 影 chips
      download a stranger's echo to race beside the brush;
-   · identity is a sign, not an account: anonymous sign-ins
-     (one toggle in the dashboard) + a mark the scribe picks.
-     Google stays as an optional second door.
+   · identity lives in the settings room (印 — THE SCRIBE'S
+     MARK): Google is the door, an anonymous mark the quiet
+     second. The name the scribe stamps there is the name the
+     board wears — never the email tag; the email itself stays
+     home in the account room.
    · a run is posted only when it carries further than the hand
      has ever carried before (local best, om_lb_best_v1); the
      week's page rides along on every endless run;
@@ -61,9 +63,13 @@ const LB = (() => {
       uid: u.id,
       name: String(m.name || m.full_name || m.user_name || '').slice(0, 24),
       photo: m.avatar_url || m.picture || '',
+      email: String(u.email || m.email || '').toLowerCase(),
     };
   }
-  const myName = () => { const m = me(); return (m && m.name) || getName(); };
+  /* the name the ledger wears: the mark the scribe stamped on this
+     device wins — a Google profile name is only the starting point,
+     never the word the board shows (and the email never shows). */
+  const myName = () => { const m = me(); return getName() || (m && m.name) || ''; };
 
   /* the scribe's mark, chosen on the page and kept on this device */
   const nameKey = 'om_lb_name_v1';
@@ -75,6 +81,30 @@ const LB = (() => {
   const setName = n => {
     try { localStorage.setItem(nameKey, JSON.stringify(cleanName(n))); } catch (e) {}
   };
+
+  /* a run armed for the ledger while the scribe walks to the
+     settings room to sign — kept so an OAuth redirect cannot
+     swallow it (sessionStorage survives the round trip) */
+  const pendKey = 'om_pending_post_v1';
+  function persistPending(run) {
+    try {
+      if (!run) { sessionStorage.removeItem(pendKey); return; }
+      const r = { mode: run.mode, wave: run.wave | 0, score: run.score | 0,
+        kills: run.kills | 0, time: run.time | 0, hard: !!run.hard,
+        day: run.day || '', counting: !!run.counting, victory: !!run.victory };
+      if (run.rec && run.rec.data) r.rec = run.rec;   /* the echo rides along */
+      sessionStorage.setItem(pendKey, JSON.stringify(r));
+    } catch (e) {}
+  }
+  function restorePending() {
+    try {
+      const raw = sessionStorage.getItem(pendKey);
+      if (!raw) return null;
+      const run = JSON.parse(raw);
+      sessionStorage.removeItem(pendKey);
+      return run && run.mode ? run : null;
+    } catch (e) { return null; }
+  }
 
   /* the hand's furthest endless carry, kept on this device */
   const bestKey = 'om_lb_best_v1';
@@ -108,12 +138,24 @@ const LB = (() => {
           const { data } = await client.auth.getSession();
           ST.user = (data && data.session && data.session.user) || null;
         } catch (e) { ST.user = null; }
+        /* a run that waited through an OAuth redirect posts itself now */
+        if (ST.user && !ST.pending) {
+          const waited = restorePending();
+          if (waited) {
+            ST.pending = waited;
+            const post = waited.mode === 'daily' ? postDailyRun : postRun;
+            setTimeout(() => { if (ST.pending === waited) { ST.pending = null; persistPending(null); post(waited); } }, 0);
+          }
+        }
         client.auth.onAuthStateChange((evt, session) => {
           if (session && session.user) ST.user = session.user;
-          else if (evt === 'SIGNED_OUT') ST.user = null;
+          else if (evt === 'SIGNED_OUT') {
+            ST.user = null; ST.pending = null; persistPending(null);
+          }
           renderAuth();
+          renderAccount();
           if (ST.user && ST.pending) {     /* the sign answered the pending post */
-            const run = ST.pending; ST.pending = null;
+            const run = ST.pending; ST.pending = null; persistPending(null);
             if (run.mode === 'daily') postDailyRun(run);
             else postRun(run);
           } else {
@@ -136,7 +178,7 @@ const LB = (() => {
     if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
       return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
     if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
-      return 'THE GOOGLE DOOR IS NOT CONFIGURED YET — SEE README · OPTIONAL: GOOGLE SIGN-IN';
+      return 'THE GOOGLE DOOR IS NOT OPEN ON THIS PAPER YET — THE LEDGER WORKS WITHOUT IT';
     if (/failed to fetch|network|fetch failed/i.test(s + ' ' + c))
       return 'THE NETWORK REFUSED THE STROKE — TRY AGAIN';
     if (/redirect|site url/i.test(s))
@@ -155,16 +197,25 @@ const LB = (() => {
     return 'THE LEDGER REFUSED THE STROKE — TRY AGAIN';
   }
 
-  /* sign the page: a mark, no account — anonymous sign-in */
+  /* sign the page: a mark, no account — the quiet second door */
   async function signIn(name) {
     SFX.ensure();
-    if (ST.debug) { ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '' }; renderAuth(); refreshOverStrip(); return me(); }
+    if (ST.debug) {
+      ST.debugUser = { uid: 'qa-scribe', name: 'QA SCRIBE', photo: '', email: '' };
+      renderAuth(); renderAccount();
+      /* the paper cloud has no auth listener — the pending post is its door */
+      if (ST.pending) {
+        const run = ST.pending; ST.pending = null; persistPending(null);
+        if (run.mode === 'daily') postDailyRun(run); else postRun(run);
+      } else refreshOverStrip();
+      return me();
+    }
     const s = await init();
     if (!s) throw new Error('unconfigured');
     const { data, error } = await s.client.auth.signInAnonymously();
     if (error) {
       const msg = authFail(error);
-      renderAuth(msg);
+      renderAuth(msg); renderAccount(msg);
       throw new Error(msg);
     }
     ST.user = data.user || null;
@@ -175,35 +226,56 @@ const LB = (() => {
       try { await s.client.auth.updateUser({ data: { name: n } }); } catch (e) {}
     }
     renderAuth();
+    renderAccount();
     refreshOverStrip();
     return ST.user;
   }
 
-  /* the optional second door: Google, once it is configured */
+  /* the first door: Google, from the settings room. The page
+     redirects — a pending run rides out the trip in sessionStorage. */
   async function signInGoogle() {
     SFX.ensure();
     if (ST.debug) return signIn();
     const s = await init();
     if (!s) throw new Error('unconfigured');
+    if (ST.pending) persistPending(ST.pending);
     const { error } = await s.client.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: location.origin + location.pathname },
     });
     if (error) {
       const msg = authFail(error);
-      renderAuth(msg);
+      renderAuth(msg); renderAccount(msg);
       throw new Error(msg);
     }
     /* the page redirects; the session lands back here and the
        auth listener consumes any pending post */
   }
 
+  /* stamp the mark: kept on the device, carried into the identity,
+     and rewritten onto the pages this scribe already has up */
+  async function saveName(n) {
+    const clean = cleanName(n);
+    setName(clean);
+    if (ST.debug || !ST.sb || !ST.user) return clean;
+    try { await ST.sb.client.auth.updateUser({ data: { name: clean } }); } catch (e) {}
+    const s = ST.sb, uid = ST.user.id;
+    try {
+      const { data: old } = await s.client.from('om_scores').select('uid').eq('uid', uid).maybeSingle();
+      if (old) await s.client.from('om_scores').update({ name: clean }).eq('uid', uid);
+    } catch (e) {}
+    try { await s.client.from('om_weekly').update({ name: clean }).eq('uid', uid).eq('week', weekKey()); } catch (e) {}
+    try { await s.client.from('om_daily').update({ name: clean }).eq('uid', uid).eq('day', todayKey()); } catch (e) {}
+    return clean;
+  }
+
   async function signOut() {
-    if (ST.debug) { ST.debugUser = null; renderAuth(); refreshOverStrip(); return; }
+    if (ST.debug) { ST.debugUser = null; renderAuth(); renderAccount(); refreshOverStrip(); return; }
     if (!ST.sb) return;
     try { await ST.sb.client.auth.signOut(); } catch (e) {}
     ST.user = null;
     renderAuth();
+    renderAccount();
     refreshOverStrip();
   }
 
@@ -476,19 +548,24 @@ const LB = (() => {
       <span>${esc(label)}</span></button>`;
   }
 
-  /* the scribe's mark + the sign — the paper's own door */
-  function signWidget(btnLabel, small) {
-    return `<span class="lb-sign">` +
-      `<input class="lb-name" maxlength="24" autocomplete="off" spellcheck="false" ` +
-        `placeholder="YOUR MARK — OPTIONAL" value="${esc(getName())}">` +
-      `<button class="ink-btn${small ? ' small' : ''}" type="button">${esc(btnLabel)}</button>` +
-    `</span>`;
+  /* the over sheet points at the settings room — the one door —
+     and arms the run so it posts itself the moment the sign lands */
+  function awaitStrip(btnLine) {
+    return `<span class="ob-line">${esc(btnLine)}</span>` +
+      `<button id="obSignBtn" class="ink-btn small" type="button">SIGN IN FROM SETTINGS — THE RUN POSTS ITSELF</button>`;
   }
-  function readMark(scope) {
-    const input = scope.querySelector('.lb-name');
-    const n = cleanName(input ? input.value : '');
-    setName(n);
-    return n;
+  function wireAwaitStrip(run) {
+    const b = document.getElementById('obSignBtn');
+    if (!b) return;
+    b.addEventListener('click', () => {
+      SFX.ensure(); SFX.pick(1);
+      ST.pending = run; persistPending(run);
+      const w = document.createElement('span');
+      w.className = 'ob-line ob-wait';
+      w.textContent = 'THE RUN WAITS — SIGN IN FROM SETTINGS';
+      b.replaceWith(w);
+      if (LB.openSettings) LB.openSettings('over');
+    });
   }
 
   function renderOverStrip(run, state) {
@@ -517,21 +594,10 @@ const LB = (() => {
       try { if (typeof UI !== 'undefined' && UI.lastOver) UI.lastOver.lbRank = state || null; } catch (e) {}
       return;
     }
-    /* awaiting: signed in → post at once; signed out → offer the seal */
+    /* awaiting: signed in → post at once; signed out → the settings room holds the door */
     if (signedIn()) { postRun(run); return; }
-    box.innerHTML = `<span class="ob-line">YOUR FURTHEST CARRY — ${waveTxt}</span>` +
-      signWidget(`SIGN THE PAGE — POST ${waveTxt}`, true);
-    const g = box.querySelector('.ink-btn');
-    if (g) g.addEventListener('click', () => {
-      const nm = readMark(box);
-      ST.pending = run;
-      renderOverStrip(run, 'posting');
-      signIn(nm).then(() => {
-        /* the auth listener usually consumes the pending post first;
-           the debug paper cloud has no listener — this is its door */
-        if (ST.pending) { ST.pending = null; postRun(run); }
-      }).catch(() => { ST.pending = null; renderOverStrip(run, null); });
-    });
+    box.innerHTML = awaitStrip(`YOUR FURTHEST CARRY — ${waveTxt}`);
+    wireAwaitStrip(run);
   }
 
   /* the daily sheet's own strip: quieter words, the same honesty */
@@ -561,15 +627,8 @@ const LB = (() => {
       return;
     }
     if (signedIn()) { postDailyRun(run); return; }
-    box.innerHTML = `<span class="ob-line">TODAY'S SHEET — WAVE ${run.wave | 0}</span>` +
-      signWidget(`SIGN THE PAGE — POST TODAY'S INK`, true);
-    const g = box.querySelector('.ink-btn');
-    if (g) g.addEventListener('click', () => {
-      const nm = readMark(box);
-      ST.pending = run;
-      renderDailyStrip(run, 'posting');
-      signIn(nm).then(() => postDailyRun(run)).catch(() => { ST.pending = null; renderDailyStrip(run, null); });
-    });
+    box.innerHTML = awaitStrip(`TODAY'S SHEET — WAVE ${run.wave | 0}`);
+    wireAwaitStrip(run);
   }
 
   async function postDailyRun(run) {
@@ -619,10 +678,10 @@ const LB = (() => {
       if (ST.tab === 'day') {
         const rec = dailyLocal();
         rows.innerHTML = rec
-          ? `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>YOUR SHEET TODAY: WAVE ${rec.wave | 0} · ${(rec.score | 0).toLocaleString('en-US')}</li>`
-          : `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (SUPABASE)</li>`;
+          ? `<li class="board-note">THE LEDGER WAITS BEYOND THE PAPER —<br>YOUR SHEET TODAY: WAVE ${rec.wave | 0} · ${(rec.score | 0).toLocaleString('en-US')}</li>`
+          : `<li class="board-note">THE LEDGER WAITS BEYOND THE PAPER —<br>IT WAKES WHEN THE INK CLOUD OPENS</li>`;
       } else {
-        rows.innerHTML = `<li class="board-note">THE INK CLOUD IS NOT CONNECTED —<br>SEE README · LEADERBOARD SETUP (SUPABASE)</li>`;
+        rows.innerHTML = `<li class="board-note">THE LEDGER WAITS BEYOND THE PAPER —<br>IT WAKES WHEN THE INK CLOUD OPENS</li>`;
       }
       return;
     }
@@ -808,43 +867,105 @@ const LB = (() => {
     }
   }
 
+  /* the board's slim seat: identity is read here; the door itself
+     lives in the settings room (印 — THE SCRIBE'S MARK) */
   function renderAuth(err) {
     const box = document.getElementById('boardAuth');
     if (!box) return;
     if (!configured()) { box.innerHTML = ''; return; }
-    if (ST.debug && ST.debugUser) {
-      box.innerHTML = `<span class="board-user"><span class="r-ava r-ava-ink" aria-hidden="true"></span><b>QA SCRIBE</b></span>
-        <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
-      const o = document.getElementById('boardOutBtn');
-      if (o) o.addEventListener('click', signOut);
+    if (!signedIn()) {
+      box.innerHTML = `<span class="board-user board-user-mute">THE SEAT AWAITS — THE SIGN LIVES IN SETTINGS</span>` +
+        `<button id="boardSetBtn" class="ink-btn small" type="button">SETTINGS</button>`;
+      const b = document.getElementById('boardSetBtn');
+      if (b) b.addEventListener('click', () => { SFX.ensure(); if (LB.openSettings) LB.openSettings('board'); });
       return;
     }
-    if (ST.user) {
-      const m_ = me() || {};
-      const n = String(m_.name || 'INK DRIFTER').slice(0, 24);
-      const ava = m_.photo
-        ? `<img class="r-ava" src="${esc(m_.photo)}" alt="" referrerpolicy="no-referrer">`
-        : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
-      box.innerHTML = `<span class="board-user">${ava}<b>${esc(n)}</b></span>
-        <button id="boardOutBtn" class="ghost-btn small" type="button">SIGN OUT</button>`;
-      const o = document.getElementById('boardOutBtn');
-      if (o) o.addEventListener('click', () => signOut().catch(() => {}));
-      return;
-    }
-    box.innerHTML = signWidget('SIGN THE PAGE') +
-      gBtn('OR USE GOOGLE', true) +
+    const m_ = me() || {};
+    const n = String(myName() || m_.name || 'INK DRIFTER').slice(0, 24);
+    const ava = m_.photo
+      ? `<img class="r-ava" src="${esc(m_.photo)}" alt="" referrerpolicy="no-referrer">`
+      : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
+    box.innerHTML = `<span class="board-user">${ava}<b>${esc(n)}</b></span>` +
       (err ? `<span class="auth-err">${esc(err)}</span>` : '');
-    const g = box.querySelector('.ink-btn');
-    if (g) g.addEventListener('click', () => {
-      g.disabled = true;
-      const nm = readMark(box);
-      signIn(nm).catch(() => { if (g) g.disabled = false; });
+  }
+
+  /* ---------------- the account room (settings) ----------------
+     印 — THE SCRIBE'S MARK. Google is the door; an anonymous mark
+     the quiet second; the stamped name is the word the board wears,
+     and the email stays home — it never reaches the ledger. */
+  function renderAccount(err) {
+    const box = document.getElementById('accountRows');
+    if (!box) return;
+    if (!configured()) {
+      box.innerHTML = `<div class="acct-note">THE LEDGER SLEEPS — THE INK CLOUD IS NOT OPEN ON THIS PAPER.<br>THE GAME PLAYS WHOLE WITHOUT IT.</div>`;
+      return;
+    }
+    if (!signedIn()) {
+      box.innerHTML =
+        `<div class="acct-google-wrap">` + gBtn('SIGN IN WITH GOOGLE') +
+          `<span class="acct-hint">THE LEDGER'S DOOR — THE NAME YOU STAMP IS WHAT THE BOARD WEARS, AND THE EMAIL STAYS HOME</span>` +
+        `</div>` +
+        `<button id="acctAnonBtn" class="ghost-btn small acct-anon" type="button">OR INK AN ANONYMOUS MARK — THIS DEVICE ONLY</button>` +
+        (err ? `<span class="auth-err">${esc(err)}</span>` : '');
+      const g = box.querySelector('.g-btn');
+      if (g) g.addEventListener('click', () => {
+        g.disabled = true;
+        signInGoogle().catch(() => { if (g) g.disabled = false; });
+      });
+      const anon = document.getElementById('acctAnonBtn');
+      if (anon) anon.addEventListener('click', () => {
+        SFX.ensure();
+        anon.disabled = true;
+        signIn('').catch(() => { if (anon) anon.disabled = false; });
+      });
+      return;
+    }
+    const m_ = me() || {};
+    const n = String(myName() || m_.name || '').slice(0, 24);
+    const email = String(m_.email || '');
+    const ava = m_.photo
+      ? `<img class="r-ava" src="${esc(m_.photo)}" alt="" referrerpolicy="no-referrer">`
+      : `<span class="r-ava r-ava-ink" aria-hidden="true"></span>`;
+    box.innerHTML =
+      `<div class="acct-id">${ava}` +
+        `<span class="acct-id-copy"><b>${esc(n || 'INK DRIFTER')}</b>` +
+        `<i class="acct-email">${esc(email || 'ANONYMOUS MARK — NO EMAIL, THIS DEVICE ONLY')}</i></span>` +
+        `<span class="acct-id-kanji" aria-hidden="true">名</span>` +
+      `</div>` +
+      `<div class="acct-name-row">` +
+        `<label class="acct-label" for="acctName">THE MARK — THE NAME THE LEDGER WEARS</label>` +
+        `<span class="acct-input-line"><input id="acctName" class="lb-name" maxlength="24" autocomplete="off" spellcheck="false" placeholder="INK A NAME — OPTIONAL" value="${esc(getName() || m_.name || '')}">` +
+        `<button id="acctStampBtn" class="ink-btn small" type="button">STAMP</button></span>` +
+        `<span class="acct-hint" id="acctHint">STAMP IT AND IT TRAVELS — EVEN TO THE PAGES ALREADY WRITTEN</span>` +
+      `</div>` +
+      `<button id="acctOutBtn" class="ghost-btn small acct-out" type="button">SIGN OUT — FORGET THIS DEVICE</button>` +
+      (err ? `<span class="auth-err">${esc(err)}</span>` : '');
+    const st = document.getElementById('acctStampBtn');
+    if (st) st.addEventListener('click', () => {
+      SFX.ensure();
+      const input = document.getElementById('acctName');
+      st.disabled = true;
+      saveName(input ? input.value : '').then(clean => {
+        st.disabled = false;
+        SFX.pick(1);
+        if (input) input.value = clean;   /* the stamp cleans as it presses */
+        const hint = document.getElementById('acctHint');
+        if (hint) {
+          hint.textContent = 'STAMPED — THE BOARD WEARS IT';
+          hint.classList.add('is-good');
+          setTimeout(() => {
+            if (!hint.isConnected) return;
+            hint.textContent = 'STAMP IT AND IT TRAVELS — EVEN TO THE PAGES ALREADY WRITTEN';
+            hint.classList.remove('is-good');
+          }, 2600);
+        }
+        const idb = box.querySelector('.acct-id-copy b');
+        if (idb) idb.textContent = myName() || 'INK DRIFTER';
+        renderAuth();
+      }).catch(() => { st.disabled = false; });
     });
-    const gg = box.querySelector('.g-btn');
-    if (gg) gg.addEventListener('click', () => {
-      gg.disabled = true;
-      signInGoogle().catch(() => { if (gg) gg.disabled = false; });
-    });
+    const out = document.getElementById('acctOutBtn');
+    if (out) out.addEventListener('click', () => { SFX.ensure(); signOut().catch(() => {}); });
   }
 
   /* ---------------- QA: a paper cloud ---------------- */
@@ -888,6 +1009,7 @@ const LB = (() => {
   /* ---------------- api ---------------- */
   return {
     onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
+    saveName, renderAccount,
     get user() { return me(); },
     get debug() { return ST.debug; },
     get lastDebugPost() { return ST.debugLastPost || null; },

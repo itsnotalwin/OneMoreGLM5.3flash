@@ -90,6 +90,25 @@
     ADAPT.grace = 4; /* spawn bursts are allowed their jank */
     G.startRun(mode || lastMode, opts);
     lastMode = mode || lastMode;
+    /* the first-run whisper: startRun has already counted this run,
+       so a first count of 1 is the only run the hint ever speaks in */
+    if (G.getRuns() === 1) showRunHint();
+  }
+
+  /* ---------------- the first-run whisper ----------------
+     the title carries no legend any more (v14 quiet title), so the
+     teaching lives here: five seconds inside run 001, then the
+     paper never repeats itself. */
+  let runHintT = null;
+  function showRunHint() {
+    const h = document.getElementById('runHint');
+    if (!h) return;
+    h.classList.remove('hidden', 'gone');
+    clearTimeout(runHintT);
+    runHintT = setTimeout(() => {
+      h.classList.add('gone');
+      setTimeout(() => h.classList.add('hidden'), 950);
+    }, 5200);
   }
 
   function goMenu() {
@@ -153,14 +172,55 @@
   document.getElementById('charmBtn').addEventListener('click', () => { SFX.ensure(); SFX.page(); CH.open(); });
   document.getElementById('charmBackBtn').addEventListener('click', () => { SFX.pick(1); CH.close(); });
 
+  /* ---------------- the starter brush — 筆 ----------------
+     one entry on the title; behind it, the shelf of tools:
+     every brush at full length, its whole word on the page. */
+  const brushRoomOpen = () => {
+    const s = document.getElementById('screenBrush');
+    return s && !s.classList.contains('hidden');
+  };
+  function openBrushRoom() {
+    SFX.ensure();
+    SFX.page();               /* the tool shelf slides out */
+    UI.buildBrushes(G.getBrush());
+    UI.show('brush');
+  }
+  function closeBrushRoom() {
+    SFX.ensure();
+    SFX.pick(1);
+    UI.show('title');
+  }
+  document.getElementById('brushBtn').addEventListener('click', openBrushRoom);
+  document.getElementById('brushBackBtn').addEventListener('click', closeBrushRoom);
+
+  /* the paper's tactility: a hair of voice as the mouse crosses a door.
+     Mice only, throttled, and it NEVER wakes the audio — tone() simply
+     stays silent until a finger has blessed the context. */
+  let lastHoverId = '', lastHoverT = 0;
+  window.addEventListener('pointerover', e => {
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    const b = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!b) return;
+    const now = performance.now();
+    if (now - lastHoverT < 70) return;
+    const id = b.id || b.className;
+    if (id === lastHoverId && now - lastHoverT < 900) return;
+    lastHoverId = id; lastHoverT = now;
+    SFX.tick();
+  });
+
   /* ---------------- settings — 設 ----------------
-     the paper's habits: sound, the ghost rival, REALLY HARD,
-     and the wipe. A quiet room behind the title. */
+     the study: the scribe's mark (the account) and the paper's
+     habits. The room remembers where the hand came from — the
+     board and the over sheet can send the player here to sign
+     in, and RETURN walks them back. */
   const settingsOpen = () => {
     const s = document.getElementById('screenSettings');
     return s && !s.classList.contains('hidden');
   };
   let wipeArmed = false, wipeTimer = null;
+  let settingsReturn = 'title';   /* title | board | over */
   function refreshSettings() {
     const on = (id, v) => {
       const row = document.getElementById(id);
@@ -178,18 +238,21 @@
     if (wipe) wipe.classList.toggle('armed', wipeArmed);
     if (wst) wst.textContent = wipeArmed ? 'SURE?' : 'WIPE';
   }
-  function openSettings() {
+  function openSettings(from) {
     SFX.ensure();
     SFX.page();               /* the study door slides */
+    settingsReturn = (from === 'board' || from === 'over') ? from : 'title';
     wipeArmed = false;
     refreshSettings();
+    if (typeof LB !== 'undefined' && LB.renderAccount) LB.renderAccount();
     UI.show('settings');
     UI.hud(false);
   }
   function closeSettings() {
     wipeArmed = false;
     clearTimeout(wipeTimer);
-    UI.show('title');
+    UI.show(settingsReturn);
+    settingsReturn = 'title';
   }
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('setBackBtn').addEventListener('click', () => { SFX.pick(1); closeSettings(); });
@@ -276,6 +339,12 @@
     if (m === 'clear') {
       if (k === 'Enter') clearNext();
       else if (k === 'Escape') clearHome();
+      return;
+    }
+    /* the brush shelf answers only its own return keys —
+       ENTER must never start a run behind the open shelf */
+    if (brushRoomOpen()) {
+      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') closeBrushRoom();
       return;
     }
     /* the settings room answers only its own return keys */
@@ -402,7 +471,6 @@
     G.initAttract();
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
     UI.setSheetContinue(G.getFurthest());
-    UI.buildJourney();                              /* the seals restamped */
     UI.setHard(G.getHard());                        /* the red toggle remembered */
     UI.setDailyChip(G.dailyState());                /* today's sheet, freshly read */
     UI.setInkLine(G.getInk());                      /* the stone, freshly read */
@@ -423,6 +491,28 @@
 
   INTRO.onEnd = enterTitle;
 
+  /* ---------------- the first tap — the door that wakes the sound ----------------
+     A browser refuses to sound an AudioContext no finger has blessed:
+     a cold boot screens the opening mute, and the only gesture available
+     would skip the film. The gate trades one quiet tap for the whole
+     voice — the tap itself unlocks the audio, then the film plays with
+     its sound design intact. QA URLs (?anything) and repeat visits and
+     reduced motion walk straight through. */
+  const introGate = document.getElementById('introGate');
+  function showIntroGate() {
+    G.mode = 'gate';            /* the loop just paints dry paper behind the door */
+    if (introGate) introGate.classList.remove('hidden');
+    const lift = e => {
+      if (e && e.stopPropagation) e.stopPropagation();   /* the tap is spent on the door alone */
+      window.removeEventListener('pointerdown', lift, true);
+      window.removeEventListener('keydown', lift, true);
+      if (introGate) introGate.classList.add('hidden');
+      playIntro();
+    };
+    window.addEventListener('pointerdown', lift, { capture: true });
+    window.addEventListener('keydown', lift, { capture: true });
+  }
+
   /* one screening per session: the opening earns its audience once,
      then the title waits on the first paint — the film only returns
      when the scribe asks for it (序) */
@@ -434,8 +524,13 @@
     try { sessionStorage.setItem(INTRO_SEEN, '1'); } catch (e) {}
   }
 
-  /* ---------------- buttons ---------------- */
-  document.getElementById('playBtn').addEventListener('click', openScrolls);
+  /* ---------------- buttons ----------------
+   THE JOURNEY is the honest verb now: one tap walks the wet frontier
+   (the same answer ENTER always gave — the button simply stopped
+   disagreeing with the keyboard). The shelf of scrolls hangs one
+   line below on the SCENES door. */
+  const startFrontier = () => start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) });
+  document.getElementById('playBtn').addEventListener('click', startFrontier);
   document.getElementById('scrollsBackBtn').addEventListener('click', () => {
     /* the scene ladder folds back to the shelf before the title */
     if (UI.scrollsLadder) { SFX.ensure(); UI.buildScrolls(); return; }
@@ -457,6 +552,9 @@
   document.getElementById('boardTabWeek').addEventListener('click', () => LB.setTab('week'));
   /* the board's 影 chips launch their race through the game's own door */
   LB.launchRun = mode => start(mode);
+  /* the account room is the one sign-in door — the board and the
+     over sheet knock on it through here, and RETURN leads back */
+  LB.openSettings = from => openSettings(from);
   document.getElementById('hardBtn').addEventListener('click', () => {
     SFX.ensure();
     G.setHard(!G.getHard());
@@ -464,7 +562,8 @@
     SFX.pick(1);
   });
   document.getElementById('boardBackBtn').addEventListener('click', closeBoard);
-  document.getElementById('sheetBtn').addEventListener('click', () => start('journey', { sheet: G.getFurthest(), level: G.frontierLevel(G.getFurthest()) }));
+  /* the SCENES door: the shelf answers here — journey by hand */
+  document.getElementById('sheetBtn').addEventListener('click', openScrolls);
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {
     SFX.ensure();
@@ -501,14 +600,16 @@
   UI.setRunNo(G.getRuns() + 1);
   UI.setBest(G.getBest());
   UI.setSheetContinue(G.getFurthest());
-  UI.buildJourney();
+
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   UI.setInkLine(G.getInk());                        /* the stone reads itself */
   if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
   if (G.S.reduced || introSeen()) {
     enterTitle();          /* the opening is a film — stillness and repeat visits go straight to the title */
+  } else if (location.search.length > 1) {
+    enterTitle();          /* a URL that asks questions is QA — the gate would hold the probes */
   } else {
-    playIntro();
+    showIntroGate();       /* the first visit: one tap buys the film its whole voice */
   }
 
   /* QA: ?lbdebug=1 — the paper cloud, so the board can be E2E'd without a

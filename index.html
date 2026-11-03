@@ -66,7 +66,7 @@
     </div>
     <div class="hud-bc">
       <div class="hud-xp">
-        <span class="xp-label">墨</span>
+        <span class="xp-label"><span class="xp-kanji" aria-hidden="true">墨</span><span class="xp-word">INK</span></span>
         <div class="xp-track"><div class="xp-fill" id="hudXpFill"></div></div>
         <span class="xp-lv" id="hudXpLv">1</span>
       </div>
@@ -121,10 +121,16 @@
       <div class="title-chip"><span class="kanji-inline" lang="zh">墨</span>A&nbsp;MONOCHROME&nbsp;SURVIVAL</div>
       <h1 class="title-word">ONE&nbsp;MORE</h1>
       <p class="title-sub">One brush. Five scrolls. The paper never ends.</p>
-      <div class="brush-row" id="brushRow" aria-label="Choose your brush"></div>
-      <p class="brush-unlock" id="brushUnlock" aria-live="polite"></p>
+      <button id="brushBtn" class="brush-entry" type="button" title="STARTER BRUSH — the tool this run begins with. Tap to open the shelf and choose." aria-haspopup="dialog" aria-controls="screenBrush">
+        <span class="be-kanji" id="brushBtnKanji" aria-hidden="true">細</span>
+        <span class="be-copy">
+          <span class="be-kicker">STARTER BRUSH</span>
+          <span class="be-name" id="brushBtnName">THE NEEDLE</span>
+        </span>
+        <span class="be-open" aria-hidden="true">▾</span>
+      </button>
       <div class="mode-row">
-        <button id="playBtn" class="play-btn">
+        <button id="playBtn" class="play-btn" title="THE JOURNEY — straight onto the wet frontier. The SCENES door below picks a sheet by hand.">
           <span class="play-seal" aria-hidden="true">一</span>
           <span class="play-label">THE JOURNEY<span class="run-seg">&nbsp;—&nbsp;<span id="runNo">RUN 001</span></span></span>
         </button>
@@ -140,7 +146,7 @@
         </button>
         <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
           <span class="daily-kanji" aria-hidden="true">日</span>
-          <span class="play-label">DAILY&nbsp;·&nbsp;<span id="dailyLabel">TODAY</span></span>
+          <span class="play-label">DAILY<span id="dailyLabel">&nbsp;·&nbsp;TODAY</span></span>
         </button>
         <button id="charmBtn" class="board-btn charm-btn" type="button" title="CHARMS — what the runs press into the inkstone buys ranks of permanent power">
           <span class="board-kanji" aria-hidden="true">符</span>
@@ -158,20 +164,15 @@
           <span class="play-label">REALLY HARD —&nbsp;<span class="hard-state">OFF</span></span>
         </button>
       </div>
-      <button id="sheetBtn" class="sheet-btn hidden" type="button" title="Resume the journey from the furthest sheet"></button>
+      <button id="sheetBtn" class="sheet-btn hidden" type="button" title="SCENES — open the shelf of scrolls and walk any sheet by hand"></button>
       <p class="best-line hidden" id="bestLine"></p>
     </div>
 
-    <!-- the five scrolls as a strip of seals: red where a Guardian
-         lies felled, ink where the sheet is unrolled, ghost where
-         the paper is still sealed — the journey, readable at a glance -->
-    <nav class="journey-band" id="journeyBand" aria-label="The five scrolls — how far the journey has come"></nav>
-
     <div class="title-foot">
-      <div class="controls-line">WASD — MOVE&nbsp;&nbsp;·&nbsp;&nbsp;THE BRUSH FIRES ITSELF&nbsp;&nbsp;·&nbsp;&nbsp;GATHER INK TO RISE&nbsp;&nbsp;·&nbsp;&nbsp;P — PAUSE&nbsp;&nbsp;·&nbsp;&nbsp;M — SOUND&nbsp;&nbsp;·&nbsp;&nbsp;<span id="verStamp">BUILD V12.1</span></div>
+      <span class="foot-stamp" id="verStamp">BUILD V16</span>
     </div>
 
-    <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the sound, the ghost rival, REALLY HARD, and the paper itself">
+    <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the account and its mark, the sound, the ghost rival, REALLY HARD, and the paper itself">
       <span class="opening-kanji" aria-hidden="true">設</span>
       <span class="opening-label">SETTINGS</span>
     </button>
@@ -216,7 +217,7 @@
       </div>
       <div class="upgrade-grid" id="upgradeGrid"></div>
       <button id="deployBtn" class="deploy-btn is-disabled" disabled>DEPLOY</button>
-      <div class="panel-hint">PRESS 1 · 2 · 3 TO SELECT — AGAIN OR ENTER TO DEPLOY</div>
+      <div class="panel-hint"><span class="hint-key">PRESS 1 · 2 · 3 TO SELECT — AGAIN OR ENTER TO DEPLOY</span><span class="hint-touch">TAP A CARD TO CHOOSE — TAP IT AGAIN TO CONTINUE</span></div>
     </div>
   </section>
 
@@ -255,7 +256,7 @@
         </div>
       </div>
       <div class="board-auth" id="boardAuth"></div>
-      <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span><span>影</span></div>
+      <div class="board-cols" aria-hidden="true"><span>№</span><span></span><span>SCRIBE</span><span>WAVE</span><span>SCORE</span><span class="col-echo">ECHO</span></div>
       <ol class="board-rows" id="boardRows"></ol>
       <div class="board-foot">
         <span class="board-mine" id="boardMine"></span>
@@ -309,16 +310,34 @@
     </div>
   </section>
 
+  <!-- ============ THE STARTER BRUSH — 筆 — the shelf of tools ============ -->
+  <section id="screenBrush" class="screen screen-brush hidden">
+    <span class="wm wm-brush" aria-hidden="true">筆</span>
+    <div class="set-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE FIRST STROKE — <span class="kanji-inline">筆</span></div>
+        <h2 class="set-title">STARTER BRUSH</h2>
+        <p class="set-sub">THE TOOL THE RUN BEGINS WITH — TAP ONE TO TAKE IT UP</p>
+        <p class="brush-room-hint" id="brushRoomHint" aria-live="polite"></p>
+      </div>
+      <div class="set-rows brush-rows" id="brushRows"></div>
+      <button id="brushBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
+    </div>
+  </section>
+
   <!-- ============ SETTINGS — 設 ============ -->
   <section id="screenSettings" class="screen screen-settings hidden">
     <span class="wm wm-settings" aria-hidden="true">設</span>
     <div class="set-wrap">
       <div class="set-head">
-        <div class="set-kicker">THE PAPER'S HABITS — <span class="kanji-inline">設</span></div>
+        <div class="set-kicker">THE STUDY — <span class="kanji-inline">設</span></div>
         <h2 class="set-title">SETTINGS</h2>
-        <p class="set-sub">FOUR SMALL TRUTHS ABOUT HOW THE SHEET BEHAVES</p>
+        <p class="set-sub">THE SCRIBE'S MARK AND THE SHEET'S SMALL TRUTHS</p>
       </div>
       <div class="set-rows">
+        <div class="room-kicker"><span class="kanji-inline" aria-hidden="true">印</span>THE SCRIBE'S MARK</div>
+        <div class="account-rows" id="accountRows" aria-live="polite"></div>
+        <div class="room-kicker room-kicker-2"><span class="kanji-inline" aria-hidden="true">設</span>THE PAPER'S HABITS</div>
         <button id="setSound" class="set-row" type="button">
           <span class="set-kanji" aria-hidden="true">音</span>
           <span class="set-name">SOUND</span>
@@ -356,7 +375,7 @@
         <div class="set-kicker">THE INKSTONE — <span class="kanji-inline">硯</span></div>
         <h2 class="set-title">CHARMS</h2>
         <p class="set-sub">WHAT THE RUNS PRESS OUT, THE PAPER KEEPS</p>
-        <p class="charm-purse">硯 <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
+        <p class="charm-purse"><span class="purse-kanji" aria-hidden="true">硯</span> INK <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
       </div>
       <div class="set-rows" id="charmRows"></div>
       <button id="charmBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
@@ -364,6 +383,29 @@
   </section>
 
   <div id="flash" aria-hidden="true"></div>
+
+  <!-- ============ THE FIRST TAP — the door that wakes the sound ============
+       browsers keep an AudioContext silent until a finger blesses one:
+       a cold boot screens the opening mute. One quiet tap here unlocks
+       the audio, then the film plays with its whole voice. -->
+  <div id="introGate" class="intro-gate hidden" role="button" aria-label="Tap to begin — the opening screens with sound">
+    <div class="gate-core">
+      <span class="gate-seal" aria-hidden="true">墨</span>
+      <span class="gate-kicker">A MONOCHROME SURVIVAL</span>
+      <span class="gate-word">TAP TO BEGIN</span>
+      <span class="gate-sub hint-key">ANY KEY WORKS — THE OPENING PLAYS WITH SOUND</span>
+      <span class="gate-sub hint-touch">THE OPENING PLAYS WITH SOUND</span>
+    </div>
+  </div>
+
+  <!-- ============ FIRST-RUN WHISPER — how the hand moves ============
+       the title's legend is gone; the teaching lives in the first
+       run's first five seconds, then never speaks again -->
+  <div id="runHint" class="run-hint hidden" aria-hidden="true">
+    <span class="rh-touch">DRAG ANYWHERE TO MOVE</span>
+    <span class="rh-key">WASD OR ARROWS — MOVE</span>
+    <span class="rh-tail">THE BRUSH FIRES ITSELF · GATHER INK TO RISE</span>
+  </div>
 
   <!-- ============ OPENING SCENE SKIP ============ -->
   <div id="introSkip" class="intro-skip hidden" role="button" tabindex="-1" aria-label="Skip the opening">

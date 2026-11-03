@@ -3652,11 +3652,15 @@ const R = (() => {
     if (S.mode !== 'title' && S.mode !== 'over') { drops.length = 0; return; }
     dropT -= dt;
     if (dropT <= 0 && drops.length < 7) {
+      /* the drops land LOW — the lower band of the sheet, where no
+         word lives — and are born already inside it, so they never
+         fall across the title's ink (v15) */
+      const ty = S.H * 0.66 + Math.random() * (S.H * 0.28);
       drops.push({
         x: 26 + Math.random() * (S.W - 52),
-        y: -8,
+        y: ty - 90 - Math.random() * 160,
         v: 46 + Math.random() * 60,
-        ty: 26 + Math.random() * (S.H - 52),
+        ty,
       });
       dropT = 0.4 + Math.random() * 1.3;
     }

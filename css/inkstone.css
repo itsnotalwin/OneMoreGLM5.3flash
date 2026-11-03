@@ -39,6 +39,12 @@ body{
   font-family: var(--mono);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* the grind is a HOLD — the page must never answer a held finger
+     with a text selection or the iOS callout (the PWA selecting
+     itself instead of grinding: fixed here, v14) */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .stone-room{
@@ -115,8 +121,12 @@ body{
   width: 100%; height: 100%;
   display: block;
   cursor: pointer;
-  touch-action: manipulation;
+  /* none, not manipulation — the browser may never claim the
+     gesture: the whole press belongs to the grind */
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* ---- flavor + pool ---- */
@@ -191,6 +201,9 @@ body{
   padding: 3px 2px;
   text-align: center;
   outline: none;
+  /* the one place the page still takes text — typing needs it */
+  user-select: text;
+  -webkit-user-select: text;
 }
 .name-input:focus{ border-bottom-color: var(--ink-55); }
 .name-input::placeholder{ color: var(--ink-25); }
