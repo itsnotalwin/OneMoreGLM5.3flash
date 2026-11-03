@@ -1,5 +1,7 @@
 # ONE MORE
 
+> **Manual-upload protection:** [Supabase integration guard](.github/workflows/supabase-integration-guard.yml) watches `main`. If recurring, *exactly recognized* Google/Supabase wiring is overwritten, [auto-repair](.github/workflows/supabase-auto-repair.yml) proposes a **draft PR for review only**. It never auto-merges or edits gameplay. Unfamiliar code is rejected. Enable GitHub Actions' **Allow GitHub Actions to create and approve pull requests** permission under repository Settings → Actions → General. See [recovery details](SUPABASE-RECOVERY.md).
+
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
