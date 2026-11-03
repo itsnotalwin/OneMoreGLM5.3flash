@@ -2,6 +2,21 @@
 
 > **Read this before manually replacing or uploading game files.** This is the canonical *source-repository recovery runbook*. A separate short BRAIN project record links here instead of duplicating the implementation. Last verified: **2026-11-03**. Source v12 restoration tested and committed; full real-browser OAuth still needs confirmation. This repo is **not** `itsnotalwin/ONE_MORE`.
 
+## Latest v16 manual upload recovery (3 November 2026)
+
+**Latest owner's unmodified source snapshot:** [`backup/v16-manual-upload-2026-11-03`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/v16-manual-upload-2026-11-03), pinned to commit [`94267ab9`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/94267ab9d0789f0f7f65dcf2e62f0a1fae68bea1). The previous v12 and initial integration backup branches remain independent. Two owner uploads, [`5f9b7c0`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/5f9b7c0a6faf31ef064da771b28511107da6d51c) and [`94267ab9`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/commit/94267ab9d0789f0f7f65dcf2e62f0a1fae68bea1), introduced substantial v16 presentation/gameplay improvements but removed the shared project's public URL/key and Google OAuth return handling. The source guard correctly failed on both while Pages still deployed.
+
+**Surgical changes on current main, not a rollback:**
+- `js/supabase-config.js` restored the exact **active, public publishable** key from the shared Pinpoint Supabase project `sffpyvxbgmhepftxoesy` and its URL; no secrets added.
+- `js/lb.js` restores the short-lived `om_lb_google_return_v1` marker and PKCE callback/error recognition, including Daily/Weekly/All-Time tabs, and preserves v16's **Google sign-in through Settings** with optional anonymous sign-in, named player identity and queued score posting. Exported `LB.consumeOAuthReturn()` and `LB.initAuth()` ensure session exchange runs after redirect and the account UI refreshes. The display error is cleaned from the URL without deleting a successful `?code`.
+- `js/main.js` restores the callback to the **Settings account screen**, not the older v12 Google button on the leaderboard. When sign-in originated at a leaderboard, the background board and tab are prepared so **Back** returns correctly. Ordinary v16 first-tap audio/intro gate, once-per-session opening and gameplay initialization are unchanged.
+- `sw.js` cache advanced to `v16-supabase-1`, retaining the new Inkstone/charm and other current PWA assets.
+- **18/18 local isolated JavaScript/source checks passed** (including PKCE code retention, failed URL cleanup, Daily/Weekly return tabs, normal intro gate, pending posts, v16 systems and syntax). Source checks are *not* a hosted real-user login demonstration.
+
+**Backend verified read-only after upload:** Pinpoint is `ACTIVE_HEALTHY`; `om_scores`, `om_daily`, and `om_weekly` still exist with RLS on, three policies each, public SELECT only and authenticated write grants. Pinpoint scores and profiles were not modified. Supabase auth has one Google-linked account with last recorded sign-in **2 Nov 2026 18:36:11 UTC**, but **no Google-linked login on 3 Nov** at verification time. Other HTTP 200 Auth events are not sufficient to prove Google sign-in in v16. Previous `invalid_client` and Anonymous-disabled errors were on 2 Nov; don't claim they describe today's settings without a new test.
+
+**For the NEXT manual upload:** start from the new v16 source, diff it against main and this v16 backup, preserve the latest gameplay/Settings UI, merge only auth/config/PWA sections, run guard and browser login tests. Never blindly substitute older v12 `main.js` or `lb.js`, and never rerun fresh project SQL.
+
 ## Preserved source snapshot
 
 - **Original integration backup branch:** [`backup/supabase-integration-2026-11-02`](https://github.com/itsnotalwin/OneMoreGLM5.3flash/tree/backup/supabase-integration-2026-11-02).
