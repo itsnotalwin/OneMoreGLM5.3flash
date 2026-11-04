@@ -31,5 +31,9 @@ jobs:
           node --check sw.js
       - name: Exercise local save migration and conflict safeguards
         run: node .github/cloud-save.test.cjs
+      - name: Verify future manual-upload repair proposals preserve cloud saves
+        run: |
+          node .github/supabase-auto-repair.cjs --self-test
+          node .github/supabase-auto-repair.cjs --dry-run
       - name: Confirm source diff cleanliness
         run: git diff --check
