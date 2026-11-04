@@ -3,6 +3,9 @@
 ## Purpose
 Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderboard.
 
+## Cross-device private save bridge (4 Nov 2026)
+`cloud-save.js` stores selected `om_*` progress keys to private, Google-user-owned Supabase `om_player_saves` using the existing single `lb.js` SDK/client. It **does not replace gameplay saves**: `game.js` and `inkstone.js` keep writing to localStorage. Revisioned cloud snapshots, backup-before-restore, and compare-and-swap protect independent PC and phone progress. On first use a played device explicitly backs up to cloud; new devices restore, and subsequent saves auto-sync unless both diverged. `lb.js` emits safe auth notifications and exposes only the authenticated client to the module; `main.js` marks local WIPE so it never silently overwrites cloud. `index.html` loads the bridge after `lb.js`; `sw.js` caches it. Test with `node .github/cloud-save.test.cjs`. Never auto-merge currency or overwriting snapshots, and never allow one player's save to be fetched by another.
+
 ## Key files
 `main.js` bootstraps the game; `game.js` owns runs; `render.js`, `ui.js` and `intro.js` handle presentation; `lb.js` reads/writes `om_scores` and `om_daily`; `supabase-config.js` holds only the public Pinpoint-project Supabase URL and publishable key. `firebase-config.js` is an unused placeholder unless separately integrated.
 
