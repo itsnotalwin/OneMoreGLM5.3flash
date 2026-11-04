@@ -451,5 +451,7 @@ window.OM_CLOUD = (() => {
     start();
   }
 
-  return { start, authChanged, beforeLocalWipe, check, snapshot, validSave, signature, summary };
+  return { start, authChanged, beforeLocalWipe, check, uploadLocal, restoreCloud,
+    snapshot, validSave, signature, summary,
+    get state() { return { mode, status, cloudRevision: cloud && cloud.revision }; } };
 })();
