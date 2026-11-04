@@ -72,7 +72,13 @@ window.OM_CLOUD = (() => {
   // A deterministic, non-security fingerprint. Cloud revisions and RLS enforce
   // ownership and conflict detection; this only spots local edits since sync.
   function signature(payload) {
-    const s = JSON.stringify(payload);
+    const ordered = { schema: payload.schema, values: {} };
+    for (const key of KEYS) {
+      if (Object.prototype.hasOwnProperty.call(payload.values, key)) {
+        ordered.values[key] = payload.values[key];
+      }
+    }
+    const s = JSON.stringify(ordered);
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) {
       h ^= s.charCodeAt(i);
@@ -95,7 +101,8 @@ window.OM_CLOUD = (() => {
     return number('om_runs_v1') > 0 || number('om_unlocked_v1') > 1 ||
       number('om_cleared_v1') > 0 || number('om_furthest_v1') > 1 ||
       !!v.om_prog_v1 || !!v.om_seal_v1 || !!v.om_best_v1 ||
-      !!v.om_stone_v1 || !!v.om_daily_v1 || charms();
+      !!v.om_stone_v1 || !!v.om_daily_v1 || !!v.om_brush_v1 ||
+      !!v.om_lb_best_v1 || !!v.om_lb_name_v1 || charms();
   }
 
   function summary(payload) {
@@ -161,6 +168,7 @@ window.OM_CLOUD = (() => {
       error: [['check', 'RETRY']],
     };
     const buttons = options[mode] || [];
+    if (hasProgress(local)) buttons.push(['export', 'EXPORT DEVICE BACKUP']);
     const message = status.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     box.innerHTML =
       '<div class="room-kicker room-kicker-2"><span class="kanji-inline" aria-hidden="true">雲</span>CLOUD SAVE</div>' +
@@ -179,8 +187,23 @@ window.OM_CLOUD = (() => {
         if (action === 'download') void restoreCloud(true);
         else if (action === 'upload') void uploadLocal(true);
         else if (action === 'check') void check(true);
+        else if (action === 'export') exportLocal();
       });
     }
+  }
+
+  function exportLocal() {
+    const p = snapshot();
+    if (!validSave(p)) { setMode('error', 'DEVICE BACKUP TOO LARGE. NO SAVE CHANGED.'); return; }
+    const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'one-more-device-save-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   async function readCloud(client, uid) {
@@ -188,7 +211,8 @@ window.OM_CLOUD = (() => {
       .select('uid,revision,data,updated_at')
       .eq('uid', uid).maybeSingle();
     if (error) throw error;
-    if (data && (!validSave(data.data) || !Number.isSafeInteger(Number(data.revision)))) {
+    if (data && (!validSave(data.data) || !Number.isSafeInteger(Number(data.revision)) ||
+        Number(data.revision) < 1 || data.uid !== uid)) {
       throw new Error('The cloud save format is not recognized. Nothing was changed.');
     }
     return data;
@@ -215,16 +239,32 @@ window.OM_CLOUD = (() => {
       return false;
     }
     if (!row || !validSave(row.data)) throw new Error('Invalid cloud save: nothing was restored.');
+    const original = snapshot();
     backupBeforeRestore(uid);
-    for (const key of KEYS) {
-      if (Object.prototype.hasOwnProperty.call(row.data.values, key)) {
-        rawSet(key, row.data.values[key]);
-      } else {
-        localStorage.removeItem(key);
+    try {
+      for (const key of KEYS) {
+        if (Object.prototype.hasOwnProperty.call(row.data.values, key)) {
+          rawSet(key, row.data.values[key]);
+        } else {
+          localStorage.removeItem(key);
+        }
       }
+      remember(uid, row.revision, row.data);
+      localStorage.removeItem(WIPE);
+    } catch (error) {
+      // Roll back partial writes if storage is full; the independent backup
+      // remains available even if the rollback itself cannot complete.
+      for (const key of KEYS) {
+        try {
+          if (Object.prototype.hasOwnProperty.call(original.values, key)) {
+            rawSet(key, original.values[key]);
+          } else {
+            localStorage.removeItem(key);
+          }
+        } catch (_) {}
+      }
+      throw new Error('Device storage rejected the restore. Original backup kept; no reload.');
     }
-    remember(uid, row.revision, row.data);
-    localStorage.removeItem(WIPE);
     location.reload();
     return true;
   }
