@@ -167,7 +167,7 @@ window.OM_CLOUD = (() => {
       synced: [['check', 'CHECK FOR UPDATES']],
       error: [['check', 'RETRY']],
     };
-    const buttons = options[mode] || [];
+    const buttons = [...(options[mode] || [])];
     if (hasProgress(local)) buttons.push(['export', 'EXPORT DEVICE BACKUP']);
     const message = status.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     box.innerHTML =
