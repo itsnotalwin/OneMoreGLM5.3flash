@@ -1,0 +1,41 @@
+name: Cloud save safety checks
+
+on:
+  push:
+    branches: [main, feature/cloud-saves-2026-11-04]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'js/cloud-save.js'
+      - 'js/lb.js'
+      - 'js/main.js'
+      - 'index.html'
+      - 'sw.js'
+      - '.github/cloud-save.test.cjs'
+      - '.github/workflows/cloud-save-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-cross-device-progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate modified JavaScript
+        run: |
+          node --check js/cloud-save.js
+          node --check js/lb.js
+          node --check js/main.js
+          node --check sw.js
+      - name: Exercise local save migration and conflict safeguards
+        run: node .github/cloud-save.test.cjs
+      - name: Verify future manual-upload repair proposals preserve cloud saves
+        run: |
+          node .github/supabase-auto-repair.cjs --self-test
+          node .github/supabase-auto-repair.cjs --dry-run
+      - name: Confirm source diff cleanliness
+        run: git diff --check

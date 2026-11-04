@@ -72,7 +72,7 @@ jobs:
           branch="automation/supabase-repair-${base_sha}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- js/supabase-config.js js/lb.js js/main.js sw.js
+          git add -- js/supabase-config.js js/lb.js js/main.js index.html sw.js
 
           # The branch is based on the newest main, but NO push to main occurs.
           git commit -m "fix: propose restoring Supabase and Google login after ${base_sha}"
@@ -99,10 +99,12 @@ jobs:
           - `js/supabase-config.js`: public Pinpoint project URL and publishable key
           - `js/lb.js`: Google PKCE callback/Settings state and leaderboards
           - `js/main.js`: Google return routing to Settings
-          - `sw.js`: PWA cache version, keeping all existing cached assets
+          - `index.html`: insert the known cloud-save script tag if missing, without changing markup elsewhere
+          - `sw.js`: PWA cache version and cloud script asset, keeping all existing cached assets
 
           ### Safety rules
-          - Other gameplay, game modes, assets, CSS, HTML and Supabase database: **untouched**
+          - Gameplay, game modes, art, CSS and Supabase database: **untouched**
+          - The only permitted HTML edit is insertion of the known cloud-save script tag
           - Any unfamiliar source change causes the planner to abort with no PR
           - No automatic merge and no force-push to `main`
           - Check the diff, run the game, and test real Google login and posting

@@ -98,6 +98,7 @@ const LB = (() => {
       if (ST.user) ST.oauthError = '';
       renderAccount();
       renderAuth();
+      if (window.OM_CLOUD) setTimeout(() => window.OM_CLOUD.authChanged(), 0);
     } catch (e) {
       ST.oauthError = authFail(e);
       renderAccount();
@@ -212,6 +213,7 @@ const LB = (() => {
           }
           renderAuth();
           renderAccount();
+          if (window.OM_CLOUD) setTimeout(() => window.OM_CLOUD.authChanged(), 0);
           if (ST.user && ST.pending) {     /* the sign answered the pending post */
             const run = ST.pending; ST.pending = null; persistPending(null);
             if (run.mode === 'daily') postDailyRun(run);
@@ -1084,6 +1086,7 @@ const LB = (() => {
   return {
     onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
     saveName, renderAccount, consumeOAuthReturn, initAuth,
+    cloudAccess() { return ST.sb ? { client: ST.sb.client, user: ST.user } : null; },
     get user() { return me(); },
     get debug() { return ST.debug; },
     get lastDebugPost() { return ST.debugLastPost || null; },

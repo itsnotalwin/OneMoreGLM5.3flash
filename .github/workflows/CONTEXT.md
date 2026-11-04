@@ -10,5 +10,8 @@ Retain the ONE MORE/Supabase integration across frequent manual game-source upda
 ## Connections
 The integration guard reads checked-out sources only. The auto-repair planner simulates known broken snapshots without contacting Supabase, and the proposal job can use a scoped GitHub token to push a separate review branch and create a draft PR. Neither workflow changes database scores, main, Pages publishing, or uses provider secrets. Repository Actions settings must allow draft PR creation.
 
+## Account save protection (4 Nov 2026)
+`cloud-save-check.yml` runs local-first mock tests for PC/phone migration, CAS revisions, JSONB order, divergent edits, WIPE and failed-restore rollback. The Supabase integration guard now also requires `cloud-save.js` and correct script/cache routing. The existing repair workflow still **only creates draft PRs**. Its known-good snapshot pin was updated to include the cloud auth and local-wipe hooks; it can safely reinsert only the known cloud script tag/cache asset when manual uploads remove them. Unknown source/layout changes abort.
+
 ## Change & verify
 When intentionally refactoring auth, update the guard to recognize equivalent safe wiring. Confirm its own GitHub Actions run completes successfully. The separate backup branch and root `SUPABASE-RECOVERY.md` are the recovery sources if the guard fails.
