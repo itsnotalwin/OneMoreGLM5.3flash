@@ -240,6 +240,8 @@ window.OM_CLOUD = (() => {
     }
     if (!row || !validSave(row.data)) throw new Error('Invalid cloud save: nothing was restored.');
     const original = snapshot();
+    const previousMeta = rawGet(META + uid);
+    const previousWipe = rawGet(WIPE);
     backupBeforeRestore(uid);
     try {
       for (const key of KEYS) {
@@ -263,6 +265,12 @@ window.OM_CLOUD = (() => {
           }
         } catch (_) {}
       }
+      try {
+        if (previousMeta === null) localStorage.removeItem(META + uid);
+        else rawSet(META + uid, previousMeta);
+        if (previousWipe === null) localStorage.removeItem(WIPE);
+        else rawSet(WIPE, previousWipe);
+      } catch (_) {}
       throw new Error('Device storage rejected the restore. Original backup kept; no reload.');
     }
     location.reload();
