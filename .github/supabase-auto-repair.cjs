@@ -102,7 +102,7 @@ function validate(content) {
       throw new Error('Service worker missing asset ' + cached + '; refusing repair');
     }
   }
-  for (const path of ALLOWED) {
+  for (const path of [...SOURCE_FILES, SW]) {
     try { new Function(content[path]); }
     catch (e) { throw new Error('JavaScript syntax error in ' + path + ': ' + e.message); }
   }
