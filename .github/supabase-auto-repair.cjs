@@ -13,7 +13,7 @@ const fs = require('node:fs');
 const cp = require('node:child_process');
 const assert = require('node:assert/strict');
 
-const GOOD = '365697c8dde79e6fe1a6edeea1e5cf289229564c';
+const GOOD = 'b95fe772b31afcd233a2142db2098c2bc895bb77';
 const BAD = '8def891bc3adccb2c4018f84f5618fbfcd22bbfe';
 const SOURCE_FILES = [
   'js/supabase-config.js',
@@ -22,7 +22,7 @@ const SOURCE_FILES = [
 ];
 const SW = 'sw.js';
 const HTML = 'index.html';
-const ALLOWED = [...SOURCE_FILES, SW];
+const ALLOWED = [...SOURCE_FILES, HTML, SW];
 
 function snapshot(ref, path) {
   return cp.execFileSync('git', ['show', ref + ':' + path], {
@@ -33,13 +33,13 @@ function snapshot(ref, path) {
 
 function sourcesFromRef(ref) {
   const result = {};
-  for (const path of [...ALLOWED, HTML]) result[path] = snapshot(ref, path);
+  for (const path of ALLOWED) result[path] = snapshot(ref, path);
   return result;
 }
 
 function sourcesFromWorktree() {
   const result = {};
-  for (const path of [...ALLOWED, HTML]) result[path] = fs.readFileSync(path, 'utf8');
+  for (const path of ALLOWED) result[path] = fs.readFileSync(path, 'utf8');
   return result;
 }
 
@@ -64,6 +64,7 @@ function healthy(path, text) {
       'function fetchEcho(',
       'function renderAccount(',
       'persistPending(',
+      'cloudAccess()',
       'return {',
     ].every(piece => text.includes(piece));
   }
@@ -75,6 +76,7 @@ function healthy(path, text) {
       'showIntroGate()',
       'CH.open()',
       'LB.launchRun',
+      'beforeLocalWipe()',
     ].every(piece => text.includes(piece));
   }
   throw new Error('Unsupported source path: ' + path);
@@ -85,15 +87,16 @@ function validate(content) {
     if (!healthy(path, content[path])) throw new Error('Integration still incomplete in ' + path);
   }
   const page = content[HTML];
-  const names = SOURCE_FILES;
+  const names = [SOURCE_FILES[0], SOURCE_FILES[1], 'js/cloud-save.js', SOURCE_FILES[2]];
   const positions = names.map(name => page.indexOf('src="./' + name + '"'));
   if (positions.some(p => p < 0) ||
-      !(positions[0] < positions[1] && positions[1] < positions[2])) {
+      !(positions[0] < positions[1] && positions[1] < positions[2] &&
+        positions[2] < positions[3])) {
     throw new Error('Supabase script order changed; refusing automatic repair');
   }
   const sw = content[SW];
   for (const cached of [
-    ...SOURCE_FILES, 'js/charms.js', 'js/inkstone.js', 'inkstone.html',
+    ...SOURCE_FILES, 'js/cloud-save.js', 'js/charms.js', 'js/inkstone.js', 'inkstone.html',
   ]) {
     if (!sw.includes("'" + cached + "'")) {
       throw new Error('Service worker missing asset ' + cached + '; refusing repair');
@@ -134,8 +137,28 @@ function plan(current, knownBad, knownGood) {
       '. No files changed. Review the diff manually; NEVER overwrite new gameplay.'
     );
   }
-  if (edits.length) {
-    proposed[SW] = bumpCache(current[SW]);
+  // A manual HTML upload may omit the tiny cloud script tag while keeping
+  // entirely new gameplay markup. Insert only this known, fixed tag.
+  if (!proposed[HTML].includes('src="./js/cloud-save.js"')) {
+    const anchor = '<script src="./js/lb.js"></script>';
+    if (proposed[HTML].split(anchor).length !== 2 ||
+        !proposed[HTML].includes('<script src="./js/main.js"></script>')) {
+      throw new Error('Unknown HTML script layout. No files changed.');
+    }
+    proposed[HTML] = proposed[HTML].replace(anchor,
+      anchor + '\n<script src="./js/cloud-save.js"></script>');
+    edits.push(HTML);
+  }
+  if (edits.length || !proposed[SW].includes("'js/cloud-save.js'")) {
+    let sw = proposed[SW];
+    if (!sw.includes("'js/cloud-save.js'")) {
+      const anchor = "'js/charms.js',";
+      if (sw.split(anchor).length !== 2) {
+        throw new Error('Unknown PWA cache layout. No files changed.');
+      }
+      sw = sw.replace(anchor, anchor + "\n  'js/cloud-save.js',");
+    }
+    proposed[SW] = bumpCache(sw);
     edits.push(SW);
   }
   validate(proposed);
@@ -151,9 +174,12 @@ function selfTest(bad, good) {
   }
   test('known missing OAuth/config is repaired, not gameplay', () => {
     const p = plan(bad, bad, good);
-    assert.deepEqual(p.edits, [...SOURCE_FILES, SW]);
+    assert.deepEqual(p.edits, [...SOURCE_FILES, HTML, SW]);
     for (const path of SOURCE_FILES) assert.equal(p.proposed[path], good[path]);
-    assert.equal(p.proposed[HTML], bad[HTML]);
+    assert.equal(
+      p.proposed[HTML].replace('\n<script src="./js/cloud-save.js"></script>', ''),
+      bad[HTML]
+    );
   });
   test('correct integration does not create a PR', () => {
     assert.equal(plan(good, bad, good).edits.length, 0);
@@ -179,6 +205,14 @@ function selfTest(bad, good) {
     assert.match(p.proposed[SW], /const VER = 'v99-supabase-1'/);
     assert.ok(p.proposed[SW].includes("'js/inkstone.js'"));
   });
+  test('cloud script missing from a new HTML upload gets a minimal PR diff', () => {
+    const changed = { ...good,
+      [HTML]: good[HTML].replace('<script src="./js/cloud-save.js"></script>\n', ''),
+    };
+    const p = plan(changed, bad, good);
+    assert.deepEqual(p.edits, [HTML, SW]);
+    assert.equal(p.proposed[HTML], good[HTML]);
+  });
   test('unknown PWA file is rejected', () => {
     const changed = { ...bad, [SW]: bad[SW].replace("'js/lb.js'", "'some-other-file.js'") };
     assert.throws(() => plan(changed, bad, good), /Service worker missing asset/);
@@ -199,6 +233,12 @@ function main() {
   const good = sourcesFromRef(GOOD);
 
   if (mode === '--self-test') return selfTest(bad, good);
+  const cloudModule = fs.readFileSync('js/cloud-save.js', 'utf8');
+  if (!cloudModule.includes('om_player_saves') ||
+      !cloudModule.includes('restoreSnapshot') ||
+      !cloudModule.includes('beforeLocalWipe')) {
+    throw new Error('Cloud-save module missing or refactored. No auto-repair.');
+  }
   if (mode === '--verify') {
     validate(current);
     const diff = cp.execFileSync('git', ['diff', '--name-only'], { encoding: 'utf8' })
