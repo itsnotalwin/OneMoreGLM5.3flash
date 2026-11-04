@@ -157,6 +157,30 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     assert.equal(db.row.data.values.om_runs_v1, '8');
   });
 
+  await test('failed device restore rolls back and keeps its backup', async () => {
+    const local = new DeviceStorage();
+    local.setItem('om_runs_v1', '3');
+    local.setItem('om_unlocked_v1', '2');
+    const originalSet = local.setItem.bind(local);
+    let rejectOnce = true;
+    local.setItem = (key, value) => {
+      if (key === 'om_unlocked_v1' && rejectOnce) {
+        rejectOnce = false;
+        throw new Error('simulated storage quota failure');
+      }
+      originalSet(key, value);
+    };
+    const other = createDevice(db, local);
+    await other.cloud.check(true);
+    assert.equal(other.cloud.state.mode, 'conflict');
+    await other.cloud.restoreCloud(true);
+    assert.equal(other.cloud.state.mode, 'error');
+    assert.equal(other.local.getItem('om_runs_v1'), '3');
+    assert.equal(other.local.getItem('om_unlocked_v1'), '2');
+    assert.equal(other.reloads, 0);
+    assert.ok(Array.from(other.local.values.keys()).some(k => k.startsWith('__omcloud_local_backup')));
+  });
+
   await test('unfamiliar cloud keys are rejected', () => {
     assert.equal(pc.cloud.validSave({ schema: 1, values: { 'sb-secret': 'no' } }), false);
     assert.equal(pc.cloud.validSave({ schema: 2, values: {} }), false);
@@ -188,5 +212,5 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     }
   });
 
-  console.log('All ' + passed + '/12 cloud-save tests passed; no live user saves were accessed.');
+  console.log('All ' + passed + '/13 cloud-save tests passed; no live user saves were accessed.');
 })().catch(e => { console.error(e); process.exitCode = 1; });
