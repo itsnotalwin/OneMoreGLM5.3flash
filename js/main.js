@@ -287,8 +287,11 @@
       wipeTimer = setTimeout(() => { wipeArmed = false; refreshSettings(); }, 4000);
       return;
     }
-    /* the second press closes the book */
+    /* the second press closes the book. Local wipe must not silently
+       erase or replace the account's separate cloud save. */
     clearTimeout(wipeTimer);
+    try { if (window.OM_CLOUD) window.OM_CLOUD.beforeLocalWipe(); }
+    catch (e) { wipeArmed = false; refreshSettings(); return; }
     try {
       const kill = [];
       for (let i = 0; i < localStorage.length; i++) {
