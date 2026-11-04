@@ -20,6 +20,7 @@ jobs:
           node --check js/supabase-config.js
           node --check js/lb.js
           node --check js/main.js
+          node --check js/cloud-save.js
           node --check js/game.js
           node --check js/charms.js
           node --check js/inkstone.js
@@ -37,6 +38,7 @@ jobs:
           const assert = (condition, message) => { if (!condition) issues.push(message); };
           const config = read('js/supabase-config.js');
           const lb = read('js/lb.js');
+          const cloud = read('js/cloud-save.js');
           const main = read('js/main.js');
           const index = read('index.html');
           const sw = read('sw.js');
@@ -66,6 +68,18 @@ jobs:
             'v12 weekly leaderboard or ghost-racing integration missing');
           assert(lb.includes("'week'") && lb.includes('om_lb_google_return_v1'),
             'v12 weekly tab must survive Google OAuth navigation');
+          assert(cloud.includes("om_player_saves") && cloud.includes('beforeLocalWipe') &&
+            cloud.includes('restoreSnapshot') && cloud.includes('saveToCloud'),
+            'Private cloud-save migration/sync module missing');
+          assert(lb.includes('cloudAccess()') && main.includes('beforeLocalWipe()'),
+            'Google account or local-wipe cloud protection hook missing');
+          assert(index.includes('src="./js/cloud-save.js"') &&
+            sw.includes("'js/cloud-save.js'"),
+            'Cloud save script no longer loaded or cached by the PWA');
+          assert(index.indexOf('src="./js/lb.js"') < index.indexOf('src="./js/cloud-save.js"') &&
+            index.indexOf('src="./js/cloud-save.js"') < index.indexOf('src="./js/main.js"'),
+            'Cloud save script order changed');
+
           assert(main.includes('LB.launchRun') && main.includes('CH.open()') &&
             main.includes('G.getInk()'),
             'v12 echo launch, charm room or inkstone integration missing');
