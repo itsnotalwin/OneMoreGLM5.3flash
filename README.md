@@ -1,9 +1,5 @@
 # ONE MORE
 
-> **Google cloud saves (new):** Your saved scrolls, unlocked brushes, Inkstone, charms and ink can now travel between devices. On your **existing PC**, sign in with Google and open **Settings → CLOUD SAVE → BACK UP THIS DEVICE** first. On your phone, use the same Google account. A new phone restores automatically; if it already has progress, **choose which save to keep**. Later changes sync automatically when online; conflicting edits do **not** overwrite each other. An **EXPORT DEVICE BACKUP** button protects your local copy. The game remains playable offline. See [cloud-save safety and setup](SUPABASE-RECOVERY.md#cross-device-google-progress-saving-4-november-2026). **Do not clear your PC browser data until you've seen Cloud Saved.**
-
-> **Manual-upload protection:** [Supabase integration guard](.github/workflows/supabase-integration-guard.yml) watches `main`. If recurring, *exactly recognized* Google/Supabase wiring is overwritten, [auto-repair](.github/workflows/supabase-auto-repair.yml) proposes a **draft PR for review only**. It never auto-merges or edits gameplay. Unfamiliar code is rejected. Enable GitHub Actions' **Allow GitHub Actions to create and approve pull requests** permission under repository Settings → Actions → General. See [recovery details](SUPABASE-RECOVERY.md).
-
 *An ink-born survival. No walls. No arena. One endless sheet of washi.*
 
 **ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
