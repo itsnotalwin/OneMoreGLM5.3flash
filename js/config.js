@@ -11,37 +11,53 @@ const CFG = {
     speed: 250,        // px/s
     hp: 3,
     invuln: 1.1,       // s of immunity after a hit
-    fireCd: 0.42,      // s between volleys
-    bulletSpeed: 560,  // px/s
-    bulletLife: 0.95,  // s aloft (range = speed * life)
-    spread: 0.13,      // rad between extra droplets
   },
 
-  /* starting brushes — choose one before the run begins.
-     The sealed brushes open as the journey's scenes are SEALED
-     (a scene seals when its tenth wave's Keeper falls): three
-     scenes wake the Wisp, six the Fan, ten — one whole sheet —
-     the Tide, fourteen the Red Seal. Locked brushes cannot be
-     chosen; the shelf of seals is the key. */
+  /* starting brushes — THE ONE BRUSH, ONE BLADE law (v19).
+     The brush IS the weapon: choose one and the run begins with that
+     arm and nothing else — there is no universal volley hiding behind
+     it. Each atk block is the weapon's own body:
+       kind 'bolts' — the brush fires its own projectiles: the
+         needle's thread, the broom's sweep, the stone's lob, the
+         wisp's homing breath;
+       kind 'gust'  — the folded fan: a cone of paper blades driven
+         by the fan loop, seeded at rank 1;
+       kind 'none'  — no projectiles at all: the Tide answers with
+         its nova, the Red Seal with its stamp, the Scribe with the
+         living stroke that weaves through the horde.
+     The sealed brushes open as the journey's scenes are SEALED (a
+     scene seals when its tenth wave's Keeper falls): three scenes
+     wake the Wisp, six the Fan, ten — one whole sheet — the Tide,
+     fourteen the Red Seal, eighteen the Scribe. Locked brushes
+     cannot be chosen; the shelf of seals is the key. */
   brushes: {
-    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. Fire comes fast, strokes stay light.',
-      mods: { fireCdMult: 0.72, moveMult: 1.08 } },
-    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, slower between strokes.',
-      mods: { shots: 2, fireCdMult: 1.24 } },
-    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. Every droplet bites deeper and the paper holds longer.',
-      mods: { dmg: 2, maxHp: 4, moveMult: 0.9, fireCdMult: 1.08 } },
+    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. A thread of ink, cast fast and true.',
+      atk: { kind: 'bolts', cd: 0.30, shots: 1, dmg: 1, speed: 640, life: 0.78, spread: 0.10, bkind: 'needle' } },
+    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps two droplets at once, broad and slow.',
+      atk: { kind: 'bolts', cd: 0.58, shots: 2, dmg: 1, speed: 520, life: 0.60, spread: 0.34, bkind: 'drop' } },
+    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. A slow lob that bites deep and splashes where it lands.',
+      atk: { kind: 'bolts', cd: 0.92, shots: 1, dmg: 3, speed: 430, life: 0.92, spread: 0.06, bkind: 'stone', splash: 46 },
+      mods: { maxHp: 4, moveMult: 0.9 } },
     wisp:   { name: 'THE WISP', kanji: '幽', unlock: 3,
-      desc: 'The brush never fights alone: a lesser spirit wakes beside it and hunts on its own.',
-      mods: { spirit: 1, fireCdMult: 1.05, moveMult: 0.98 } },
+      desc: 'The brush breathes homing wisps — and a lesser spirit wakes beside it, hunting on its own.',
+      atk: { kind: 'bolts', cd: 0.80, shots: 1, dmg: 1, speed: 330, life: 2.4, spread: 0.05, bkind: 'wisp', homing: 6.5 },
+      mods: { spirit: 1 } },
     fan:    { name: 'THE FAN', kanji: '扇', unlock: 6,
-      desc: 'Carries a folded fan. The volley comes slower; every few breaths the fan snaps open instead.',
-      mods: { fan: 1, fireCdMult: 1.14 } },
+      desc: 'Carries a folded fan. A cone of paper blades with every swing; every fifth snaps full-circle.',
+      atk: { kind: 'gust' },
+      mods: { fan: 1 } },
     tide:   { name: 'THE TIDE', kanji: '潮', unlock: 10,
-      desc: 'The black tide answers it: every few breaths the ink surges outward and shoves the paper back.',
-      mods: { nova: 1, moveMult: 0.95 } },
+      desc: 'No arrows — the ink itself answers: a black surge rolls outward, and the wake you leave still bites.',
+      atk: { kind: 'none' },
+      mods: { nova: 1 } },
     seal:   { name: 'THE RED SEAL', kanji: '印', unlock: 14,
-      desc: 'A heavy hand and a great hanko. Every eleventh breath the stamp falls on the thickest horde.',
-      mods: { hanko: 1, fireCdMult: 1.16, moveMult: 0.95 } },
+      desc: 'A great hanko. Every few breaths the stamp falls on the thickest horde — and few under it rise fast.',
+      atk: { kind: 'none' },
+      mods: { hanko: 1 } },
+    scribe: { name: 'THE SCRIBE', kanji: '書', unlock: 18,
+      desc: 'The master\u2019s way: no arrows at all. One living stroke weaves through the horde, unbroken, biting all it passes.',
+      atk: { kind: 'none' },
+      mods: { scribe: 1 } },
   },
 
   /* the world is unbounded — the brush walks an endless sheet.
@@ -173,28 +189,51 @@ const CFG = {
 
   /* ---- CAPTAINS — the horde's officers ----
      A captain walks INSIDE the pack (never alone, never a boss bar):
-     it quickens every beast near it, calls fresh ink into the paper,
-     and when it falls its whole fan stuns — break the officer and
-     the rank breaks with it. One per sheet, cut from that sheet's ink. */
-  captain: { auraR: 210, auraMult: 1.32, deathStun: 1.15, deathR: 235 },
+     it quickens every beast near it, SURGES at the brush every few
+     breaths — a telegraphed road through the paper — and RALLIES a
+     true swarm of its kindred under the flag (v19: the officer does
+     not trickle one replacement in, it musters the rank). When it
+     falls its whole fan stuns — break the officer and the rank
+     breaks with it. One per sheet, cut from that sheet's ink. */
+  captain: {
+    auraR: 210, auraMult: 1.32, deathStun: 1.15, deathR: 235,
+    surgeEvery: 5.2, surgeSpeed: 560, surgeDur: 0.44, surgeWind: 0.55,
+    swarmEvery: 5.4, swarmN: 4,
+  },
 
   shockwave: { radius: 230, knock: 420 },
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
 
   /* brush skills */
   orbit:   { radius: lv => 96 + lv * 28, speed: 2.9, dmgCd: 0.4, flingEvery: 4 },
-  nova:    { period: lv => 6.6 - 0.9 * (lv - 1), radius: lv => 165 + lv * 38, knock: 330, stun: 0.4 },
+  /* the tide's surge — born at the rhythm a PRIMARY weapon needs
+     (the Tide brush answers with it every few breaths); ranks buy
+     radius and cadence, the arts buy damage and undertow */
+  nova:    { period: lv => 3.1 * Math.pow(0.88, lv - 1), radius: lv => 165 + (lv - 1) * 34, knock: 340, stun: 0.35 },
   ward:    { cd: 22 },
   slow:    { dur: 1.6, mult: 0.55 },
   crit:    { chance: lv => 0.16 * lv },
   magnet:  { radius: lv => CFG.xp.pickupR * (1 + 0.42 * lv) },
   mends:   { period: lv => 40 - 9 * lv },
 
-  /* weapons */
-  fan:    { period: lv => 3.4 - 0.35 * (lv - 1), count: lv => 4 + lv, speed: 430, life: 0.62, spread: 1.15, dmg: 1 },
+  /* the scribe — THE SCRIBE brush's living stroke: a perpetual
+     seeking line that weaves through the horde and bites on touch.
+     No projectiles. It never rests, never expires; when no beast
+     walks the paper it returns to circle the hand. */
+  scribe:  { speed: 430, turn: 5.2, r: 8, tick: 0.4, weave: 3.1, weaveAmp: 150 },
+
+  /* the tide's wet wake — where the brush walks, its ink still bites */
+  wake:    { gap: 0.26, radius: 21, life: 1.15, tick: 0.55, dmg: 1 },
+
+  /* the wisp bolt — the homing breath of the Wisp brush */
+  wisp:    { turn: 6.5 },
+
+  /* weapons — every loop is a power any brush may learn; the brush
+     that is BORN to one carries its first rank from the first wave */
+  fan:    { period: lv => 0.72 * Math.pow(0.9, lv - 1), blades: lv => 3 + lv, speed: 470, life: 0.52, spread: 0.95 },
   trail:  { gap: lv => 0.5 - 0.08 * (lv - 1), radius: lv => 26 + lv * 7, life: 2.7, tick: 0.42, dmg: 1 },
-  spirit: { period: lv => 3.1 - 0.3 * (lv - 1), count: lv => 1 + lv, speed: 300, turn: 7.5, life: 3.2, dmg: 1 },
-  hanko:  { period: lv => 11.5 - 1.1 * (lv - 1), radius: lv => 84 + lv * 10, dmg: lv => 3 + lv, stun: 0.4 },
+  spirit: { period: lv => 2.6 * Math.pow(0.9, lv - 1), count: lv => lv, speed: 300, turn: 7.5, life: 3.2, dmg: 1 },
+  hanko:  { period: lv => 2.3 * Math.pow(0.88, lv - 1), radius: lv => 88 + (lv - 1) * 12, dmg: lv => 3 + Math.floor((lv - 1) / 2), stun: 0.45 },
   arc:    { period: lv => 2.5 - 0.22 * (lv - 1), jumps: lv => 2 + lv, range: 210, maxRange: 270, dmg: lv => 1 + Math.ceil(lv / 2) },
   boomer: { period: lv => 2.9 - 0.25 * (lv - 1), speed: 620, dist: lv => 300 + lv * 40, dmg: lv => 1 + lv, life: 3 },
   vortex: { period: lv => 7.5 - 0.7 * (lv - 1), radius: lv => 90 + lv * 24, dur: lv => 2 + 0.25 * lv, pull: 340, tick: 0.36, dmg: 1 },
@@ -278,6 +317,25 @@ const ENEMIES = {
   binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
   weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
 
+  /* ---- V19 · THE SECOND BREEDING ----
+     Nine new beasts, one to three a sheet, each bending the fight
+     a different way: the rill weaves, the specter phases, the
+     warhorn musters, the squall circles, the eel rushes in rivers,
+     the giltwing wounds and flees, the midas turns flesh to coin,
+     the stencil presses seals where you stand, the fray unravels
+     into shards. The stale papers (IV and V leaned on Sheet I's
+     old ink) now walk their own blood again. */
+  rill:      { name: 'RILL',        trait: 'WEAVER',    cost: 2, intro: 51,  hp: 2, r: 11, speed: 128, score: 24, shape: 'rill' },
+  specter:   { name: 'SPECTER',     trait: 'PHASER',    cost: 3, intro: 171, hp: 4, r: 13, speed: 70,  score: 55, shape: 'specter' },
+  horn:      { name: 'WARHORN',     trait: 'MUSTER',    cost: 4, intro: 281, hp: 6, r: 15, speed: 46,  score: 80, shape: 'horn' },
+  squall:    { name: 'SQUALL',      trait: 'CIRCLER',   cost: 2, intro: 331, hp: 2, r: 10, speed: 205, score: 45, shape: 'squall' },
+  eel:       { name: 'EEL',         trait: 'RUSHER',    cost: 2, intro: 341, hp: 3, r: 10, speed: 165, score: 42, shape: 'eel' },
+  giltwing:  { name: 'GILTWING',    trait: 'SKIRMISHER',cost: 3, intro: 431, hp: 3, r: 12, speed: 235, score: 80, shape: 'giltwing' },
+  midas:     { name: 'THE MIDAS',   trait: 'ALCHEMIST', cost: 4, intro: 441, hp: 5, r: 14, speed: 40,  score: 120, shape: 'midas' },
+  stencil:   { name: 'STENCIL',     trait: 'STAMPER',   cost: 3, intro: 541, hp: 5, r: 13, speed: 50,  score: 70, shape: 'stencil' },
+  fray:      { name: 'THE FRAY',    trait: 'UNRAVELER', cost: 4, intro: 551, hp: 6, r: 14, speed: 58,  score: 80, shape: 'fray' },
+  stitchling:{ name: 'STITCHLING',  trait: 'SHARD',     cost: 1, intro: 551, hp: 1, r: 6,  speed: 155, score: 6,  shape: 'dot' },
+
   /* shards shed by dividers and mothers */
   pulseling: { name: 'BLIP',       trait: 'SHARD',    cost: 1, intro: 1,   hp: 1,  r: 6,  speed: 150, score: 5,  shape: 'dot'     },
 
@@ -348,6 +406,9 @@ const ENEMY_WEIGHTS = {
   s_nest: 0.9, s_mender: 0.8, s_toller: 0.9, s_ledger: 0.8, s_trace: 0.8,
   /* the blank silk's own half-drawn things */
   sketch: 1.5, stitch: 1.4, reseal: 0.9, sizing: 1.2, binder: 0.9, weft: 1.3,
+  /* the second breeding (v19) */
+  rill: 2.0, specter: 1.4, horn: 1.0, squall: 1.7, eel: 1.6,
+  giltwing: 1.3, midas: 0.9, stencil: 1.1, fray: 1.0,
 };
 
 /* ------------------------------------------------------------
@@ -364,8 +425,8 @@ const AREAS = [
     ink: '淡墨',                                     // pale warm wash
     desc: 'Fresh washi. The first strokes land soft.',
     mult: { hp: 1, sp: 1, budget: 1 },
-    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter', 'c_drum'],
-    order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'split', 'palecrane', 'slab', 'wraith'],
+    roster: ['pulse', 'dart', 'popper', 'washling', 'moth', 'rill', 'split', 'palecrane', 'slab', 'wraith', 'gnat', 'blotter', 'c_drum'],
+    order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'rill', 'palecrane', 'slab', 'wraith'],
     names: ['初描', '新樹', '遠山', '淡游', '霧起', '垂露', '鶴舞', '古松', '暮色', '落款'],
     elite: 'slab', boss: 'b_wheel', keeper: 'k_blight',
   },
@@ -374,8 +435,8 @@ const AREAS = [
     ink: '濃墨',                                     // lamp-black, heavy
     desc: 'The ink deepens. Things move inside it.',
     mult: { hp: 1.7, sp: 1.06, budget: 1.45 },
-    roster: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother', 's_nest', 'c_choir'],
-    order: ['spit', 'shade', 'kage', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan'],
+    roster: ['spit', 'shade', 'kage', 'specter', 'nightshade', 'stilt', 'lotus', 'gloom', 'warden', 'titan', 'owl', 'smother', 's_nest', 'c_choir'],
+    order: ['spit', 'shade', 'kage', 'nightshade', 'specter', 'stilt', 'lotus', 'gloom', 'titan'],
     names: ['入夜', '遠浦', '梟鳴', '夜影', '高軒', '蓮池', '墨霧', '旌旗', '母胎', '落款'],
     elite: 'shade', boss: 'b_mother', keeper: 'k_husk',
   },
@@ -384,8 +445,8 @@ const AREAS = [
     ink: '朱墨',                                     // vermillion-stained
     desc: 'A vermillion wash dries underfoot. The last stroke is heaviest.',
     mult: { hp: 2.7, sp: 1.1, budget: 2.0 },
-    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab', 'ashigaru', 'stamper', 'shiki', 'c_banner', 's_mender'],
-    order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'slab'],
+    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'horn', 'slab', 'ashigaru', 'stamper', 'shiki', 'c_banner', 's_mender'],
+    order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'horn'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
     elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
   },
@@ -394,8 +455,8 @@ const AREAS = [
     ink: '雨墨',                                     // rain-grey
     desc: 'Rain hammers the paper. The ink runs like rivers.',
     mult: { hp: 4.2, sp: 1.16, budget: 2.7 },
-    roster: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth', 'surge', 'maelstrom', 'crest', 'c_gale', 's_toller'],
-    order: ['raindrake', 'gale', 'koi', 'crane', 'dart', 'wraith', 'warden', 'popper', 'moth'],
+    roster: ['raindrake', 'gale', 'koi', 'squall', 'eel', 'crane', 'dart', 'warden', 'surge', 'maelstrom', 'crest', 'c_gale', 's_toller'],
+    order: ['raindrake', 'gale', 'koi', 'squall', 'eel', 'crane', 'warden', 'surge', 'maelstrom'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
     elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
   },
@@ -404,8 +465,8 @@ const AREAS = [
     ink: '金墨',                                     // gold-dusted
     desc: 'Old gold leaf underfoot. The last sheet is the heaviest.',
     mult: { hp: 6.6, sp: 1.22, budget: 3.4 },
-    roster: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask', 'c_gild', 's_ledger'],
-    order: ['gildling', 'phoenix', 'golem', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit'],
+    roster: ['gildling', 'phoenix', 'golem', 'giltwing', 'midas', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask', 'c_gild', 's_ledger'],
+    order: ['gildling', 'phoenix', 'golem', 'giltwing', 'midas', 'mirror', 'koban', 'oni', 'gate'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
   },
@@ -414,49 +475,141 @@ const AREAS = [
     ink: '素墨',                                     // cool ink on unstained silk
     desc: 'The silk the first stroke landed on. Some things are still only drawn.',
     mult: { hp: 7.9, sp: 1.26, budget: 4.1 },
-    roster: ['sketch', 'stitch', 'reseal', 'sizing', 'binder', 'weft', 'kage', 'crane', 'gate', 'warden', 'titan', 'golem', 's_trace', 'c_hush'],
-    order: ['sketch', 'stitch', 'reseal', 'sizing', 'binder', 'weft', 'gate', 'titan', 'golem'],
+    roster: ['sketch', 'stitch', 'reseal', 'sizing', 'stencil', 'fray', 'binder', 'weft', 'kage', 'crane', 'gate', 'warden', 'titan', 'golem', 's_trace', 'c_hush'],
+    order: ['sketch', 'stitch', 'reseal', 'sizing', 'stencil', 'fray', 'binder', 'weft', 'golem'],
     names: ['素紙', '下絵', '糸影', '糊染', '再印', '織端', '絹目', '古鏡', '無字', '落款'],
     elite: 'sketch', boss: 'b_blank', keeper: 'k_edge',
   },
 ];
 
 const UPGRADES = [
-  { id: 'rapid',  name: 'Quick Hand',   desc: '−15% time between volleys. The brush barely lifts.',         max: 5, apply: s => { s.fireCdMult *= 0.85; } },
-  { id: 'heavy',  name: 'Bitter Ink',   desc: '+1 damage per droplet. Dense, dark, final.',                 max: 4, apply: s => { s.dmg += 1; } },
-  { id: 'split',  name: 'Twin Stroke',  desc: '+1 droplet per volley, fanned like brush hairs.',            max: 3, apply: s => { s.shots += 1; } },
-  { id: 'pierce', name: 'Through Mist', desc: 'Droplets pass through +1 target before breaking.',           max: 3, apply: s => { s.pierce += 1; } },
-  { id: 'velo',   name: 'Flick',        desc: '+22% droplet speed. Reach grows with the wrist.',            max: 3, apply: s => { s.bulletSpeedMult *= 1.22; } },
-  { id: 'over',   name: 'Fleeting Foot',desc: '+12% movement. Be elsewhere before the ink lands.',          max: 4, apply: s => { s.moveMult *= 1.12; } },
-  { id: 'plate',  name: 'Thick Ink',    desc: '+1 max integrity and restore 1. You dilute slower.',         max: 3, apply: s => { s.maxHp += 1; s.hp = Math.min(s.maxHp, s.hp + 1); } },
-  { id: 'adren',  name: 'Red Seal',     desc: 'Every kill presses a seal: a short 1.2× stride surge.',      max: 3, apply: s => { s.adren += 1; } },
+  /* ---- the hand's universal arts ----
+     rapid/heavy speak to the BRUSH ITSELF (primary cadence, the
+     depth of every stroke the hand lays); split/pierce/velo/echo
+     speak to cast strokes and hide for the projectile-less brushes
+     (Tide, Red Seal, Scribe); the rest are the scribe's body. */
+  { id: 'rapid',  name: 'Quick Hand',   desc: 'The brush lifts 15% sooner between casts. Whatever it lays.',  max: 5, apply: s => { s.fireCdMult *= 0.85; } },
+  { id: 'heavy',  name: 'Bitter Ink',   desc: 'Every stroke the hand lays bites one deeper — bolt, surge, stamp, scribe.', max: 4, apply: s => { s.dmg += 1; } },
+  { id: 'split',  name: 'Twin Stroke',  desc: '+1 stroke per cast, fanned like brush hairs.',                max: 3, proj: 1, apply: s => { s.shots += 1; } },
+  { id: 'pierce', name: 'Through Mist', desc: 'Cast strokes pass through +1 target before breaking.',        max: 3, proj: 1, apply: s => { s.pierce += 1; } },
+  { id: 'velo',   name: 'Flick',        desc: '+22% cast-stroke speed. Reach grows with the wrist.',         max: 3, proj: 1, apply: s => { s.bulletSpeedMult *= 1.22; } },
+  { id: 'over',   name: 'Fleeting Foot',desc: '+12% movement. Be elsewhere before the ink lands.',           max: 4, apply: s => { s.moveMult *= 1.12; } },
+  { id: 'plate',  name: 'Thick Ink',    desc: '+1 max integrity and restore 1. You dilute slower.',          max: 3, apply: s => { s.maxHp += 1; s.hp = Math.min(s.maxHp, s.hp + 1); } },
+  { id: 'adren',  name: 'Red Seal',     desc: 'Every kill presses a seal: a short 1.2\u00d7 stride surge.',  max: 3, apply: s => { s.adren += 1; } },
   { id: 'shock',  name: 'Ink Burst',    desc: 'Taking a hit splashes everything nearby away. Once per hit.', max: 1, apply: s => { s.shock = true; } },
-  { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored volley answers behind your back. +1 droplet.',    max: 2, apply: s => { s.echo += 1; } },
+  { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored cast answers behind your back. +1 stroke.',        max: 2, proj: 1, apply: s => { s.echo += 1; } },
   { id: 'orbit',  name: 'Ink Orbit',    desc: 'Droplets circle the brush in a wide ring, grinding all they graze.', max: 3, apply: s => { s.orb += 1; },
     maxSpec: 'THE GRAVE RING — an orbital hunts what it sees, every few breaths' },
-  { id: 'nova',   name: 'Black Tide',   desc: 'Every few breaths the ink surges outward, shoving all back.', max: 3, apply: s => { s.nova += 1; } },
-  { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',  max: 2, apply: s => { s.slow += 1; } },
-  { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',    max: 2, apply: s => { s.crit += 1; } },
-  { id: 'ward',   name: 'Paper Ward',   desc: 'A dry talisman swallows one hit whole, then reforms.',       max: 1, apply: s => { s.ward = true; } },
-  { id: 'magnet', name: 'Ink Hunger',   desc: 'The paper pulls harder — +42% gathering radius per rank.',   max: 3, apply: s => { s.magnet += 1; } },
-  { id: 'mends',  name: 'Paper Mends',  desc: 'The sheet heals itself: +1 integrity every so often.',       max: 2, apply: s => { s.mends += 1; s.mendsT = CFG.mends.period(s.mends); } },
-  { id: 'well',   name: 'Deep Well',    desc: 'Every mote of ink is worth +25% more to the brush.',         max: 2, apply: s => { s.well += 1; } },
-  /* ---- weapons ---- */
-  { id: 'fan',    name: 'Folded Fan',   desc: 'Every few breaths the fan snaps open — a spray of paper blades.', max: 4, weapon: true, apply: s => { s.fan += 1; },
-    maxSpec: 'THE FULL BLOOM — every fourth cast snaps open full-circle' },
-  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, weapon: true, apply: s => { s.trailW += 1; },
-    maxSpec: 'THE LINGERING POOL — the ink bites twice as fast and pools deeper' },
-  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, weapon: true, apply: s => { s.spirit += 1; },
+  { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',   max: 2, apply: s => { s.slow += 1; } },
+  { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',     max: 2, apply: s => { s.crit += 1; } },
+  { id: 'ward',   name: 'Paper Ward',   desc: 'A dry talisman swallows one hit whole, then reforms.',        max: 1, apply: s => { s.ward = true; } },
+  { id: 'magnet', name: 'Ink Hunger',   desc: 'The paper pulls harder — +42% gathering radius per rank.',    max: 3, apply: s => { s.magnet += 1; } },
+  { id: 'mends',  name: 'Paper Mends',  desc: 'The sheet heals itself: +1 integrity every so often.',        max: 2, apply: s => { s.mends += 1; s.mendsT = CFG.mends.period(s.mends); } },
+  { id: 'well',   name: 'Deep Well',    desc: 'Every mote of ink is worth +25% more to the brush.',          max: 2, apply: s => { s.well += 1; } },
+  /* ---- the learned powers ----
+     Any brush may learn them; the brush born to one wears its first
+     rank from the first wave, and every further pick deepens it. */
+  { id: 'nova',   name: 'Black Tide',   desc: 'The ink surges outward every few breaths, shoving all back.', max: 3, ability: 1, apply: s => { s.nova += 1; },
+    maxSpec: 'THE Risen SEA — the surge comes faster and reaches farther' },
+  { id: 'fan',    name: 'Folded Fan',   desc: 'A cone of paper blades with every swing — more blades, faster.', max: 4, ability: 1, apply: s => { s.fan += 1; },
+    maxSpec: 'THE FULL BLOOM — the fan snaps open full-circle' },
+  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, ability: 1, apply: s => { s.spirit += 1; },
     maxSpec: 'THE LITANY — spirits run through up to three bodies and fly faster' },
-  { id: 'hanko',  name: 'Crimson Hanko',desc: 'Every eleventh breath a great red seal slams the nearest horde — elites bend it, few break it.', max: 3, weapon: true, apply: s => { s.hanko += 1; },
+  { id: 'hanko',  name: 'Crimson Hanko',desc: 'The great seal falls on the thickest horde — faster, broader.', max: 3, ability: 1, apply: s => { s.hanko += 1; },
     maxSpec: 'THE TWIN STAMP — a second, lighter seal follows the first' },
-  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, weapon: true, apply: s => { s.arc += 1; },
+  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, ability: 1, apply: s => { s.trailW += 1; },
+    maxSpec: 'THE LINGERING POOL — the ink bites twice as fast and pools deeper' },
+  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, ability: 1, apply: s => { s.arc += 1; },
     maxSpec: 'THE LIVING LINE — the stroke leaps three links farther' },
-  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, weapon: true, apply: s => { s.boomer += 1; },
+  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, ability: 1, apply: s => { s.boomer += 1; },
     maxSpec: 'THE MIRROR RETURN — the homing stroke bursts into an ink ring' },
-  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, weapon: true, apply: s => { s.vortex += 1; },
+  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, ability: 1, apply: s => { s.vortex += 1; },
     maxSpec: 'THE WHORL TEETH — the closing whirlpool bites what remains' },
-];
+  /* ---- the brush's own arts ----
+     One track per brush, no other hand may learn it: the weapon's
+     own techniques, unique to the tool the run began with. */
+  { id: 'nrain',  name: 'Needle Rain',  for: 'needle', art: 1, max: 1,
+    desc: 'Every sixth cast opens into a six-thread fan, wide as a window.',
+    apply: s => { s.nrain = 1; } },
+  { id: 'ndeep',  name: 'Deep Point',   for: 'needle', art: 1, max: 2,
+    desc: 'The needle’s own thread bites one deeper. Nothing else changes.',
+    apply: s => { s.ndeep += 1; } },
+  { id: 'nsilk',  name: 'Silk Thread',  for: 'needle', art: 1, max: 2,
+    desc: 'The thread flies a fifth farther before it dries.',
+    apply: s => { s.nsilk += 1; } },
+  { id: 'bwide',  name: 'Wide Sweep',   for: 'broom', art: 1, max: 2,
+    desc: 'The sweep opens wider — and at the second rank a third droplet joins.',
+    apply: s => { s.bwide += 1; if (s.bwide >= 2) s.shots += 1; } },
+  { id: 'bbrist', name: 'Heavy Bristles', for: 'broom', art: 1, max: 2,
+    desc: 'The broom’s own droplets bite one deeper.',
+    apply: s => { s.bbrist += 1; } },
+  { id: 'bwet',   name: 'Wet Sweep',    for: 'broom', art: 1, max: 1,
+    desc: 'What the sweep touches wades — struck beasts slow, briefly.',
+    apply: s => { s.bwet = 1; } },
+  { id: 'sshat',  name: 'Shatter',      for: 'stone', art: 1, max: 2,
+    desc: 'Where the stone lands, the splash reaches nearly half again.',
+    apply: s => { s.sshat += 1; } },
+  { id: 'squake', name: 'Quake',        for: 'stone', art: 1, max: 1,
+    desc: 'The splash stuns — beasts caught in it stand dazed a breath.',
+    apply: s => { s.squake = 1; } },
+  { id: 'sbould', name: 'Boulder',      for: 'stone', art: 1, max: 2,
+    desc: 'A heavier lob: the stone bites one deeper and flies faster.',
+    apply: s => { s.sbould += 1; } },
+  { id: 'wtwin',  name: 'Twin Wisps',   for: 'wisp', art: 1, max: 2,
+    desc: 'The brush breathes a second, then a third wisp with every cast.',
+    apply: s => { s.wtwin += 1; } },
+  { id: 'whaunt', name: 'Swift Haunt',  for: 'wisp', art: 1, max: 2,
+    desc: 'The wisps hunt keener: faster casts, tighter turns.',
+    apply: s => { s.whaunt += 1; } },
+  { id: 'fbloom', name: 'Full Bloom',   for: 'fan', art: 1, max: 1,
+    desc: 'Every FOURTH swing snaps open full-circle — ten blades, all around.',
+    apply: s => { s.fbloom = 1; } },
+  { id: 'fgale',  name: 'Gale Push',    for: 'fan', art: 1, max: 1,
+    desc: 'The gust shoves — blades knock the horde back as they cut.',
+    apply: s => { s.fgale = 1; } },
+  { id: 'fedge',  name: 'Edge Wind',    for: 'fan', art: 1, max: 2,
+    desc: 'One more blade rides every swing of the fan.',
+    apply: s => { s.fedge += 1; } },
+  { id: 'nrip',   name: 'Riptide',      for: 'tide', art: 1, max: 2,
+    desc: 'The surge shoves half again harder, and stuns a breath longer.',
+    apply: s => { s.nrip += 1; } },
+  { id: 'nswell', name: 'Deep Swell',   for: 'tide', art: 1, max: 2,
+    desc: 'The surge’s own bite deepens by one. The sea grows teeth.',
+    apply: s => { s.nswell += 1; } },
+  { id: 'nunder', name: 'Undertow',     for: 'tide', art: 1, max: 1,
+    desc: 'The wake bites twice as fast — the wet ink hungers.',
+    apply: s => { s.nunder = 1; } },
+  { id: 'nspring',name: 'Spring Tide',  for: 'tide', art: 1, max: 2,
+    desc: 'The surge reaches a fifth farther, rank by rank.',
+    apply: s => { s.nspring += 1; } },
+  { id: 'htwin',  name: 'Twin Stamp',   for: 'seal', art: 1, max: 1,
+    desc: 'A second, lighter seal follows the first, a breath behind.',
+    apply: s => { s.htwin = 1; } },
+  { id: 'hbroad', name: 'Broad Seal',   for: 'seal', art: 1, max: 2,
+    desc: 'The stamp presses a quarter broader, rank by rank.',
+    apply: s => { s.hbroad += 1; } },
+  { id: 'hpress', name: 'Deep Press',   for: 'seal', art: 1, max: 2,
+    desc: 'The stamp’s own bite deepens by one.',
+    apply: s => { s.hpress += 1; } },
+  { id: 'hrain',  name: 'Red Rain',     for: 'seal', art: 1, max: 1,
+    desc: 'Every fifth stamp falls twice — the two thickest hordes both.',
+    apply: s => { s.hrain = 1; } },
+  { id: 'ssecond',name: 'Second Scribe', for: 'scribe', art: 1, max: 2,
+    desc: 'Another living stroke wakes and weaves beside the first.',
+    apply: s => { s.ssecond += 1; } },
+  { id: 'sswift', name: 'Swift Line',   for: 'scribe', art: 1, max: 2,
+    desc: 'The stroke weaves a quarter faster through the horde.',
+    apply: s => { s.sswift += 1; } },
+  { id: 'slong',  name: 'Long Stroke',  for: 'scribe', art: 1, max: 2,
+    desc: 'The stroke grows — all it passes feels its width.',
+    apply: s => { s.slong += 1; } },
+  { id: 'swake',  name: 'Ink Wake',     for: 'scribe', art: 1, max: 1,
+    desc: 'Where the stroke has passed, its ink lingers and bites.',
+    apply: s => { s.swake = 1; } },
+  { id: 'sdeep',  name: 'Deep Ink',     for: 'scribe', art: 1, max: 2,
+    desc: 'The stroke’s own bite deepens by one, rank by rank.',
+    apply: s => { s.sdeep += 1; } },
+]
 
 /* ---- CHARMS (符) — what the inkstone buys ----
    Permanent upgrades, pressed between runs. The stone holds the
@@ -467,33 +620,50 @@ const UPGRADES = [
    a real build, and the ward's in-run pick retires once the charm
    owns it (no trap options). Total board: 硯 4,890 over 19 ranks. */
 const CHARMS = [
-  { id: 'hunger', kanji: '引', name: 'INK HUNGER',   cost: [50, 130],
+  /* The stone's shop, v19. The ladder keeps its shape — quality of
+     life leads, damage caps at what a run could earn by its own
+     picks — but the press presses HARDER now: the deep ranks cost
+     real journeys, two new charms ride the brush itself (its own
+     bite, its own cadence), and THE SCHOLAR makes study pay.
+     Total board: 硯 15,820 over 32 ranks. Checked in
+     scripts/economy_calc.js. */
+  { id: 'hunger', kanji: '引', name: 'INK HUNGER',   cost: [60, 150, 380],
     desc: 'The paper pulls harder. Gathering radius widens, rank by rank.',
     apply: s => { s.magnet += 1; } },
-  { id: 'breath', kanji: '息', name: 'LONG BREATH',  cost: [70, 180],
-    desc: 'Droplets fly ten parts farther in ten. The wrist never tires.',
+  { id: 'breath', kanji: '息', name: 'LONG BREATH',  cost: [80, 200, 500],
+    desc: 'The hand\u2019s strokes fly ten parts farther in ten. The wrist never tires.',
     apply: s => { s.bulletSpeedMult *= 1.10; } },
-  { id: 'quick',  kanji: '疾', name: 'QUICK HAND',   cost: [90, 220, 500],
-    desc: 'The brush lifts eight parts in a hundred faster, between volleys.',
+  { id: 'quick',  kanji: '疾', name: 'QUICK HAND',   cost: [100, 260, 640],
+    desc: 'The brush lifts eight parts in a hundred sooner, between casts.',
     apply: s => { s.fireCdMult *= 0.92; } },
-  { id: 'flick',  kanji: '歩', name: 'FLICK',        cost: [80, 200, 460],
+  { id: 'flick',  kanji: '歩', name: 'FLICK',        cost: [90, 230, 560],
     desc: 'The hand moves lighter. Be elsewhere before the ink lands.',
     apply: s => { s.moveMult *= 1.08; } },
-  { id: 'thick',  kanji: '厚', name: 'THICK PAPER',  cost: [140, 360],
+  { id: 'thick',  kanji: '厚', name: 'THICK PAPER',  cost: [160, 420, 960],
     desc: 'One more integrity, pressed into every run. The sheet holds.',
     apply: s => { s.maxHp += 1; s.hp += 1; } },
-  { id: 'bitter', kanji: '重', name: 'BITTER INK',   cost: [160, 420],
-    desc: 'Every droplet bites one deeper. Dense, dark, permanent.',
+  { id: 'bitter', kanji: '重', name: 'BITTER INK',   cost: [190, 500, 1250],
+    desc: 'Every stroke the hand lays bites one deeper. Dense, dark, permanent.',
     apply: s => { s.dmg += 1; } },
-  { id: 'redtip', kanji: '赤', name: 'RED TIP',      cost: [150, 400],
+  { id: 'redtip', kanji: '赤', name: 'RED TIP',      cost: [180, 460, 1050],
     desc: 'Six strokes in a hundred bite twice as deep, whatever the hand carries.',
     apply: s => { s.critC += 0.06; } },
-  { id: 'oldink', kanji: '遺', name: 'THE OLD INK',  cost: [240, 560],
+  { id: 'oldink', kanji: '遺', name: 'THE OLD INK',  cost: [300, 700, 1500],
     desc: 'Every mote of ink is worth a fourth more to the brush. The old ink remembers.',
     apply: s => { s.well += 1; } },
-  { id: 'ward',   kanji: '守', name: 'THE PAPER WARD', cost: [480],
+  { id: 'ward',   kanji: '守', name: 'THE PAPER WARD', cost: [560],
     desc: 'Every run begins warded. A dry talisman swallows the first blow whole.',
     apply: s => { s.ward = true; } },
+  /* the brush's own tracks — the weapon itself, pressed permanent */
+  { id: 'firststroke', kanji: '筆', name: 'THE FIRST STROKE', cost: [260, 620, 1400],
+    desc: 'The brush you carry bites one deeper — its own ink, and nothing else’s.',
+    apply: s => { s.firststroke += 1; } },
+  { id: 'swiftbrush', kanji: '手', name: 'THE SWIFT HAND', cost: [240, 580],
+    desc: 'The brush you carry casts a tenth part sooner, rank by rank.',
+    apply: s => { s.swiftbrush += 1; } },
+  { id: 'scholar', kanji: '学', name: 'THE SCHOLAR', cost: [380, 860],
+    desc: 'Every wave survived presses a tenth more into the stone. Study pays.',
+    apply: s => {} },   /* read by inkForRun through charmLv — the ledger's own charm */
 ];
 
 /* ---- THE BOSS BANNER SPEAKS ----

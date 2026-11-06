@@ -16,8 +16,11 @@
 
 **ONE MORE** is a Vampire-Survivors-like painted as living sumi-e, written in
 vanilla HTML/CSS/JS. You are a brush spirit walking sheets of washi paper;
-your brush fires at the nearest threat on its own, and your only job is to
-*not be erased*. Every kill spills ink motes — gather them to fill the ink
+your brush **is** your weapon — choose one of eight and the run begins with
+that arm and nothing else: the needle's thread, the broom's sweep, the
+stone's lob, the wisp's homing breath, the fan's cone of blades, the tide's
+surge, the seal's stamp, or the scribe's living stroke that never fires a
+single projectile. Your only job is to *not be erased*. Every kill spills ink motes — gather them to fill the ink
 gauge and rise mid-battle. Every kill also splatters real ink that
 **permanently stains the paper**: by the sixth sheet the world is a painting
 of your whole fight.
@@ -43,6 +46,10 @@ optional and can stay dark forever.
 | A scene of the first sheet — chain ×1.64, the ink already staining | The Guardian of sheet V — THE FIRST BRUSH, a hanko already slammed |
 |---|---|
 | ![A journey scene under surge](screenshots/04-journey.png) | ![The First Brush duel](screenshots/06-guardian.png) |
+
+| THE SCRIBE on the storm sheet — one living stroke, thirteen squalls circling | CHOOSE ONE MORE — the scribe's own ARTS beside the learned POWERS |
+|---|---|
+| ![The scribe on the storm sheet](screenshots/12-scribe.png) | ![The brush arts and powers](screenshots/13-arts.png) |
 
 | The ink rises — CHOOSE ONE MORE, three cards, two of them weapons | CHARMS — what the runs press out, the paper keeps |
 |---|---|
@@ -155,25 +162,31 @@ Kill them first, or fight the horde they make.
 
 ---
 
-## The brushes
+## The brushes — ONE BRUSH, ONE BLADE
 
-Choose your brush before the run — the choice is remembered. Three are free;
-four are sealed behind the journey's scenes, and a scene **seals** when its
-tenth wave's Keeper falls.
+Choose your brush before the run — the choice is remembered. The brush **is**
+the weapon: there is no universal volley hiding behind it, and no weapon ever
+arrives the hand did not pick. Three are free; five are sealed behind the
+journey's scenes, and a scene **seals** when its tenth wave's Keeper falls.
 
-| Brush | kanji | Sealed until | The hand it gives you |
+| Brush | kanji | Sealed until | The weapon it is |
 |---|---|---|---|
-| THE NEEDLE | 細 | free | A fine tip that barely lifts — fire comes fast, strokes stay light (+28% fire rate, +8% move) |
-| THE BROOM | 掃 | free | A wide brush that sweeps two droplets at once, slower between strokes |
-| THE STONE | 岩 | free | A heavy hand — every droplet bites +2 deeper, the sheet holds 4 drops, the walk is heavy |
-| THE WISP | 幽 | 3 scenes | The brush never fights alone: a lesser spirit wakes beside it and hunts on its own |
-| THE FAN | 扇 | 6 scenes | Carries a folded fan — every few breaths it snaps open instead of a volley |
-| THE TIDE | 潮 | 10 scenes | The black tide answers it — every few breaths the ink surges outward and shoves the paper back |
-| THE RED SEAL | 印 | 14 scenes | A heavy hand and a great hanko — every eleventh breath the stamp falls on the thickest horde |
+| THE NEEDLE | 細 | free | casts a thread of ink every 0.30s — fast, light, true |
+| THE BROOM | 掃 | free | sweeps two wide droplets at once, broad and slow |
+| THE STONE | 岩 | free | lobs a heavy stone — bites 3 deep, splashes where it lands; 4-integrity body |
+| THE WISP | 幽 | 3 scenes | breathes homing wisps that lean into the horde — and a spirit wakes beside it |
+| THE FAN | 扇 | 6 scenes | a cone of paper blades with every swing; every fifth snaps full-circle |
+| THE TIDE | 潮 | 10 scenes | no arrows — a black surge rolls outward every few breaths, and the wet wake you leave still bites |
+| THE RED SEAL | 印 | 14 scenes | no arrows — the great hanko falls on the thickest horde, stunning all under it |
+| THE SCRIBE | 書 | 18 scenes | the master's way: one living stroke weaves through the horde, perpetual, biting all it passes |
+
+Every brush carries its own **ART track** — techniques no other hand may
+learn (see The brush arts). The Wisp, Fan, Tide and Seal brushes are born at
+rank 1 of their kindred power; picking that power again deepens it.
 
 ---
 
-## The ink-born — 72 of them
+## The ink-born — 82 of them
 
 Every creature is a living blot of sumi ink with hand-drawn line boil. The
 *trait* beside each name is the game's own stamp; **walks in** is the global
@@ -192,6 +205,7 @@ one beast of its own.
 | **WASHLING** | PALE WANDERER | 31 |
 | **MOTH** | ERRATIC | 41 — never holds a course, bursts in jolts |
 | **DRIP** | DIVIDER | 51 — dies into two fast blips |
+| **RILL** | WEAVER | 51 — a stream that never runs straight, weaving as it closes |
 | **PALE CRANE** | SWOOPER | 61 — swoops past in long, fast arcs |
 | **BRUTE** | BRUISER | 71 — hatched, dripping, very hard to kill |
 | **WISP** | WEAVER | 81 — weaves sideways as it closes in |
@@ -210,6 +224,7 @@ one beast of its own.
 | **SMOTHER** | CREEP | 156 |
 | **GLOOM** | BREATH | 156 |
 | **WARDEN** | HERALD | 171 — quickens every beast near it. Kill it first |
+| **SPECTER** | PHASER | 171 — unhurried, but every few breaths it is suddenly nearer |
 | **TITAN** | MOTHER | 181 — sheds her brood as she bears down |
 
 **SHEET III · CINNABAR FIELD** — vermillion-stained ink
@@ -223,6 +238,7 @@ one beast of its own.
 | **SEALBEARER** | SEALED | 216 |
 | **GATE** | SHIELDED | 221 — frontal strikes are turned; flank it or drown it |
 | **STAMPER** | SEALSMITH | 241 |
+| **WARHORN** | MUSTER | 281 — its pulse drives every beast near it 32% faster |
 | **SHIKI** | SUMMONER | 246 |
 
 **SHEET IV · STORM SHEET** — rain-grey ink
@@ -234,6 +250,8 @@ one beast of its own.
 | **KOI** | SINEW | 311 — swims long sine curves and *dives beneath your strokes* |
 | **SURGE** | BREAKER | 316 |
 | **MAELSTROM** | UNDERTOW | 351 — pulls the fight inward |
+| **SQUALL** | CIRCLER | 331 — circles the brush, closing its hand |
+| **EEL** | RUSHER | 341 — rushes in rivers, fast and never straight |
 | **WAVE CREST** | SWELL | 356 |
 
 **SHEET V · GILT SCROLL** — gold-dusted ink
@@ -245,6 +263,8 @@ one beast of its own.
 | **GOLEM** | COLOSSUS | 411 — a folded colossus that breaks into two brutes |
 | **MIRROR** | REFLECT | 421 |
 | **KOBAN** | GREED | 436 |
+| **GILTWING** | SKIRMISHER | 431 — swoops in; wounded, it flies rich and away |
+| **THE MIDAS** | ALCHEMIST | 441 — transmutes lesser beasts into fleeing koban |
 | **RELIC CASK** | TREASURY | 441 |
 
 **SHEET VI · THE BLANK SILK** — cool ink on unstained silk
@@ -256,12 +276,21 @@ one beast of its own.
 | **RESEAL** | RESTAMPED | 521 |
 | **SIZING** | GLUE | 531 |
 | **BINDER** | MOUNT | 541 |
+| **STENCIL** | STAMPER | 541 — presses red seals where you stand |
+| **THE FRAY** | UNRAVELER | 551 — sheds stitchlings from its unraveling seam |
 | **WEFT** | LOOM | 551 |
 
-…plus **BLIP** (the shard shed by dividers and mothers), the five
+…plus **BLIP** (the shard shed by dividers and mothers), **STITCHLING**
+(the shard shed by THE FRAY), the five
 **specials** (THE NEST · THE MENDER · THE TOLLER · THE LEDGER · THE TRACE),
 the six **Captains**, the six **Keepers** and the six **Guardians** —
-seventy-two ink-born in all.
+eighty-two ink-born in all.
+
+**THE CAPTAINS SURGE (v19).** Every officer now draws a telegraphed road
+through the paper every few breaths and takes it — and under its flag the
+rank MUSTERS: a swarm of its kindred fans out and hunts the brush, mustering
+harder when the officer is wounded. Break the officer and the swarm stands
+still.
 
 ---
 
@@ -284,30 +313,40 @@ Its Keeper walks ahead of it every hundred waves: **THE BLIGHT** (*THE STAIN
 SENDS ITS FIRST SERVANT* — 10), **THE HUSK** (110), **THE CINDER** (210),
 **THE RAINVEIL** (310), **THE NIB** (410), **THE MARGIN** (510).
 
+**The Guardian is the Keeper, upgraded.** Each sheet's finale keeps its
+Keeper's whole kit and adds abilities the lesser duel never shows: THE STAIN
+slams double rings and calls blotters from phase one; THE NIGHT MOTHER's
+brood sheds four wide and an owl rides her shadow; THE CINNABAR ONI's charge
+ends in a paper-knockback slam and TWO kin answer its horn; THE STORM EYE
+drops six bolts and its own cranes ride the edge; THE FIRST BRUSH opens a
+NINE-blade aimed fan and its enraged students come four wide; THE UNWRITTEN
+stamps three seals and what it erases comes back RESTAMPED.
+
 ---
 
-## The brush arts — 25 picks, 8 max-tier specials
+## The brush arts — 52 picks: strokes, powers, and the brush's own arts
 
-The level-up screen deals three cards from this pool. Strokes reshape the
-volley; weapons (marked 武 in vermilion on their cards) fight on their own
-clocks. Every weapon carries a **max-tier special** that transforms it.
+The level-up screen deals three cards from this pool — and the pool answers
+the hand: cast-stroke arts only deal to brushes that cast; each brush's own
+arts deal only to that brush. **ARTS** (marked 墨-ink on their cards) are the
+weapon's own techniques; **POWERS** (marked 武 in vermilion) fight on their
+own clocks. Strokes reshape the hand itself.
 
-**The strokes**
+**The strokes — every hand**
 
 | Stroke | Max | What it does |
 |---|---|---|
-| Quick Hand | 5 | −15% time between volleys |
-| Bitter Ink | 4 | +1 damage per droplet |
-| Twin Stroke | 3 | +1 droplet per volley, fanned like brush hairs |
-| Through Mist | 3 | droplets pass through +1 target |
-| Flick | 3 | +22% droplet speed |
+| Quick Hand | 5 | −15% time between casts |
+| Bitter Ink | 4 | every stroke the hand lays bites one deeper |
+| Twin Stroke | 3 | +1 stroke per cast (casting brushes only) |
+| Through Mist | 3 | cast strokes pass through +1 target (casting brushes only) |
+| Flick | 3 | +22% cast-stroke speed (casting brushes only) |
 | Fleeting Foot | 4 | +12% movement |
 | Thick Ink | 3 | +1 max integrity, restore 1 |
 | Red Seal | 3 | every kill presses a seal — a short 1.2× stride surge |
 | Ink Burst | 1 | taking a hit splashes everything nearby away |
-| Echo Stroke | 2 | a mirrored volley answers behind your back |
+| Echo Stroke | 2 | a mirrored cast answers behind your back (casting brushes only) |
 | Ink Orbit | 3 | droplets circle the brush in a wide ring |
-| Black Tide | 3 | every few breaths the ink surges outward, shoving all back |
 | Wet Paper | 2 | struck beasts wade — slowed briefly |
 | Crimson Tip | 2 | one stroke in six bites twice as deep |
 | Paper Ward | 1 | a dry talisman swallows one hit whole, then reforms |
@@ -315,17 +354,50 @@ clocks. Every weapon carries a **max-tier special** that transforms it.
 | Paper Mends | 2 | the sheet heals itself, +1 integrity every so often |
 | Deep Well | 2 | every mote is worth +25% more |
 
-**The weapons and their max-tier specials**
+**The learned powers — any hand; the born brush starts at rank 1**
 
-| Weapon | Max | At its peak it becomes |
+| Power | Max | At its peak it becomes |
 |---|---|---|
-| Folded Fan | 4 | **THE FULL BLOOM** — every fourth cast snaps open full-circle |
-| Ink Trail | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper |
+| Black Tide | 3 | the surge comes faster and reaches farther |
+| Folded Fan | 4 | more blades every swing — the fan's own bloom |
 | Spirit Scribes | 3 | **THE LITANY** — spirits run through up to three bodies |
 | Crimson Hanko | 3 | **THE TWIN STAMP** — a second, lighter seal follows the first |
+| Ink Trail | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper |
 | Sumi Arc | 4 | **THE LIVING LINE** — the stroke leaps three links farther |
 | Returning Stroke | 4 | **THE MIRROR RETURN** — the homing stroke bursts into an ink ring |
 | Ink Vortex | 3 | **THE WHORL TEETH** — the closing whirlpool bites what remains |
+
+**The brush's own arts — one track, one hand (v19)**
+
+| Brush | Art | Max | What it does |
+|---|---|---|---|
+| NEEDLE | Needle Rain | 1 | every sixth cast opens into a six-thread fan |
+| NEEDLE | Deep Point | 2 | the thread bites one deeper |
+| NEEDLE | Silk Thread | 2 | the thread flies a fifth farther |
+| BROOM | Wide Sweep | 2 | the sweep opens wider; rank two adds a third droplet |
+| BROOM | Heavy Bristles | 2 | the broom's droplets bite one deeper |
+| BROOM | Wet Sweep | 1 | what the sweep touches wades — slowed |
+| STONE | Shatter | 2 | the splash reaches nearly half again |
+| STONE | Quake | 1 | the splash stuns a breath |
+| STONE | Boulder | 2 | the lob bites deeper and flies faster |
+| WISP | Twin Wisps | 2 | a second, then a third wisp with every cast |
+| WISP | Swift Haunt | 2 | faster casts, tighter turns |
+| FAN | Full Bloom | 1 | every FOURTH swing snaps full-circle |
+| FAN | Gale Push | 1 | blades knock the horde back as they cut |
+| FAN | Edge Wind | 2 | one more blade rides every swing |
+| TIDE | Riptide | 2 | the surge shoves harder and stuns longer |
+| TIDE | Deep Swell | 2 | the surge's own bite deepens |
+| TIDE | Undertow | 1 | the wet wake bites twice as fast |
+| TIDE | Spring Tide | 2 | the surge reaches a fifth farther |
+| SEAL | Twin Stamp | 1 | a second, lighter seal follows the first |
+| SEAL | Broad Seal | 2 | the stamp presses a quarter broader |
+| SEAL | Deep Press | 2 | the stamp's own bite deepens |
+| SEAL | Red Rain | 1 | every fifth stamp falls twice — two hordes both |
+| SCRIBE | Second Scribe | 2 | another living stroke wakes |
+| SCRIBE | Swift Line | 2 | the stroke weaves a quarter faster |
+| SCRIBE | Long Stroke | 2 | the stroke grows — all it passes feels its width |
+| SCRIBE | Ink Wake | 1 | where the stroke passed, its ink lingers and bites |
+| SCRIBE | Deep Ink | 2 | the stroke's own bite deepens |
 
 Found on the paper: the **pot** (+1 integrity), the **墨 talisman** (vacuums
 every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
@@ -336,23 +408,27 @@ every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
 ## Charms (符) — what the inkstone buys
 
 Permanent upgrades pressed between runs. A charm's rank rides every page the
-hand opens — journey, endless, daily, the resumed frontier. Nine charms over
-nineteen ranks; the whole board costs **硯 4,890**. The ladder is shaped
-honestly: the cheapest charm lands on the first run, quality-of-life leads,
-damage is capped at half a real build, and the Paper Ward charm retires the
-in-run pick so there are no trap options.
+hand opens — journey, endless, daily, the resumed frontier. Twelve charms over
+**32 ranks; the whole board costs 硯 15,820** — a full victory run presses
+about 3,700, so the deep ranks are bought with real journeys. The ladder is
+shaped honestly: the cheapest charm lands on the first run, quality-of-life
+leads, damage is capped at half a real build, and the Paper Ward charm retires
+the in-run pick so there are no trap options.
 
 | Charm | kanji | Ranks | Cost (ink) | What it presses |
 |---|---|---|---|---|
-| INK HUNGER | 引 | 2 | 50 · 130 | gathering radius widens, rank by rank |
-| LONG BREATH | 息 | 2 | 70 · 180 | droplets fly 10% farther |
-| FLICK | 歩 | 3 | 80 · 200 · 460 | the hand moves 8% lighter per rank |
-| QUICK HAND | 疾 | 3 | 90 · 220 · 500 | the brush lifts 8% faster per rank |
-| THICK PAPER | 厚 | 2 | 140 · 360 | one more integrity, pressed into every run |
-| RED TIP | 赤 | 2 | 150 · 400 | six strokes in a hundred bite twice as deep |
-| BITTER INK | 重 | 2 | 160 · 420 | every droplet bites one deeper |
-| THE OLD INK | 遺 | 2 | 240 · 560 | every mote is worth a fourth more |
-| THE PAPER WARD | 守 | 1 | 480 | every run begins warded |
+| INK HUNGER | 引 | 3 | 60 · 150 · 380 | gathering radius widens, rank by rank |
+| LONG BREATH | 息 | 3 | 80 · 200 · 500 | the hand's strokes fly 10% farther per rank |
+| FLICK | 歩 | 3 | 90 · 230 · 560 | the hand moves 8% lighter per rank |
+| QUICK HAND | 疾 | 3 | 100 · 260 · 640 | the brush lifts 8% faster per rank |
+| THICK PAPER | 厚 | 3 | 160 · 420 · 960 | one more integrity, pressed into every run |
+| RED TIP | 赤 | 3 | 180 · 460 · 1050 | six strokes in a hundred bite twice as deep |
+| BITTER INK | 重 | 3 | 190 · 500 · 1250 | every stroke the hand lays bites one deeper |
+| THE OLD INK | 遺 | 3 | 300 · 700 · 1500 | every mote is worth a fourth more |
+| THE PAPER WARD | 守 | 1 | 560 | every run begins warded |
+| **THE FIRST STROKE** | 筆 | 3 | 260 · 620 · 1400 | the brush you carry bites one deeper — its own ink only |
+| **THE SWIFT HAND** | 手 | 2 | 240 · 580 | the brush you carry casts 10% sooner per rank |
+| **THE SCHOLAR** | 学 | 2 | 380 · 860 | every wave survived presses 10% deeper into the stone |
 
 ### The Inkstone (硯) — the idle page
 
@@ -678,7 +754,7 @@ Everything is a knob in `js/config.js` — edit and refresh, no build:
 - `CFG.wave` — the ten-wave shape: budgets, surge cadence, elite scaling,
   the concurrent cap (150) and group size
 - `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
-- `CFG.brushes` — the seven brushes and their mods
+- `CFG.brushes` — the eight brushes and their weapon bodies (`atk`)
 - `UPGRADES` — the 25 picks, their caps, and the eight max-tier specials
 - `CHARMS` — the nine charms, their ranks and ink costs
 - `CFG.charmEarn` — what a run presses into the stone
@@ -700,7 +776,7 @@ armed.
 | Param | What it does |
 |---|---|
 | `?wave=N` | start the next run at global wave N (0–999) — `?wave=500` drops the run on the First Brush |
-| `&power=N` | seed a deep-run build of N upgrades (0–30) |
+| `&power=N` | seed a deep-run build of N upgrades (0–30; 60% stats, 40% powers) |
 | `&god=1` | the scribe cannot bleed — for probes that must outlive a swarm |
 | `&hard=1` | force REALLY HARD for the run |
 | `?daily=1` | walk today's seeded sheet |

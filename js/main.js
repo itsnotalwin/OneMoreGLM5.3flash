@@ -233,6 +233,9 @@
     on('setSound', !muted);
     on('setGhost', localStorage.getItem('om_ghost_off_v1') !== '1');
     on('setHard', G.getHard());
+    /* the sheet's ink: AUTO wears the highest unlocked scroll */
+    const tst = document.getElementById('setThemeState');
+    if (tst) tst.textContent = THEME_LABELS[G.getThemeSetting()] || 'AUTO';
     const wipe = document.getElementById('setWipe');
     const wst = document.getElementById('setWipeState');
     if (wipe) wipe.classList.toggle('armed', wipeArmed);
@@ -272,6 +275,18 @@
     SFX.ensure();
     G.setHard(!G.getHard());
     UI.setHard(G.getHard());
+    SFX.pick(1);
+    refreshSettings();
+  });
+  /* THE SHEET'S INK — the theme cycles AUTO → the six papers */
+  const THEME_CYCLE = ['auto', 'pale', 'dark', 'red', 'storm', 'gilt', 'silk'];
+  const THEME_LABELS = { auto: 'AUTO', pale: 'FIRST WASH', dark: 'NIGHT', red: 'CINNABAR', storm: 'STORM', gilt: 'GILT', silk: 'SILK' };
+  const themeBtn = document.getElementById('setTheme');
+  if (themeBtn) themeBtn.addEventListener('click', () => {
+    SFX.ensure();
+    const cur = THEME_CYCLE.indexOf(G.getThemeSetting());
+    const next = THEME_CYCLE[(cur + 1) % THEME_CYCLE.length];
+    G.setThemeSetting(next);
     SFX.pick(1);
     refreshSettings();
   });

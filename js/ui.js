@@ -93,6 +93,35 @@ const UI = (() => {
     arc: '<path d="M4 14L9 9.5l2.4 3L15 8l2 3.4L20 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17.5l3-2.6M17 16.5l3-2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><circle cx="9" cy="9.5" r="1.2" fill="#b23a2b"/>',
     boomer: '<path d="M6 17.5C8.6 13.5 12 9.5 17.5 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M17.5 6l-.8 4.4M17.5 6l-4.4.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.4 19.4c2.2-.6 3.6-2 4.4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>',
     vortex: '<path d="M12 12m-1.6 0a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0" fill="currentColor"/><path d="M12 4.6c4.1 0 7.4 3.3 7.4 7.4M12 19.4c-4.1 0-7.4-3.3-7.4-7.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15.8 12A3.8 3.8 0 0 1 12 15.8M8.2 12A3.8 3.8 0 0 1 12 8.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>',
+    /* v19 — the brush's own arts */
+    nrain: '<path d="M12 4v11M7 7v9M17 7v9M4 11v6M20 11v6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    ndeep: '<path d="M4 12h13M13 8.5L17.5 12 13 15.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="20" cy="12" r="1.5" fill="currentColor"/>',
+    nsilk: '<path d="M3 12c3-4 6 4 9 0s6-4 9 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    bwide: '<path d="M4 12c3-5 8-7 16-7M4 12c3 5 8 7 16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M4 12h13" stroke="currentColor" stroke-width="1.4"/>',
+    bbrist: '<path d="M4 12h11M15 12l4-3M15 12l4 3M15 12l5 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    bwet: '<path d="M4 15c2.5-2 5-2 8 0s5.5 2 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M8 9c1-1.6 2.4-1.6 3.4 0S13 11 12 11s-5-.4-4-2z" fill="currentColor"/>',
+    sshat: '<circle cx="11" cy="12" r="3.2" fill="currentColor"/><path d="M15.5 8.5l2.5-2M16.5 12h3M15.5 15.5l2.5 2M6.5 8.5l-2-2M6.5 15.5l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    squake: '<path d="M4 17h16M6 17v-3M12 17v-5M18 17v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3 8l2 2M9 6l2 3M15 6l-2 3M21 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    sbould: '<path d="M7 16c-1.5-3.5.5-8 5-8s6.5 4.5 5 8c-.8 1.6-9.2 1.6-10 0z" fill="currentColor"/>',
+    wtwin: '<circle cx="8.5" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="15.5" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.9"/>',
+    whaunt: '<path d="M5 14c2-5 7-8 12-7-1 5-5 9-10 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="15" cy="9.6" r="1.4" fill="currentColor"/>',
+    fbloom: '<path d="M12 12L12 4M12 12l6.9-4M12 12l6.9 4M12 12l0 8M12 12l-6.9 4M12 12l-6.9-4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    fgale: '<path d="M4 9h9a2.5 2.5 0 1 0-2.4-3.2M4 13h13a2.5 2.5 0 1 1-2.4 3.2M4 17h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    fedge: '<path d="M12 4v16M8 7v10M16 7v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    nrip: '<path d="M4 9c2.7-2.4 5.3-2.4 8 0s5.3 2.4 8 0M4 15c2.7-2.4 5.3-2.4 8 0s5.3 2.4 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    nswell: '<path d="M4 16c2-6 5-9 8-9s6 3 8 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.6"/>',
+    nunder: '<path d="M12 5v9M12 14l-3.5-3.5M12 14l3.5-3.5M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    nspring: '<path d="M5 15a7 7 0 0 1 14 0M5 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 8V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    htwin: '<rect x="4" y="8" width="7" height="8" rx="1" fill="currentColor"/><rect x="13" y="8" width="7" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+    hbroad: '<rect x="4" y="7" width="16" height="10" rx="1.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.8"/>',
+    hpress: '<rect x="7" y="8" width="10" height="8" rx="1" fill="currentColor"/><path d="M5 5h14M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    hrain: '<rect x="8" y="4" width="8" height="6" rx="1" fill="currentColor"/><path d="M6 14h3M12 14h3M9 18h3M15 18h3M4.5 18h2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    ssecond: '<path d="M6 18c8 0 12-4 12-12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M4 20c8 0 12-4 12-12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.65"/>',
+    sswift: '<path d="M4 16C10 16 14 12 15 5c4 2 6 6 5 10-1 3-4 5-8 5-3 0-6-1.5-8-4z" fill="currentColor"/>',
+    slong: '<path d="M3 12h18M18 12l-3.5-3M18 12l-3.5 3" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+    swake: '<path d="M4 18c6 0 10-3 13-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M5 21h4M11 21h4M17 21h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    sdeep: '<path d="M6 5c8 2 12 6 12 14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="18.5" cy="19.5" r="1.8" fill="currentColor"/>',
+
   };
   /* the upgrade is filed under 'trail'; the glyph under 'trailW' — same brush */
   GLYPHS.trail = GLYPHS.trailW;
@@ -797,12 +826,13 @@ const UI = (() => {
       const pips = u.patch ? '' : Array.from({ length: u.max }, (_, k) =>
         `<i class="pip${k < lv ? ' on' : ''}"></i>`).join('');
       const isNew = !u.patch && lv === 0 ? '<span class="up-new">NEW</span>' : '';
-      const isWpn = u.weapon ? '<span class="up-wpn">WEAPON</span>' : '';
+      const isWpn = (u.weapon || u.ability) ? '<span class="up-wpn">POWER</span>' : '';
+      const isArt = u.art ? '<span class="up-wpn up-art">ART</span>' : '';
       /* the final pick earns its name on the card: the special it wakes */
       const maxLine = (!u.patch && u.maxSpec && lv === u.max - 1)
         ? `<span class="up-maxspec">${u.maxSpec}</span>` : '';
       card.innerHTML =
-        `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
+        `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isArt}${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
         `<svg class="up-glyph" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg>` +
         `<h3 class="up-name">${u.name}</h3>` +
         `<p class="up-desc">${u.desc}</p>` +
@@ -954,7 +984,10 @@ const UI = (() => {
      weapon wears MAX instead of a number */
   function setLoadout(levels) {
     if (!el.hudLoadout) return;
-    el.hudLoadout.innerHTML = UPGRADES
+    /* the brush itself leads the shelf: ONE BRUSH, ONE BLADE */
+    const br = CFG.brushes[G.S.brush] || null;
+    const brChip = br ? `<span class="load-item load-brush" title="${br.name}"><b>${br.kanji}</b></span>` : '';
+    el.hudLoadout.innerHTML = brChip + UPGRADES
       .filter(u => (levels[u.id] || 0) > 0)
       .map(u => `<span class="load-item${levels[u.id] >= u.max ? ' load-max' : ''}" title="${u.name}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg><b>${levels[u.id] >= u.max ? 'MAX' : levels[u.id]}</b></span>`)
       .join('');

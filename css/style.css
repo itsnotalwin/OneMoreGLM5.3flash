@@ -1016,6 +1016,18 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   padding: 3px 4px 2px;
   transform: rotate(-3deg);
 }
+/* the brush's own arts wear the ink itself, not the red — the
+   track belongs to the tool, not the paper's powers */
+.up-wpn.up-art{
+  background: var(--ink);
+  color: var(--paper);
+  transform: rotate(2.4deg);
+}
+/* the brush's own kanji leads the HUD shelf */
+.load-item.load-brush b{
+  font-size: 13px; font-weight: 700; color: var(--ink);
+  line-height: 1;
+}
 
 /* the endless call on the victory sheet */
 .block-btn.continue{ background: var(--red); color: var(--paper); }

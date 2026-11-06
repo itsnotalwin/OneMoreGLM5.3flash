@@ -119,7 +119,13 @@ const R = (() => {
       const area = AREAS[S.areaIdx % AREAS.length];
       return area.theme;
     }
-    return themeKey; /* title & over keep whatever sheet they lie on */
+    /* the title wears ink by choice (v19): the setting's theme — or,
+       in AUTO, the highest unlocked scroll's ink, so the paper the
+       hand owns is the paper the title wears */
+    const pref = (typeof G.getThemeSetting === 'function') ? G.getThemeSetting() : 'auto';
+    if (pref && pref !== 'auto' && THEMES[pref]) return pref;
+    const unlocked = (typeof G.getUnlocked === 'function') ? G.getUnlocked() : 1;
+    return AREAS[Math.min(AREAS.length, Math.max(1, unlocked)) - 1].theme;
   }
 
   /* ---------------- tiled washi paper ---------------- */
@@ -1281,7 +1287,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.18, 10);
         break;
       }
-      case 'moth': { /* MOTH — a flicker of ink that never holds course */
+      case 'moth': case 'rill': { /* MOTH / RILL — a flicker of ink that never holds course; the rill a stream that weaves */
         c.rotate(e.ang);
         const flap = Math.sin(e.t * 13 + e.seed);
         c.scale(1 + flap * 0.08, 1 - flap * 0.14);
@@ -1303,7 +1309,7 @@ const R = (() => {
         silhouette = () => { c.save(); c.rotate(e.ang); teardrop(c, r * 1.1); c.restore(); };
         break;
       }
-      case 'shade': case 'nightshade': { /* SHADE — dissolving into nothing, then behind you */
+      case 'shade': case 'nightshade': case 'specter': { /* SHADE / SPECTER — dissolving into nothing, then behind you */
         const st = e.state;
         const ns = e.type === 'nightshade';
         let alpha = ns ? 0.86 : 0.72;
@@ -1589,7 +1595,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.06, sd, 0.13, 13);
         break;
       }
-      case 'crane': case 'palecrane': case 'phoenix': { /* CRANE — folded paper that swoops past in arcs */
+      case 'crane': case 'palecrane': case 'phoenix': case 'squall': case 'giltwing': { /* CRANE / SQUALL / GILTWING — folded paper that swoops past in arcs */
         const st = e.state;
         const pale = e.type === 'palecrane';
         const gold = e.type === 'phoenix';
@@ -1734,7 +1740,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 0.96, sd, 0.12, 12);
         break;
       }
-      case 'warden': { /* WARDEN — a floating standard that quickens the pack */
+      case 'warden': case 'horn': { /* WARDEN / WARHORN — a floating standard that quickens the pack */
         const bob = Math.sin(e.t * 2.6 + e.seed) * 2.4;
         c.translate(0, bob);
         /* the herald's reach, drawn when beasts run fast nearby */
@@ -1764,7 +1770,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.24, 9);
         break;
       }
-      case 'koi': { /* KOI — a long curve of ink that dives beneath the strokes */
+      case 'koi': case 'eel': { /* KOI / EEL — a long curve of ink that dives beneath the strokes; the eel rushes in rivers */
         const div = e.diving;
         c.globalAlpha = div ? 0.3 : 0.95;
         c.rotate(e.ang);
@@ -2105,7 +2111,7 @@ const R = (() => {
         eyeSlits(c, ang, r * 0.8, 0.55);
         break;
       }
-      case 'shiki': { /* SHIKI — a paper doll that calls lesser ink to serve */
+      case 'shiki': case 'midas': { /* SHIKI / MIDAS — a paper doll that calls lesser ink to serve; the midas turns it to coin */
         const raise = e.state === 'tele' ? Math.min(1, e.stateT / 0.75) : 0;
         /* the body: one tall brush stroke, leaning as it strafes */
         c.save();
@@ -2281,7 +2287,7 @@ const R = (() => {
         silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.ellipse(0, 0, r * 1.5, r * 0.6, 0, 0, TAU); c.restore(); };
         break;
       }
-      case 'reseal': { /* RESEAL — a stamp that refuses its first ending */
+      case 'reseal': case 'stencil': { /* RESEAL / STENCIL — a stamp that refuses its first ending; the stencil presses yours */
         const rose = !!e.rose;
         c.save();
         c.rotate(Math.sin(e.t * 1.8 + e.seed) * 0.06 - 0.05);
@@ -2379,7 +2385,7 @@ const R = (() => {
         silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.14, 10);
         break;
       }
-      case 'weft': { /* WEFT — a loom-shuttle that throws the cross-weave */
+      case 'weft': case 'fray': { /* WEFT / FRAY — a loom-shuttle that throws the cross-weave; the fray unravels */
         const st3 = e.state;
         c.save();
         c.rotate(e.ang);
@@ -3606,6 +3612,18 @@ const R = (() => {
       c.save(); c.translate(-2.6, 4.8); c.rotate(1.9); teardrop(c, 1.9); c.fill(); c.restore();
       c.globalAlpha = 0.38;
       inkStroke(c, [{ x: -7, y: 0 }, { x: -12 - b.age * 6, y: 0.5 }], 3.6, { alpha: 1 });
+    } else if (b.kind === 'wisp' || b.brush === 'wisp') {
+      /* the homing breath — a small ghost with a long, streaming tail */
+      c.rotate(b.ang);
+      c.globalAlpha = 0.92;
+      c.fillStyle = INK;
+      blobPath(c, 0, 0, 3.4, b.seed ?? 7, 0.3, 8);
+      c.fill();
+      c.globalAlpha = 0.55;
+      blobPath(c, -1.4, -1, 1.7, (b.seed ?? 7) ^ 5, 0.4, 7);
+      c.fill();
+      c.globalAlpha = 0.3;
+      inkStroke(c, [{ x: -4, y: 0 }, { x: -12 - b.age * 14, y: Math.sin(b.age * 9 + b.seed) * 3 }], 2.2, { alpha: 1 });
     } else { /* a flicked droplet (echo stroke) */
       c.rotate(b.ang);
       c.fillStyle = INK;
@@ -3741,6 +3759,37 @@ const R = (() => {
     c.textBaseline = 'middle';
     c.globalAlpha = alpha;
     c.fillText('一', 0, s * 0.08);
+    c.restore();
+  }
+
+  /* THE SCRIBE's living stroke — a perpetual serpent of ink that
+     weaves through the horde. Drawn as one long tapered stroke
+     snaking along its heading, a tail drying behind it. */
+  function drawScribe(c, sc) {
+    const wob = Math.sin(sc.phase * 1.7 + sc.seed) * 5;
+    const wob2 = Math.sin(sc.phase * 1.1 + sc.seed * 2) * 8;
+    c.save();
+    c.translate(sc.x, sc.y);
+    c.rotate(sc.ang);
+    c.fillStyle = INK;
+    /* the drying wake it leaves in the air */
+    c.globalAlpha = 0.16;
+    inkStroke(c, [{ x: -10, y: -wob2 * 0.4 }, { x: -34, y: -wob2 }, { x: -58, y: -wob2 * 1.3 }], 6.5, { alpha: 1, taper: 1.6, seed: sc.seed ^ 21 });
+    /* the body: a long living line, thicker at the head */
+    c.globalAlpha = 0.95;
+    inkStroke(c, [
+      { x: 12, y: wob * 0.2 },
+      { x: -2, y: wob * 0.6 },
+      { x: -16, y: -wob * 0.4 },
+      { x: -30, y: wob * 0.8 },
+    ], 7.5, { alpha: 1, taper: 0.9, seed: sc.seed, dry: false });
+    /* the head: a drop that leans into the hunt */
+    c.globalAlpha = 1;
+    teardrop(c, 4.6);
+    c.fill();
+    /* a single paper-flick of the brush's own ink, breathing */
+    c.globalAlpha = 0.5;
+    inkStroke(c, [{ x: 2, y: -2 }, { x: 10, y: -5 + wob * 0.3 }], 1.6, { alpha: 1 });
     c.restore();
   }
 
@@ -5356,6 +5405,7 @@ const R = (() => {
     }
     for (const mt of S.motes) drawMote(ctx, mt, t);
     for (const pk of S.pickups) drawPickup(ctx, pk, t);
+    for (const sc of S.scribes) drawScribe(ctx, sc);
     for (const sp of S.spirits) drawSpirit(ctx, sp);
     /* the echo walks under the living brush — a pale elder stroke */
     if (playing) drawGhost(ctx, t);
