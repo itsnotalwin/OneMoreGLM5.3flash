@@ -1,4 +1,4 @@
-name: Propose Supabase repair (never merge automatically)
+name: Validate Supabase repair (single-branch, review patch only)
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
       - name: Check today's integrated source without modifying files
         run: node .github/supabase-auto-repair.cjs --dry-run
 
-  draft-repair-pr:
+  prepare-review-patch:
     if: >-
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'failure' &&
@@ -40,8 +40,7 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,7 +51,7 @@ jobs:
       - name: Plan ONLY known Supabase and OAuth corrections
         id: plan
         run: node .github/supabase-auto-repair.cjs --repair
-      - name: Validate repaired code and strict four-file scope
+      - name: Validate repaired code and strict five-file scope
         if: steps.plan.outputs.changed == 'true'
         run: |
           node .github/supabase-auto-repair.cjs --verify
@@ -61,56 +60,29 @@ jobs:
           node --check js/main.js
           node --check sw.js
           git diff --check
-      - name: Push separate review branch and open DRAFT pull request
+      # GitHub Actions is not permitted to create PRs in this repository.
+      # A PR needs a second branch, contrary to the owner's one-branch policy.
+      # Generate a reviewable patch as an Actions artifact. NEVER push branches.
+      - name: Prepare patch for owner review (no new branch, no merge)
         if: steps.plan.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          base_sha="$(git rev-parse --short=12 HEAD)"
-          branch="automation/supabase-repair-${base_sha}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- js/supabase-config.js js/lb.js js/main.js index.html sw.js
-
-          # The branch is based on the newest main, but NO push to main occurs.
-          git commit -m "fix: propose restoring Supabase and Google login after ${base_sha}"
-
-          if git ls-remote --exit-code origin "refs/heads/${branch}" >/dev/null 2>&1; then
-            echo "::notice::Existing repair branch ${branch} found; never force-pushing it."
-          else
-            git push origin "HEAD:refs/heads/${branch}"
-          fi
-
-          if [ "$(gh pr list --state open --head "${branch}" --json number --jq 'length')" != '0' ]; then
-            echo "::notice::An open repair PR already exists for ${branch}."
-            exit 0
-          fi
-
-          body_file="${RUNNER_TEMP}/one-more-repair-pr.md"
-          cat > "${body_file}" <<'BODY'
-          ## Supabase / Google login recovery (REVIEW ONLY)
-          The manual upload removed the exact, previously diagnosed Supabase
-          connection and/or Google OAuth callback code. This proposal restores
-          only matching, known-broken versions. **Nothing has been merged.**
-
-          ### What can change
-          - `js/supabase-config.js`: public Pinpoint project URL and publishable key
-          - `js/lb.js`: Google PKCE callback/Settings state and leaderboards
-          - `js/main.js`: Google return routing to Settings
-          - `index.html`: insert the known cloud-save script tag if missing, without changing markup elsewhere
-          - `sw.js`: PWA cache version and cloud script asset, keeping all existing cached assets
-
-          ### Safety rules
-          - Gameplay, game modes, art, CSS and Supabase database: **untouched**
-          - The only permitted HTML edit is insertion of the known cloud-save script tag
-          - Any unfamiliar source change causes the planner to abort with no PR
-          - No automatic merge and no force-push to `main`
-          - Check the diff, run the game, and test real Google login and posting
-          - GitHub integration guard is a static check, not proof of live OAuth
-
-          Source notes: [SUPABASE-RECOVERY.md](SUPABASE-RECOVERY.md)
-          BODY
-
-          gh pr create             --base main             --head "${branch}"             --draft             --title "Review: restore ONE MORE Supabase and Google login"             --body-file "${body_file}"
+          git diff --binary -- js/supabase-config.js js/lb.js js/main.js index.html sw.js > "${RUNNER_TEMP}/one-more-integration-repair.patch"
+          test -s "${RUNNER_TEMP}/one-more-integration-repair.patch"
+          {
+            echo "## ONE MORE integration repair proposal"
+            echo "The Supabase guard detected overwritten integration code."
+            echo "A guarded **five-file patch** was prepared but **NOT applied to main**."
+            echo "No extra Git branch or PR was created."
+            echo "Inspect the \`one-more-integration-repair-patch\` workflow artifact and review changes before applying."
+            echo "Gameplay, artwork and database were not modified."
+          } >> "${GITHUB_STEP_SUMMARY}"
+      - name: Upload guarded repair patch for review
+        if: steps.plan.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: one-more-integration-repair-patch
+          path: ${{ runner.temp }}/one-more-integration-repair.patch
+          retention-days: 30
+          if-no-files-found: error
