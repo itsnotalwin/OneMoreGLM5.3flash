@@ -4,7 +4,7 @@
 Repository automation and safeguards for manual GitHub uploads, commits and pull requests.
 
 ## Key files
-`workflows/` contains the integration guard and the read-only/check-then-draft repair workflow. `supabase-auto-repair.cjs` plans narrowly scoped source recovery from pinned known-good/known-bad Git snapshots. Its self-tests intentionally reject unfamiliar auth edits.
+`workflows/` contains the read-only integration guard and the single-branch repair-patch workflow. `supabase-auto-repair.cjs` uses pinned known-good/known-bad snapshots and strict additive OAuth/WIPE patches for v19+ startup to retain new game UI; its self-tests reject unfamiliar or partly updated authentication. The workflow publishes a reviewable patch artifact and **does not create branches, PRs or merge changes**.
 
 ## Connections
 GitHub Pages uses GitHub's built-in publishing workflow. The supplementary Supabase integration guard is independent of Pages publishing.
