@@ -28,10 +28,10 @@
 /* the night scroll: every DOM ink flips to pale so the HUD, the
    banners and the sheets keep their contrast on dark paper */
 body[data-theme="dark"]{
-  --paper: #17130f;
-  --paper-92: rgba(23, 19, 15, 0.94);
-  --paper-80: rgba(23, 19, 15, 0.82);
-  --paper-55: rgba(23, 19, 15, 0.6);
+  --paper: #3e372b;
+  --paper-92: rgba(62, 55, 43, 0.94);
+  --paper-80: rgba(62, 55, 43, 0.82);
+  --paper-55: rgba(62, 55, 43, 0.6);
   --ink: #e9e2d2;
   --ink-70: rgba(233, 226, 210, 0.7);
   --ink-62: rgba(233, 226, 210, 0.62);
@@ -39,8 +39,8 @@ body[data-theme="dark"]{
   --ink-45: rgba(233, 226, 210, 0.45);
   --ink-25: rgba(233, 226, 210, 0.25);
   --ink-12: rgba(233, 226, 210, 0.12);
-  /* vermillion lifts on the dark sheet — 3.1:1 → 4.5:1 */
-  --red: #d55340;
+  /* vermillion lifts on the dark sheet — 5.7:1 on pale → 4.0:1 on the washed night */
+  --red: #ea7560;
 }
 
 /* the cinnabar field, the storm sheet, the gilt scroll: the DOM
@@ -1375,10 +1375,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    data-wear is set while a scene ladder is open: the head, the
    beam, the hint and every strip print in the sheet's tone */
 #screenScrolls[data-wear="dark"]{
-  --paper: #17130f;
-  --paper-92: rgba(23, 19, 15, 0.94);
-  --paper-80: rgba(23, 19, 15, 0.82);
-  --paper-55: rgba(23, 19, 15, 0.6);
+  --paper: #3e372b;
+  --paper-92: rgba(62, 55, 43, 0.94);
+  --paper-80: rgba(62, 55, 43, 0.82);
+  --paper-55: rgba(62, 55, 43, 0.6);
   --ink: #e9e2d2;
   --ink-70: rgba(233, 226, 210, 0.7);
   --ink-62: rgba(233, 226, 210, 0.62);
@@ -1386,11 +1386,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   --ink-45: rgba(233, 226, 210, 0.45);
   --ink-25: rgba(233, 226, 210, 0.25);
   --ink-12: rgba(233, 226, 210, 0.12);
-  --red: #d55340;
+  --red: #ea7560;
   background:
     radial-gradient(ellipse at 24% 12%, rgba(233,226,210,.06), transparent 55%),
     radial-gradient(ellipse at 78% 90%, rgba(178,58,43,.05), transparent 60%),
-    linear-gradient(rgba(23,19,15,.93), rgba(23,19,15,.93));
+    linear-gradient(rgba(62,55,43,.93), rgba(62,55,43,.93));
 }
 #screenScrolls[data-wear="red"]{
   --paper: #eadbc4;
@@ -2540,7 +2540,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   padding: 16px 0 max(10px, env(safe-area-inset-bottom));
   background: linear-gradient(rgba(237,231,217,0), rgba(237,231,217,.94) 36%, #ede7d9);
 }
-#screenScrolls[data-wear="dark"]  .scrolls-foot{ background: linear-gradient(rgba(23,19,15,0), rgba(23,19,15,.94) 36%, #17130f); }
+#screenScrolls[data-wear="dark"]  .scrolls-foot{ background: linear-gradient(rgba(62,55,43,0), rgba(62,55,43,.94) 36%, #3e372b); }
 #screenScrolls[data-wear="red"]   .scrolls-foot{ background: linear-gradient(rgba(234,219,196,0), rgba(234,219,196,.94) 36%, #eadbc4); }
 #screenScrolls[data-wear="storm"] .scrolls-foot{ background: linear-gradient(rgba(199,205,201,0), rgba(199,205,201,.94) 36%, #c7cdc9); }
 #screenScrolls[data-wear="gilt"]  .scrolls-foot{ background: linear-gradient(rgba(231,214,173,0), rgba(231,214,173,.94) 36%, #e7d6ad); }

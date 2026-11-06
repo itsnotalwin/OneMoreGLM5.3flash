@@ -19,8 +19,8 @@
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --paper: #17130f;
-    --paper-92: rgba(23, 19, 15, 0.94);
+    --paper: #3e372b;
+    --paper-92: rgba(62, 55, 43, 0.94);
     --ink: #e9e2d2;
     --ink-70: rgba(233, 226, 210, 0.7);
     --ink-55: rgba(233, 226, 210, 0.55);

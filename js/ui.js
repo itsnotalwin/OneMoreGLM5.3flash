@@ -175,7 +175,7 @@ const UI = (() => {
      金 gold-dust, 素 the blank silk — so the journey reads as six hung sheets */
   const BAND_TONES = {
     pale:  { ink: '#4a3d28', rgba: '74,61,40',    paper: '#ede7d9' },
-    dark:  { ink: '#e9e2d2', rgba: '233,226,210', paper: '#17130f' },
+    dark:  { ink: '#e9e2d2', rgba: '233,226,210', paper: '#3e372b' },
     red:   { ink: '#a2321f', rgba: '162,50,31',   paper: '#eadbc4' },
     storm: { ink: '#31485a', rgba: '49,72,90',    paper: '#c7cdc9' },
     gilt:  { ink: '#8a6420', rgba: '138,100,32',  paper: '#e7d6ad' },
@@ -212,7 +212,7 @@ const UI = (() => {
       'ink-25': `rgba(${ir},0.25)`,
       'ink-12': `rgba(${ir},0.12)`,
       /* the one sacred red — lifted on the night sheet alone */
-      'red': dark ? '#d55340' : '#b23a2b',
+      'red': dark ? '#ea7560' : '#b23a2b',
       /* the wash a hover breathes: the sheet's ink in the air */
       'pt-rgba': t.rgba,
     };

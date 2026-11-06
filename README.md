@@ -1,237 +1,422 @@
-# ONE MORE
+<h1 align="center">ONE MORE</h1>
 
-*An ink-born survival. No walls. No arena. One endless sheet of washi.*
+<p align="center">
+  <i>An ink-born survival. One brush. Six scrolls. The paper never ends.</i>
+</p>
 
-**ONE MORE** is a zero-dependency, zero-build browser game written in vanilla
-HTML/CSS/JS. You are a brush spirit walking an unbounded scroll of washi
-paper — Vampire-Survivors style, the camera follows you and the paper never
-ends. Your brush fires ink at the nearest threat on its own; your only job
-is to *not be erased*.
+<p align="center">
+  <img src="screenshots/01-title.png" width="800" alt="ONE MORE — the title screen: an ensō brushed behind the wordmark, a vermillion seal beside it">
+</p>
 
-The journey is **six scrolls of ten waves**, each sheet a different paper
-with its own weather, each ruled by a **named Guardian**. Clear the sixth
-sheet and the scroll offers itself forever: **THE ENDLESS SCROLL**, where
-the paper cycles through all six faces and the difficulty never stops
-compounding.
+<p align="center">
+  vanilla JS · Canvas 2D · zero dependencies · zero build · full PWA · MIT
+</p>
 
-Every kill spills **ink motes** — gather them to fill the ink gauge and
-*rise mid-battle*, Vampire-Survivors style. Kill in chains to multiply your
-score. Guardians fall into chests. The paper remembers everything.
+---
 
-The whole game is painted like living sumi-e: every creature is a wobbling
-blot of ink animated with hand-drawn line boil, every kill splatters real
-ink that **permanently stains the paper** — the world slowly becomes a
-painting of your fight. Wave banners are stamped in kanji. The one drop of
-color belongs to the vermillion seal.
+**ONE MORE** is a Vampire-Survivors-like painted as living sumi-e, written in
+vanilla HTML/CSS/JS. You are a brush spirit walking sheets of washi paper;
+your brush fires at the nearest threat on its own, and your only job is to
+*not be erased*. Every kill spills ink motes — gather them to fill the ink
+gauge and rise mid-battle. Every kill also splatters real ink that
+**permanently stains the paper**: by the sixth sheet the world is a painting
+of your whole fight.
 
-Every visit opens with **THE OPENING** — a short ink cinematic: a single
-batch of ink falls through the void, bursts, and floods into a sheet of washi;
-a brush cuts three strokes; the ink begins to move; and a vermilion seal
-slams the first mark onto the paper. Press any key (or tap) to skip it,
-or replay it anytime from the title screen — the button marked 序.
+The journey is **six scrolls of ten scenes**, each scene ten waves — six
+hundred waves on the way to the last Guardian. Each sheet is a different
+paper washed in its own ink, with its own weather, its own Captain, its own
+Keeper on every tenth wave, and a named **Guardian** waiting on scene ten.
+Clear the sixth sheet and **THE JOURNEY'S END** plays — the ink stills, the
+six keepers are remembered, your brush paints one last great ensō around the
+run and seals it — and the scroll offers itself forever: **THE ENDLESS
+SCROLL**, where the paper cycles all six faces and the difficulty never
+stops compounding.
 
-The loop closes like a film. **When a sheet is cleared the scroll literally
-turns**: the next sheet of paper rolls in over the world, stamps its kanji,
-its name and its temperament, and presses its red hanko before the first
-wave crawls in. **Clear the sixth sheet and THE JOURNEY'S END plays** —
-the ink stills, the six keepers are remembered, your brush spirit paints
-one last great ensō around the run and seals it, and the credits roll
-before the victory sheet offers the endless paper. Both films can be
-skipped with any key or tap.
+Everything here is honest, hand-tuned and local: no engine, no framework,
+no telemetry. The one cloud in the room — the endless leaderboard — is
+optional and can stay dark forever.
+
+---
+
+## The paper in pictures
+
+| A scene of the first sheet — chain ×1.64, the ink already staining | The Guardian of sheet V — THE FIRST BRUSH, a hanko already slammed |
+|---|---|
+| ![A journey scene under surge](screenshots/04-journey.png) | ![The First Brush duel](screenshots/06-guardian.png) |
+
+| The ink rises — CHOOSE ONE MORE, three cards, two of them weapons | CHARMS — what the runs press out, the paper keeps |
+|---|---|
+| ![The level-up cards](screenshots/05-levelup.png) | ![The charms room](screenshots/07-charms.png) |
+
+---
+
+## The modes
+
+**THE JOURNEY** — the six scrolls, straight onto the wet frontier. The run
+resumes where the brush last sealed a scene. Every visit opens with
+**THE OPENING** (a short ink cinematic — any key or tap skips it; replay it
+from the title's 序 button). When a sheet is cleared **the scroll literally
+turns**: the next sheet of paper rolls in over the world, stamps its kanji
+and its temperament, and presses its red hanko before the first wave crawls
+in. Both films are skippable.
+
+**DAILY INK** — one seeded sheet a day. The same paper, the same beasts, the
+same luck for every scribe on Earth; the first sheet you walk today is the
+one that counts. A practiced daily presses only a fifth of its ink —
+practice is for the hand, not the stone.
+
+**THE ENDLESS SCROLL** — the journey's sixth sheet cleared, the scroll
+unbound: no arena, no margins, an endless sheet of washi, and every lap the
+beasts stand taller (**hp ×1.24**), think faster (**speed ×1.016**) and
+arrive thicker (**budget ×1.32**). Only endless runs post to the ledger —
+and waves past the six hundred press **double ink** into the stone.
+
+**REALLY HARD** — the title's red toggle, remembered on this device: beasts
+stand ×1.4 taller, arrive ×1.15 faster, waves spend ×1.45 more — and the
+ledger pays **double** for every stroke that survives it.
+
+| The six scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, four still sealed |
+|---|---|
+| ![The six scrolls shelf](screenshots/02-scrolls.png) | ![The brush room](screenshots/03-brushes.png) |
+
+<p align="center">
+  <img src="screenshots/11-night.png" width="800" alt="The night scroll — sheet II: lamp-lit umber washi, cream-ink beasts, embers drifting, a chain rising">
+</p>
+
+---
+
+## How a wave breathes
+
+Each scene of ten waves has a shape, and the shape is the rhythm of the
+fight:
+
+| Wave | Shape |
+|---|---|
+| 1 | **opening** — a light trickle, to read the page |
+| 2 · 4 · 6 | **press** — the ordinary weight of the sheet |
+| 3 | **debut** — the scene's new beast walks in, featured |
+| 5 | **SURGE** — a ring closes around the brush |
+| 7 | **SEAL HUNT** — elites walk the paper |
+| 8 | **FLOOD** — everything, from two sides at once |
+| 9 | **SURGE** — the storm before the seal |
+| 10 | **SEAL** — an honor guard of elites to break; on scene ten, the **Keeper** — and on scene ten of sheet ten, the **Guardian** itself |
+
+The pressure climbs twice: wave by wave inside a scene, and scene by scene
+inside the sheet (scene ten spends ~1.81× the budget of scene one, its
+beasts stand ~1.63× taller) — and the sheets themselves climb (**hp ×1 →
+×7.9**, **budget ×1 → ×4.1** by the blank silk). Chained kills multiply the
+score (decay 2.3 s, ceiling ×5); a hit costs a drop of integrity, and three
+drops dry the page.
+
+**Controls**
+
+| Input | Action |
+|---|---|
+| `W A S D` / arrows | Move — walk anywhere the paper goes |
+| auto-fire | Engaged — the brush always flicks at the nearest blot |
+| ink motes | Walk over the drops your kills spill; a full gauge = **CHOOSE ONE MORE** |
+| `1` `2` `3` | Pick a card — press again, or `Enter`, to drink the ink |
+| any key / tap | Skip the opening or any cutscene |
+| `P` / `Esc` | Pause |
+| `M` | Toggle sound |
+| touch | Drag anywhere for a virtual joystick |
 
 ---
 
 ## The six scrolls
 
-| Sheet | Paper & weather | The beasts that live there | Guardian |
-|---|---|---|---|
-| 一 FIRST WASH | Pale washi; drifting motes | BLOT, SPEAR, SPIT, POPPER, MOTH, DRIP, WISP, BRUTE | THE STAIN |
-| 二 NIGHT SCROLL | Near-black paper; rising embers | WISP, SHADE, MOTH, KAGE, STILT, LOTUS, WARDEN, SPEAR | THE NIGHT MOTHER |
-| 三 CINNABAR FIELD | Vermillion wash; falling petals | BRUTE, SPIT, ONI, CRANE, DRIP, TITAN, KAGE, GATE | THE CINNABAR ONI |
-| 四 STORM SHEET | Storm-gray paper; driving rain and lightning | CRANE, SPEAR, KAGE, STILT, WISP, KOI, WARDEN, MOTH, POPPER | THE STORM EYE |
-| 五 GILT SCROLL | Aged gold leaf; drifting flakes | ONI, BRUTE, GOLEM, GATE, SPIT, WARDEN, TITAN, KAGE, KOI | THE FIRST BRUSH |
-| 素 THE BLANK SILK | Bright cool silk; drifting threads | SKETCH, STITCH, RESEAL, SIZING, BINDER, WEFT, THE TRACE, KAGE, CRANE, GATE, WARDEN, TITAN, GOLEM | THE UNWRITTEN |
+| # | Sheet | Ink | kanji | hp / budget | Captain | Keeper | Special | Guardian |
+|---|---|---|---|---|---|---|---|---|
+| I | FIRST WASH | 淡墨 pale wash | 一 | ×1.0 / ×1.0 | THE DRUM | THE BLIGHT | — | THE STAIN |
+| II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | ×1.7 / ×1.45 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
+| III | CINNABAR FIELD | 朱墨 vermillion | 紅 | ×2.7 / ×2.0 | THE BANNER | THE CINDER | THE MENDER | THE CINNABAR ONI |
+| IV | STORM SHEET | 雨墨 rain-grey | 嵐 | ×4.2 / ×2.7 | THE STORMCALLER | THE RAINVEIL | THE TOLLER | THE STORM EYE |
+| V | GILT SCROLL | 金墨 gold-dust | 金 | ×6.6 / ×3.4 | THE PAYMASTER | THE NIB | THE LEDGER | THE FIRST BRUSH |
+| VI | THE BLANK SILK | 素墨 cool silk | 素 | ×7.9 / ×4.1 | THE HUSH | THE MARGIN | THE TRACE | THE UNWRITTEN |
 
-Each sheet runs ten waves; the tenth summons its **Guardian** — a boss with
-its own patterns, a named seal at the top of the screen, and a red arrow at
-the rim when it waits beyond the eye. Slay it and it drops a **chest**, a
-pot of fresh water, and a shower of ink. Waves 5 and 15 and 25 are
-**SURGES** — denser, louder, meaner.
+Journey and daily runs live **inside a fixed arena** — a page with margins,
+2240 × 1600 on every screen, so a fight plays the same on a phone as on a
+desk. Only THE ENDLESS SCROLL keeps the unbroken sheet.
 
-**The curve is built to bite.** Every sheet deep in the journey packs more
-beasts per wave (the budget compounds per sheet), surges grow fiercer the
-farther you travel, and every Guardian below a third of its ink **moves
-like something cornered**. Survive the fifth sheet and the scroll turns
-forever: each lap of THE ENDLESS SCROLL multiplies the beasts' ink, speed
-and numbers again.
+Every tenth wave of every scene is a **Keeper** fight: a red-sealed beast,
+lesser kin of the sheet's Guardian, walking with a halved honor guard — a
+debut duel runs twenty-to-thirty honest seconds, and repeats grow with the
+scene. Kill it and its seal drops a **chest** (a free stroke of your
+choice), a pot of fresh water, and a shower of ink.
 
-## How to play
+**Captains** walk *inside* the pack — never alone, never a boss bar. One cut
+from each sheet's own ink, they quicken every beast near them (×1.32 within
+210 px), call fresh ink into the paper, and when one falls its whole fan
+stuns (1.15 s within 235 px). Walk the wave, find the flag, break the rank.
 
-| Input | Action |
-|---|---|
-| `W A S D` / Arrow keys | Move — the sheet is endless, walk anywhere |
-| Auto-fire | Engaged — the brush always flicks at the nearest blot |
-| Ink motes | Walk over the drops your kills spill to fill the gauge — a full gauge = a mid-wave level-up |
-| `1` `2` `3` | Select an upgrade (press again, or `Enter`, to deploy) |
-| Any key / tap | Skip the opening or any cutscene (scroll turn / finale) |
-| `P` / `Esc` | Pause |
-| `M` | Toggle sound |
-| Touch | Drag anywhere for a virtual joystick |
-
-**Choose your brush** before the run: THE NEEDLE (fast, light), THE BROOM
-(twin droplets), or THE STONE (heavy and hard to kill). Your choice is
-remembered.
-
-**The twenty ink-born**
-
-| Name | Behavior |
-|---|---|
-| BLOT | Slow, relentless drifter |
-| SPEAR | Telegraphs, then lunges in a straight line |
-| SPIT | Keeps its distance, inflates, and lobs ink globs back at you |
-| POPPER | A fast bomb of ink — bursts into a ring of needles when it dies |
-| MOTH | Erratic flicker — never holds a course, bursts in jolts |
-| DRIP | Dies into two fast blips |
-| SHADE | Dissolves into flecks, blinks at your back, pounces |
-| BRUTE | Hatched, dripping bruiser. Slow. Very hard to kill |
-| WISP | Weaves sideways as it closes in |
-| KAGE | Circles you like a stain, then cuts straight through in a dash |
-| LOTUS | Roots itself and sprays fans of ink at range |
-| WARDEN | The herald — quickens every beast near it. Kill it first |
-| STILT | A tall sniper — draws a hair-thin line at you, then fires a needle |
-| TITAN | The mother of blots — sheds her brood as she bears down |
-| ONI | Horned bruiser — winds up, then bulldozes straight ahead |
-| CRANE | Folded paper that swoops past in long, fast arcs |
-| GATE | Slow and shielded — frontal strikes are turned; flank it or drown it in ink |
-| KOI | Swims in long sine curves and *dives beneath your strokes*, untouchable |
-| GOLEM | A folded colossus that breaks into two brutes |
-| BLIP | A fast shard, born from deaths and titans |
-
-**The six Guardians**
-
-| Guardian | Pattern |
-|---|---|
-| THE STAIN | A rolling sea of ink that swells and slams rings of globs |
-| THE NIGHT MOTHER | Dissolves, blinks at your back, fans needles, sheds shades |
-| THE CINNABAR ONI | Bulldozer charges and 7-glob spreads — enrages at half health |
-| THE STORM EYE | Orbits you, drags you inward, spirals needles, calls lightning bolts |
-| THE FIRST BRUSH | Three phases: radial volleys, summoned brood, furious charges |
-| THE UNWRITTEN | A walking blank page: erase pulses sweep your droplets and scatter your ink, telegraphed seal slams press where you stand, and its margin burns through three phases |
-
-**The brush arts — 26 upgrades**, including seven weapons:
-
-- *Strokes*: Quick Hand, Bitter Ink, Twin Stroke, Through Mist, Flick,
-  Fleeting Foot, Thick Ink, Red Seal, Ink Burst, Echo Stroke, Ink Orbit,
-  Black Tide, Wet Paper, Crimson Tip, Paper Ward, **Ink Hunger** (gather
-  radius), **Paper Mends** (the sheet heals itself), **Deep Well** (ink
-  motes are worth more)
-- *Weapons* (marked 武 in vermilion on their cards):
-  **Folded Fan** — a snapping spray of paper blades;
-  **Ink Trail** — the smears you leave behind keep biting;
-  **Spirit Scribes** — lesser brushes that wake and hunt on their own;
-  **Crimson Hanko** — a great red seal that slams down on the nearest horde;
-  **Sumi Arc** — a live stroke that leaps from beast to beast like spilled
-  lightning;
-  **Returning Stroke** — a wide brushstroke that flies out and recalls
-  itself, biting twice;
-  **Ink Vortex** — a whirlpool of living ink that drags beasts in and
-  drowns them.
-- *Talismans found on the paper*: the **pot** (+1 integrity), the **墨
-  talisman** (vacuums every mote), the **ink bomb** (splashes the whole
-  sheet), and the Guardians' **chest** (a free stroke of your choice).
+**Specials** are the paper's odd mechanics, one per sheet from the second
+scroll on — breed, mend, toll or tax. Each bends the fight around itself.
+Kill them first, or fight the horde they make.
 
 ---
 
-## Deploy to GitHub Pages
+## The brushes
 
-The repo ships with a ready-made workflow at
-`.github/workflows/deploy.yml` that publishes the site on every push to
-`main` using the official GitHub Pages Actions pipeline.
+Choose your brush before the run — the choice is remembered. Three are free;
+four are sealed behind the journey's scenes, and a scene **seals** when its
+tenth wave's Keeper falls.
 
-1. Create a new repository on GitHub (e.g. `one-more`).
-2. Push this folder's contents to the `main` branch:
+| Brush | kanji | Sealed until | The hand it gives you |
+|---|---|---|---|
+| THE NEEDLE | 細 | free | A fine tip that barely lifts — fire comes fast, strokes stay light (+28% fire rate, +8% move) |
+| THE BROOM | 掃 | free | A wide brush that sweeps two droplets at once, slower between strokes |
+| THE STONE | 岩 | free | A heavy hand — every droplet bites +2 deeper, the sheet holds 4 drops, the walk is heavy |
+| THE WISP | 幽 | 3 scenes | The brush never fights alone: a lesser spirit wakes beside it and hunts on its own |
+| THE FAN | 扇 | 6 scenes | Carries a folded fan — every few breaths it snaps open instead of a volley |
+| THE TIDE | 潮 | 10 scenes | The black tide answers it — every few breaths the ink surges outward and shoves the paper back |
+| THE RED SEAL | 印 | 14 scenes | A heavy hand and a great hanko — every eleventh breath the stamp falls on the thickest horde |
 
-   ```bash
-   git init
-   git add -A
-   git commit -m "ONE MORE — the scroll turns"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/one-more.git
-   git push -u origin main
-   ```
+---
 
-3. In the repository, go to **Settings → Pages** and set
-   **Build and deployment → Source** to **GitHub Actions**.
-4. That's it. The workflow runs on every push and publishes the game to:
+## The ink-born — 72 of them
 
-   `https://<your-username>.github.io/one-more/`
+Every creature is a living blot of sumi ink with hand-drawn line boil. The
+*trait* beside each name is the game's own stamp; **walks in** is the global
+wave where the beast debuts, and each scene of each sheet debuts at least
+one beast of its own.
 
-You can also trigger a redeploy manually from the **Actions** tab via
-**Run workflow** (the workflow has `workflow_dispatch` enabled).
+**SHEET I · FIRST WASH** — pale ink on fresh washi
 
-> Note: the first deploy requires step 3. If the workflow fails with a
-> "Pages not enabled" error, this is the setting you missed.
+| Beast | Trait | Walks in |
+|---|---|---|
+| **BLOT** | DRIFTER | 1 — slow, relentless |
+| **SPEAR** | LUNGER | 11 — telegraphs, then strikes in a straight line |
+| **GNAT** | SWARM | 16 — a fast little shard-fleck |
+| **POPPER** | BOMBER | 21 — bursts into a ring of needles when it dies |
+| **BLOTTER** | SPONGE | 36 — soaks strokes, takes more ink to break |
+| **WASHLING** | PALE WANDERER | 31 |
+| **MOTH** | ERRATIC | 41 — never holds a course, bursts in jolts |
+| **DRIP** | DIVIDER | 51 — dies into two fast blips |
+| **PALE CRANE** | SWOOPER | 61 — swoops past in long, fast arcs |
+| **BRUTE** | BRUISER | 71 — hatched, dripping, very hard to kill |
+| **WISP** | WEAVER | 81 — weaves sideways as it closes in |
 
-## Run locally
+**SHEET II · NIGHT SCROLL** — lamp-black on dark paper
 
-No build step. Any static server works:
+| Beast | Trait | Walks in |
+|---|---|---|
+| **SPIT** | GUNNER | 101 — keeps its distance and lobs ink globs |
+| **SHADE** | PHANTOM | 111 — dissolves into flecks, blinks at your back |
+| **KAGE** | STALKER | 121 — circles like a stain, then cuts straight through |
+| **NIGHTSHADE** | BLINKER | 126 |
+| **OWL** | WATCHER | 131 |
+| **STILT** | SNIPER | 141 — draws a hair-thin line at you, then fires a needle |
+| **LOTUS** | ROOTED | 151 — roots itself and sprays fans of ink at range |
+| **SMOTHER** | CREEP | 156 |
+| **GLOOM** | BREATH | 156 |
+| **WARDEN** | HERALD | 171 — quickens every beast near it. Kill it first |
+| **TITAN** | MOTHER | 181 — sheds her brood as she bears down |
 
-```bash
-python3 -m http.server 8000
-# then open http://localhost:8000
-```
+**SHEET III · CINNABAR FIELD** — vermillion-stained ink
 
-(Opening `index.html` directly from disk also works.)
+| Beast | Trait | Walks in |
+|---|---|---|
+| **ONI** | CHARGER | 201 — horns down, then bulldozes straight ahead |
+| **EMBER** | DASHER | 206 |
+| **CRANE** | SWOOPER | 211 |
+| **ASHIGARU** | RANK | 211 — marches in file |
+| **SEALBEARER** | SEALED | 216 |
+| **GATE** | SHIELDED | 221 — frontal strikes are turned; flank it or drown it |
+| **STAMPER** | SEALSMITH | 241 |
+| **SHIKI** | SUMMONER | 246 |
 
-## Install as an app (PWA) · 端
+**SHEET IV · STORM SHEET** — rain-grey ink
 
-ONE MORE is a full PWA — installable and fully offline. Visit the site
-in Chrome, Edge or Safari and choose **Install app** / **Add to Home
-Screen**: the game opens standalone with no browser chrome, stamped
-with its own hanko icon (brush ensō + vermillion 一 seal), and plays
-entirely offline. The service worker (`sw.js`) precaches the shell and
-every ink asset on first visit and sweeps images into a runtime cache
-as they are first painted; page navigations fall back to the cached
-shell when the network is gone. Updates land on the next visit after a
-deploy — the versioned cache (`om-core-vX.Y`) is swapped silently in
-the background. All paths are scope-relative, so it works identically
-at a user-site root or a project subpath on GitHub Pages.
+| Beast | Trait | Walks in |
+|---|---|---|
+| **RAINDRAKE** | CALLER | 301 — the rain answers it |
+| **GALE** | GUST | 306 |
+| **KOI** | SINEW | 311 — swims long sine curves and *dives beneath your strokes* |
+| **SURGE** | BREAKER | 316 |
+| **MAELSTROM** | UNDERTOW | 351 — pulls the fight inward |
+| **WAVE CREST** | SWELL | 356 |
+
+**SHEET V · GILT SCROLL** — gold-dusted ink
+
+| Beast | Trait | Walks in |
+|---|---|---|
+| **GILDLING** | GILDED | 401 |
+| **PHOENIX** | DIVING | 406 |
+| **GOLEM** | COLOSSUS | 411 — a folded colossus that breaks into two brutes |
+| **MIRROR** | REFLECT | 421 |
+| **KOBAN** | GREED | 436 |
+| **RELIC CASK** | TREASURY | 441 |
+
+**SHEET VI · THE BLANK SILK** — cool ink on unstained silk
+
+| Beast | Trait | Walks in |
+|---|---|---|
+| **SKETCH** | UNDRAWN | 501 |
+| **STITCH** | SEAM | 511 |
+| **RESEAL** | RESTAMPED | 521 |
+| **SIZING** | GLUE | 531 |
+| **BINDER** | MOUNT | 541 |
+| **WEFT** | LOOM | 551 |
+
+…plus **BLIP** (the shard shed by dividers and mothers), the five
+**specials** (THE NEST · THE MENDER · THE TOLLER · THE LEDGER · THE TRACE),
+the six **Captains**, the six **Keepers** and the six **Guardians** —
+seventy-two ink-born in all.
+
+---
+
+## The six Guardians
+
+Every named beast announces itself with one line — the duel's tone set
+before the first stroke lands. Every Guardian is a 35–60 second set piece,
+and the First Brush is the longest fight in the game.
+
+| Sheet | Guardian | It speaks |
+|---|---|---|
+| I · wave 100 | **THE STAIN** | *IT DRINKS THE SHEET. DRINK IT BACK.* |
+| II · wave 200 | **THE NIGHT MOTHER** | *THE DARK HAS A HEART. LISTEN TO IT BEAT.* |
+| III · wave 300 | **THE CINNABAR ONI** | *FOUR HORNS, ONE ROAD — AND THE ROAD IS BEHIND YOU.* |
+| IV · wave 400 | **THE STORM EYE** | *STAND IN THE RAIN. THEN STAND SOMEWHERE ELSE.* |
+| V · wave 500 | **THE FIRST BRUSH** | *THE FIRST STROKE IS STILL WET.* |
+| VI · wave 600 | **THE UNWRITTEN** | *THE PAGE IS STILL BLANK. IT WANTS YOUR HAND.* |
+
+Its Keeper walks ahead of it every hundred waves: **THE BLIGHT** (*THE STAIN
+SENDS ITS FIRST SERVANT* — 10), **THE HUSK** (110), **THE CINDER** (210),
+**THE RAINVEIL** (310), **THE NIB** (410), **THE MARGIN** (510).
+
+---
+
+## The brush arts — 25 picks, 8 max-tier specials
+
+The level-up screen deals three cards from this pool. Strokes reshape the
+volley; weapons (marked 武 in vermilion on their cards) fight on their own
+clocks. Every weapon carries a **max-tier special** that transforms it.
+
+**The strokes**
+
+| Stroke | Max | What it does |
+|---|---|---|
+| Quick Hand | 5 | −15% time between volleys |
+| Bitter Ink | 4 | +1 damage per droplet |
+| Twin Stroke | 3 | +1 droplet per volley, fanned like brush hairs |
+| Through Mist | 3 | droplets pass through +1 target |
+| Flick | 3 | +22% droplet speed |
+| Fleeting Foot | 4 | +12% movement |
+| Thick Ink | 3 | +1 max integrity, restore 1 |
+| Red Seal | 3 | every kill presses a seal — a short 1.2× stride surge |
+| Ink Burst | 1 | taking a hit splashes everything nearby away |
+| Echo Stroke | 2 | a mirrored volley answers behind your back |
+| Ink Orbit | 3 | droplets circle the brush in a wide ring |
+| Black Tide | 3 | every few breaths the ink surges outward, shoving all back |
+| Wet Paper | 2 | struck beasts wade — slowed briefly |
+| Crimson Tip | 2 | one stroke in six bites twice as deep |
+| Paper Ward | 1 | a dry talisman swallows one hit whole, then reforms |
+| Ink Hunger | 3 | +42% gathering radius per rank |
+| Paper Mends | 2 | the sheet heals itself, +1 integrity every so often |
+| Deep Well | 2 | every mote is worth +25% more |
+
+**The weapons and their max-tier specials**
+
+| Weapon | Max | At its peak it becomes |
+|---|---|---|
+| Folded Fan | 4 | **THE FULL BLOOM** — every fourth cast snaps open full-circle |
+| Ink Trail | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper |
+| Spirit Scribes | 3 | **THE LITANY** — spirits run through up to three bodies |
+| Crimson Hanko | 3 | **THE TWIN STAMP** — a second, lighter seal follows the first |
+| Sumi Arc | 4 | **THE LIVING LINE** — the stroke leaps three links farther |
+| Returning Stroke | 4 | **THE MIRROR RETURN** — the homing stroke bursts into an ink ring |
+| Ink Vortex | 3 | **THE WHORL TEETH** — the closing whirlpool bites what remains |
+
+Found on the paper: the **pot** (+1 integrity), the **墨 talisman** (vacuums
+every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
+**chest** — a free stroke of your choice.
+
+---
+
+## Charms (符) — what the inkstone buys
+
+Permanent upgrades pressed between runs. A charm's rank rides every page the
+hand opens — journey, endless, daily, the resumed frontier. Nine charms over
+nineteen ranks; the whole board costs **硯 4,890**. The ladder is shaped
+honestly: the cheapest charm lands on the first run, quality-of-life leads,
+damage is capped at half a real build, and the Paper Ward charm retires the
+in-run pick so there are no trap options.
+
+| Charm | kanji | Ranks | Cost (ink) | What it presses |
+|---|---|---|---|---|
+| INK HUNGER | 引 | 2 | 50 · 130 | gathering radius widens, rank by rank |
+| LONG BREATH | 息 | 2 | 70 · 180 | droplets fly 10% farther |
+| FLICK | 歩 | 3 | 80 · 200 · 460 | the hand moves 8% lighter per rank |
+| QUICK HAND | 疾 | 3 | 90 · 220 · 500 | the brush lifts 8% faster per rank |
+| THICK PAPER | 厚 | 2 | 140 · 360 | one more integrity, pressed into every run |
+| RED TIP | 赤 | 2 | 150 · 400 | six strokes in a hundred bite twice as deep |
+| BITTER INK | 重 | 2 | 160 · 420 | every droplet bites one deeper |
+| THE OLD INK | 遺 | 2 | 240 · 560 | every mote is worth a fourth more |
+| THE PAPER WARD | 守 | 1 | 480 | every run begins warded |
+
+### The Inkstone (硯) — the idle page
+
+Every run ends with the press: the ink is squeezed back into the stone. A
+currency that survives the paper.
+
+| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The stone remembers — 2,140 ink held, 3,180 pressed, a journal of feats |
+|---|---|
+| ![The endless leaderboard](screenshots/08-board.png) | ![The inkstone page](screenshots/09-inkstone.png) |
+
+**What a run presses**: 6 ink per wave survived — waves past the six hundred
+press **double**; +80 per Guardian felled; +300 once ever for the six sheets
+signed; a new personal best presses ×1.25; REALLY HARD presses the ledger's
+own ×2; a practiced daily only a fifth.
+
+**Between runs, the stone lives its own life** (`inkstone.html`): it
+condenses ink from the air — one drop a quarter hour, kept overnight — it
+grows through named stages as the pool deepens (頑石 rough stone → 生暉 awake
+→ …), you can seal a name onto it, and **THE STONE REMEMBERS** — a journal
+of everything pressed. Grind it by hand: press and hold.
+
+**The run's report** can be pressed into a share card — 1080 × 1350, stamped
+with the run's hanko (or your ledger rank, #N, when a post landed), ready to
+carry the fight to the world.
+
+**Ranks** are waves cleared, printed as the end-of-run seal:
+**C** 70 · **B** 190 · **A** 300 · **S** 400 · **S+** 500.
+
+---
 
 ## The endless leaderboard (榜) on Supabase
 
 The **ENDLESS LEADERBOARD** records the furthest wave every scribe has
 carried the ink in **THE ENDLESS SCROLL**. It runs on **Supabase**'s free
 tier: a Postgres ledger, row-level security as the lock, and
-**sign-the-page identity** — the scribe signs in from the **settings
-room (印 — THE SCRIBE'S MARK)**: Google is the door, an anonymous
-mark the quiet second, and the name you stamp there is the name the
-board wears (the email stays home — it never reaches the ledger).
-Until it is connected the game plays exactly
-as before — the ledger sits quietly offline.
+**sign-the-page identity** — the scribe signs in from the settings room
+(印 — THE SCRIBE'S MARK): Google is the door, an anonymous mark the quiet
+second, and the name you stamp there is the name the board wears (the email
+stays home — it never reaches the ledger). Until it is connected the game
+plays exactly as before — the ledger sits quietly offline.
 
 **How it behaves when connected**
 
 - Endless runs post automatically on death — but only if the run carried
   further than your best on this device (one page per scribe, no spam).
 - Died without signing? The over sheet offers **SIGN IN FROM SETTINGS —
-  THE RUN POSTS ITSELF**: the run waits while you sign (the trip to
-  Google and back included), and posts the moment the sign lands.
+  THE RUN POSTS ITSELF**: the run waits while you sign (the trip to Google
+  and back included), and posts the moment the sign lands.
 - Your mark lives in the settings room: **STAMP** a custom name and it
   travels — even onto the pages already written — so no email tag ever
   shows on the board. Sign out there too.
-- Every endless run also raises your **WEEKLY** page — your best run of
-  the ISO week, one page per scribe a week. The board wears three eyes:
+- Every endless run also raises your **WEEKLY** page — your best run of the
+  ISO week, one page per scribe a week. The board wears three eyes:
   ALL-TIME, DAILY, WEEKLY.
 - Pages carry their scribe's **echo** — the recorded strokes of the run
   that set them. A row bearing 影 downloads that recording when pressed:
-  **RACE THIS ECHO** arms a stranger's echo, closes the board, and starts
-  a run with their pale ink walking beside yours (a daily echo races the
+  **RACE THIS ECHO** arms a stranger's echo, closes the board, and starts a
+  run with their pale ink walking beside yours (a daily echo races the
   day's own seeded sheet). The over sheet names them in the verdict, and
   the 設 room's 影 toggle still silences every echo at once.
-- Rank = the wave you reached; score breaks ties. Top three wear red
-  hanko seals. Your own row is edged in vermillion. When a post lands,
-  the share card's hanko stamps your **ledger rank** (#N) instead of the
-  run's seal rank.
+- Rank = the wave you reached; score breaks ties. Top three wear red hanko
+  seals. Your own row is edged in vermillion. When a post lands, the share
+  card's hanko stamps your **ledger rank** (#N) instead of the run's seal
+  rank.
 - The journey's own deaths never post — the ledger belongs to the endless
   scroll alone (a journey victory that walks INTO THE ENDLESS posts from
   then on, carrying the whole run's depth).
@@ -342,8 +527,8 @@ create policy "a scribe raises only their week" on om_weekly
 ```
 
 > Already running the earlier two-table ledger? Paste this once and the
-> v8.7 powers land in place — the echo columns, the weekly page, and the
-> board's third eye. Safe to re-run:
+> echo columns, the weekly page and the board's third eye land in place.
+> Safe to re-run:
 >
 > ```sql
 > alter table om_scores add column if not exists ghost text;
@@ -383,92 +568,173 @@ create policy "a scribe raises only their week" on om_weekly
 > by the recorder itself at ~28 minutes of strokes). That is the
 > right weight for a brush-and-paper arcade board.
 
-**The account room** — signing in, the custom mark, and sign-out live
-in the settings room (印 — THE SCRIBE'S MARK), not on the board: the
-board only reads the seat. Google is the primary door (cross-device
-identity); the anonymous mark stays for players who want no account at
-all. A stamped name always outranks the Google profile name on the
-ledger, and the email address is shown to its owner in the account room
-only — it is never written to a board row.
+---
+
+## Deploy to GitHub Pages
+
+The repo ships with a ready-made workflow at
+`.github/workflows/deploy.yml` that publishes the site on every push to
+`main` using the official GitHub Pages Actions pipeline.
+
+1. Create a new repository on GitHub (e.g. `one-more`).
+2. Push this folder's contents to the `main` branch:
+
+   ```bash
+   git init
+   git add -A
+   git commit -m "ONE MORE — the scroll turns"
+   git branch -M main
+   git remote add origin https://github.com/<your-username>/one-more.git
+   git push -u origin main
+   ```
+
+3. In the repository, go to **Settings → Pages** and set
+   **Build and deployment → Source** to **GitHub Actions**.
+4. That's it. The workflow runs on every push and publishes the game to:
+
+   `https://<your-username>.github.io/one-more/`
+
+You can also trigger a redeploy manually from the **Actions** tab via
+**Run workflow** (the workflow has `workflow_dispatch` enabled).
+
+> Note: the first deploy requires step 3. If the workflow fails with a
+> "Pages not enabled" error, this is the setting you missed.
+
+## Run locally
+
+No build step. Any static server works:
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000
+```
+
+(Opening `index.html` directly from disk also works.)
+
+## Install as an app (PWA) · 端
+
+ONE MORE is a full PWA — installable and fully offline. Visit the site in
+Chrome, Edge or Safari and choose **Install app** / **Add to Home Screen**:
+the game opens standalone with no browser chrome, stamped with its own
+hanko icon, and plays entirely offline.
+
+<p align="center">
+  <img src="screenshots/10-mobile.png" width="300" alt="ONE MORE on a phone — a surge scene in portrait, chain ×1.76">
+</p>
+
+**Updates are automatic.** The service worker (`sw.js`) precaches the shell
+and every ink asset on first visit and sweeps images into a runtime cache as
+they are first painted; page navigations go network-first with the cached
+shell as the offline fall. On every online visit the browser byte-checks
+`sw.js` — a version bump (`om-core-vX.Y`) installs the new worker in the
+background, `skipWaiting` activates it immediately, `clients.claim` takes
+the open page, and the activate step retires every cache that does not carry
+the current version. In practice: **deploy, and the next time the player
+opens or reloads the game, the new build is already on their paper.** The
+one discipline: bump `VER` in `sw.js` on every build. All paths are
+scope-relative, so it works identically at a user-site root or a project
+subpath on GitHub Pages.
 
 ## Project structure
 
 ```
 one-more/
 ├── index.html                  # shell: canvas + all screens + ink wobble filters
+├── inkstone.html               # THE INKSTONE — the idle page (the stone the runs press)
 ├── css/
-│   └── style.css               # the sumi-e design system
+│   ├── style.css               # the sumi-e design system
+│   └── inkstone.css            # the stone page's paper
 ├── js/
-│   ├── config.js               # tuning: areas, guardians, enemies, waves, xp, upgrades
+│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, charms
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
-│   ├── ui.js                   # DOM screens, HUD, ink gauge, guardian seal, brush picker
-│   ├── game.js                 # camera, areas, waves, xp/motes, guardians, weapons, flow
-│   ├── render.js               # sumi-e renderer: six paper themes, weather, brush
-│   │                           #   strokes, line boil, world-space stain layer
-│   ├── cutscene.js             # the scroll-turn interludes & the journey's-end
-│   │                           #   finale (credits, closing ensō) — skippable films
-│   ├── intro.js                # THE OPENING — skippable ink cinematic before the title
-│   ├── supabase-config.js      # the ink cloud's address (paste your Supabase URL + anon key)
+│   ├── ui.js                   # DOM screens, HUD, ink gauge, boss seal, brush picker
+│   ├── game.js                 # run state, waves, arenas, guardians, weapons, economy
+│   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains
+│   ├── charms.js               # the charm ladder (符) — ranks, costs, application
+│   ├── inkstone.js             # the idle stone: condensation, stages, journal
+│   ├── share.js                # the 1080×1350 share card
+│   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
+│   ├── intro.js                # THE OPENING — the skippable ink cinematic
 │   ├── lb.js                   # the endless ledger: sign-the-page + Postgres board
+│   ├── supabase-config.js      # the ink cloud's address (paste your URL + anon key)
 │   └── main.js                 # bootstrap, input, hit-stop game loop, wiring
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Pages deployment
+├── screenshots/                # the paper in pictures (used by this README)
+├── .github/workflows/deploy.yml # GitHub Pages deployment
 ├── .nojekyll                   # serve files as-is, skip Jekyll
+├── manifest.json               # the PWA manifest
+├── sw.js                       # the service worker — versioned caches, offline
 ├── LICENSE
 └── README.md
 ```
 
 ## Tuning the scrolls
 
-All balance knobs live in `js/config.js`:
+Everything is a knob in `js/config.js` — edit and refresh, no build:
 
-- `AREAS` — the six sheets: name, kanji, paper theme, difficulty multipliers,
-  spawn roster and each sheet's Guardian
-- `CFG.wave` — waves per sheet, spawn budgets, surge cadence, elite scaling
-- `CFG.xp` — mote values, level curve, gathering radius, magnet duration
-- `CFG.combo` — chain decay and the score-multiplier ceiling
-- `CFG.brushes` — the three starting brushes and their stat mods
-- `CFG.endless` — how fast the endless paper grows teeth after sheet six
-- `ENEMIES` — hp, speed, size, score and the wave each type enters
-- `UPGRADES` — the pool of strokes and weapons, and their level caps
-- `CFG.world` — spawn padding, stain cap and fade, ambient mark density
-- `CFG.ranks` — waves-cleared thresholds for the end-of-run seal
+- `AREAS` — the six sheets: ink, paper theme, multipliers, debut order,
+  scene names, roster, elite / Keeper / Guardian
+- `ENEMIES` + `ENEMY_WEIGHTS` — hp, speed, size, cost, score, debut wave,
+  spawn weight for all seventy-two
+- `CFG.wave` — the ten-wave shape: budgets, surge cadence, elite scaling,
+  the concurrent cap (150) and group size
+- `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
+- `CFG.brushes` — the seven brushes and their mods
+- `UPGRADES` — the 25 picks, their caps, and the eight max-tier specials
+- `CHARMS` — the nine charms, their ranks and ink costs
+- `CFG.charmEarn` — what a run presses into the stone
+- `CFG.endless` / `CFG.hard` — the two teeth: lap growth and REALLY HARD
+- `CFG.world` — the fixed arena (2240 × 1600), spawn padding, stain cap
+- `CFG.ranks` — the end-of-run seal thresholds
 
-High score, run counter, brush choice and mute preference persist in
-`localStorage` — no backend, no accounts, no tracking. GitHub Pages serves
-static files only, and the game is 100% client-side by design.
+High score, run counter, brush choice, charms, the stone and mute
+preference persist in `localStorage` — no accounts, no tracking. GitHub
+Pages serves static files only, and the game is 100% client-side by
+design.
 
 ### QA hooks (hidden)
 
-For testing deep sheets, the Guardians and the ending without a full run:
+For testing deep sheets, the Guardians and the ending without a full run —
+a URL that asks questions is QA: it lands on the title with the next run
+armed.
 
-- `?wave=N` — start a run at wave N (e.g. `?wave=50` drops you on the
-  fifth Guardian; the wave after 50 triggers the finale)
-- `&power=N` — seed a deep-run build of N upgrades (0–14)
+| Param | What it does |
+|---|---|
+| `?wave=N` | start the next run at global wave N (0–999) — `?wave=500` drops the run on the First Brush |
+| `&power=N` | seed a deep-run build of N upgrades (0–30) |
+| `&god=1` | the scribe cannot bleed — for probes that must outlive a swarm |
+| `&hard=1` | force REALLY HARD for the run |
+| `?daily=1` | walk today's seeded sheet |
+| `&day=YYYY-MM-DD` | a specific day's sheet |
+| `?charms=N` | seed the stone with N ink |
+| `?scenes=N` | probe the sealed-brush gate (0–60 scenes sealed) |
+| `?lbdebug=1` | the ledger's paper cloud — twelve fake scribes to E2E the board |
+| `?fps=1` | the frame-rate stamp |
+| `?nores` | disable the adaptive resolution scaler |
 
-Example: `index.html?wave=49&power=14`.
+Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
 
 ## Tech
 
-- Vanilla JavaScript (ES6+), Canvas 2D, WebAudio API
-- Opening cinematic rendered on the same canvas: animated drop physics,
-  bleeding paper flood, progressive calligraphic strokes, rising beasts,
-  a slamming seal — skippable, replayable, reduced-motion aware
-- In-run cutscenes on the same ink engine: the scroll-turn interlude
-  (rolling sheet edge, kanji stamp, hanko) and the journey's-end finale
-  (stilling, the six keepers, the closing ensō, credits roll)
+- Vanilla JavaScript (ES6+), Canvas 2D, WebAudio API — zero dependencies,
+  zero build step, zero telemetry
 - Procedural brush rendering: tapered strokes, wobbling blobs, splatter
-  stamps, dry-brush streaks, line-boil animation — no image assets
-- Unbounded world: camera-follow, rectangle-accurate off-screen spawning,
-  sprite-cached world-space stains, hash-grid ambient paper marks
-- Per-sheet weather: motes, embers, petals, driving rain with lightning
-  flashes, drifting gold leaf
-- Vampire-Survivors loop: kill-dropped XP motes, mid-wave level-ups,
-  chain-kill score multiplier, hit-stop on heavy kills
-- Zero dependencies, zero build step, zero telemetry
+  stamps, dry-brush streaks, line-boil animation at 0.115 s per
+  hand-drawn frame — no image assets for the creatures
+- A world that remembers: sprite-cached world-space stains dry into the
+  paper (430 kept, fading), hash-grid ambient marks, per-sheet weather —
+  motes, embers, petals, driving rain with lightning, drifting gold leaf
+- The fixed arena for journey/daily (2240 × 1600, camera-clamped, the
+  border on screen) and the truly unbounded endless sheet
+- An FX budget: 900 live flecks, thinned over the soft cap, oldest
+  recycled past the hard cap — a flood never buries the frame
+- The ink engine also paints the films: THE OPENING (drop physics, the
+  paper flood, calligraphic strokes, the slamming seal), the scroll-turn
+  interludes, and the journey's-end finale (credits, the closing ensō) —
+  all skippable, reduced-motion aware
+- The meta paper: charms, the idle inkstone with its condensation clock
+  and journal, the share card, ghost echoes that walk beside you
 - Full PWA: web manifest + service worker — installable, offline-capable,
-  versioned cache, hanko icon set (192/512 any + maskable, apple-touch, favicon)
+  versioned caches, hanko icon set (32/180/192/512, any + maskable)
 - Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system
   fallbacks if offline)
 

@@ -19,7 +19,7 @@ const R = (() => {
      are all ground in the same ink as the sheet they haunt. */
   const THEMES = {
     pale:  { paper: '#ede7d9', ink: '#1a1714', tint: '#322616', vig: '58,52,40',  wash: '112,102,80',  washA: 0.021, fiber: [70,62,48],  speck: '50,45,36',    weather: 'motes'  },
-    dark:  { paper: '#17130f', ink: '#e9e2d2', tint: '#f6efdc', vig: '0,0,0',     wash: '237,231,217', washA: 0.017, fiber: [200,194,178], speck: '220,214,198', weather: 'embers' },
+    dark:  { paper: '#3e372b', ink: '#e9e2d2', tint: '#f6efdc', vig: '0,0,0',     wash: '237,231,217', washA: 0.017, fiber: [200,194,178], speck: '220,214,198', weather: 'embers' },
     red:   { paper: '#eadbc4', ink: '#1a1714', tint: '#4a211a', vig: '122,42,26', wash: '178,58,43',   washA: 0.031, fiber: [70,62,48],  speck: '50,45,36',    weather: 'petals' },
     storm: { paper: '#c7cdc9', ink: '#161c1f', tint: '#1e3240', vig: '26,38,44',  wash: '58,74,84',    washA: 0.03,  fiber: [56,66,70],  speck: '40,52,58',    weather: 'rain'   },
     gilt:  { paper: '#e7d6ad', ink: '#241c12', tint: '#4a360e', vig: '96,70,20',  wash: '166,124,44',  washA: 0.035, fiber: [96,78,44],  speck: '120,92,40',   weather: 'gold'   },

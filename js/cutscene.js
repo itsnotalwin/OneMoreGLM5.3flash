@@ -14,7 +14,7 @@ const CUT = (() => {
   /* the six sheets, as paint */
   const SHEET = {
     pale:  { paper: '#ede7d9', ink: '#1a1714' },
-    dark:  { paper: '#17130f', ink: '#e9e2d2' },
+    dark:  { paper: '#3e372b', ink: '#e9e2d2' },
     red:   { paper: '#eadbc4', ink: '#1a1714' },
     storm: { paper: '#c7cdc9', ink: '#161c1f' },
     gilt:  { paper: '#e7d6ad', ink: '#241c12' },
