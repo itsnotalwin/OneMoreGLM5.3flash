@@ -3,9 +3,10 @@
 /*
  * ONE MORE: fail-closed Supabase recovery planner.
  *
- * Never edits main. In GitHub Actions this may prepare a DRAFT pull request,
- * but only for three EXACT known-reset source files plus the SW cache version.
- * An unfamiliar change to auth/startup code aborts all proposed edits.
+ * Never edits main. GitHub Actions can publish a review-only repair patch,
+ * scoped to known config/OAuth source and missing script-cache wiring.
+ * Only a tightly matched ADDITIVE startup patch may touch novel game versions.
+ * Unrecognized authentication or startup changes abort before edits.
  *
  * For intentional auth refactors, update these pins and tests in a reviewed PR.
  */
@@ -118,6 +119,65 @@ function bumpCache(sw) {
   return sw.replace(found[0][0], "const VER = '" + next + "'");
 }
 
+
+/* This is deliberately an ADDITIVE adapter, not a file-level rollback.
+ * New v19+ gameplay and Settings features live in main.js. We only insert
+ * the three previously reviewed OAuth/cloud-wipe hooks at unique legacy
+ * anchors. Any unexpected marker/anchor/partial integration aborts.
+ */
+function repairMainAdditively(input) {
+  if (healthy('js/main.js', input)) return input;
+  for (const required of ['showIntroGate()', 'LB.launchRun', 'CH.open()',
+    "const INTRO_SEEN = 'om_intro_seen'",
+    'function openSettings(from)',
+    'function refreshSettings()',
+    'function closeSettings()',
+    "document.getElementById('setWipe')",
+  ]) {
+    if (!input.includes(required)) throw new Error('Unknown startup layout: missing ' + required);
+  }
+  for (const conflicting of ['LB.consumeOAuthReturn()', 'LB.initAuth()',
+    'beforeLocalWipe()', 'LB.authReturnTo = settingsReturn']) {
+    if (input.includes(conflicting)) throw new Error('Partial authentication integration: ' + conflicting);
+  }
+  const edits = [
+    [
+      "    settingsReturn = (from === 'board' || from === 'over') ? from : 'title';\n    wipeArmed = false;",
+      "    settingsReturn = (from === 'board' || from === 'over') ? from : 'title';\n" +
+      "    if (typeof LB !== 'undefined') LB.authReturnTo = settingsReturn;\n    wipeArmed = false;"
+    ],
+    [
+      "    /* the second press closes the book */\n    clearTimeout(wipeTimer);\n    try {\n      const kill = [];",
+      "    /* Local wipe never silently erases the cloud account save. */\n" +
+      "    clearTimeout(wipeTimer);\n" +
+      "    try { if (window.OM_CLOUD) window.OM_CLOUD.beforeLocalWipe(); }\n" +
+      "    catch (e) { wipeArmed = false; refreshSettings(); return; }\n" +
+      "    try {\n      const kill = [];"
+    ],
+    [
+      "  if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();\n  if (G.S.reduced || introSeen()) {",
+      "  if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();\n" +
+      "  /* Resume Google OAuth in Settings, preserving the previous board tab. */\n" +
+      "  const oauthReturn = LB.consumeOAuthReturn();\n" +
+      "  if (oauthReturn) {\n" +
+      "    enterTitle();\n" +
+      "    if (oauthReturn.from === 'board') LB.open('title', oauthReturn.tab);\n" +
+      "    openSettings(oauthReturn.from);\n" +
+      "    LB.initAuth().catch(() => {});\n" +
+      "  } else if (G.S.reduced || introSeen()) {"
+    ]
+  ];
+  let result = input;
+  for (const [before, after] of edits) {
+    if (result.split(before).length !== 2) {
+      throw new Error('Unrecognized startup anchor; refused additive auth repair');
+    }
+    result = result.replace(before, after);
+  }
+  if (!healthy('js/main.js', result)) throw new Error('Additive auth repair did not restore all startup hooks');
+  return result;
+}
+
 function plan(current, knownBad, knownGood) {
   const proposed = { ...current };
   const edits = [];
@@ -127,6 +187,13 @@ function plan(current, knownBad, knownGood) {
     if (current[path] === knownBad[path] && healthy(path, knownGood[path])) {
       proposed[path] = knownGood[path];
       edits.push(path);
+    } else if (path === 'js/main.js') {
+      try {
+        proposed[path] = repairMainAdditively(current[path]);
+        edits.push(path);
+      } catch (e) {
+        unfamiliar.push(path + ' (' + e.message + ')');
+      }
     } else {
       unfamiliar.push(path);
     }
@@ -212,6 +279,22 @@ function selfTest(bad, good) {
     const p = plan(changed, bad, good);
     assert.deepEqual(p.edits, [HTML, SW]);
     assert.equal(p.proposed[HTML], good[HTML]);
+  });
+  test('v19 changed gameplay main receives only additive integration hooks', () => {
+    const v19 = sourcesFromRef('e71106c14d1b35315be13d2ffa45cd64e6e892ce');
+    const p = plan(v19, bad, good);
+    assert.deepEqual(p.edits, [...SOURCE_FILES, HTML, SW]);
+    for (const marker of ['THEME_CYCLE', 'THEME_LABELS', 'setThemeState']) {
+      assert.ok(p.proposed['js/main.js'].includes(marker));
+    }
+    assert.equal(p.proposed[HTML].includes('BUILD V19.0'), true);
+    assert.equal(p.proposed['js/main.js'].includes('beforeLocalWipe()'), true);
+  });
+  test('unrecognized main startup layout aborts without writing', () => {
+    const v19 = sourcesFromRef('e71106c14d1b35315be13d2ffa45cd64e6e892ce');
+    v19['js/main.js'] = v19['js/main.js'].replace("  if (G.S.reduced || introSeen()) {",
+      "  if (otherNewGate()) {");
+    assert.throws(() => plan(v19, bad, good), /UNKNOWN AUTH SOURCE/);
   });
   test('unknown PWA file is rejected', () => {
     const changed = { ...bad, [SW]: bad[SW].replace("'js/lb.js'", "'some-other-file.js'") };
