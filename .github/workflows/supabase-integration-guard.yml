@@ -23,7 +23,6 @@ jobs:
           node --check js/cloud-save.js
           node --check js/game.js
           node --check js/charms.js
-          node --check js/inkstone.js
           node --check sw.js
       - name: Detect overwritten Supabase and Google OAuth wiring
         shell: bash
@@ -57,16 +56,18 @@ jobs:
             'Google OAuth sign-in client flow missing');
           assert(lb.includes("flowType: 'pkce'") && lb.includes('detectSessionInUrl: true'),
             'Google OAuth PKCE callback handling missing');
-          assert(lb.includes('om_lb_google_return_v1') && lb.includes('consumeOAuthReturn'),
+          assert(lb.includes('om_lb_google_return_v1') && lb.includes('consumeOAuthReturn') &&
+            lb.includes('cloudAccess()') && lb.includes('window.OM_CLOUD.authChanged()'),
             'Short-lived Google callback/board context restoration missing');
           assert(lb.includes('unable to exchange external code'),
             'Actionable token-exchange error handling missing');
-          assert(main.includes('LB.consumeOAuthReturn()') && main.includes('LB.open('),
+          assert(main.includes('LB.consumeOAuthReturn()') && main.includes('LB.open(') &&
+            main.includes('LB.initAuth()') && main.includes('LB.authReturnTo = settingsReturn'),
             'Startup no longer restores the leaderboard after Google OAuth');
           assert(lb.includes("from('om_weekly')") && lb.includes('has_ghost') &&
             lb.includes('fetchEcho(') && lb.includes('raceEcho('),
             'v12 weekly leaderboard or ghost-racing integration missing');
-          assert(lb.includes("'week'") && lb.includes('om_lb_google_return_v1'),
+          assert(lb.includes('renderWeeklyRows') && lb.includes('om_lb_google_return_v1'),
             'v12 weekly tab must survive Google OAuth navigation');
           assert(cloud.includes("om_player_saves") && cloud.includes('beforeLocalWipe') &&
             cloud.includes('restoreSnapshot') && cloud.includes('saveToCloud'),
@@ -82,11 +83,11 @@ jobs:
 
           assert(main.includes('LB.launchRun') && main.includes('CH.open()') &&
             main.includes('G.getInk()'),
-            'v12 echo launch, charm room or inkstone integration missing');
-          assert(index.includes('id="boardTabWeek"') && index.includes('id="stoneBtn"'),
-            'v12 weekly board tab or inkstone title button missing');
-          for (const file of ['inkstone.html', 'css/inkstone.css',
-            'js/inkstone.js', 'js/charms.js']) {
+            'v19.3 echo launch, charm room or purse integration missing');
+          assert(index.includes('id="boardTabWeek"') && index.includes('id="charmBtn"') &&
+            index.includes('id="charmInk"'),
+            'v19.3 weekly board or purse charm UI missing');
+          for (const file of ['js/charms.js']) {
             assert(sw.includes("'" + file + "'"),
               'v12 PWA cache no longer includes ' + file);
           }

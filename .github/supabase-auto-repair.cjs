@@ -54,7 +54,7 @@ function healthy(path, text) {
     return [
       'om_lb_google_return_v1',
       'function consumeOAuthReturn(',
-      'function initAuth(',
+      'async function initAuth(',
       'signInWithOAuth(',
       'signInAnonymously(',
       "flowType: 'pkce'",
@@ -66,6 +66,9 @@ function healthy(path, text) {
       'function renderAccount(',
       'persistPending(',
       'cloudAccess()',
+      'authReturnTo: \'title\'',
+      'window.OM_CLOUD.authChanged()',
+      'unable to exchange external code',
       'return {',
     ].every(piece => text.includes(piece));
   }
@@ -97,7 +100,7 @@ function validate(content) {
   }
   const sw = content[SW];
   for (const cached of [
-    ...SOURCE_FILES, 'js/cloud-save.js', 'js/charms.js', 'js/inkstone.js', 'inkstone.html',
+    ...SOURCE_FILES, 'js/cloud-save.js', 'js/charms.js',
   ]) {
     if (!sw.includes("'" + cached + "'")) {
       throw new Error('Service worker missing asset ' + cached + '; refusing repair');
@@ -119,6 +122,92 @@ function bumpCache(sw) {
   return sw.replace(found[0][0], "const VER = '" + next + "'");
 }
 
+
+
+function replaceOne(source, before, after, label) {
+  const count = source.split(before).length - 1;
+  if (count !== 1) throw new Error('Unrecognized ' + label + ' anchor (' + count + ')');
+  return source.replace(before, after);
+}
+function extractBetween(source, start, end, label) {
+  const a = source.indexOf(start), b = source.indexOf(end, a + 1);
+  if (a < 0 || b < 0) throw new Error('Known-good ' + label + ' template unavailable');
+  return source.slice(a, b);
+}
+function repairConfigAdditively(input, knownGood) {
+  if (healthy('js/supabase-config.js', input)) return input;
+  const oldBlock = input.match(/window\.OM_SUPABASE\s*=\s*\{[\s\S]*?\};/);
+  const goodBlock = knownGood.match(/window\.OM_SUPABASE\s*=\s*\{[\s\S]*?\};/);
+  if (!oldBlock || !goodBlock ||
+      !/url\s*:\s*['"]{2}/.test(oldBlock[0]) ||
+      !/anonKey\s*:\s*['"]{2}/.test(oldBlock[0])) {
+    throw new Error('Supabase config is not the known empty template');
+  }
+  return replaceOne(input, oldBlock[0], goodBlock[0], 'blank Supabase config');
+}
+function repairLobbyAdditively(input, knownGood) {
+  if (healthy('js/lb.js', input)) return input;
+  const required = [
+    "const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';",
+    "    tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet",
+    'function init() {', 'client.auth.onAuthStateChange((evt, session) => {',
+    'async function signInGoogle() {', 'function authFail(e) {', 'function postFail(e) {',
+    'function renderAuth(err) {', 'function renderAccount(err) {',
+    "from('om_scores')", "from('om_daily')", "from('om_weekly')",
+    'function fetchEcho(', 'function renderWeeklyRows(', 'return {',
+  ];
+  for (const marker of required) {
+    if (!input.includes(marker)) throw new Error('Unknown lobby layout: missing ' + marker);
+  }
+  for (const marker of ['om_lb_google_return_v1','function consumeOAuthReturn(',
+    'function initAuth(','cloudAccess()','ST.oauthError','window.OM_CLOUD.authChanged()']) {
+    if (input.includes(marker)) throw new Error('Partial lobby integration: ' + marker);
+  }
+  const oauthHelpers = extractBetween(knownGood,
+    "  const oauthReturnKey = 'om_lb_google_return_v1';",
+    '  const cfg = () => {', 'OAuth callback');
+  const authFail = extractBetween(knownGood,
+    '  function authFail(e) {', '  function postFail(e) {', 'auth error mapping');
+  const signInGoogle = extractBetween(knownGood,
+    '  async function signInGoogle() {', '  /* stamp the mark:', 'Google OAuth');
+  let result = input;
+  result = replaceOne(result,
+    "    tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet\n  };",
+    "    tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet\n" +
+    "    oauthError: '',     // message for unsuccessful Google sign-in returns\n  };", 'lobby state');
+  result = replaceOne(result,
+    "  const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';\n",
+    "  const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';\n" + oauthHelpers,
+    'OAuth helper insertion');
+  result = replaceOne(result,
+    extractBetween(result, '  function authFail(e) {', '  function postFail(e) {', 'current auth error'),
+    authFail, 'OAuth error mapping');
+  result = replaceOne(result,
+    '          if (session && session.user) ST.user = session.user;',
+    "          if (session && session.user) { ST.user = session.user; ST.oauthError = ''; }", 'auth state');
+  result = replaceOne(result,
+    '          renderAuth();\n          renderAccount();\n          if (ST.user && ST.pending)',
+    '          renderAuth();\n          renderAccount();\n' +
+    '          if (window.OM_CLOUD) setTimeout(() => window.OM_CLOUD.authChanged(), 0);\n' +
+    '          if (ST.user && ST.pending)', 'cloud auth notification');
+  result = replaceOne(result,
+    extractBetween(result, '  async function signInGoogle() {', '  /* stamp the mark:', 'current Google sign-in'),
+    signInGoogle, 'OAuth return state');
+  result = replaceOne(result,
+    '  function renderAuth(err) {\n    const box',
+    '  function renderAuth(err) {\n    err = err || ST.oauthError;\n    const box', 'OAuth auth error display');
+  result = replaceOne(result,
+    '  function renderAccount(err) {\n    const box',
+    '  function renderAccount(err) {\n    err = err || ST.oauthError;\n    const box', 'OAuth account error display');
+  result = replaceOne(result,
+    '    saveName, renderAccount,\n    get user() { return me(); },',
+    '    saveName, renderAccount, consumeOAuthReturn, initAuth,\n' +
+    "    authReturnTo: 'title',\n" +
+    '    cloudAccess() { return ST.sb ? { client: ST.sb.client, user: ST.user } : null; },\n' +
+    '    get user() { return me(); },', 'lobby public API');
+  if (!healthy('js/lb.js', result)) throw new Error('Additive lobby repair did not restore all required hooks');
+  return result;
+}
 
 /* This is deliberately an ADDITIVE adapter, not a file-level rollback.
  * New v19+ gameplay and Settings features live in main.js. We only insert
@@ -187,6 +276,20 @@ function plan(current, knownBad, knownGood) {
     if (current[path] === knownBad[path] && healthy(path, knownGood[path])) {
       proposed[path] = knownGood[path];
       edits.push(path);
+    } else if (path === 'js/supabase-config.js') {
+      try {
+        proposed[path] = repairConfigAdditively(current[path], knownGood[path]);
+        edits.push(path);
+      } catch (e) {
+        unfamiliar.push(path + ' (' + e.message + ')');
+      }
+    } else if (path === 'js/lb.js') {
+      try {
+        proposed[path] = repairLobbyAdditively(current[path], knownGood[path]);
+        edits.push(path);
+      } catch (e) {
+        unfamiliar.push(path + ' (' + e.message + ')');
+      }
     } else if (path === 'js/main.js') {
       try {
         proposed[path] = repairMainAdditively(current[path]);
@@ -248,7 +351,7 @@ function selfTest(bad, good) {
       bad[HTML]
     );
   });
-  test('correct integration does not create a PR', () => {
+  test('correct integration yields no repair patch', () => {
     assert.equal(plan(good, bad, good).edits.length, 0);
   });
   test('config-only regression changes config and SW only', () => {
@@ -270,9 +373,10 @@ function selfTest(bad, good) {
     ) };
     const p = plan(changed, bad, good);
     assert.match(p.proposed[SW], /const VER = 'v99-supabase-1'/);
-    assert.ok(p.proposed[SW].includes("'js/inkstone.js'"));
+    assert.ok(p.proposed[SW].includes("'js/cloud-save.js'"));
+    assert.ok(p.proposed[SW].includes("'js/charms.js'"));
   });
-  test('cloud script missing from a new HTML upload gets a minimal PR diff', () => {
+  test('cloud script missing from a new HTML upload gets a minimal patch diff', () => {
     const changed = { ...good,
       [HTML]: good[HTML].replace('<script src="./js/cloud-save.js"></script>\n', ''),
     };
@@ -295,6 +399,23 @@ function selfTest(bad, good) {
     v19['js/main.js'] = v19['js/main.js'].replace("  if (G.S.reduced || introSeen()) {",
       "  if (otherNewGate()) {");
     assert.throws(() => plan(v19, bad, good), /UNKNOWN AUTH SOURCE/);
+  });
+
+  test('v19.3 purse and ten-seal upload gets additive auth recovery without restoring Inkstone', () => {
+    const v193 = sourcesFromRef('5d034d9cd68e6f1614f38736a21f47ed8336b7d8');
+    const p = plan(v193, bad, good);
+    assert.deepEqual(p.edits, [...SOURCE_FILES, HTML, SW]);
+    assert.ok(p.proposed[HTML].includes('BUILD V19.3'));
+    assert.ok(p.proposed[HTML].includes('id="charmInk"'));
+    assert.ok(p.proposed[SW].includes("'js/cloud-save.js'"));
+    assert.ok(!p.proposed[SW].includes("'inkstone.html'"));
+    assert.ok(p.proposed['js/lb.js'].includes('cloudAccess()'));
+    assert.ok(p.proposed['js/main.js'].includes('beforeLocalWipe()'));
+  });
+  test('unknown v19.3 lobby layout aborts without writing', () => {
+    const v193 = sourcesFromRef('5d034d9cd68e6f1614f38736a21f47ed8336b7d8');
+    v193['js/lb.js'] = v193['js/lb.js'].replace('function init() {', 'function alteredInit() {');
+    assert.throws(() => plan(v193, bad, good), /UNKNOWN AUTH SOURCE/);
   });
   test('unknown PWA file is rejected', () => {
     const changed = { ...bad, [SW]: bad[SW].replace("'js/lb.js'", "'some-other-file.js'") };
