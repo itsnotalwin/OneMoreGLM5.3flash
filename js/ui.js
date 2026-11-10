@@ -9,7 +9,7 @@ const UI = (() => {
   let lastOver = null;   /* the most recent over-sheet report — the share card reads it */
 
   const el = {
-    hardBtn: $('hardBtn'), hudHard: $('hudHard'),
+    hudHard: $('hudHard'),
     hud: $('hud'), hudWave: $('hudWave'), waveFill: $('waveFill'), hudHp: $('hudHp'),
     hudScore: $('hudScore'), hudTime: $('hudTime'), muteBtn: $('muteBtn'),
     hudArea: $('hudArea'), hudAreaKanji: $('hudAreaKanji'), hudAreaName: $('hudAreaName'),
@@ -364,15 +364,9 @@ const UI = (() => {
     bannerTimer = setTimeout(() => el.banner.classList.remove('show'), 2200);
   }
 
-  /* the toggle, worn in three places: the title's red chip, the
-     HUD's vermillion 難 seal through the run, and the state word */
+  /* the toggle, worn in two places: the settings' row and the
+     HUD's vermillion 難 seal through the run */
   function setHard(v) {
-    if (el.hardBtn) {
-      el.hardBtn.classList.toggle('on', !!v);
-      el.hardBtn.setAttribute('aria-pressed', v ? 'true' : 'false');
-    }
-    const st = document.querySelector('#hardBtn .hard-state');
-    if (st) st.textContent = v ? 'ON' : 'OFF';
     if (el.hudHard) el.hudHard.classList.toggle('hidden', !v);
   }
 
@@ -938,7 +932,7 @@ const UI = (() => {
     el.statKills.textContent = d.kills.toLocaleString('en-US');
     el.statTime.textContent = fmtTime(d.time);
     el.statScore.textContent = d.score.toLocaleString('en-US');
-    /* the inkstone: what this run pressed back into the stone */
+    /* the purse: what this run pressed out for the charms */
     const inkRow = document.getElementById('inkStatRow');
     if (inkRow) inkRow.classList.toggle('hidden', !(d.ink > 0));
     if (d.ink > 0) el.statInk.textContent = '+' + d.ink.toLocaleString('en-US');
@@ -970,10 +964,10 @@ const UI = (() => {
 
   function muteVisual(m) { el.muteBtn.classList.toggle('muted', m); }
 
-  /* the purse lives on the 砚 chip now — the rail reads the wallet.
+  /* the purse lives on the 符 chip — the rail reads the wallet.
      It stays quiet until the first press lands. */
   function setInkLine(total) {
-    const badge = document.getElementById('stoneCount');
+    const badge = document.getElementById('charmInk');
     if (!badge) return;
     const t = Math.max(0, total | 0);
     badge.textContent = t.toLocaleString('en-US');
@@ -981,16 +975,24 @@ const UI = (() => {
   }
 
   /* the brush's current loadout, worn on the wrist — a completed
-     weapon wears MAX instead of a number */
+     weapon wears MAX instead of a number. The shelf reads in three
+     clusters, hairline-separated: the brush's own ARTS, the learned
+     POWERS, and the plain STROKES — a wrist, not a wall of glyphs. */
   function setLoadout(levels) {
     if (!el.hudLoadout) return;
     /* the brush itself leads the shelf: ONE BRUSH, ONE BLADE */
     const br = CFG.brushes[G.S.brush] || null;
     const brChip = br ? `<span class="load-item load-brush" title="${br.name}"><b>${br.kanji}</b></span>` : '';
-    el.hudLoadout.innerHTML = brChip + UPGRADES
-      .filter(u => (levels[u.id] || 0) > 0)
-      .map(u => `<span class="load-item${levels[u.id] >= u.max ? ' load-max' : ''}" title="${u.name}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg><b>${levels[u.id] >= u.max ? 'MAX' : levels[u.id]}</b></span>`)
-      .join('');
+    const chip = u => `<span class="load-item${levels[u.id] >= u.max ? ' load-max' : ''}" title="${u.name}"><svg viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg><b>${levels[u.id] >= u.max ? 'MAX' : levels[u.id]}</b></span>`;
+    const sep = '<span class="load-sep" aria-hidden="true"></span>';
+    const owned = UPGRADES.filter(u => (levels[u.id] || 0) > 0);
+    const arts = owned.filter(u => u.art).map(chip).join('');
+    const powers = owned.filter(u => u.ability).map(chip).join('');
+    const strokes = owned.filter(u => !u.art && !u.ability).map(chip).join('');
+    el.hudLoadout.innerHTML = brChip
+      + (arts ? sep + arts : '')
+      + (powers ? sep + powers : '')
+      + (strokes ? sep + strokes : '');
   }
 
   return {

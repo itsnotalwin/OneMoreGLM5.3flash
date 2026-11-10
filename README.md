@@ -76,13 +76,13 @@ practice is for the hand, not the stone.
 unbound: no arena, no margins, an endless sheet of washi, and every lap the
 beasts stand taller (**hp ×1.24**), think faster (**speed ×1.016**) and
 arrive thicker (**budget ×1.32**). Only endless runs post to the ledger —
-and waves past the six hundred press **double ink** into the stone.
+and waves past the six hundred press **double ink** into the purse.
 
-**REALLY HARD** — the title's red toggle, remembered on this device: beasts
+**REALLY HARD** — the settings' red toggle (設 — remembered on this device): beasts
 stand ×1.4 taller, arrive ×1.15 faster, waves spend ×1.45 more — and the
 ledger pays **double** for every stroke that survives it.
 
-| The six scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, four still sealed |
+| The six scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, five still sealed |
 |---|---|
 | ![The six scrolls shelf](screenshots/02-scrolls.png) | ![The brush room](screenshots/03-brushes.png) |
 
@@ -145,11 +145,34 @@ Journey and daily runs live **inside a fixed arena** — a page with margins,
 2240 × 1600 on every screen, so a fight plays the same on a phone as on a
 desk. Only THE ENDLESS SCROLL keeps the unbroken sheet.
 
-Every tenth wave of every scene is a **Keeper** fight: a red-sealed beast,
-lesser kin of the sheet's Guardian, walking with a halved honor guard — a
-debut duel runs twenty-to-thirty honest seconds, and repeats grow with the
-scene. Kill it and its seal drops a **chest** (a free stroke of your
-choice), a pot of fresh water, and a shower of ink.
+Every tenth wave of every scene is a **Keeper** fight — and since v19.1, **every
+scene owns its own**: sixty red-sealed bosses, ten to a sheet, each with its own
+body (one of fifteen brush forms), its own ink (a hue contrast-checked against
+its sheet's paper), its own cry, and its own two abilities cut from a kit of
+eighteen primitives — radial slams, aimed needle fans, volleys, broods, mirrors,
+telegraphed charges, blinks, red seal-stamps, sky-rain, spirals, orbits, musters.
+THE POOL spreads and breeds gnats; THE FAR PEAK breaks its own road through the
+paper; THE PAPER LANTERN circles at a spear's length; THE GILD MOTHER counts her
+half-ink copies. A debut duel runs twenty-to-thirty honest seconds, and repeats
+grow with the scene. Kill it and its seal drops a flush of ink — the scene's
+true Keeper (scene ten) also drops a **chest** (a free stroke of your choice)
+and a pot of fresh water.
+
+**THE ASSEMBLY** — scene ten's tenth wave. The Guardian enters alone, and the
+sheet comes with it: at 72%, 45% and 20% of the Guardian's ink, the scene
+bosses return as **echoes** (a third of their ink, kit and color intact) —
+three, three, then four, until the arena holds **all ten seals and the
+Guardian at once**. The Guardian's fall no longer ends the sheet on the spot:
+the unroll waits until the last echo dries, and the paper seals only when the
+arena stands empty.
+
+| The Assembly — all ten seals and THE STAIN stand together |
+|---|
+| ![The Assembly — eleven named bosses on one paper](screenshots/14-assembly.png) |
+
+| THE FAR PEAK — scene three's own keeper, mid-windup |
+|---|
+| ![A scene keeper duel — THE FAR PEAK with its ring telegraph](screenshots/15-keeper.png) |
 
 **Captains** walk *inside* the pack — never alone, never a boss bar. One cut
 from each sheet's own ink, they quicken every beast near them (×1.32 within
@@ -283,8 +306,8 @@ one beast of its own.
 …plus **BLIP** (the shard shed by dividers and mothers), **STITCHLING**
 (the shard shed by THE FRAY), the five
 **specials** (THE NEST · THE MENDER · THE TOLLER · THE LEDGER · THE TRACE),
-the six **Captains**, the six **Keepers** and the six **Guardians** —
-eighty-two ink-born in all.
+the six **Captains**, the sixty **ten-seal Keepers** (ten to a sheet, one per
+scene) and the six **Guardians** — one hundred and thirty-six ink-born in all.
 
 **THE CAPTAINS SURGE (v19).** Every officer now draws a telegraphed road
 through the paper every few breaths and takes it — and under its flag the
@@ -311,7 +334,10 @@ and the First Brush is the longest fight in the game.
 
 Its Keeper walks ahead of it every hundred waves: **THE BLIGHT** (*THE STAIN
 SENDS ITS FIRST SERVANT* — 10), **THE HUSK** (110), **THE CINDER** (210),
-**THE RAINVEIL** (310), **THE NIB** (410), **THE MARGIN** (510).
+**THE RAINVEIL** (310), **THE NIB** (410), **THE MARGIN** (510) — scene ten's
+own seal, and since v19.1 only one of ten: every scene of every sheet walks
+its own Keeper (see THE TEN SEALS above), and at the Guardian's wave they all
+return as echoes beside it — **THE ASSEMBLY**.
 
 **The Guardian is the Keeper, upgraded.** Each sheet's finale keeps its
 Keeper's whole kit and adds abilities the lesser duel never shows: THE STAIN
@@ -405,11 +431,11 @@ every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
 
 ---
 
-## Charms (符) — what the inkstone buys
+## Charms (符) — what the purse buys
 
 Permanent upgrades pressed between runs. A charm's rank rides every page the
 hand opens — journey, endless, daily, the resumed frontier. Twelve charms over
-**32 ranks; the whole board costs 硯 15,820** — a full victory run presses
+**32 ranks; the whole board costs 15,820 ink** — a full victory run presses
 about 3,700, so the deep ranks are bought with real journeys. The ladder is
 shaped honestly: the cheapest charm lands on the first run, quality-of-life
 leads, damage is capped at half a real build, and the Paper Ward charm retires
@@ -428,27 +454,22 @@ the in-run pick so there are no trap options.
 | THE PAPER WARD | 守 | 1 | 560 | every run begins warded |
 | **THE FIRST STROKE** | 筆 | 3 | 260 · 620 · 1400 | the brush you carry bites one deeper — its own ink only |
 | **THE SWIFT HAND** | 手 | 2 | 240 · 580 | the brush you carry casts 10% sooner per rank |
-| **THE SCHOLAR** | 学 | 2 | 380 · 860 | every wave survived presses 10% deeper into the stone |
+| **THE SCHOLAR** | 学 | 2 | 380 · 860 | every wave survived presses 10% deeper into the purse |
 
-### The Inkstone (硯) — the idle page
+### The purse (符) — ink that survives the paper
 
-Every run ends with the press: the ink is squeezed back into the stone. A
-currency that survives the paper.
+Every run ends with the press: the ink is squeezed back into the purse. It is
+read on the title's 符 chip and spent in the charm room — a currency that
+survives the paper.
 
-| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The stone remembers — 2,140 ink held, 3,180 pressed, a journal of feats |
+| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — the whole board costs 15,820 ink, ranks worn in pips |
 |---|---|
-| ![The endless leaderboard](screenshots/08-board.png) | ![The inkstone page](screenshots/09-inkstone.png) |
+| ![The endless leaderboard](screenshots/08-board.png) | ![The charm room](screenshots/07-charms.png) |
 
 **What a run presses**: 6 ink per wave survived — waves past the six hundred
 press **double**; +80 per Guardian felled; +300 once ever for the six sheets
 signed; a new personal best presses ×1.25; REALLY HARD presses the ledger's
 own ×2; a practiced daily only a fifth.
-
-**Between runs, the stone lives its own life** (`inkstone.html`): it
-condenses ink from the air — one drop a quarter hour, kept overnight — it
-grows through named stages as the pool deepens (頑石 rough stone → 生暉 awake
-→ …), you can seal a name onto it, and **THE STONE REMEMBERS** — a journal
-of everything pressed. Grind it by hand: press and hold.
 
 **The run's report** can be pressed into a share card — 1080 × 1350, stamped
 with the run's hanko (or your ledger rank, #N, when a post landed), ready to
@@ -716,10 +737,8 @@ subpath on GitHub Pages.
 ```
 one-more/
 ├── index.html                  # shell: canvas + all screens + ink wobble filters
-├── inkstone.html               # THE INKSTONE — the idle page (the stone the runs press)
 ├── css/
-│   ├── style.css               # the sumi-e design system
-│   └── inkstone.css            # the stone page's paper
+│   └── style.css               # the sumi-e design system
 ├── js/
 │   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, charms
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
@@ -727,7 +746,6 @@ one-more/
 │   ├── game.js                 # run state, waves, arenas, guardians, weapons, economy
 │   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains
 │   ├── charms.js               # the charm ladder (符) — ranks, costs, application
-│   ├── inkstone.js             # the idle stone: condensation, stages, journal
 │   ├── share.js                # the 1080×1350 share card
 │   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
 │   ├── intro.js                # THE OPENING — the skippable ink cinematic
@@ -755,14 +773,14 @@ Everything is a knob in `js/config.js` — edit and refresh, no build:
   the concurrent cap (150) and group size
 - `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
 - `CFG.brushes` — the eight brushes and their weapon bodies (`atk`)
-- `UPGRADES` — the 25 picks, their caps, and the eight max-tier specials
-- `CHARMS` — the nine charms, their ranks and ink costs
-- `CFG.charmEarn` — what a run presses into the stone
+- `UPGRADES` — the 52 picks — strokes, learned powers and the brushes' own ART tracks
+- `CHARMS` — the twelve charms, their ranks and ink costs
+- `CFG.charmEarn` — what a run presses into the purse
 - `CFG.endless` / `CFG.hard` — the two teeth: lap growth and REALLY HARD
 - `CFG.world` — the fixed arena (2240 × 1600), spawn padding, stain cap
 - `CFG.ranks` — the end-of-run seal thresholds
 
-High score, run counter, brush choice, charms, the stone and mute
+High score, run counter, brush choice, charms, the ink purse and mute
 preference persist in `localStorage` — no accounts, no tracking. GitHub
 Pages serves static files only, and the game is 100% client-side by
 design.
@@ -781,7 +799,7 @@ armed.
 | `&hard=1` | force REALLY HARD for the run |
 | `?daily=1` | walk today's seeded sheet |
 | `&day=YYYY-MM-DD` | a specific day's sheet |
-| `?charms=N` | seed the stone with N ink |
+| `?charms=N` | seed the purse with N ink |
 | `?scenes=N` | probe the sealed-brush gate (0–60 scenes sealed) |
 | `?lbdebug=1` | the ledger's paper cloud — twelve fake scribes to E2E the board |
 | `?fps=1` | the frame-rate stamp |
@@ -807,8 +825,8 @@ Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
   paper flood, calligraphic strokes, the slamming seal), the scroll-turn
   interludes, and the journey's-end finale (credits, the closing ensō) —
   all skippable, reduced-motion aware
-- The meta paper: charms, the idle inkstone with its condensation clock
-  and journal, the share card, ghost echoes that walk beside you
+- The meta paper: charms, the ink purse pressed from every run, the share
+  card, ghost echoes that walk beside you
 - Full PWA: web manifest + service worker — installable, offline-capable,
   versioned caches, hanko icon set (32/180/192/512, any + maskable)
 - Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system

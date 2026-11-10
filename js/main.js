@@ -166,7 +166,7 @@
   }
 
   /* ---------------- the charm room — 符 ----------------
-     what the runs pressed into the inkstone buys permanent power.
+     what the runs press out buys permanent power.
      A quiet shop beside the settings room. */
   const charmsOpen = () => typeof CH !== 'undefined' && CH.isOpen();
   document.getElementById('charmBtn').addEventListener('click', () => { SFX.ensure(); SFX.page(); CH.open(); });
@@ -245,7 +245,6 @@
     SFX.ensure();
     SFX.page();               /* the study door slides */
     settingsReturn = (from === 'board' || from === 'over') ? from : 'title';
-    if (typeof LB !== 'undefined') LB.authReturnTo = settingsReturn;
     wipeArmed = false;
     refreshSettings();
     if (typeof LB !== 'undefined' && LB.renderAccount) LB.renderAccount();
@@ -302,10 +301,8 @@
       wipeTimer = setTimeout(() => { wipeArmed = false; refreshSettings(); }, 4000);
       return;
     }
-    /* Local wipe never silently erases or replaces the account cloud save. */
+    /* the second press closes the book */
     clearTimeout(wipeTimer);
-    try { if (window.OM_CLOUD) window.OM_CLOUD.beforeLocalWipe(); }
-    catch (e) { wipeArmed = false; refreshSettings(); return; }
     try {
       const kill = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -491,7 +488,7 @@
     UI.setSheetContinue(G.getFurthest());
     UI.setHard(G.getHard());                        /* the red toggle remembered */
     UI.setDailyChip(G.dailyState());                /* today's sheet, freshly read */
-    UI.setInkLine(G.getInk());                      /* the stone, freshly read */
+    UI.setInkLine(G.getInk());                      /* the purse, freshly read */
     if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     UI.show('title');
     G.mode = 'title';
@@ -560,10 +557,6 @@
     start('daily');
   });
   document.getElementById('boardBtn').addEventListener('click', openBoard);
-  /* the stone's own room — a separate paper beside the game's */
-  document.getElementById('stoneBtn').addEventListener('click', () => {
-    location.href = 'inkstone.html';
-  });
   /* the ledger's three eyes: all time, today's sheet, the week */
   document.getElementById('boardTabAll').addEventListener('click', () => LB.setTab('all'));
   document.getElementById('boardTabDay').addEventListener('click', () => LB.setTab('day'));
@@ -573,12 +566,6 @@
   /* the account room is the one sign-in door — the board and the
      over sheet knock on it through here, and RETURN leads back */
   LB.openSettings = from => openSettings(from);
-  document.getElementById('hardBtn').addEventListener('click', () => {
-    SFX.ensure();
-    G.setHard(!G.getHard());
-    UI.setHard(G.getHard());
-    SFX.pick(1);
-  });
   document.getElementById('boardBackBtn').addEventListener('click', closeBoard);
   /* the SCENES door: the shelf answers here — journey by hand */
   document.getElementById('sheetBtn').addEventListener('click', openScrolls);
@@ -620,16 +607,9 @@
   UI.setSheetContinue(G.getFurthest());
 
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
-  UI.setInkLine(G.getInk());                        /* the stone reads itself */
+  UI.setInkLine(G.getInk());                        /* the purse reads itself */
   if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
-  /* Resume Settings and the correct leaderboard tab after Google PKCE. */
-  const oauthReturn = LB.consumeOAuthReturn();
-  if (oauthReturn) {
-    enterTitle();
-    if (oauthReturn.from === 'board') LB.open('title', oauthReturn.tab);
-    openSettings(oauthReturn.from);
-    LB.initAuth().catch(() => {});
-  } else if (G.S.reduced || introSeen()) {
+  if (G.S.reduced || introSeen()) {
     enterTitle();          /* the opening is a film — stillness and repeat visits go straight to the title */
   } else if (location.search.length > 1) {
     enterTitle();          /* a URL that asks questions is QA — the gate would hold the probes */

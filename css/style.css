@@ -179,10 +179,12 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .hud-score{ font-size: 13px; font-weight: 600; letter-spacing: .18em; }
 
 .hud-bl{ position: absolute; bottom: 20px; left: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
-.hud-loadout{ display: flex; gap: 9px; min-height: 16px; }
+.hud-loadout{ display: flex; align-items: center; gap: 8px; min-height: 16px; }
 .load-item{ display: inline-flex; align-items: center; gap: 3px; color: var(--ink); }
-.load-item svg{ width: 15px; height: 15px; }
-.load-item b{ font-size: 9px; font-weight: 600; color: var(--ink-70); }
+.load-item svg{ width: 16px; height: 16px; }
+.load-item b{ font-size: 9.5px; font-weight: 600; color: var(--ink-70); }
+/* the wrist's hairlines: ARTS | POWERS | STROKES read as three clusters */
+.load-sep{ flex: none; width: 1px; height: 13px; background: var(--ink-25); margin: 0 3px; }
 .hud-time{ font-size: 11px; letter-spacing: .3em; color: var(--ink-70); }
 
 .hud-br{ position: absolute; bottom: 16px; right: 20px; }
@@ -1795,8 +1797,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   max-width: 100%;
   animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.6s backwards;
 }
-.minor-row .board-btn{ margin-top: 0; animation: none; padding: 10px 16px 10px 12px; }
-.minor-row .board-btn, .hard-btn{ font-size: 10px; letter-spacing: .26em; }
+.minor-row .board-btn{ margin-top: 0; animation: none; padding: 10px 16px 10px 12px; font-size: 10px; letter-spacing: .26em; }
 /* the purse seal on the stone chip — the wallet, readable at the rail */
 .chip-count{
   position: absolute; z-index: 2; bottom: -8px; right: -9px;
@@ -1809,46 +1810,6 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transform: rotate(2deg);
   pointer-events: none;
 }
-.hard-btn{
-  position: relative;
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 10px 22px 10px 14px;
-  font-family: inherit;
-  font-size: 10.5px; font-weight: 600; letter-spacing: .3em; text-indent: .1em;
-  color: var(--ink-45);
-  background: none; border: none; cursor: pointer;
-  --tilt: .4deg;
-  transform: rotate(var(--tilt));
-  transition: color .14s ease, transform .14s ease;
-}
-.hard-btn::before{
-  content: '';
-  position: absolute; inset: 0;
-  border: 1px dashed var(--ink-25);
-  background: var(--paper-55);
-  filter: var(--rough-soft);
-  pointer-events: none;
-}
-.hard-btn .hard-kanji{
-  position: relative; z-index: 1;
-  font-family: var(--display); font-size: 17px; line-height: 1;
-  color: var(--ink-45); transform: rotate(-3deg);
-  transition: color .14s ease;
-}
-.hard-btn .play-label{ position: relative; z-index: 1; color: inherit; }
-.hard-btn .hard-state{ color: var(--ink-25); letter-spacing: .3em; }
-.hard-btn:hover{ color: var(--ink-70); transform: rotate(var(--tilt)) translateY(-1px); }
-/* the red seal pressed in: the page will bite back */
-.hard-btn.on{ color: var(--red); }
-.hard-btn.on::before{ border: 1.5px solid rgba(178,58,43,.6); background: rgba(178,58,43,.06); }
-.hard-btn.on .hard-kanji{
-  color: var(--paper);
-  background: var(--red);
-  padding: 2px;
-  box-shadow: 1px 1px 0 rgba(26,23,20,.25);
-}
-.hard-btn.on .hard-state{ color: var(--red); }
-
 /* the run's own reminder: a vermillion 難 beside the sheet's name */
 .hud-hard{
   align-self: center;
@@ -2302,10 +2263,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 
 /* ============================================================
-   CHARMS — 符 — the inkstone's shop (v8.8)
+   CHARMS — 符 — the purse's shop (v8.8)
    ============================================================ */
 /* the title's fourth minor chip: the ledger door's twin, with a
-   red breath that says the stone can buy something */
+   red breath that says the purse can buy something */
 .charm-btn{ --tilt: .35deg; }
 .charm-dot{
   position: absolute; z-index: 2; top: -3px; right: -3px;
@@ -2406,6 +2367,18 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   min-height: 12px;
 }
 .brush-room-hint.is-live{ color: var(--ink-70); }
+/* the whole shelf on one page: eight brushes, no scroll, on a
+   tall-enough desktop — the phone keeps its own tighter fold */
+@media (min-width: 900px) and (min-height: 620px){
+  .screen-brush .set-wrap{ width: min(720px, calc(100vw - 36px)); padding-top: 14px; padding-bottom: 10px; }
+  .screen-brush .set-head{ margin-bottom: 3px; }
+  .screen-brush .set-title{ font-size: clamp(19px, 3vh, 24px); margin: 3px 0 2px; }
+  .screen-brush .set-rows{ gap: 5px; margin: 5px 0 5px; }
+  .screen-brush .set-row{ padding: 6px 11px 7px; }
+  .screen-brush .set-kanji{ font-size: 19px; }
+  .screen-brush .brush-room-hint{ margin-top: 3px; min-height: 11px; }
+  .screen-brush .set-back{ margin-top: 2px; padding: 6px 20px 7px; }
+}
 @media (prefers-reduced-motion: reduce){ .brush-entry{ transition: none; } }
 /* the beast's one line, under its name */
 .banner-sub{
@@ -2432,17 +2405,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   /* every chip goes vertical — kanji above its word — daily-btn
      included (it wears its own class, so the row's children rule) */
   .minor-row > *{ flex-direction: column; gap: 4px; }
-  .minor-row > *, .minor-row .board-btn, .hard-btn{ padding: 8px 10px 7px; }
+  .minor-row > *, .minor-row .board-btn{ padding: 8px 10px 7px; }
   .minor-row .play-label{
     display: block; font-size: 6.5px; letter-spacing: .18em; text-indent: .18em;
   }
   /* the daily chip wears one word on the rail — TODAY lives in its own room */
   .minor-row #dailyLabel{ display: none; }
-  /* REALLY HARD — OFF folds to HARD; the seal itself carries the state */
-  .hard-btn .play-label{ font-size: 0; }
-  .hard-btn .play-label::after{ content: 'HARD'; font-size: 6.5px; letter-spacing: .18em; text-indent: .18em; }
-  .hard-btn .hard-state{ display: none; }
-  .minor-row .board-kanji, .hard-btn .hard-kanji{ font-size: 16px; }
+  .minor-row .board-kanji{ font-size: 16px; }
   .chip-count{ bottom: -6px; right: -6px; font-size: 7px; }
 }
 

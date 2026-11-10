@@ -11,26 +11,22 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v19.0-cloud-1';
+const VER = 'v19.3';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
 const CORE = [
   './',
   'index.html',
-  'inkstone.html',
   'manifest.json',
-  'css/inkstone.css',
   'css/style.css',
   'js/audio.js',
   'js/charms.js',
-  'js/cloud-save.js',
   'js/config.js',
   'js/cutscene.js',
   'js/supabase-config.js',
   'js/game.js',
   'js/intro.js',
-  'js/inkstone.js',
   'js/lb.js',
   'js/main.js',
   'js/render.js',

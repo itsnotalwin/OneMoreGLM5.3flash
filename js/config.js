@@ -150,8 +150,8 @@ const CFG = {
      every stroke that survives it. */
   hard: { hp: 1.4, sp: 1.15, budget: 1.45, score: 2.0 },
 
-  /* ---- THE INKSTONE (硯) — what the runs press out ----
-     When a run ends, the press squeezes its ink back into the stone:
+  /* ---- THE INK PURSE (符) — what the runs press out ----
+     When a run ends, the press squeezes its ink back into the purse:
      a currency that survives the paper, spent on CHARMS between runs.
      Every wave survived presses 6 drops (waves past the six sheets
      press double — the endless loops go deeper than the journey ever
@@ -159,7 +159,7 @@ const CFG = {
      signed adds 300, once ever. A new personal best presses 1.25×,
      REALLY HARD presses the ledger's own double, and a practiced
      daily sheet presses only a fifth — practice is for the hand,
-     not the stone. Checked in scripts/economy_calc.js. */
+     not the purse. Checked in scripts/economy_calc.js. */
   charmEarn: {
     perWave: 6,        // ink pressed per wave survived
     loopFrom: 600,     // waves past the six sheets pay double
@@ -374,7 +374,73 @@ const ENEMIES = {
   b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 700, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
   b_blank:   { name: 'THE UNWRITTEN',   trait: 'GUARDIAN VI',  cost: 0, intro: 600, hp: 660, r: 32, speed: 50, score: 2600, shape: 'boss', boss: 1 },
 
-  /* ---- the six Keepers, one per sheet, on EVERY tenth wave ----
+  /* ---- v19.1 · THE TEN SEALS — a keeper for EVERY scene ----
+     Each of a sheet's ten levels owns its own red-sealed boss: its
+     own body (form), its own ink (hue), its own cry, and its own
+     two abilities cut from the keeper kit. The sheet's tenth scene
+     keeps the old Keeper — the Guardian's true lesser kin — and at
+     that sheet's tenth wave all ten come back with it (game.js,
+     THE ASSEMBLY). Bases follow the same law as the old shared
+     keeper: measured against the scribe's natural build, scaled by
+     scene weight (0.84 + 0.045 × scene), introduced at the sheet's
+     gate wave so the journey's climb carries them. Hues are
+     contrast-checked against each sheet's paper (>= 4.5:1). */
+  k1_1: { name: 'THE POOL', trait: 'KEEPER I · SCENE 1', cost: 0, intro: 10, hp: 210, r: 24, speed: 59, score: 185, shape: 'boss', boss: 2, form: 'pool', hue: '#6b5a49', cry: 'THE POOL SPREADS', ab: ['ring', 'brood'], kin: 'gnat' },
+  k1_2: { name: 'THE SAPLING', trait: 'KEEPER I · SCENE 2', cost: 0, intro: 10, hp: 225, r: 23, speed: 66, score: 200, shape: 'boss', boss: 2, form: 'tree', hue: '#5d6b4f', cry: 'THE SAPLING BENDS', ab: ['brood', 'fan'], kin: 'pulse' },
+  k1_3: { name: 'THE FAR PEAK', trait: 'KEEPER I · SCENE 3', cost: 0, intro: 10, hp: 235, r: 27, speed: 56, score: 210, shape: 'boss', boss: 2, form: 'mountain', hue: '#4f4a42', cry: 'THE PEAK BREAKS', ab: ['charge', 'ring'] },
+  k1_4: { name: 'THE DRIFT', trait: 'KEEPER I · SCENE 4', cost: 0, intro: 10, hp: 245, r: 21, speed: 63, score: 220, shape: 'boss', boss: 2, form: 'koi', hue: '#586a72', cry: 'THE DRIFT TURNS', ab: ['orbit', 'volley'] },
+  k1_5: { name: 'THE RISING MIST', trait: 'KEEPER I · SCENE 5', cost: 0, intro: 10, hp: 255, r: 21, speed: 53, score: 230, shape: 'boss', boss: 2, form: 'wraith', hue: '#6f5b66', cry: 'THE MIST THICKENS', ab: ['blink', 'fan'] },
+  k1_6: { name: 'THE DEW', trait: 'KEEPER I · SCENE 6', cost: 0, intro: 10, hp: 265, r: 20, speed: 60, score: 240, shape: 'boss', boss: 2, form: 'moth', hue: '#7c5f43', cry: 'THE DEW GATHERS', ab: ['rain', 'mirror'], kin: 'gnat' },
+  k1_7: { name: 'THE DANCING CRANE', trait: 'KEEPER I · SCENE 7', cost: 0, intro: 10, hp: 275, r: 20, speed: 67, score: 255, shape: 'boss', boss: 2, form: 'crane', hue: '#7a5c33', cry: 'THE CRANE TURNS', ab: ['charge', 'fan'] },
+  k1_8: { name: 'THE OLD PINE', trait: 'KEEPER I · SCENE 8', cost: 0, intro: 10, hp: 290, r: 23, speed: 57, score: 265, shape: 'boss', boss: 2, form: 'tree', hue: '#4a5a52', cry: 'THE PINE SHEDS', ab: ['ring', 'haste'] },
+  k1_9: { name: 'THE FIRST DUSK', trait: 'KEEPER I · SCENE 9', cost: 0, intro: 10, hp: 300, r: 22, speed: 64, score: 275, shape: 'boss', boss: 2, form: 'mask', hue: '#5a4a5f', cry: 'THE DUSK DEEPENS', ab: ['blink', 'volley'] },
+  k2_1: { name: 'THE PAPER LANTERN', trait: 'KEEPER II · SCENE 1', cost: 0, intro: 110, hp: 415, r: 22, speed: 59, score: 255, shape: 'boss', boss: 2, form: 'lantern', hue: '#d8b36a', cry: 'THE LANTERN SWINGS', ab: ['orbit', 'ring'] },
+  k2_2: { name: 'THE TALON', trait: 'KEEPER II · SCENE 2', cost: 0, intro: 110, hp: 435, r: 20, speed: 66, score: 270, shape: 'boss', boss: 2, form: 'crane', hue: '#c7d09a', cry: 'THE TALON DIVES', ab: ['charge', 'fan'] },
+  k2_3: { name: 'THE SIFTER', trait: 'KEEPER II · SCENE 3', cost: 0, intro: 110, hp: 460, r: 24, speed: 56, score: 285, shape: 'boss', boss: 2, form: 'spider', hue: '#d09a7c', cry: 'THE SIFTER CREEPS', ab: ['brood', 'ring'], kin: 'shade' },
+  k2_4: { name: 'THE WICK', trait: 'KEEPER II · SCENE 4', cost: 0, intro: 110, hp: 480, r: 20, speed: 63, score: 300, shape: 'boss', boss: 2, form: 'moth', hue: '#b7d0c5', cry: 'THE WICK FLARES', ab: ['blink', 'spiral'] },
+  k2_5: { name: 'THE NIGHT EDDY', trait: 'KEEPER II · SCENE 5', cost: 0, intro: 110, hp: 500, r: 24, speed: 53, score: 315, shape: 'boss', boss: 2, form: 'pool', hue: '#d8cf9a', cry: 'THE EDDY WIDENS', ab: ['ring', 'mirror'], kin: 'shade' },
+  k2_6: { name: 'THE SILENT BANNER', trait: 'KEEPER II · SCENE 6', cost: 0, intro: 110, hp: 520, r: 22, speed: 60, score: 330, shape: 'boss', boss: 2, form: 'banner', hue: '#c9a8b8', cry: 'THE BANNER RISES', ab: ['haste', 'brood1'], kin: 'owl' },
+  k2_7: { name: 'THE NOH MASK', trait: 'KEEPER II · SCENE 7', cost: 0, intro: 110, hp: 545, r: 22, speed: 67, score: 345, shape: 'boss', boss: 2, form: 'mask', hue: '#d8c07c', cry: 'THE MASK TURNS', ab: ['fan', 'blink'] },
+  k2_8: { name: 'THE LONG MAN', trait: 'KEEPER II · SCENE 8', cost: 0, intro: 110, hp: 565, r: 22, speed: 57, score: 360, shape: 'boss', boss: 2, form: 'banner', hue: '#b7c9d0', cry: 'THE LONG MAN STIRS', ab: ['rain', 'volley'] },
+  k2_9: { name: 'THE DROWSE', trait: 'KEEPER II · SCENE 9', cost: 0, intro: 110, hp: 585, r: 25, speed: 64, score: 375, shape: 'boss', boss: 2, form: 'toad', hue: '#c9b88f', cry: 'THE DROWSE WAKES', ab: ['brood', 'ring'], kin: 'smother' },
+  k3_1: { name: 'THE FIRST GATE', trait: 'KEEPER III · SCENE 1', cost: 0, intro: 210, hp: 480, r: 27, speed: 59, score: 325, shape: 'boss', boss: 2, form: 'mountain', hue: '#8f2f1d', cry: 'THE GATE CLOSES', ab: ['stamp', 'ring'] },
+  k3_2: { name: 'THE CINDER FOX', trait: 'KEEPER III · SCENE 2', cost: 0, intro: 210, hp: 500, r: 21, speed: 66, score: 340, shape: 'boss', boss: 2, form: 'koi', hue: '#9a4423', cry: 'THE FOX RUNS', ab: ['charge', 'fan'] },
+  k3_3: { name: 'THE WAR FAN', trait: 'KEEPER III · SCENE 3', cost: 0, intro: 210, hp: 525, r: 20, speed: 56, score: 360, shape: 'boss', boss: 2, form: 'moth', hue: '#7d2f2a', cry: 'THE WAR FAN OPENS', ab: ['fan', 'haste'] },
+  k3_4: { name: 'THE GATEWARDEN', trait: 'KEEPER III · SCENE 4', cost: 0, intro: 210, hp: 550, r: 22, speed: 63, score: 380, shape: 'boss', boss: 2, form: 'mask', hue: '#8f4517', cry: 'THE WARDEN STEPS', ab: ['stamp', 'brood'], kin: 'ashigaru' },
+  k3_5: { name: 'THE EMBER OX', trait: 'KEEPER III · SCENE 5', cost: 0, intro: 210, hp: 575, r: 27, speed: 53, score: 400, shape: 'boss', boss: 2, form: 'mountain', hue: '#8a3a2f', cry: 'THE OX LOWERS', ab: ['charge', 'ring'] },
+  k3_6: { name: 'THE RED COURIER', trait: 'KEEPER III · SCENE 6', cost: 0, intro: 210, hp: 600, r: 20, speed: 60, score: 420, shape: 'boss', boss: 2, form: 'crane', hue: '#9c2f3a', cry: 'THE COURIER COMES', ab: ['orbit', 'volley'] },
+  k3_7: { name: 'THE FORGE HEART', trait: 'KEEPER III · SCENE 7', cost: 0, intro: 210, hp: 625, r: 27, speed: 67, score: 435, shape: 'boss', boss: 2, form: 'mountain', hue: '#6e2f24', cry: 'THE FORGE BREATHES', ab: ['rain', 'ring'] },
+  k3_8: { name: 'THE SEALWRIGHT', trait: 'KEEPER III · SCENE 8', cost: 0, intro: 210, hp: 650, r: 21, speed: 57, score: 455, shape: 'boss', boss: 2, form: 'stamp', hue: '#8f4a2a', cry: 'THE SEALWRIGHT DIPS', ab: ['stamp', 'brood'], kin: 'ember' },
+  k3_9: { name: 'THE CLIFF ROAD', trait: 'KEEPER III · SCENE 9', cost: 0, intro: 210, hp: 670, r: 27, speed: 64, score: 475, shape: 'boss', boss: 2, form: 'mountain', hue: '#7d3a1f', cry: 'THE ROAD BREAKS', ab: ['charge', 'spiral'] },
+  k4_1: { name: 'THE CLOUD HEAD', trait: 'KEEPER IV · SCENE 1', cost: 0, intro: 310, hp: 550, r: 21, speed: 59, score: 390, shape: 'boss', boss: 2, form: 'wraith', hue: '#33474f', cry: 'THE CLOUD LOWERS', ab: ['rain', 'ring'] },
+  k4_2: { name: 'THE WIND VANE', trait: 'KEEPER IV · SCENE 2', cost: 0, intro: 310, hp: 575, r: 23, speed: 66, score: 415, shape: 'boss', boss: 2, form: 'wheel', hue: '#2e3d52', cry: 'THE VANE SPINS', ab: ['orbit', 'fan'] },
+  k4_3: { name: 'THE LEAPING KOI', trait: 'KEEPER IV · SCENE 3', cost: 0, intro: 310, hp: 605, r: 21, speed: 56, score: 435, shape: 'boss', boss: 2, form: 'koi', hue: '#3f5350', cry: 'THE KOI LEAPS', ab: ['charge', 'rain'] },
+  k4_4: { name: 'THE ROLLING SKY', trait: 'KEEPER IV · SCENE 4', cost: 0, intro: 310, hp: 630, r: 24, speed: 63, score: 460, shape: 'boss', boss: 2, form: 'pool', hue: '#37475c', cry: 'THE SKY ROLLS', ab: ['ring', 'spiral'] },
+  k4_5: { name: 'THE RIVERBEND', trait: 'KEEPER IV · SCENE 5', cost: 0, intro: 310, hp: 660, r: 21, speed: 53, score: 485, shape: 'boss', boss: 2, form: 'ribbon', hue: '#2f4a52', cry: 'THE RIVER TURNS', ab: ['charge', 'mirror'], kin: 'eel' },
+  k4_6: { name: 'THE DOWNPOUR', trait: 'KEEPER IV · SCENE 6', cost: 0, intro: 310, hp: 690, r: 20, speed: 60, score: 505, shape: 'boss', boss: 2, form: 'moth', hue: '#3d4f5c', cry: 'THE RAIN HARDENS', ab: ['rain', 'haste'] },
+  k4_7: { name: 'THE WHITE CREST', trait: 'KEEPER IV · SCENE 7', cost: 0, intro: 310, hp: 715, r: 21, speed: 67, score: 530, shape: 'boss', boss: 2, form: 'ribbon', hue: '#25404d', cry: 'THE CREST BREAKS', ab: ['charge', 'ring'] },
+  k4_8: { name: 'THE STORM LANTERN', trait: 'KEEPER IV · SCENE 8', cost: 0, intro: 310, hp: 745, r: 22, speed: 57, score: 550, shape: 'boss', boss: 2, form: 'lantern', hue: '#4a3d52', cry: 'THE LANTERN FLICKERS', ab: ['spiral', 'blink'] },
+  k4_9: { name: 'THE RAIN BANNER', trait: 'KEEPER IV · SCENE 9', cost: 0, intro: 310, hp: 770, r: 22, speed: 64, score: 575, shape: 'boss', boss: 2, form: 'banner', hue: '#31424a', cry: 'THE BANNER SOAKS', ab: ['rain', 'brood1'], kin: 'gale' },
+  k5_1: { name: 'THE GILD MOTHER', trait: 'KEEPER V · SCENE 1', cost: 0, intro: 410, hp: 460, r: 24, speed: 59, score: 475, shape: 'boss', boss: 2, form: 'spider', hue: '#7a5518', cry: 'THE MOTHER COUNTS', ab: ['mirror', 'ring'], kin: 'gildling' },
+  k5_2: { name: 'THE FOUNDRY', trait: 'KEEPER V · SCENE 2', cost: 0, intro: 410, hp: 485, r: 27, speed: 66, score: 505, shape: 'boss', boss: 2, form: 'mountain', hue: '#6b4a1f', cry: 'THE FOUNDRY POURS', ab: ['rain', 'brood1'], kin: 'koban' },
+  k5_3: { name: 'THE ASHEN WING', trait: 'KEEPER V · SCENE 3', cost: 0, intro: 410, hp: 505, r: 20, speed: 56, score: 530, shape: 'boss', boss: 2, form: 'crane', hue: '#755115', cry: 'THE WING BURNS', ab: ['charge', 'fan'] },
+  k5_4: { name: 'THE WEIGHT', trait: 'KEEPER V · SCENE 4', cost: 0, intro: 410, hp: 530, r: 27, speed: 63, score: 560, shape: 'boss', boss: 2, form: 'mountain', hue: '#5d4a2a', cry: 'THE WEIGHT FALLS', ab: ['charge', 'stamp'] },
+  k5_5: { name: 'THE GILT MASK', trait: 'KEEPER V · SCENE 5', cost: 0, intro: 410, hp: 555, r: 22, speed: 53, score: 590, shape: 'boss', boss: 2, form: 'mask', hue: '#75561e', cry: 'THE MASK GLINTS', ab: ['fan', 'blink'] },
+  k5_6: { name: 'THE COIN RIVER', trait: 'KEEPER V · SCENE 6', cost: 0, intro: 410, hp: 575, r: 21, speed: 60, score: 615, shape: 'boss', boss: 2, form: 'ribbon', hue: '#6e5214', cry: 'THE RIVER SPENDS', ab: ['orbit', 'mirror'], kin: 'koban' },
+  k5_7: { name: 'THE IDOL', trait: 'KEEPER V · SCENE 7', cost: 0, intro: 410, hp: 600, r: 27, speed: 67, score: 645, shape: 'boss', boss: 2, form: 'mountain', hue: '#4f3f22', cry: 'THE IDOL WATCHES', ab: ['stamp', 'ring'] },
+  k5_8: { name: 'THE TRANSMUTE', trait: 'KEEPER V · SCENE 8', cost: 0, intro: 410, hp: 625, r: 23, speed: 57, score: 670, shape: 'boss', boss: 2, form: 'wheel', hue: '#75591c', cry: 'THE WHEEL TURNS ALL', ab: ['spiral', 'haste'] },
+  k5_9: { name: 'THE GOLDEN HOUR', trait: 'KEEPER V · SCENE 9', cost: 0, intro: 410, hp: 645, r: 22, speed: 64, score: 700, shape: 'boss', boss: 2, form: 'lantern', hue: '#6b5518', cry: 'THE HOUR BENDS', ab: ['orbit', 'rain'] },
+  k6_1: { name: 'THE UNDERDRAWING', trait: 'KEEPER VI · SCENE 1', cost: 0, intro: 510, hp: 565, r: 21, speed: 59, score: 510, shape: 'boss', boss: 2, form: 'wraith', hue: '#474457', cry: 'THE DRAWING SHIFTS', ab: ['mirror', 'fan'], kin: 'stitch' },
+  k6_2: { name: 'THE SEAM', trait: 'KEEPER VI · SCENE 2', cost: 0, intro: 510, hp: 595, r: 21, speed: 66, score: 540, shape: 'boss', boss: 2, form: 'ribbon', hue: '#3c4a57', cry: 'THE SEAM PULLS', ab: ['charge', 'ring'] },
+  k6_3: { name: 'THE RESTAMPED', trait: 'KEEPER VI · SCENE 3', cost: 0, intro: 510, hp: 625, r: 21, speed: 56, score: 570, shape: 'boss', boss: 2, form: 'stamp', hue: '#544257', cry: 'THE STAMP PRESSES', ab: ['stamp', 'brood1'], kin: 'stitchling' },
+  k6_4: { name: 'THE GLUEWORK', trait: 'KEEPER VI · SCENE 4', cost: 0, intro: 510, hp: 655, r: 25, speed: 63, score: 600, shape: 'boss', boss: 2, form: 'toad', hue: '#3f5147', cry: 'THE GLUE SETS', ab: ['stamp', 'rain'] },
+  k6_5: { name: 'THE MOUNTING', trait: 'KEEPER VI · SCENE 5', cost: 0, intro: 510, hp: 680, r: 22, speed: 53, score: 630, shape: 'boss', boss: 2, form: 'banner', hue: '#4a4257', cry: 'THE SILK STRETCHES', ab: ['haste', 'brood1'], kin: 'stitchling' },
+  k6_6: { name: 'THE GRAIN', trait: 'KEEPER VI · SCENE 6', cost: 0, intro: 510, hp: 710, r: 23, speed: 60, score: 660, shape: 'boss', boss: 2, form: 'wheel', hue: '#37444a', cry: 'THE GRAIN RIDGES', ab: ['spiral', 'ring'] },
+  k6_7: { name: 'THE OLD MIRROR', trait: 'KEEPER VI · SCENE 7', cost: 0, intro: 510, hp: 740, r: 22, speed: 67, score: 690, shape: 'boss', boss: 2, form: 'mask', hue: '#544a62', cry: 'THE MIRROR CLOUDS', ab: ['mirror', 'volley'], kin: 'sketch' },
+  k6_8: { name: 'THE MARGINALIA', trait: 'KEEPER VI · SCENE 8', cost: 0, intro: 510, hp: 770, r: 20, speed: 57, score: 720, shape: 'boss', boss: 2, form: 'moth', hue: '#5c3a4a', cry: 'THE MARGIN WRITES', ab: ['blink', 'fan'] },
+  k6_9: { name: 'THE BLANK CROWN', trait: 'KEEPER VI · SCENE 9', cost: 0, intro: 510, hp: 795, r: 27, speed: 64, score: 750, shape: 'boss', boss: 2, form: 'mountain', hue: '#3f3c4e', cry: 'THE CROWN PRESSES', ab: ['stamp', 'rain'] },
+
+  /* ---- the six Keepers, one per sheet, on its tenth scene ----
      lesser bosses cut from the same ink as their Guardian — they
      share its body and its hunger, thinned for a scene's climax.
      Bases are measured against the scribe's natural build at each
@@ -429,6 +495,7 @@ const AREAS = [
     order: ['pulse', 'dart', 'popper', 'washling', 'moth', 'rill', 'palecrane', 'slab', 'wraith'],
     names: ['初描', '新樹', '遠山', '淡游', '霧起', '垂露', '鶴舞', '古松', '暮色', '落款'],
     elite: 'slab', boss: 'b_wheel', keeper: 'k_blight',
+    keepers: ['k1_1', 'k1_2', 'k1_3', 'k1_4', 'k1_5', 'k1_6', 'k1_7', 'k1_8', 'k1_9', 'k_blight'],
   },
   {
     id: 'II', name: 'NIGHT SCROLL', kanji: '夜', theme: 'dark',
@@ -439,6 +506,7 @@ const AREAS = [
     order: ['spit', 'shade', 'kage', 'nightshade', 'specter', 'stilt', 'lotus', 'gloom', 'titan'],
     names: ['入夜', '遠浦', '梟鳴', '夜影', '高軒', '蓮池', '墨霧', '旌旗', '母胎', '落款'],
     elite: 'shade', boss: 'b_mother', keeper: 'k_husk',
+    keepers: ['k2_1', 'k2_2', 'k2_3', 'k2_4', 'k2_5', 'k2_6', 'k2_7', 'k2_8', 'k2_9', 'k_husk'],
   },
   {
     id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',
@@ -449,6 +517,7 @@ const AREAS = [
     order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'horn'],
     names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
     elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
+    keepers: ['k3_1', 'k3_2', 'k3_3', 'k3_4', 'k3_5', 'k3_6', 'k3_7', 'k3_8', 'k3_9', 'k_cinder'],
   },
   {
     id: 'IV', name: 'STORM SHEET', kanji: '嵐', theme: 'storm',
@@ -459,6 +528,7 @@ const AREAS = [
     order: ['raindrake', 'gale', 'koi', 'squall', 'eel', 'crane', 'warden', 'surge', 'maelstrom'],
     names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
     elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
+    keepers: ['k4_1', 'k4_2', 'k4_3', 'k4_4', 'k4_5', 'k4_6', 'k4_7', 'k4_8', 'k4_9', 'k_veil'],
   },
   {
     id: 'V', name: 'GILT SCROLL', kanji: '金', theme: 'gilt',
@@ -469,6 +539,7 @@ const AREAS = [
     order: ['gildling', 'phoenix', 'golem', 'giltwing', 'midas', 'mirror', 'koban', 'oni', 'gate'],
     names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
     elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
+    keepers: ['k5_1', 'k5_2', 'k5_3', 'k5_4', 'k5_5', 'k5_6', 'k5_7', 'k5_8', 'k5_9', 'k_nib'],
   },
   {
     id: 'VI', name: 'THE BLANK SILK', kanji: '素', theme: 'silk',
@@ -479,6 +550,7 @@ const AREAS = [
     order: ['sketch', 'stitch', 'reseal', 'sizing', 'stencil', 'fray', 'binder', 'weft', 'golem'],
     names: ['素紙', '下絵', '糸影', '糊染', '再印', '織端', '絹目', '古鏡', '無字', '落款'],
     elite: 'sketch', boss: 'b_blank', keeper: 'k_edge',
+    keepers: ['k6_1', 'k6_2', 'k6_3', 'k6_4', 'k6_5', 'k6_6', 'k6_7', 'k6_8', 'k6_9', 'k_edge'],
   },
 ];
 
@@ -611,21 +683,21 @@ const UPGRADES = [
     apply: s => { s.sdeep += 1; } },
 ]
 
-/* ---- CHARMS (符) — what the inkstone buys ----
-   Permanent upgrades, pressed between runs. The stone holds the
+/* ---- CHARMS (符) — what the purse buys ----
+   Permanent upgrades, pressed between runs. The purse holds the
    ink (om_charms_v1); a charm's rank rides every page the hand
    opens — journey, endless, daily, the shelf's resumed scenes.
    The ladder is best-practice shaped: the cheapest charm lands on
    the FIRST run, quality-of-life leads, damage is capped at half
    a real build, and the ward's in-run pick retires once the charm
-   owns it (no trap options). Total board: 硯 4,890 over 19 ranks. */
+   owns it (no trap options). Total board: INK 4,890 over 19 ranks. */
 const CHARMS = [
-  /* The stone's shop, v19. The ladder keeps its shape — quality of
+  /* The charm shop, v19. The ladder keeps its shape — quality of
      life leads, damage caps at what a run could earn by its own
      picks — but the press presses HARDER now: the deep ranks cost
      real journeys, two new charms ride the brush itself (its own
      bite, its own cadence), and THE SCHOLAR makes study pay.
-     Total board: 硯 15,820 over 32 ranks. Checked in
+     Total board: INK 15,820 over 32 ranks. Checked in
      scripts/economy_calc.js. */
   { id: 'hunger', kanji: '引', name: 'INK HUNGER',   cost: [60, 150, 380],
     desc: 'The paper pulls harder. Gathering radius widens, rank by rank.',
@@ -662,7 +734,7 @@ const CHARMS = [
     desc: 'The brush you carry casts a tenth part sooner, rank by rank.',
     apply: s => { s.swiftbrush += 1; } },
   { id: 'scholar', kanji: '学', name: 'THE SCHOLAR', cost: [380, 860],
-    desc: 'Every wave survived presses a tenth more into the stone. Study pays.',
+    desc: 'Every wave survived presses a tenth more into the purse. Study pays.',
     apply: s => {} },   /* read by inkForRun through charmLv — the ledger's own charm */
 ];
 
@@ -682,4 +754,59 @@ const BOSS_TAUNTS = {
   k_nib:     'THE OLD BRUSH\u2019S TIP — IT REMEMBERS YOUR HAND.',
   b_blank:   'THE PAGE IS STILL BLANK. IT WANTS YOUR HAND.',
   k_edge:    'THE MARGIN HOLDS WHAT THE BRUSH FORGOT.',
+  /* the ten seals speak — one line per scene-keeper, the duel set before the first stroke */
+  k1_1: 'A SPILL THAT LEARNED TO HUNGER.',
+  k1_2: 'IT GREW OVERNIGHT. IT BITES BY DAWN.',
+  k1_3: 'THE MOUNTAIN CAME DOWN TO SEE YOU.',
+  k1_4: 'IT SWIMS WHERE YOU WILL BE.',
+  k1_5: 'BREATHE. IT IS ALREADY IN YOUR LUNGS.',
+  k1_6: 'EVERY DROP REMEMBERS FALLING.',
+  k1_7: 'ONE LEG. ONE STROKE. ONE OF YOU WALKS AWAY.',
+  k1_8: 'ROOTS FIRST. NEEDLES AFTER.',
+  k1_9: 'THE DAY ENDS WHERE IT STANDS.',
+  k2_1: 'IT LIGHTS THE DARK TO SEE YOU BETTER.',
+  k2_2: 'THE NIGHT HUNTS ON WING.',
+  k2_3: 'IT DRINKS THE DARK AND SPITS TEETH.',
+  k2_4: 'FLAME REMEMBERS. SO DOES THE WAX.',
+  k2_5: 'THE DARK POOLS WHERE YOU STAND.',
+  k2_6: 'NO ONE MARCHES UNDER IT. EVERYONE DOES.',
+  k2_7: 'IT WORE A FACE ONCE. IT KEPT IT.',
+  k2_8: 'TALL ENOUGH TO WATCH. FAR ENOUGH TO WAIT.',
+  k2_9: 'IT SLEEPS IN INK. YOUR STEP IS THE ALARM.',
+  k3_1: 'THE GATE STANDS. YOU WALK THROUGH IT.',
+  k3_2: 'THE FIELD REMEMBERS EVERY FIRE.',
+  k3_3: 'IT OPENS. THE FIELD KNEELS.',
+  k3_4: 'NOBODY PASSES UNSTAMPED.',
+  k3_5: 'IT CARRIES THE KILN IN ITS CHEST.',
+  k3_6: 'IT DELIVERS. IT DOES NOT KNOCK.',
+  k3_7: 'THE HAMMER FELL. THE SPARKS WALK.',
+  k3_8: 'EVERY STROKE IT SEES, IT SIGNS.',
+  k3_9: 'THE PATH IS BEHIND YOU. IT IS THE ONLY ONE.',
+  k4_1: 'THE SKY LEANED DOWN TO LOOK.',
+  k4_2: 'IT POINTS. THE WIND OBEYS.',
+  k4_3: 'THE RIVER REMEMBERS EVERY LEAP.',
+  k4_4: 'THE RAIN HAS A CENTER. YOU ARE IN IT.',
+  k4_5: 'THE RIVER TOOK A TURN. IT TOOK YOU.',
+  k4_6: 'EVERY DROP ASKS YOUR NAME.',
+  k4_7: 'THE WAVE STOOD UP. IT SAW YOU.',
+  k4_8: 'LIGHTNING KEEPS ITS OWN TIME.',
+  k4_9: 'THE MARCH IS WET. THE MARCH GOES ON.',
+  k5_1: 'EVERYTHING SHE TOUCHES OWES HER.',
+  k5_2: 'THE MOLD IS BROKEN. THE COINS ARE NOT.',
+  k5_3: 'IT BURNED ONCE. GOLD CAME OUT.',
+  k5_4: 'THE LEDGER ALWAYS BALANCES. IT IS THE LEDGER.',
+  k5_5: 'IT SMILES IN GOLD. IT MEANS NOTHING BY IT.',
+  k5_6: 'RICHES ROLL DOWNHILL. SO DOES IT.',
+  k5_7: 'KNEELING IS OPTIONAL. FALLING IS NOT.',
+  k5_8: 'FLESH IN. GOLD OUT.',
+  k5_9: 'THE LAST LIGHT IS THE MOST EXPENSIVE.',
+  k6_1: 'DRAWN FIRST. ERASED NEVER.',
+  k6_2: 'HOLDING IT TOGETHER IS ITS WHOLE JOB.',
+  k6_3: 'REJECTED ONCE. IT CAME BACK SIGNED.',
+  k6_4: 'IT HOLDS. EVERYTHING HOLDS. FOREVER.',
+  k6_5: 'THE SILK STRETCHES. THE SILK REMEMBERS.',
+  k6_6: 'RUN YOUR HAND ALONG IT. IT RUNS BACK.',
+  k6_7: 'IT SHOWS YOU FINISHED.',
+  k6_8: 'WRITTEN IN THE MARGIN. IN RED.',
+  k6_9: 'THE PAGE ENDS HERE. IT DECIDED.',
 };

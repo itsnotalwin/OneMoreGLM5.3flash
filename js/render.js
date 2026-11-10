@@ -641,18 +641,6 @@ const R = (() => {
       inkStroke(p, [{x:-40,y:-52},{x:-46,y:-56}], 1.5, {alpha:0.7, taper:1.2, seed:67});
     });
 
-    /* 石 — a rock cluster */
-    reg('rockS', 130, 85, p => {
-      blobPath(p, 0, 8, 25, 71, 0.2, 10); p.globalAlpha = 0.8; p.fillStyle = INK; p.fill(); p.globalAlpha = 1;
-      inkStroke(p, [{x:-14,y:2},{x:2,y:-4},{x:14,y:2}], 1.8, {alpha:0.35, color: PAPER, seed: 72, jit: 0.1});
-      blobPath(p, -34, 18, 13, 73, 0.24, 9); p.globalAlpha = 0.68; p.fillStyle = INK; p.fill(); p.globalAlpha = 1;
-      blobPath(p, 28, 20, 11, 74, 0.24, 9); p.globalAlpha = 0.62; p.fillStyle = INK; p.fill(); p.globalAlpha = 1;
-      for (let i = 0; i < 4; i++) {
-        const gx = -44 + i * 28;
-        inkStroke(p, [{x:gx,y:34},{x:gx+2,y:24},{x:gx,y:18}], 2, {alpha:0.55, taper:1.2, seed:75 + i});
-      }
-    });
-
     /* 燈籠 — a stone lantern */
     reg('lantern', 84, 122, p => {
       p.globalAlpha = 0.9; p.fillStyle = INK;
@@ -806,13 +794,13 @@ const R = (() => {
     pale: [   /* FIRST WASH — a morning plain fills with its first scenery */
       [el('pineYoung', 0.30, 0.8, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.62)],
       [wash('shu', 840, 1080, 0.20, 0.28, '遠山')],
-      [el('bamboo', 0.30, 0.85, 1.25, 0.74, '竹林'), el('rockS', 0.24, 0.8, 1.1, 0.66)],
+      [el('bamboo', 0.30, 0.85, 1.25, 0.74, '竹林')],
       [el('pineOld', 0.26, 0.9, 1.3, 0.86, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.74, '燈籠')],
       [mist(0.18)],
       [wash('guo2', 990, 1270, 0.21, 0.30, '山居')],
       [el('crane', 0.30, 0.9, 1.2, 0.72), el('pineYoung', 0.22, 0.9, 1.2, 0.70)],
       [wash('kuan', 1050, 1380, 0.18, 0.26, '層巒')],
-      [el('rockS', 0.30, 1, 1.4, 0.72), el('reeds', 0.26, 0.9, 1.3, 0.60), el('deadTree', 0.15, 0.9, 1.1, 0.68, '古木')],
+      [el('reeds', 0.26, 0.9, 1.3, 0.60), el('deadTree', 0.15, 0.9, 1.1, 0.68, '古木')],
       [seal(), mist(0.12), el('crane', 0.32, 1, 1.3, 0.60)],
     ],
     dark: [   /* NIGHT SCROLL — the moon rises over broken-ink mountains */
@@ -824,19 +812,19 @@ const R = (() => {
       [wash('hab1', 990, 1320, 0.25, 0.36, '破墨')],
       [el('pineOld', 0.26, 0.9, 1.25, 0.86, '古松'), wash('trees', 1100, 1430, 0.17, 0.25)],
       [wash('shu2', 935, 1210, 0.22, 0.31, '遠浦'), el('crane', 0.28, 0.9, 1.2, 0.56)],
-      [el('rockS', 0.30, 1, 1.4, 0.64), wash('shore', 990, 1270, 0.24, 0.33, '汀')],
+      [wash('shore', 990, 1270, 0.24, 0.33, '汀')],
       [seal(), mist(0.12)],
     ],
     red: [    /* CINNABAR FIELD — vermillion country, gates and cliffs */
       [el('maple', 0.30, 0.85, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.58)],
       [wash('hab2', 900, 1140, 0.22, 0.31, '遠崖')],
-      [el('rockS', 0.28, 0.9, 1.3, 0.72), el('maple', 0.24, 0.9, 1.25, 0.74)],
+      [el('maple', 0.24, 0.9, 1.25, 0.74)],
       [el('torii', 0.22, 0.85, 1.15, 0.90, '鳥居')],
       [mist(0.17)],
       [wash('cliff', 1050, 1380, 0.21, 0.30, '絕壁')],
       [el('deadTree', 0.26, 0.9, 1.2, 0.78, '古木'), el('lantern', 0.18, 0.85, 1.05, 0.72)],
       [wash('guo', 990, 1320, 0.18, 0.27, '疊嶂'), el('crane', 0.26, 0.9, 1.2, 0.61)],
-      [el('rockS', 0.30, 1, 1.4, 0.70), el('bamboo', 0.24, 0.85, 1.2, 0.66)],
+      [el('bamboo', 0.24, 0.85, 1.2, 0.66)],
       [seal(), mist(0.12)],
     ],
     storm: [  /* STORM SHEET — wind, rain and the arriving sea */
@@ -848,31 +836,31 @@ const R = (() => {
       [wash('guo', 1050, 1380, 0.20, 0.28, '雨山')],
       [el('boat', 0.24, 0.9, 1.2, 0.80, '孤舟')],
       [wash('waves', 970, 1270, 0.21, 0.30, '怒濤'), el('crane', 0.22, 0.85, 1.1, 0.56, null, { bend: 1 })],
-      [el('rockS', 0.30, 1, 1.4, 0.68), el('reeds', 0.26, 0.9, 1.3, 0.58, null, { bend: 1 })],
+      [el('reeds', 0.26, 0.9, 1.3, 0.58, null, { bend: 1 })],
       [seal(), mist(0.12)],
     ],
     gilt: [   /* GILT SCROLL — the final page, gold and ceremony */
       [el('pineYoung', 0.30, 0.8, 1.2, 0.78), el('reeds', 0.22, 0.8, 1.2, 0.62)],
       [wash('kuan', 990, 1320, 0.20, 0.27, '遠嶽')],
-      [el('bamboo', 0.28, 0.85, 1.25, 0.74), el('rockS', 0.24, 0.85, 1.2, 0.66)],
+      [el('bamboo', 0.28, 0.85, 1.25, 0.74)],
       [el('pavilion', 0.20, 0.85, 1.15, 0.90, '樓閣')],
       [mist(0.16)],
       [wash('guo', 1050, 1380, 0.21, 0.30, '金山')],
       [el('pineOld', 0.26, 0.95, 1.3, 0.84, '古松'), el('lantern', 0.18, 0.85, 1.05, 0.72)],
       [wash('shu2', 935, 1210, 0.21, 0.29), el('crane', 0.28, 0.9, 1.2, 0.64)],
-      [el('rockS', 0.30, 1, 1.4, 0.70), wash('shore', 990, 1270, 0.22, 0.32, '汀')],
+      [wash('shore', 990, 1270, 0.22, 0.32, '汀')],
       [seal(), mist(0.12), el('crane', 0.30, 1, 1.3, 0.58)],
     ],
     silk: [   /* THE BLANK SILK — the underdrawing wakes on unstained silk */
       [el('reeds', 0.22, 0.85, 1.2, 0.5)],
       [wash('hab2', 900, 1140, 0.16, 0.22, '遠山')],
-      [el('rockS', 0.22, 0.85, 1.15, 0.6, null, { bend: 0 })],
+      [],   /* the blank silk keeps its emptiness */
       [wash('trees', 1050, 1320, 0.13, 0.2, '下絵')],
       [mist(0.2)],
       [wash('guo2', 990, 1270, 0.15, 0.22, '無字')],
       [el('deadTree', 0.2, 0.9, 1.2, 0.62, '古木'), el('crane', 0.22, 0.9, 1.2, 0.5)],
       [wash('kuan', 1050, 1380, 0.14, 0.21, '絹目')],
-      [el('rockS', 0.24, 1, 1.35, 0.58), wash('shore', 990, 1270, 0.16, 0.24, '汀')],
+      [wash('shore', 990, 1270, 0.16, 0.24, '汀')],
       [seal(), mist(0.14)],
     ],
   };
@@ -1101,6 +1089,349 @@ const R = (() => {
     c.restore();
   }
 
+  /* ---------------- THE TEN SEALS' FIFTEEN FORMS (v19.1) ----------------
+     Every scene-keeper is drawn from its own brush form — pool,
+     tree, mountain, koi, wraith, moth, crane, mask, lantern,
+     spider, ribbon, wheel, banner, stamp, toad — seeded per beast,
+     tinted with its own ink (the caller set fillStyle to def.hue),
+     and reacting to its state: a windup swells, a charge
+     stretches, a dissolve thins, a spiral turns. Returns the
+     silhouette path fn for the hit-flash overlay. */
+  function paintKeeperForm(c, e, r, sd, t) {
+    const st = e.state;
+    const S = G.S;
+    const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+    const swell = st === 'windup' ? 1 + Math.min(1, e.stateT / 0.6) * 0.22 : 1;
+    const breathe = 1 + Math.sin(e.t * 1.8 + e.seed) * 0.04;
+    const thin = st === 'dissolve' ? Math.max(0.15, 1 - e.stateT / 0.5) : 1;
+    const paint = ENEMIES[e.type].form;
+    let sil = () => blobPath(c, 0, 0, r * 1.08, sd, 0.16, 14);
+    c.save();
+    c.scale(thin, thin);
+    switch (paint) {
+
+      case 'pool': { /* a spill with a tide — ripple rings and a wide lamina */
+        c.save(); c.scale(swell, swell);
+        blobPath(c, 0, 0, r, sd, 0.13, 16); c.fill();
+        c.globalAlpha = 0.35; blobPath(c, 0, 0, r * 0.62, sd ^ 21, 0.2, 12); c.fill();
+        c.globalAlpha = 0.5; c.strokeStyle = PAPER; c.lineWidth = 1.3;
+        for (let i = 1; i <= 2; i++) {
+          c.beginPath(); c.arc(0, 0, r * (0.4 + 0.24 * i) + Math.sin(t * 2.1 + i) * 2.4, 0, TAU); c.stroke();
+        }
+        c.restore();
+        c.globalAlpha = 1;
+        for (let i = 0; i < 4; i++) {
+          const oa = e.t * 1.3 + (i / 4) * TAU;
+          c.beginPath(); c.arc(Math.cos(oa) * r * 1.3, Math.sin(oa) * r * 1.3, 3.6, 0, TAU); c.fill();
+        }
+        sil = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.13, 16);
+        break;
+      }
+
+      case 'tree': { /* a young tree — trunk, canopy of blots, pine needles when old */
+        const pine = e.type === 'k1_8';
+        c.save(); c.scale(swell, swell);
+        inkStroke(c, [{ x: 0, y: r * 0.9 }, { x: -2, y: 0 }, { x: 1.5, y: -r * 0.5 }], r * 0.22, {});
+        c.globalAlpha = 0.92;
+        blobPath(c, 0, -r * 0.55, r * 0.78, sd, 0.22, 12); c.fill();
+        if (pine) {
+          c.strokeStyle = PAPER; c.lineWidth = 1.1; c.globalAlpha = 0.55;
+          for (let i = 0; i < 7; i++) {
+            const na = (i / 7) * TAU + e.t * 0.3;
+            c.beginPath(); c.moveTo(Math.cos(na) * r * 0.45, -r * 0.55 + Math.sin(na) * r * 0.45);
+            c.lineTo(Math.cos(na) * r * 0.95, -r * 0.55 + Math.sin(na) * r * 0.95); c.stroke();
+          }
+        } else {
+          const rnd = mulberry(sd >> 5);
+          for (let i = 0; i < 4; i++) {
+            const la = -0.9 + i * 0.6 + (rnd() - 0.5) * 0.3;
+            c.globalAlpha = 0.9;
+            teardrop(c, r * 0.16);
+            c.save(); c.translate(Math.cos(la) * r * 0.85, -r * 0.4 + Math.sin(la) * r * 0.5); c.rotate(la + 1.2); teardrop(c, r * 0.15); c.fill(); c.restore();
+          }
+        }
+        c.restore();
+        sil = () => blobPath(c, 0, -r * 0.2, r * swell, sd, 0.2, 12);
+        break;
+      }
+
+      case 'mountain': { /* a heavy mass — peak, snow-cap stroke, horns for the ox */
+        const ox = e.type === 'k3_5', gate = e.type === 'k3_1';
+        c.save(); c.scale(swell * breathe, 2 - swell * breathe);
+        c.save(); c.rotate(ang); c.scale(1.12, 0.92); c.rotate(-ang);
+        blobPath(c, 0, 0, r, sd, 0.09, 13); c.fill();
+        c.globalAlpha = 0.35; c.fillStyle = patHatch; blobPath(c, 0, 0, r * 0.96, sd, 0.09, 13); c.fill();
+        c.restore();
+        if (ox) { /* the ember ox's horns */
+          c.strokeStyle = PAPER; c.lineWidth = 2.4; c.globalAlpha = 0.85;
+          for (const s of [-1, 1]) {
+            c.beginPath(); c.moveTo(s * r * 0.35, -r * 0.55);
+            c.quadraticCurveTo(s * r * 0.75, -r * 0.95, s * r * 0.95, -r * 0.6); c.stroke();
+          }
+        }
+        if (gate) { /* the torii's crossbeam, worn like a crown */
+          c.strokeStyle = PAPER; c.lineWidth = 2.2; c.globalAlpha = 0.8;
+          c.beginPath(); c.moveTo(-r * 0.85, -r * 0.62); c.lineTo(r * 0.85, -r * 0.62); c.stroke();
+          c.beginPath(); c.moveTo(-r * 0.55, -r * 0.4); c.lineTo(r * 0.55, -r * 0.4); c.stroke();
+        }
+        c.strokeStyle = PAPER; c.lineWidth = 1.6; c.globalAlpha = 0.6;
+        c.beginPath(); c.moveTo(-r * 0.2, -r * 0.5); c.lineTo(0, -r * 0.85); c.lineTo(r * 0.22, -r * 0.5); c.stroke();
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.09, 13);
+        break;
+      }
+
+      case 'koi': { /* a swimmer — whiskered, always mid-turn */
+        c.save(); c.rotate(ang); c.scale(swell, 1);
+        blobPath(c, 0, 0, r, sd, 0.12, 14); c.fill();
+        c.globalAlpha = 0.32; c.fillStyle = patHatch; blobPath(c, 0, 0, r * 0.95, sd, 0.12, 14); c.fill();
+        c.globalAlpha = 0.9;
+        /* tail fin */
+        c.beginPath();
+        c.moveTo(-r * 0.85, 0); c.lineTo(-r * 1.6, -r * 0.5 + Math.sin(t * 7) * 3); c.lineTo(-r * 1.5, r * 0.5 + Math.sin(t * 7 + 1) * 3);
+        c.closePath(); c.fill();
+        /* whiskers */
+        c.strokeStyle = PAPER; c.lineWidth = 1.2; c.globalAlpha = 0.7;
+        for (const s of [-1, 1]) {
+          c.beginPath(); c.moveTo(r * 0.8, s * r * 0.15);
+          c.quadraticCurveTo(r * 1.3, s * r * 0.4, r * 1.55, s * r * 0.15); c.stroke();
+        }
+        c.restore();
+        sil = () => { c.save(); c.rotate(ang); blobPath(c, 0, 0, r * swell * 1.1, sd, 0.12, 14); c.restore(); };
+        break;
+      }
+
+      case 'wraith': { /* a hooded drift — two tails, no feet */
+        c.save(); c.scale(breathe, 2 - breathe);
+        c.globalAlpha = 0.88;
+        blobPath(c, 0, -r * 0.12, r * 0.82, sd, 0.2, 12); c.fill();
+        /* hood opening */
+        c.fillStyle = PAPER; c.globalAlpha = 0.5;
+        blobPath(c, 0, -r * 0.3, r * 0.3, sd ^ 13, 0.3, 9); c.fill();
+        c.fillStyle = bodyInkOf(c, e);
+        c.globalAlpha = 0.75;
+        for (const s of [-1, 1]) {
+          c.beginPath();
+          c.moveTo(s * r * 0.3, r * 0.2);
+          c.quadraticCurveTo(s * r * 0.7, r * (0.9 + Math.sin(t * 2.4 + s) * 0.2), s * r * 0.25, r * 1.5);
+          c.quadraticCurveTo(s * r * 0.12, r * 0.9, s * r * 0.05, r * 0.4);
+          c.closePath(); c.fill();
+        }
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * 1.05, sd, 0.2, 12);
+        break;
+      }
+
+      case 'moth': { /* two powder wings, a small body between */
+        const flap = Math.sin(t * 6 + e.seed) * 0.3;
+        c.save();
+        for (const s of [-1, 1]) {
+          c.save(); c.rotate(s * (0.5 + flap)); c.scale(1, 0.72);
+          c.globalAlpha = 0.85;
+          c.beginPath(); c.ellipse(s * r * 0.85, -r * 0.1, r * 0.8, r * 0.5, s * 0.4, 0, TAU); c.fill();
+          c.globalAlpha = 0.3; c.fillStyle = patHatch;
+          c.beginPath(); c.ellipse(s * r * 0.85, -r * 0.1, r * 0.8, r * 0.5, s * 0.4, 0, TAU); c.fill();
+          c.restore();
+        }
+        c.fillStyle = bodyInkOf(c, e);
+        c.globalAlpha = 1;
+        blobPath(c, 0, 0, r * 0.5, sd, 0.18, 9); c.fill();
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * 1.2, sd, 0.18, 10);
+        break;
+      }
+
+      case 'crane': { /* one leg, wings like strokes, a neck that aims */
+        c.save(); c.rotate(ang); c.scale(swell, swell);
+        const flap = Math.sin(t * 5 + e.seed) * 0.25;
+        c.globalAlpha = 0.9;
+        blobPath(c, 0, 0, r * 0.72, sd, 0.14, 11); c.fill();
+        for (const s of [-1, 1]) {
+          c.save(); c.rotate(s * (0.7 + flap));
+          c.beginPath(); c.ellipse(r * 0.1, s * r * 0.9, r * 0.95, r * 0.3, 0, 0, TAU); c.fill();
+          c.restore();
+        }
+        /* neck + head — the aim */
+        inkStroke(c, [{ x: r * 0.5, y: 0 }, { x: r * 1.15, y: -r * 0.28 }, { x: r * 1.55, y: -r * 0.18 }], 3, {});
+        c.beginPath(); c.arc(r * 1.6, -r * 0.18, r * 0.16, 0, TAU); c.fill();
+        c.strokeStyle = PAPER; c.lineWidth = 1.4; c.globalAlpha = 0.75;
+        c.beginPath(); c.moveTo(-r * 0.2, r * 0.6); c.lineTo(-r * 0.24, r * 1.35); c.stroke();
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * swell * 1.1, sd, 0.14, 11);
+        break;
+      }
+
+      case 'mask': { /* a face that floats — horns, a chin, hollow cheeks */
+        c.save(); c.rotate(Math.sin(e.t * 1.2 + e.seed) * 0.1); c.scale(swell, swell);
+        c.globalAlpha = 0.94;
+        c.beginPath();
+        c.moveTo(0, -r);
+        c.quadraticCurveTo(r * 0.95, -r * 0.62, r * 0.72, r * 0.25);
+        c.quadraticCurveTo(r * 0.4, r * 0.95, 0, r * 1.05);
+        c.quadraticCurveTo(-r * 0.4, r * 0.95, -r * 0.72, r * 0.25);
+        c.quadraticCurveTo(-r * 0.95, -r * 0.62, 0, -r);
+        c.fill();
+        c.save(); c.globalAlpha = 0.3; c.fillStyle = patHatch; c.fill(); c.restore();
+        /* horns */
+        c.strokeStyle = PAPER; c.lineWidth = 2.2; c.globalAlpha = 0.85;
+        for (const s of [-1, 1]) {
+          c.beginPath(); c.moveTo(s * r * 0.42, -r * 0.72);
+          c.quadraticCurveTo(s * r * 0.8, -r * 1.15, s * r * 0.4, -r * 1.42); c.stroke();
+        }
+        /* hollow cheeks */
+        c.fillStyle = PAPER; c.globalAlpha = 0.42;
+        c.beginPath(); c.arc(-r * 0.34, r * 0.1, r * 0.16, 0, TAU); c.fill();
+        c.beginPath(); c.arc(r * 0.34, r * 0.1, r * 0.16, 0, TAU); c.fill();
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.12, 10);
+        break;
+      }
+
+      case 'lantern': { /* a paper lantern — ribs, a glow, a swinging tassel */
+        c.save();
+        const swing = Math.sin(t * 1.6 + e.seed) * 0.09;
+        c.rotate(swing); c.scale(swell, swell);
+        c.globalAlpha = 0.9;
+        c.beginPath(); c.ellipse(0, 0, r * 0.78, r, 0, 0, TAU); c.fill();
+        c.save(); c.globalAlpha = 0.3; c.fillStyle = patHatch;
+        c.beginPath(); c.ellipse(0, 0, r * 0.78, r, 0, 0, TAU); c.fill(); c.restore();
+        /* ribs */
+        c.strokeStyle = PAPER; c.lineWidth = 1.2; c.globalAlpha = 0.65;
+        for (let i = -2; i <= 2; i++) {
+          c.beginPath(); c.ellipse(0, 0, Math.max(2, r * 0.78 * (1 - Math.abs(i) * 0.28)), r, 0, -Math.PI / 2, Math.PI / 2); c.stroke();
+        }
+        /* the fire inside */
+        c.fillStyle = PAPER; c.globalAlpha = 0.5 + 0.18 * Math.sin(t * 5.4);
+        c.beginPath(); c.arc(0, r * 0.12, r * 0.24, 0, TAU); c.fill();
+        /* cap + tassel */
+        c.fillStyle = bodyInkOf(c, e);
+        c.fillRect(-r * 0.3, -r * 1.08, r * 0.6, r * 0.16);
+        c.globalAlpha = 0.8;
+        inkStroke(c, [{ x: 0, y: r * 1.0 }, { x: Math.sin(t * 2.2) * 3, y: r * 1.45 }], 2, {});
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.14, 12);
+        break;
+      }
+
+      case 'spider': { /* a round body on stroked legs that reach as it walks */
+        c.save(); c.scale(swell, swell);
+        const step = Math.sin(t * 4 + e.seed) * 0.12;
+        c.strokeStyle = bodyInkOf(c, e); c.lineWidth = 2.2; c.globalAlpha = 0.9;
+        for (let i = 0; i < 6; i++) {
+          const la = (i / 6) * TAU + 0.26 + (i % 2 ? step : -step);
+          c.beginPath(); c.moveTo(0, 0);
+          c.quadraticCurveTo(Math.cos(la) * r * 1.1, Math.sin(la) * r * 1.1 - r * 0.3, Math.cos(la) * r * 1.5, Math.sin(la) * r * 1.35);
+          c.stroke();
+        }
+        c.fillStyle = bodyInkOf(c, e);
+        blobPath(c, 0, 0, r * 0.72, sd, 0.16, 12); c.fill();
+        c.fillStyle = PAPER; c.globalAlpha = 0.4;
+        blobPath(c, 0, 0, r * 0.3, sd ^ 9, 0.2, 8); c.fill();
+        c.restore();
+        sil = () => blobPath(c, 0, 0, r * swell, sd, 0.16, 12);
+        break;
+      }
+
+      case 'ribbon': { /* a living stroke — a sinuous line that whips */
+        c.save(); c.rotate(ang);
+        const whip = st === 'chg' ? 1.5 : 1;
+        c.save(); c.scale(swell * whip, 0.8);
+        c.beginPath();
+        c.moveTo(-r * 1.7, 0);
+        for (let i = 0; i <= 12; i++) {
+          const px = -r * 1.7 + (i / 12) * r * 3.4;
+          c.lineTo(px, Math.sin(i * 0.9 + t * 6) * r * 0.34);
+        }
+        c.lineWidth = r * 0.62; c.strokeStyle = bodyInkOf(c, e); c.lineCap = 'round'; c.stroke();
+        c.lineWidth = r * 0.28; c.strokeStyle = PAPER; c.globalAlpha = 0.3; c.stroke();
+        c.restore();
+        c.fillStyle = bodyInkOf(c, e);
+        c.beginPath(); c.arc(r * 1.75, 0, r * 0.4, 0, TAU); c.fill();
+        c.restore();
+        sil = () => { c.save(); c.rotate(ang); blobPath(c, 0, 0, r * 1.5, sd, 0.3, 10); c.restore(); };
+        break;
+      }
+
+      case 'wheel': { /* a spoked ring that always turns */
+        c.save(); c.rotate(e.t * 1.4); c.scale(swell, swell);
+        c.lineWidth = r * 0.2;
+        c.beginPath(); c.arc(0, 0, r * 0.85, 0, TAU); c.stroke();
+        c.lineWidth = r * 0.12;
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * TAU;
+          c.beginPath(); c.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2);
+          c.lineTo(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85); c.stroke();
+        }
+        c.beginPath(); c.arc(0, 0, r * 0.2, 0, TAU); c.fill();
+        c.restore();
+        c.fillStyle = bodyInkOf(c, e);
+        sil = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.08, 12);
+        break;
+      }
+
+      case 'banner': { /* a pole, a cloth, and what hangs beneath */
+        const long = e.type === 'k2_8';
+        c.save(); c.scale(swell, swell);
+        inkStroke(c, [{ x: -r * 0.5, y: r * (long ? 1.5 : 1.0) }, { x: -r * 0.5, y: -r * (long ? 1.7 : 1.2) }], 2.6, {});
+        c.globalAlpha = 0.9;
+        c.beginPath();
+        const cy = -r * 0.9, ch = r * (long ? 0.8 : 1.05), cw = r * 1.15;
+        const wav = Math.sin(t * 3 + e.seed) * r * 0.1;
+        c.moveTo(-r * 0.5, cy);
+        c.quadraticCurveTo(r * 0.2, cy + wav - ch * 0.2, r * 0.62, cy + ch * 0.32);
+        c.quadraticCurveTo(r * 0.1, cy + ch * 0.62 + wav, -r * 0.5, cy + ch * 0.95);
+        c.closePath(); c.fill();
+        c.restore();
+        c.fillStyle = bodyInkOf(c, e);
+        sil = () => blobPath(c, 0, -r * 0.2, r * swell * 1.15, sd, 0.22, 10);
+        break;
+      }
+
+      case 'stamp': { /* a seal block on one leg, face carved on its foot */
+        c.save(); c.scale(swell, swell);
+        const lift = st === 'chg' ? 0 : Math.abs(Math.sin(t * 2.6)) * r * 0.18;
+        inkStroke(c, [{ x: 0, y: r * 1.1 }, { x: 0, y: -r * 0.1 }], r * 0.2, {});
+        c.save(); c.translate(0, -r * 0.55 - lift);
+        c.fillRect(-r * 0.62, -r * 0.5, r * 1.24, r * 1.0);
+        c.strokeStyle = PAPER; c.lineWidth = 1.8; c.globalAlpha = 0.8;
+        c.strokeRect(-r * 0.44, -r * 0.34, r * 0.88, r * 0.68);
+        c.globalAlpha = 0.9;
+        c.beginPath(); c.moveTo(-r * 0.2, -r * 0.1); c.lineTo(r * 0.2, -r * 0.1); c.stroke();
+        c.beginPath(); c.moveTo(0, -r * 0.28); c.lineTo(0, r * 0.12); c.stroke();
+        c.restore();
+        c.restore();
+        c.fillStyle = bodyInkOf(c, e);
+        sil = () => blobPath(c, 0, -r * 0.3, r * swell, sd, 0.12, 8);
+        break;
+      }
+
+      case 'toad': { /* a squat weight — wide mouth, tucked legs */
+        c.save(); c.scale(swell * breathe, 2 - swell * breathe);
+        c.globalAlpha = 0.94;
+        blobPath(c, 0, r * 0.1, r, sd, 0.12, 12); c.fill();
+        c.save(); c.globalAlpha = 0.3; c.fillStyle = patHatch; blobPath(c, 0, r * 0.1, r, sd, 0.12, 12); c.fill(); c.restore();
+        /* the mouth: a wide paper slit */
+        c.strokeStyle = PAPER; c.lineWidth = 2; c.globalAlpha = 0.7;
+        c.beginPath(); c.arc(0, r * 0.25, r * 0.55, 0.25 * Math.PI, 0.75 * Math.PI); c.stroke();
+        /* tucked legs */
+        c.fillStyle = bodyInkOf(c, e); c.globalAlpha = 0.9;
+        for (const s of [-1, 1]) {
+          c.beginPath(); c.ellipse(s * r * 0.75, r * 0.55, r * 0.34, r * 0.2, s * 0.5, 0, TAU); c.fill();
+        }
+        c.restore();
+        sil = () => blobPath(c, 0, r * 0.1, r * swell * 1.06, sd, 0.12, 12);
+        break;
+      }
+    }
+    c.restore();
+    return sil;
+  }
+
+  /* the ten seals keep their own ink across painter sub-shapes */
+  function bodyInkOf(c, e) {
+    return ENEMIES[e.type].hue || (themeKey === 'dark' ? '#c9462e' : RED);
+  }
+
   function drawEnemy(c, e, t) {
     const S = G.S;
     const tick = Math.floor(t / CFG.ink.boilRate);
@@ -1110,10 +1441,14 @@ const R = (() => {
     c.save();
     c.translate(e.x, e.y);
     /* a boss is born of vermilion — the paper's one sacred red,
-       brightened on the night sheet so it burns there too */
+       brightened on the night sheet so it burns there too. v19.1:
+       a ten-seal keeper wears its OWN ink instead (def.hue), each
+       hue contrast-checked against its sheet's paper. */
     const BOSS_INK = themeKey === 'dark' ? '#c9462e' : RED;
-    c.fillStyle = isBoss ? BOSS_INK : INK;
-    c.strokeStyle = isBoss ? BOSS_INK : INK;
+    const bdef = ENEMIES[e.type];
+    const bodyInk = isBoss ? (bdef.hue || BOSS_INK) : INK;
+    c.fillStyle = bodyInk;
+    c.strokeStyle = bodyInk;
     c.lineJoin = 'round';
     c.lineCap = 'round';
     /* the tracer's copies are only half-inked — faint as a remembered shadow */
@@ -2868,7 +3203,15 @@ const R = (() => {
         break;
       }
 
-      default: { /* BLIP — a shard of the drip */
+      default: {
+        if (ENEMIES[e.type].form) {
+          /* THE TEN SEALS — fifteen brush forms, one per kind of beast */
+          silhouette = paintKeeperForm(c, e, r, sd, t) || null;
+          const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
+          eyeSlits(c, ang, r, 0.85);
+          break;
+        }
+        /* BLIP — a shard of the drip */
         blobPath(c, 0, 0, r, sd, 0.24, 9);
         c.fill();
         silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.24, 9);

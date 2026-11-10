@@ -137,11 +137,11 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
   S.hardMode = getHard();
 
-  /* ---------------- the inkstone (硯) — v8.8 ----------------
+  /* ---------------- the ink purse (符) — v8.8 ----------------
      what the runs press out, kept between runs. om_charms_v1
      carries the ink, every charm's rank, and the one-time feats
      (the six sheets signed). The settings room's WIPE already
-     sweeps every om_* key — the stone empties with the rest. */
+     sweeps every om_* key — the purse empties with the rest. */
   const CHARMS_KEY = 'om_charms_v1';
   function charmsSave() {
     const c = store.get(CHARMS_KEY, null);
@@ -150,12 +150,12 @@ const rand = (a, b) => a + RNG() * (b - a);
       : { ink: 0, earned: 0, lv: {}, feats: {} };
   }
   const getInk = () => charmsSave().ink;
-  function setInk(n) {   /* QA probe: ?charms=1 seeds the stone */
+  function setInk(n) {   /* QA probe: ?charms=1 seeds the purse */
     const c = charmsSave(); c.ink = Math.max(0, n | 0);
     store.set(CHARMS_KEY, c);
   }
   const charmLv = id => (charmsSave().lv[id] || 0);
-  if (qaCharms >= 0) setInk(qaCharms);   /* ?charms=N — seed the stone for probes */
+  if (qaCharms >= 0) setInk(qaCharms);   /* ?charms=N — seed the purse for probes */
   const charmRankCount = () => Object.values(charmsSave().lv).reduce((a, b) => a + (b | 0), 0);
   function buyCharm(id) {
     const def = CHARMS.find(c => c.id === id);
@@ -577,45 +577,44 @@ const rand = (a, b) => a + RNG() * (b - a);
     /* ink motes spill from every kill */
     const tier = moteTierFor(def.cost);
     if (isBoss) {
+      /* the keeper's hoard: a flush of ink and a flask of clean water
+         (an echo of the Assembly pays a thinner hoard — the sheet
+         itself pays the full one) */
       if (keeper) {
-        /* the keeper's hoard: a flush of ink and a flask of clean water */
-        for (let i = 0; i < 10; i++) dropMote(e.x + rand(-26, 26), e.y + rand(-26, 26), moteValue(4), 2);
-        dropPickup('pot', e.x + rand(-20, 20), e.y + rand(-20, 20));
+        const n = e.echo ? 5 : 10;
+        for (let i = 0; i < n; i++) dropMote(e.x + rand(-26, 26), e.y + rand(-26, 26), moteValue(4), 2);
+        if (!e.echo) dropPickup('pot', e.x + rand(-20, 20), e.y + rand(-20, 20));
       } else {
         for (let i = 0; i < 14; i++) dropMote(e.x + rand(-30, 30), e.y + rand(-30, 30), moteValue(4), 2);
         dropPickup('pot', e.x + rand(-24, 24), e.y + rand(-24, 24));
         dropPickup('chest', e.x, e.y);
       }
       /* the sheet's seal breaks: the scroll is finished, and the next
-         scroll unrolls — on film when motion is welcome (the run holds
-         its breath while the sheet announces itself), by banner cry
-         when the hand asks for stillness */
-      let unroll = null;
+         scroll unrolls — on film AFTER the Assembly falls (the echoes
+         must die first; the unroll waits at S.pendingUnroll for the
+         wave to empty), by banner cry when the hand asks for stillness */
       if (S.runMode === 'journey') {
         const per = CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea;
         const sheet = Math.floor((S.stats.wave - 1) / per) + 1;
         const asNow = areaStateFor(S.stats.wave);
-        /* only a Guardian's own wave may press the seal — a boss
-           death anywhere else never credits a sheet */
-        if (asNow.isGuardianWave && sheet > getCleared()) {
+        /* only the GUARDIAN's own fall may press the seal — a keeper
+           or an Assembly echo dying on this wave never credits a sheet */
+        if (asNow.isGuardianWave && def.boss === 1 && sheet > getCleared()) {
           setCleared(sheet);
           const next = AREAS[sheet] || null;   /* sheet is 1-based; AREAS[sheet] is the next */
           if (next) {
             setUnlocked(sheet + 1);
-            if (!S.reduced) unroll = { area: asNow.area, next };
+            if (!S.reduced) {
+              /* the unroll waits: the echoes must fall first — the
+                 sheet seals only when the arena stands empty */
+              S.pendingUnroll = { area: asNow.area, next };
+            }
             else UI.unlockBanner(asNow.area, next, false);
           }
           else UI.unlockBanner(asNow.area, null, true);
         }
       }
-      if (unroll) {
-        S.mode = 'cutscene';
-        UI.hud(false);
-        UI.show(null);
-        CUT.start('unroll', unroll);
-      } else {
-        UI.bossFalls(def.name, def.boss === 2);
-      }
+      UI.bossFalls(def.name, def.boss === 2);
     } else if (e.elite) {
       for (let i = 0; i < 7; i++) dropMote(e.x + rand(-20, 20), e.y + rand(-20, 20), moteValue(3), 2);
     } else {
@@ -860,11 +859,11 @@ const rand = (a, b) => a + RNG() * (b - a);
       });
     }
     /* every wave leaves a small accent somewhere near the brush */
-    const ik = (S.inkKind = ((S.inkKind || 0) + 1) % 3);
+    const ik = (S.inkKind = ((S.inkKind || 0) + 1) % 2);
     S.inklings.push({
       x: S.player.x + (((n * 73) % 17) - 8) * 34,
       y: S.player.y + (((n * 31) % 13) - 6) * 30,
-      kind: ['reeds', 'rockS', 'crane'][ik],
+      kind: ['reeds', 'crane'][ik],
       t: performance.now() / 1000,
       seed: (n * 2654435761) >>> 0,
     });
@@ -892,17 +891,25 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.queue.push(featured, featured, featured);
     }
     let elites = 0;
+    S.assembly = null;
     if (as.isGuardianWave) {
-      /* the Guardian of the sheet enters — a beast with a name */
+      /* the Guardian of the sheet enters — a beast with a name.
+         v19.1: on the tenth scene the SHEET COMES WITH IT — the
+         ten seals return as echoes at three beats of the duel
+         (the ASSEMBLY, run from updateAssembly below). */
       const pt = edgePoint();
       S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
       elites = 1;
+      S.assembly = { area: as.area, fired: 0,
+        beats: [{ hp: 0.72, n: 3 }, { hp: 0.45, n: 3 }, { hp: 0.2, n: 4 }] };
     } else if (as.isLevelEnd) {
-      /* the seal wave is a BOSS FIGHT: the scene's Keeper — the
-         Guardian's lesser red kin — walks the paper, a halved
-         honor guard at its heels */
+      /* the seal wave is a BOSS FIGHT: the scene's OWN Keeper —
+         v19.1 gives every scene its own red-sealed boss, its own
+         body, ink and kit — walks the paper, a halved honor guard
+         at its heels */
       const pt = edgePoint();
-      S.markers.push({ type: as.area.keeper, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
+      const kid = as.area.keepers ? as.area.keepers[as.level - 1] : as.area.keeper;
+      S.markers.push({ type: kid, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
       elites = Math.max(1, Math.ceil(CFG.wave.elitesAt(as.depth) * 0.5));
       for (let i = 0; i < elites; i++) {
         const pt = edgePoint(i % 4);
@@ -913,6 +920,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.waveActive = true;
     S.spawnTimer = 1.0;
     S.clearedT = 0;
+    S.pendingUnroll = null;
     UI.setWave(as.waveInLevel);
     UI.setArea(as.area, as.level, as.waveInLevel, as.isLevelEnd);
     UI.setProgress(0);
@@ -942,7 +950,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       UI.bossBanner(as.area, ENEMIES[as.area.boss].name, false, as.level, as.area.boss);
       SFX.gong();
     } else if (as.isLevelEnd) {
-      UI.bossBanner(as.area, ENEMIES[as.area.keeper].name, true, as.level, as.area.keeper);
+      const kid = as.area.keepers ? as.area.keepers[as.level - 1] : as.area.keeper;
+      UI.bossBanner(as.area, ENEMIES[kid].name, true, as.level, kid);
       SFX.gong();
     }
   }
@@ -1195,7 +1204,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (!brushUnlocked(S.brush)) S.brush = 'needle';
     S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
-    S.inkWave = 0;   /* the stone counts this run's waves from zero */
+    S.inkWave = 0;   /* the purse counts this run's waves from zero */
     S.bullets = []; S.ebullets = []; S.enemies = []; S.markers = []; S.telgs = [];
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = [];
     S.puddles = []; S.spirits = []; S.stamps = [];
@@ -1525,7 +1534,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       const prev = ghostLoadOwn('endless');
       if (!prev || (st.score | 0) > (prev.score | 0)) ghostSave('endless', st);
     }
-    /* ---- the inkstone: the run presses its ink back (v8.8) ----
+    /* ---- the purse: the run presses its ink back (v8.8) ----
        death and victory alike press; a run continued past the
        finale pays only the waves it walked further. Practice
        sheets press a fifth; the ledger's double still stands. */
@@ -1566,7 +1575,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     UI.hud(false);
     UI.show('over');
     S.mode = 'over';
-    UI.setInkLine(inkTotal);            /* the title's stone, freshly read */
+    UI.setInkLine(inkTotal);            /* the title's purse, freshly read */
     if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     /* the endless ledger takes its entry when an endless run truly
        ends — the journey answers only to its own seals (LB is the
@@ -2778,6 +2787,11 @@ const rand = (a, b) => a + RNG() * (b - a);
      beast TURNS — a cry pressed into the paper, a red ring, a hit
      of stillness, and a faster, meaner rhythm. Hard by design,
      fair by telegraph: every phase is readable, none is a trick. */
+  function bossPhaseOf(e) {
+    return e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+  }
+  /* the ten seals carry their cry on their own def (v19.1); the old
+     twelve keep their lines here, and every def.cry merges in below */
   const ENRAGE_CRY = {
     b_wheel: 'THE STAIN SPREADS',    k_blight: 'THE BLIGHT BLOOMS',
     b_mother: 'THE BROOD WAKES',     k_husk: 'THE HUSK SPLITS',
@@ -2786,8 +2800,211 @@ const rand = (a, b) => a + RNG() * (b - a);
     b_origin: 'THE OLD INK REMEMBERS', k_nib: 'THE NIB RE-DIPS',
     b_blank: 'THE PAGE TURNS',       k_edge: 'THE MARGIN WIDENS',
   };
-  function bossPhaseOf(e) {
-    return e.hp < e.maxHp * 0.33 ? 2 : e.hp < e.maxHp * 0.66 ? 1 : 0;
+  for (const id in ENEMIES) if (ENEMIES[id].cry) ENRAGE_CRY[id] = ENEMIES[id].cry;
+
+  /* ---------------- THE KEEPER KIT (v19.1) ----------------
+     The ten seals fight from one composable kit: every new keeper
+     walks like a boss (slow chase, three enrage phases) and casts
+     TWO abilities of its own — a signature and a support — from
+     fourteen primitives. Telegraphed or fast, never both: each
+     state-changing cast only starts from a quiet cruise. */
+  function kitTelegraph(e, kind, life) {
+    S.telgs.push({ e, kind, r: kind === 'ring' ? 205 : undefined, len: kind === 'line' ? 340 : undefined, life, maxLife: life });
+  }
+  function kitChase(e, ux, uy, sm, ph) {
+    const run = ph >= 1 ? 1.15 : 1;
+    if (e.state === 'chg') return null;              /* the dash moves it */
+    if (e.state === 'orbit') return null;            /* the orbit steers it */
+    return [ux * e.speed * sm * run, uy * e.speed * sm * run];
+  }
+  function kitSpawnKin(e, type, n, halve, cap) {
+    if (S.enemies.length >= cap + 8) return;
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, TAU);
+      const c = spawnEnemy(type, e.x + Math.cos(a) * (e.r + 10), e.y + Math.sin(a) * (e.r + 10));
+      c.kbx = Math.cos(a) * 170; c.kby = Math.sin(a) * 170;
+      if (halve) { c.maxHp = Math.max(1, Math.ceil(c.maxHp * 0.5)); c.hp = c.maxHp; }
+    }
+    S.rings.push({ x: e.x, y: e.y, max: 115, life: 0.45, maxLife: 0.45, red: true });
+    SFX.elite();
+  }
+  /* one kit cast; returns true when it consumed the beast's state.
+     cap = the wave's concurrent ceiling (passed from updateEnemies). */
+  function kitAct(e, slot, kind, dt, ph, d, p, ux, uy, cap) {
+    const tK = slot ? 'kT1' : 'kT0';
+    const fast = ph === 2 ? 0.66 : ph === 1 ? 0.82 : 1;   /* enraged casts come sooner */
+    e[tK] = (e[tK] == null ? 1.2 : e[tK]) - dt;
+    if (e[tK] > 0) return false;
+    switch (kind) {
+      case 'ring':   /* radial burst — telegraphed, then the ring of red globs */
+        if (e.state !== 'cruise') return false;
+        e[tK] = 3.3 * fast; e.state = 'windup'; e.stateT = 0;
+        kitTelegraph(e, 'ring', 0.6); SFX.wind();
+        return true;
+      case 'fan':    /* aimed needle fan */
+        if (d > 460) return false;
+        e[tK] = 2.7 * fast;
+        { const base = Math.atan2(p.y - e.y, p.x - e.x), half = 1 + ph;
+          for (let i = -half; i <= half; i++) {
+            const a = base + i * 0.19;
+            S.ebullets.push({ kind: 'needle', red: true,
+              x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+              vx: Math.cos(a) * CFG.needle.speed * 0.82, vy: Math.sin(a) * CFG.needle.speed * 0.82,
+              ang: a, age: 0, life: CFG.needle.life * 1.15 });
+          }
+          SFX.needle(); }
+        return false;
+      case 'volley': /* aimed triple of fat drops */
+        if (d > 470) return false;
+        e[tK] = 2.5 * fast;
+        { const base = Math.atan2(p.y - e.y, p.x - e.x);
+          for (let i = -1; i <= 1; i++) {
+            const a = base + i * 0.2;
+            S.ebullets.push({ kind: 'drop', red: true,
+              x: e.x + Math.cos(a) * (e.r + 7), y: e.y + Math.sin(a) * (e.r + 7),
+              vx: Math.cos(a) * 215, vy: Math.sin(a) * 215, ang: a, age: 0, life: 2.3 });
+          }
+          SFX.glob(); }
+        return false;
+      case 'brood':  /* two — three, enraged — of its chosen kin */
+        if (S.enemies.length >= cap + 8) return false;
+        e[tK] = (ph === 2 ? 5.2 : 7.2) * fast;
+        kitSpawnKin(e, ENEMIES[e.type].kin, ph === 2 ? 3 : 2, false, cap);
+        return false;
+      case 'brood1': /* one kin, again and again — a slow tide of its own */
+        if (S.enemies.length >= cap + 8) return false;
+        e[tK] = (ph === 2 ? 3.4 : 4.6) * fast;
+        kitSpawnKin(e, ENEMIES[e.type].kin, 1, false, cap);
+        return false;
+      case 'mirror': /* two half-ink copies of its kin — which one is real? */
+        if (S.enemies.length >= cap + 8) return false;
+        e[tK] = (ph === 2 ? 4.4 : 6.0) * fast;
+        kitSpawnKin(e, ENEMIES[e.type].kin, 2, true, cap);
+        S.popups.push({ x: e.x, y: e.y - e.r - 12, txt: 'MIRRORED', life: 0.9, max: 0.9, red: true });
+        return false;
+      case 'charge': /* telegraphed road through the paper */
+        if (e.state !== 'cruise' || d > 430) return false;
+        e[tK] = (ph === 2 ? 3.1 : 4.1) * fast; e.state = 'chg-wind'; e.stateT = 0;
+        kitTelegraph(e, 'line', 0.5); SFX.wind();
+        return true;
+      case 'blink':  /* dissolve, and the paper forgets where it stood */
+        if (e.state !== 'cruise') return false;
+        e[tK] = (ph === 2 ? 3.7 : 5.0) * fast; e.state = 'dissolve'; e.stateT = 0;
+        return true;
+      case 'stamp':  /* red seals pressed where you stand */
+        if (d > 560) return false;
+        e[tK] = (ph === 2 ? 3.1 : 4.3) * fast;
+        { const n = 1 + (ph >= 1 ? 1 : 0) + (ph === 2 ? 1 : 0);
+          for (let i = 0; i < n; i++) {
+            const ba = rand(0, TAU), bd = i === 0 ? rand(10, 60) : rand(70, 150);
+            S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.9, r: 62, struck: false, life: 0, red: true, seal: 1 });
+          }
+          SFX.wind(); }
+        return false;
+      case 'rain':   /* the sky opens over the brush */
+        e[tK] = (ph === 2 ? 3.6 : 5.0) * fast;
+        { const nb = 2 + ph;
+          for (let i = 0; i < nb; i++) {
+            const ba = rand(0, TAU), bd = rand(20, 150);
+            S.bolts.push({ x: p.x + Math.cos(ba) * bd, y: p.y + Math.sin(ba) * bd, t: 0.85 + i * 0.3, r: 54, struck: false, life: 0 });
+          }
+          SFX.wind(); }
+        return false;
+      case 'spiral': /* two arms of needles, turning */
+        if (e.state !== 'cruise') return false;
+        e[tK] = (ph === 2 ? 3.2 : 4.4) * fast; e.state = 'spiral'; e.stateT = 0; e.spA = rand(0, TAU);
+        return true;
+      case 'orbit':  /* hold the ring — and plink at the brush from it */
+        if (d > 460) return false;
+        e[tK] = (ph === 2 ? 1.9 : 2.6) * fast;
+        { const a = Math.atan2(p.y - e.y, p.x - e.x) + rand(-0.15, 0.15);
+          S.ebullets.push({ kind: 'drop', red: true,
+            x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+            vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, ang: a, age: 0, life: 2.1 });
+          SFX.glob(); }
+        return false;
+      case 'haste':  /* its cry quickens every beast near it */
+        e[tK] = (ph === 2 ? 4.2 : 5.8) * fast;
+        { let felled = 0;
+          for (const o of S.enemies) {
+            if (o === e || ENEMIES[o.type].boss) continue;
+            const dx = o.x - e.x, dy = o.y - e.y;
+            if (dx * dx + dy * dy < 240 * 240) { o.hornT = 2.5; felled++; }
+          }
+          S.rings.push({ x: e.x, y: e.y, max: 240, life: 0.5, maxLife: 0.5, red: true });
+          if (felled) S.popups.push({ x: e.x, y: e.y - e.r - 12, txt: 'QUICKENED', life: 0.9, max: 0.9, red: true });
+          SFX.elite(); }
+        return false;
+      default:
+        e[tK] = 3;
+        return false;
+    }
+  }
+  /* the windup→payoff half of the state-casting abilities */
+  function kitState(e, dt, ph, p) {
+    if (e.state === 'windup') {
+      e.stateT += dt;
+      if (e.stateT > 0.6) {
+        e.state = 'cruise'; e.stateT = 0;
+        const n = 8 + ph * 3, off = rand(0, TAU);
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * TAU + off;
+          S.ebullets.push({ kind: 'glob', red: true,
+            x: e.x + Math.cos(a) * (e.r + 8), y: e.y + Math.sin(a) * (e.r + 8),
+            vx: Math.cos(a) * CFG.glob.speed * 0.82, vy: Math.sin(a) * CFG.glob.speed * 0.82,
+            ang: a, age: 0, life: CFG.glob.life * 1.3 });
+        }
+        S.rings.push({ x: e.x, y: e.y, max: 205, life: 0.5, maxLife: 0.5, red: true });
+        S.shake = Math.max(S.shake, 7); SFX.nova();
+      }
+      return true;
+    }
+    if (e.state === 'chg-wind') {
+      e.stateT += dt;
+      if (e.stateT > 0.5) {
+        e.ang = Math.atan2(p.y - e.y, p.x - e.x);
+        e.px = Math.cos(e.ang); e.py = Math.sin(e.ang);
+        e.state = 'chg'; e.stateT = 0;
+      }
+      return true;
+    }
+    if (e.state === 'chg') {
+      e.stateT += dt;
+      if (Math.random() < 0.35) S.stainQueue.push({ x: e.x, y: e.y, r: 7, alpha: 0.3, red: true });
+      if (e.stateT > 0.45) { e.state = 'cruise'; e.stateT = 0; }
+      return true;
+    }
+    if (e.state === 'dissolve') {
+      e.stateT += dt;
+      if (e.stateT > 0.5) {
+        S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 0.85, alpha: 0.4 });
+        const bd = ph === 2 ? rand(110, 160) : rand(140, 200), ba = rand(0, TAU);
+        e.x = p.x + Math.cos(ba) * bd; e.y = p.y + Math.sin(ba) * bd;
+        S.stainQueue.push({ x: e.x, y: e.y, r: e.r, alpha: 0.45 });
+        S.rings.push({ x: e.x, y: e.y, max: e.r * 2.3, life: 0.35, maxLife: 0.35 });
+        e.state = 'cruise'; e.stateT = 0; SFX.blink();
+      }
+      return true;
+    }
+    if (e.state === 'spiral') {
+      e.stateT += dt;
+      e.spA += dt * 4.6;
+      e.spE = (e.spE || 0) - dt;
+      if (e.spE <= 0) {
+        e.spE = 0.09;
+        for (const arm of [0, Math.PI]) {
+          const a = e.spA + arm;
+          S.ebullets.push({ kind: 'needle', red: true,
+            x: e.x + Math.cos(a) * (e.r + 6), y: e.y + Math.sin(a) * (e.r + 6),
+            vx: Math.cos(a) * CFG.needle.speed * 0.72, vy: Math.sin(a) * CFG.needle.speed * 0.72,
+            ang: a, age: 0, life: CFG.needle.life * 1.2 });
+        }
+        if (Math.random() < 0.3) SFX.needle();
+      }
+      if (e.stateT > 1.15) { e.state = 'cruise'; e.stateT = 0; }
+      return true;
+    }
+    return false;
   }
   function enrageCheck(e, cry) {
     const ph = bossPhaseOf(e);
@@ -4454,6 +4671,34 @@ const rand = (a, b) => a + RNG() * (b - a);
             }
             break;
           }
+
+          /* ============ THE TEN SEALS (v19.1) ============
+             every def.form boss fights from the keeper kit: chase,
+             three enrage phases, and the two abilities its def names */
+          default: {
+            const kdef = ENEMIES[e.type];
+            if (!kdef.form) break;
+            const ph = enrageCheck(e, ENRAGE_CRY[e.type] || (kdef.name + ' TURNS'));
+            /* state-casts run their own rhythm; a quiet beast walks */
+            if (kitState(e, dt, ph, p)) { vx = 0; vy = 0; break; }
+            if (e.state === 'chg') {
+              vx = e.px * 520; vy = e.py * 520;
+            } else if (kdef.ab[0] === 'orbit' || kdef.ab[1] === 'orbit') {
+              /* hold the ring at a spear's length — the duel circles */
+              const ringD = 250;
+              const tangent = Math.atan2(uy, ux) + (e.seed > 3.14 ? 1 : -1) * Math.PI / 2;
+              const pull = clamp((d - ringD) * 2.2, -80, 80);
+              vx = (Math.cos(tangent) * e.speed + ux * pull) * sm;
+              vy = (Math.sin(tangent) * e.speed + uy * pull) * sm;
+              e.ang = Math.atan2(uy, ux);
+            } else {
+              const ch = kitChase(e, ux, uy, sm, ph);
+              if (ch) { vx = ch[0]; vy = ch[1]; e.ang = Math.atan2(uy, ux); }
+            }
+            kitAct(e, 0, kdef.ab[0], dt, ph, d, p, ux, uy, broodCap);
+            kitAct(e, 1, kdef.ab[1], dt, ph, d, p, ux, uy, broodCap);
+            break;
+          }
         }
         /* a wounded Guardian moves like something cornered */
         if (ENEMIES[e.type].boss && e.hp < e.maxHp * 0.35) {
@@ -4571,11 +4816,49 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (mk.t <= 0) {
         S.markers.splice(i, 1);
         S.stainQueue.push({ x: mk.x, y: mk.y, r: ENEMIES[mk.type].r * (mk.boss ? 2.4 : mk.elite ? 2 : 1.1), alpha: mk.boss || mk.elite ? 0.55 : 0.42, red: !!mk.elite });
-        spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss });
+        const sp = spawnEnemy(mk.type, mk.x, mk.y, { elite: !!mk.elite && !mk.boss });
+        /* an Assembly echo arrives thinned: the scene's boss, one
+           third of its ink, its kit and its color intact */
+        if (mk.echo) {
+          sp.echo = 1;
+          sp.maxHp = Math.max(1, Math.round(sp.maxHp * 0.32));
+          sp.hp = sp.maxHp;
+        }
         if (mk.boss) { S.shake = Math.max(S.shake, 10); SFX.elite(); }
         else if (mk.elite) { S.shake = Math.max(S.shake, 7); SFX.elite(); }
       }
     }
+  }
+
+  /* ---------------- THE ASSEMBLY (v19.1) ----------------
+     the tenth scene's tenth wave: the Guardian fights, and the
+     sheet's ten seals come back to stand beside it. Three beats —
+     at 72%, 45% and 20% of the Guardian's ink — three, three and
+     four echoes rise at the paper's edge, each the scene's own
+     boss at a third of its ink. By the last beat the arena holds
+     the whole scroll at once. */
+  function updateAssembly(dt) {
+    const A = S.assembly;
+    if (!A || !S.waveActive) return;
+    const g = S.enemies.find(e => e.type === A.area.boss && !e.dead);
+    if (!g) { if (S.markers.every(m => m.type !== A.area.boss)) S.assembly = null; return; }
+    const frac = g.hp / g.maxHp;
+    const beat = A.beats[A.fired];
+    if (!beat || frac > beat.hp) return;
+    A.fired++;
+    const list = A.area.keepers || [A.area.keeper];
+    const start = A.fired === 1 ? 0 : A.fired === 2 ? 3 : 6;
+    const ids = list.slice(start, start + beat.n);
+    ids.forEach((id, i) => {
+      const pt = edgePoint(i % 4);
+      S.markers.push({ type: id, x: pt.x, y: pt.y, t: 2.2 + i * 0.45, elite: true, boss: true, echo: 1 });
+    });
+    S.rings.push({ x: g.x, y: g.y, max: 320, life: 0.7, maxLife: 0.7, red: true });
+    S.shake = Math.max(S.shake, 14);
+    const cry = A.fired === 1 ? 'THE ASSEMBLY — THE FIRST SEAL RETURNS' : A.fired === 2 ? 'THE ASSEMBLY — THE SHEET STIRS' : 'THE ASSEMBLY — ALL TEN STAND';
+    S.popups.push({ x: g.x, y: g.y - g.r - 24, txt: cry, life: 1.6, max: 1.6, red: true });
+    S.redFlash = Math.max(S.redFlash || 0, 0.3);
+    SFX.gong();
   }
 
   function updateSpawning(dt) {
@@ -4700,6 +4983,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     updateVortices(dt);
     updateBolts(dt);
     updateMarkers(dt);
+    updateAssembly(dt);
     updateSpawning(dt);
     updateFx(dt);
 
@@ -4709,17 +4993,21 @@ const rand = (a, b) => a + RNG() * (b - a);
 
     UI.setXp(st.xp / CFG.xp.req(st.xpLevel), st.xpLevel);
 
-    /* the red beast's seal, worn on the top of the sheet */
-    let boss = null;
-    for (const e of S.enemies) if (ENEMIES[e.type].boss) { boss = e; break; }
+    /* the red beast's seal, worn on the top of the sheet.
+       The Guardian outranks its echoes; when several stand, the
+       bar says so. */
+    let boss = null, bossN = 0;
+    for (const e of S.enemies) if (ENEMIES[e.type].boss) { bossN++; if (!boss || ENEMIES[e.type].boss === 1) boss = e; }
     if (!boss) {
       for (const m of S.markers) if (m.boss) { boss = { name: ENEMIES[m.type].name, marker: true, keeper: ENEMIES[m.type].boss === 2 }; break; }
     }
     const asBar = areaStateFor(st.wave);
     if (boss && !boss.marker) {
       const bdef = ENEMIES[boss.type];
-      UI.setBoss(bdef.name, boss.hp / boss.maxHp,
-        bdef.boss === 2 ? 'KEEPER — SCENE ' + asBar.level : 'GUARDIAN — SHEET ' + asBar.area.id);
+      const kick = bossN > 1
+        ? 'THE ASSEMBLY — ' + bossN + ' STAND'
+        : bdef.boss === 2 ? 'KEEPER — SCENE ' + asBar.level : 'GUARDIAN — SHEET ' + asBar.area.id;
+      UI.setBoss(bdef.name, boss.hp / boss.maxHp, kick);
     }
     else if (boss && boss.marker) UI.setBoss(boss.name, 1, boss.keeper ? 'KEEPER — SCENE ' + asBar.level : 'GUARDIAN — SHEET ' + asBar.area.id);
     else UI.setBoss(null);
@@ -4759,8 +5047,17 @@ const rand = (a, b) => a + RNG() * (b - a);
           CUT.start('finale', {});
         } else if (as.isLevelEnd) {
           /* the journey stops at the broken seal: onward naked, or home.
-             (the endless scroll never rests — its seal still owes a stroke) */
-          if (S.runMode === 'journey') showLevelClear();
+             (the endless scroll never rests — its seal still owes a stroke)
+             v19.1: on a guardian wave the UNROLL waits here — the
+             sheet seals on film only when the last echo has fallen */
+          if (S.pendingUnroll) {
+            const pu = S.pendingUnroll; S.pendingUnroll = null;
+            S.mode = 'cutscene';
+            UI.hud(false);
+            UI.show(null);
+            CUT.start('unroll', pu);
+          }
+          else if (S.runMode === 'journey') showLevelClear();
           else openUpgrade('wave');
         } else {
           /* the next wave of the level follows on the same page */
@@ -4780,7 +5077,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     updateFx(dt);
     S.dyingT -= dt;
     if (S.dyingT <= 0) {
-      S.dyingT = Infinity;   /* the fall reports once — the stone pays once */
+      S.dyingT = Infinity;   /* the fall reports once — the purse pays once */
       showOver(false);
     }
   }
@@ -4845,7 +5142,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
-    /* the inkstone (v8.8): the charm room and the QA probes read these */
+    /* the purse (v8.8): the charm room and the QA probes read these */
     getInk, setInk, charmLv, charmRankCount, buyCharm, getThemeSetting, setThemeSetting,
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */

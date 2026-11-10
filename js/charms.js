@@ -1,9 +1,9 @@
 /* ONE MORE — the charm room (符, v8.8).
    A quiet shop behind the title, in the settings room's paper:
-   what the runs pressed into the inkstone buys ranks of permanent
-   power here. Every rank rides every page the hand opens after.
+   what the runs press out buys ranks of permanent power here.
+   Every rank rides every page the hand opens after.
    The room reads the economy through the game's own door — G's
-   inkstone API — and owns only the DOM: rows, pips, the purse,
+   purse API — and owns only the DOM: rows, pips, the purse,
    and the 符 chip's pulse when something is buyable. */
 'use strict';
 
@@ -40,7 +40,7 @@ const CH = (() => {
     return best;
   }
 
-  /* the title's 符 chip breathes when the stone can buy something */
+  /* the title's 符 chip breathes when the purse can buy something */
   function refreshChip() {
     const btn = $('charmBtn');
     if (!btn) return;
@@ -83,7 +83,7 @@ const CH = (() => {
             refresh();
             refreshChip();
           } else {
-            /* the stone is short — the row shakes its head */
+            /* the purse is short — the row shakes its head */
             SFX.thud ? SFX.thud() : SFX.pick(0);
             row.classList.remove('deny');
             void row.offsetWidth;   /* restart the shake */

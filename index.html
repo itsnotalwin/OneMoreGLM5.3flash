@@ -148,20 +148,11 @@
           <span class="daily-kanji" aria-hidden="true">日</span>
           <span class="play-label">DAILY<span id="dailyLabel">&nbsp;·&nbsp;TODAY</span></span>
         </button>
-        <button id="charmBtn" class="board-btn charm-btn" type="button" title="CHARMS — what the runs press into the inkstone buys ranks of permanent power">
+        <button id="charmBtn" class="board-btn charm-btn" type="button" title="CHARMS — what the runs press out buys ranks of permanent power">
           <span class="board-kanji" aria-hidden="true">符</span>
           <span class="play-label">CHARMS</span>
           <i class="charm-dot" aria-hidden="true"></i>
-        </button>
-        <button id="stoneBtn" class="board-btn stone-btn" type="button" title="THE INKSTONE — the stone the runs press. It condenses ink from the air while you are away; visit it, grind, and watch it grow.">
-          <span class="board-kanji" aria-hidden="true">砚</span>
-          <span class="play-label">INKSTONE</span>
-          <span class="chip-count hidden" id="stoneCount" aria-live="polite" title="Ink held by the stone"></span>
-        </button>
-        <button id="hardBtn" class="hard-btn" type="button" aria-pressed="false"
-          title="REALLY HARD — every beast stands taller, comes faster, comes thicker. The ledger pays double.">
-          <span class="hard-kanji" aria-hidden="true">難</span>
-          <span class="play-label">REALLY HARD —&nbsp;<span class="hard-state">OFF</span></span>
+          <span class="chip-count hidden" id="charmInk" aria-live="polite" title="Ink held by the purse"></span>
         </button>
       </div>
       <button id="sheetBtn" class="sheet-btn hidden" type="button" title="SCENES — open the shelf of scrolls and walk any sheet by hand"></button>
@@ -169,7 +160,7 @@
     </div>
 
     <div class="title-foot">
-      <span class="foot-stamp" id="verStamp">BUILD V19.0</span>
+      <span class="foot-stamp" id="verStamp">BUILD V19.3</span>
     </div>
 
     <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the account and its mark, the sound, the ghost rival, REALLY HARD, and the paper itself">
@@ -296,7 +287,7 @@
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">BLOTS CLEANED</span><span class="stat-dots"></span><span class="stat-value" id="statKills">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">TIME IN ARENA</span><span class="stat-dots"></span><span class="stat-value" id="statTime">00:00</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
-          <div class="stat-row hidden" id="inkStatRow"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">PRESSED INTO THE STONE</span><span class="stat-dots"></span><span class="stat-value" id="statInk">+0</span></div>
+          <div class="stat-row hidden" id="inkStatRow"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">PRESSED INTO THE PURSE</span><span class="stat-dots"></span><span class="stat-value" id="statInk">+0</span></div>
         </div>
       </div>
       <div class="ghost-line hidden" id="ghostLine" aria-live="polite"></div>
@@ -373,15 +364,15 @@
     </div>
   </section>
 
-  <!-- ============ CHARMS — 符 — the inkstone's shop ============ -->
+  <!-- ============ CHARMS — 符 — the purse's shop ============ -->
   <section id="screenCharms" class="screen screen-charms hidden">
     <span class="wm wm-charms" aria-hidden="true">符</span>
     <div class="set-wrap">
       <div class="set-head">
-        <div class="set-kicker">THE INKSTONE — <span class="kanji-inline">硯</span></div>
+        <div class="set-kicker">THE CHARM ROOM — <span class="kanji-inline">符</span></div>
         <h2 class="set-title">CHARMS</h2>
         <p class="set-sub">WHAT THE RUNS PRESS OUT, THE PAPER KEEPS</p>
-        <p class="charm-purse"><span class="purse-kanji" aria-hidden="true">硯</span> INK <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
+        <p class="charm-purse"><span class="purse-kanji" aria-hidden="true">符</span> INK <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
       </div>
       <div class="set-rows" id="charmRows"></div>
       <button id="charmBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
@@ -428,7 +419,6 @@
 <script src="./js/intro.js"></script>
 <script src="./js/supabase-config.js"></script>
 <script src="./js/lb.js"></script>
-<script src="./js/cloud-save.js"></script>
 <script src="./js/share.js"></script>
 <script src="./js/charms.js"></script>
 <script src="./js/main.js"></script>
