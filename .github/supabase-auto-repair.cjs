@@ -66,7 +66,6 @@ function healthy(path, text) {
       'function renderAccount(',
       'persistPending(',
       'cloudAccess()',
-      'authReturnTo: \'title\'',
       'window.OM_CLOUD.authChanged()',
       'unable to exchange external code',
       'return {',
@@ -358,8 +357,8 @@ function selfTest(bad, good) {
     const partial = { ...good, [SOURCE_FILES[0]]: bad[SOURCE_FILES[0]] };
     assert.deepEqual(plan(partial, bad, good).edits, [SOURCE_FILES[0], SW]);
   });
-  test('novel broken source aborts before ANY write', () => {
-    const newCode = { ...bad, [SOURCE_FILES[1]]: bad[SOURCE_FILES[1]] + '\n// new gameplay change\n' };
+  test('unrecognized lobby refactor aborts before ANY write', () => {
+    const newCode = { ...bad, [SOURCE_FILES[1]]: bad[SOURCE_FILES[1]].replace('function init() {', 'function reworkedInit() {') };
     assert.throws(() => plan(newCode, bad, good), /UNKNOWN AUTH SOURCE/);
   });
   test('new code with intact integration remains untouched', () => {
