@@ -193,12 +193,21 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     assert.equal(guest.reloads, 0);
   });
 
-  await test('existing v18.1 gameplay and OAuth entrypoints are preserved', () => {
+  await test('v19.3 ten-seal gameplay and OAuth/cloud-save entrypoints are preserved', () => {
     assert.match(game, /om_charms_v1/);
     assert.match(game, /om_unlocked_v1/);
-    assert.match(lobby, /LB|consumeOAuthReturn/);
+    assert.match(game, /TEN SEALS/);
+    assert.match(lobby, /om_lb_google_return_v1/);
+    assert.match(lobby, /consumeOAuthReturn/);
+    assert.match(lobby, /initAuth/);
     assert.match(lobby, /cloudAccess\(\)/);
+    assert.match(lobby, /window\.OM_CLOUD\.authChanged/);
+    assert.match(main, /LB\.consumeOAuthReturn\(\)/);
+    assert.match(main, /LB\.initAuth\(\)/);
+    assert.match(main, /LB\.authReturnTo = settingsReturn/);
     assert.match(main, /beforeLocalWipe\(\)/);
+    assert.ok(html.includes('id="boardTabWeek"'));
+    assert.ok(html.includes('id="charmBtn"') && html.includes('id="charmInk"'));
     assert.ok(html.indexOf('js/supabase-config.js') < html.indexOf('js/lb.js'));
     assert.ok(html.indexOf('js/lb.js') < html.indexOf('js/cloud-save.js'));
     assert.ok(html.indexOf('js/cloud-save.js') < html.indexOf('js/main.js'));
