@@ -9,6 +9,13 @@
 
 const R = (() => {
   const RED = '#b23a2b';
+  /* v20 THE RED/BLACK LAW — the paper carries only two classes of
+     beast: the BOSSES (Guardians, the ten seals' keepers, the
+     captains) burn the one sacred vermillion, brightened on the
+     night sheet so it still burns there; the HORDE walks in the
+     sheet's own ink — black on the daylight papers, the lamp-pale
+     inverse on the night scroll, where black could never read. */
+  function bossInk() { return themeKey === 'dark' ? '#c9462e' : RED; }
   const TAU = Math.PI * 2;
 
   /* ---------------- paper themes ----------------
@@ -1093,10 +1100,11 @@ const R = (() => {
      Every scene-keeper is drawn from its own brush form — pool,
      tree, mountain, koi, wraith, moth, crane, mask, lantern,
      spider, ribbon, wheel, banner, stamp, toad — seeded per beast,
-     tinted with its own ink (the caller set fillStyle to def.hue),
-     and reacting to its state: a windup swells, a charge
-     stretches, a dissolve thins, a spiral turns. Returns the
-     silhouette path fn for the hit-flash overlay. */
+     tinted with the bosses' own vermillion (the caller set
+     fillStyle to bodyInkOf — v20's red/black law), and reacting to
+     its state: a windup swells, a charge stretches, a dissolve
+     thins, a spiral turns. Returns the silhouette path fn for the
+     hit-flash overlay. */
   function paintKeeperForm(c, e, r, sd, t) {
     const st = e.state;
     const S = G.S;
@@ -1427,9 +1435,9 @@ const R = (() => {
     return sil;
   }
 
-  /* the ten seals keep their own ink across painter sub-shapes */
+  /* the boss class wears the law's red across every painter form */
   function bodyInkOf(c, e) {
-    return ENEMIES[e.type].hue || (themeKey === 'dark' ? '#c9462e' : RED);
+    return bossInk();
   }
 
   function drawEnemy(c, e, t) {
@@ -1440,13 +1448,11 @@ const R = (() => {
     const isBoss = !!ENEMIES[e.type].boss;
     c.save();
     c.translate(e.x, e.y);
-    /* a boss is born of vermilion — the paper's one sacred red,
-       brightened on the night sheet so it burns there too. v19.1:
-       a ten-seal keeper wears its OWN ink instead (def.hue), each
-       hue contrast-checked against its sheet's paper. */
-    const BOSS_INK = themeKey === 'dark' ? '#c9462e' : RED;
-    const bdef = ENEMIES[e.type];
-    const bodyInk = isBoss ? (bdef.hue || BOSS_INK) : INK;
+    /* a boss is born of vermilion — the paper's one sacred red.
+       v20 THE RED/BLACK LAW: EVERY boss wears it — Guardian, the
+       ten seals' keepers, all of them one family again — while the
+       horde stays in the sheet's own ink. No private hues. */
+    const bodyInk = isBoss ? bossInk() : INK;
     c.fillStyle = bodyInk;
     c.strokeStyle = bodyInk;
     c.lineJoin = 'round';
@@ -2967,7 +2973,7 @@ const R = (() => {
           c.fillStyle = PAPER;
           const s2 = r * 0.2;
           c.fillRect(-s2, -s2, s2 * 2, s2 * 2);
-          c.fillStyle = phase === 2 ? BOSS_INK : RED;
+          c.fillStyle = phase === 2 ? bossInk() : RED;
           const s3 = s2 * 0.45;
           c.fillRect(-s3, -s3, s3 * 2, s3 * 2);
           c.restore();
@@ -2987,7 +2993,7 @@ const R = (() => {
         const sway = Math.sin(e.t * 1.6 + e.seed) * 0.06 + (eraseWind ? Math.sin(e.stateT * 24) * 0.05 : 0);
         c.rotate(sway);
         c.fillStyle = PAPER;
-        c.strokeStyle = BOSS_INK;
+        c.strokeStyle = bossInk();
         /* the page: a tall rounded sheet, drawn as one pressed rectangle */
         const pw = r * 0.78, ph2 = r * 1.18, corner = r * 0.14;
         c.lineWidth = 2.6;
@@ -3004,7 +3010,7 @@ const R = (() => {
         c.globalAlpha = 1;
         /* the underdrawing that haunts its own surface — faint marks that
            surface with every phase, the page remembering what it erased */
-        c.strokeStyle = BOSS_INK;
+        c.strokeStyle = bossInk();
         c.globalAlpha = 0.16 + phase * 0.12;
         c.lineWidth = 1.2;
         const ur = mulberry(sd >> 2);
@@ -3018,14 +3024,14 @@ const R = (() => {
         c.globalAlpha = 1;
         /* the red margin: a corner seal pressed on the page's lower right —
            it deepens through the phases until the whole edge burns */
-        c.fillStyle = phase === 2 ? BOSS_INK : RED;
+        c.fillStyle = phase === 2 ? bossInk() : RED;
         c.globalAlpha = 0.55 + phase * 0.2;
         const ms = r * 0.16 + phase * r * 0.05;
         c.fillRect(pw - ms - 3, ph2 - ms - 3, ms, ms);
         c.globalAlpha = 1;
         /* the eyes: two slits torn where a face was almost drawn */
-        c.strokeStyle = BOSS_INK;
-        c.fillStyle = BOSS_INK;
+        c.strokeStyle = bossInk();
+        c.fillStyle = bossInk();
         c.lineWidth = 2;
         c.beginPath();
         c.arc(-pw * 0.32, -ph2 * 0.28, r * 0.13, Math.PI * 1.15, Math.PI * 1.85);
@@ -3150,8 +3156,10 @@ const R = (() => {
         c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillText(K, r * 0.42 + fw / 2, -r * 2.55 - fh / 2 + 1);
         c.restore();
-        /* the body: a marching blot, fattened with rank */
-        c.fillStyle = INK; c.strokeStyle = INK;
+        /* the body: a marching blot, fattened with rank — v20 the
+           officer wears the bosses' own red, the flag and the rank
+           one colour, unmistakable in any horde */
+        c.fillStyle = bossInk(); c.strokeStyle = bossInk();
         c.save();
         c.translate(0, bob);
         blobPath(c, 0, 0, r, sd, 0.16, 11);
@@ -3224,7 +3232,7 @@ const R = (() => {
     if (isBoss && e.hp < e.maxHp * 0.5) {
       c.save();
       c.globalAlpha = S.reduced ? 0.16 : 0.2 + 0.13 * Math.sin(t * 9);
-      c.strokeStyle = BOSS_INK;
+      c.strokeStyle = bossInk();
       c.lineWidth = 2.6;
       blobPath(c, 0, 0, r * (1.3 + 0.05 * Math.sin(t * 6.3)), sd ^ 91, 0.16, 14);
       c.stroke();
@@ -3626,6 +3634,48 @@ const R = (() => {
      A living drop of ink that carries the chosen brush.
      It leans into the run, squashes on each stroke, and
      its single paper eye narrows in concentration. */
+  /* the ink gauge — the ENSŌ RING. The old screen bar at bottom-center
+     crossed the world's pressed borders whenever the brush walked the
+     page's lower margin; the gauge is now drawn AROUND THE HAND in
+     world space: a hairline circle that fills as motes gather and
+     closes like an ensō the moment the ink rises. The wrist's 墨 chip
+     (hud-foot) carries the rise count. */
+  function drawInkRing(c, t) {
+    const S = G.S, p = S.player;
+    const st = S.stats;
+    const need = CFG.xp.req(st.xpLevel) || 1;
+    const frac = Math.max(0, Math.min(1, st.xp / need));
+    /* the ring breathes — a hand-pressed circle is never perfect */
+    const R = 30 + Math.sin(t * 1.7) * 0.8;
+    c.save();
+    c.translate(p.x, p.y);
+    /* the eager end: past 92% the ink leans toward the rise */
+    const eager = frac > 0.92;
+    /* the faint base track: the whole ensō, waiting */
+    c.globalAlpha = 0.13;
+    c.strokeStyle = INK;
+    c.lineWidth = 1.3;
+    c.beginPath(); c.arc(0, 0, R, 0, TAU); c.stroke();
+    /* the pressed register: a second hairline rides just outside */
+    c.globalAlpha = 0.08;
+    c.beginPath(); c.arc(0, 0, R + 2.2, 0, TAU); c.stroke();
+    /* the gathering ink: swept clockwise from the top */
+    if (frac > 0.004) {
+      const a0 = -Math.PI / 2, a1 = a0 + frac * TAU;
+      c.globalAlpha = eager ? 0.9 : 0.55;
+      c.lineWidth = 2.4;
+      c.lineCap = 'round';
+      c.beginPath(); c.arc(0, 0, R, a0, a1); c.stroke();
+      /* the nib at the arc's head */
+      c.fillStyle = INK;
+      c.globalAlpha = eager ? 0.95 : 0.6;
+      c.beginPath();
+      c.arc(Math.cos(a1) * R, Math.sin(a1) * R, 2.2, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+
   function drawPlayer(c, t) {
     const S = G.S;
     const p = S.player;
@@ -5754,6 +5804,7 @@ const R = (() => {
     if (playing) drawGhost(ctx, t);
     /* the player stands only where the first stroke has already passed */
     const washHides = S.beginT > 0 && washTipX(S.beginT) < S.W / 2 + S.player.x - S.cam.x;
+    if (playing && !washHides) drawInkRing(ctx, t);
     if (playing && !washHides) drawPlayer(ctx, t);
     for (const s of S.stamps) drawStamp(ctx, s);
     for (const ar of S.arcs) drawArcFx(ctx, ar);

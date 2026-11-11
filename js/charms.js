@@ -30,12 +30,15 @@ const CH = (() => {
   }
 
   /* the cheapest next rank on the board — the chip's pulse,
-     and the small promise that a run or two can afford it */
+     and the small promise that a run or two can afford it.
+     v20: ranks the scrolls keep sealed do not count — the pulse
+     only promises what the hand may actually take. */
   function cheapestNext() {
+    const cap = G.charmCap ? G.charmCap() : Infinity;
     let best = Infinity;
     for (const c of CHARMS) {
       const r = G.charmLv(c.id);
-      if (r < c.cost.length && c.cost[r] < best) best = c.cost[r];
+      if (r < c.cost.length && r + 1 <= cap && c.cost[r] < best) best = c.cost[r];
     }
     return best;
   }
@@ -47,9 +50,13 @@ const CH = (() => {
     btn.classList.toggle('is-ready', G.getInk() >= cheapestNext());
   }
 
-  function pipsHtml(max, owned) {
+  function pipsHtml(max, owned, sealedFrom) {
     let out = '';
-    for (let i = 0; i < max; i++) out += `<i class="pip${i < owned ? ' on' : ''}" aria-hidden="true"></i>`;
+    for (let i = 0; i < max; i++) {
+      const on = i < owned;
+      const sealed = sealedFrom != null && i >= sealedFrom;
+      out += `<i class="pip${on ? ' on' : ''}${sealed ? ' sealed' : ''}" aria-hidden="true"></i>`;
+    }
     return `<span class="charm-pips" aria-label="${owned} of ${max} ranks">${out}</span>`;
   }
 
@@ -59,6 +66,7 @@ const CH = (() => {
     const worn = $('charmWorn');
     if (!rows) return;
     const ink = G.getInk();
+    const cap = G.charmCap ? G.charmCap() : Infinity;
     if (purse) purse.textContent = ink.toLocaleString('en-US');
     if (worn) worn.textContent = G.charmRankCount() + ' WORN';
     rows.innerHTML = '';
@@ -66,16 +74,22 @@ const CH = (() => {
       const rank = G.charmLv(c.id);
       const maxed = rank >= c.cost.length;
       const price = maxed ? 0 : c.cost[rank];
+      /* v20 THE SEALED LADDER: a next rank beyond the scroll's cap
+         wears the 封 lid — its price is a scroll, not ink */
+      const scrollLocked = !maxed && rank + 1 > cap;
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'set-row charm-row' +
-        (maxed ? ' is-max' : ink >= price ? ' is-buyable' : ' is-poor');
+        (maxed ? ' is-max' : scrollLocked ? ' is-scrolllocked' : ink >= price ? ' is-buyable' : ' is-poor');
+      const state = maxed ? 'MAX · SEALED'
+        : scrollLocked ? `封 SCROLL ${rank - 1} UNROLLS IT`
+        : 'INK ' + price.toLocaleString('en-US');
       row.innerHTML =
         `<span class="set-kanji" aria-hidden="true">${c.kanji}</span>` +
-        `<span class="set-name">${c.name}${pipsHtml(c.cost.length, rank)}</span>` +
+        `<span class="set-name">${c.name}${pipsHtml(c.cost.length, rank, scrollLocked ? rank + 1 : null)}</span>` +
         `<span class="set-desc">${c.desc}</span>` +
-        `<span class="set-state">${maxed ? 'MAX · SEALED' : 'INK ' + price}</span>`;
-      if (!maxed) {
+        `<span class="set-state">${state}</span>`;
+      if (!maxed && !scrollLocked) {
         row.addEventListener('click', () => {
           SFX.ensure();
           if (G.buyCharm(c.id)) {
@@ -91,7 +105,14 @@ const CH = (() => {
           }
         });
       } else {
-        row.disabled = true;
+        row.addEventListener('click', () => {
+          SFX.ensure();
+          /* a sealed rank shakes its head too — the scroll, not the purse */
+          SFX.thud ? SFX.thud() : SFX.pick(0);
+          row.classList.remove('deny');
+          void row.offsetWidth;
+          row.classList.add('deny');
+        });
       }
       rows.appendChild(row);
     }

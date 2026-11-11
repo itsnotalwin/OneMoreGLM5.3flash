@@ -121,7 +121,7 @@ drops dry the page.
 |---|---|
 | `W A S D` / arrows | Move — walk anywhere the paper goes |
 | auto-fire | Engaged — the brush always flicks at the nearest blot |
-| ink motes | Walk over the drops your kills spill; a full gauge = **CHOOSE ONE MORE** |
+| ink motes | Walk over the drops your kills spill — the ensō ring around the brush fills, and closing it means **CHOOSE ONE MORE** |
 | `1` `2` `3` | Pick a card — press again, or `Enter`, to drink the ink |
 | any key / tap | Skip the opening or any cutscene |
 | `P` / `Esc` | Pause |
@@ -135,11 +135,11 @@ drops dry the page.
 | # | Sheet | Ink | kanji | hp / budget | Captain | Keeper | Special | Guardian |
 |---|---|---|---|---|---|---|---|---|
 | I | FIRST WASH | 淡墨 pale wash | 一 | ×1.0 / ×1.0 | THE DRUM | THE BLIGHT | — | THE STAIN |
-| II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | ×1.7 / ×1.45 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
-| III | CINNABAR FIELD | 朱墨 vermillion | 紅 | ×2.7 / ×2.0 | THE BANNER | THE CINDER | THE MENDER | THE CINNABAR ONI |
-| IV | STORM SHEET | 雨墨 rain-grey | 嵐 | ×4.2 / ×2.7 | THE STORMCALLER | THE RAINVEIL | THE TOLLER | THE STORM EYE |
-| V | GILT SCROLL | 金墨 gold-dust | 金 | ×6.6 / ×3.4 | THE PAYMASTER | THE NIB | THE LEDGER | THE FIRST BRUSH |
-| VI | THE BLANK SILK | 素墨 cool silk | 素 | ×7.9 / ×4.1 | THE HUSH | THE MARGIN | THE TRACE | THE UNWRITTEN |
+| II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | ×2.0 / ×1.5 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
+| III | CINNABAR FIELD | 朱墨 vermillion | 紅 | ×3.6 / ×2.1 | THE BANNER | THE CINDER | THE MENDER | THE CINNABAR ONI |
+| IV | STORM SHEET | 雨墨 rain-grey | 嵐 | ×6.0 / ×2.9 | THE STORMCALLER | THE RAINVEIL | THE TOLLER | THE STORM EYE |
+| V | GILT SCROLL | 金墨 gold-dust | 金 | ×9.5 / ×3.8 | THE PAYMASTER | THE NIB | THE LEDGER | THE FIRST BRUSH |
+| VI | THE BLANK SILK | 素墨 cool silk | 素 | ×13.0 / ×4.6 | THE HUSH | THE MARGIN | THE TRACE | THE UNWRITTEN |
 
 Journey and daily runs live **inside a fixed arena** — a page with margins,
 2240 × 1600 on every screen, so a fight plays the same on a phone as on a
@@ -147,16 +147,18 @@ desk. Only THE ENDLESS SCROLL keeps the unbroken sheet.
 
 Every tenth wave of every scene is a **Keeper** fight — and since v19.1, **every
 scene owns its own**: sixty red-sealed bosses, ten to a sheet, each with its own
-body (one of fifteen brush forms), its own ink (a hue contrast-checked against
-its sheet's paper), its own cry, and its own two abilities cut from a kit of
-eighteen primitives — radial slams, aimed needle fans, volleys, broods, mirrors,
-telegraphed charges, blinks, red seal-stamps, sky-rain, spirals, orbits, musters.
-THE POOL spreads and breeds gnats; THE FAR PEAK breaks its own road through the
-paper; THE PAPER LANTERN circles at a spear's length; THE GILD MOTHER counts her
-half-ink copies. A debut duel runs twenty-to-thirty honest seconds, and repeats
-grow with the scene. Kill it and its seal drops a flush of ink — the scene's
-true Keeper (scene ten) also drops a **chest** (a free stroke of your choice)
-and a pot of fresh water.
+body (one of fifteen brush forms), its own cry, and its own two abilities cut
+from a kit of eighteen primitives — radial slams, aimed needle fans, volleys,
+broods, mirrors, telegraphed charges, blinks, red seal-stamps, sky-rain,
+spirals, orbits, musters. Since v20 the whole boss class wears **one ink**: the
+paper's sacred vermillion (brightened on the night scroll so it burns there
+too) — Guardian, Keeper and Captain are one red family, and the horde stays
+the sheet's own black ink. THE POOL spreads and breeds gnats; THE FAR PEAK
+breaks its own road through the paper; THE PAPER LANTERN circles at a spear's
+length; THE GILD MOTHER counts her half-ink copies. A debut duel runs
+twenty-to-thirty honest seconds, and repeats grow with the scene. Kill it and
+its seal drops a flush of ink — the scene's true Keeper (scene ten) also drops
+a **chest** (a free stroke of your choice) and a pot of fresh water.
 
 **THE ASSEMBLY** — scene ten's tenth wave. The Guardian enters alone, and the
 sheet comes with it: at 72%, 45% and 20% of the Guardian's ink, the scene
@@ -177,7 +179,9 @@ arena stands empty.
 **Captains** walk *inside* the pack — never alone, never a boss bar. One cut
 from each sheet's own ink, they quicken every beast near them (×1.32 within
 210 px), call fresh ink into the paper, and when one falls its whole fan
-stuns (1.15 s within 235 px). Walk the wave, find the flag, break the rank.
+stuns (1.15 s within 235 px). Since v20 the officer wears the bosses' red —
+flag and body one colour — unmistakable in any horde. Walk the wave, find the
+flag, break the rank.
 
 **Specials** are the paper's odd mechanics, one per sheet from the second
 scroll on — breed, mend, toll or tax. Each bends the fight around itself.
@@ -215,6 +219,15 @@ Every creature is a living blot of sumi ink with hand-drawn line boil. The
 *trait* beside each name is the game's own stamp; **walks in** is the global
 wave where the beast debuts, and each scene of each sheet debuts at least
 one beast of its own.
+
+**THE STANDING ARMY (v19.4).** Nothing the brush has met ever leaves the
+world: every sheet's roster inherits the whole horde of the sheets before
+it — the NIGHT SCROLL walks with all twelve of the first wash, and THE
+BLANK SILK musters fifty-nine kin from every paper before it. The
+newcomers still lead their own sheet (their ink is the paper's voice; the
+army wades behind at seven-tenths weight), the officers and the paper's
+odd mechanics stay sheet-bound, and the horde paints in the SHEET's ink —
+so the army inherits each paper's contrast by design.
 
 **SHEET I · FIRST WASH** — pale ink on fresh washi
 
@@ -434,27 +447,31 @@ every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
 ## Charms (符) — what the purse buys
 
 Permanent upgrades pressed between runs. A charm's rank rides every page the
-hand opens — journey, endless, daily, the resumed frontier. Twelve charms over
-**32 ranks; the whole board costs 15,820 ink** — a full victory run presses
-about 3,700, so the deep ranks are bought with real journeys. The ladder is
-shaped honestly: the cheapest charm lands on the first run, quality-of-life
-leads, damage is capped at half a real build, and the Paper Ward charm retires
-the in-run pick so there are no trap options.
+hand opens — journey, endless, daily, the resumed frontier. v20 — **THE SEALED
+LADDER**: twelve charms over **79 ranks; the whole board costs 351,450 ink** —
+a full victory run presses about 3,700, so the deep ranks are bought with real
+journeys and the endless loops. And **the scrolls gate the ladder**: the
+highest sheet the journey has unrolled caps every charm (the first scroll
+sells three ranks of anything; each unrolled scroll opens one more), so the
+board grows as the road does. The board buys only the hand's basic arts —
+cadence, footwork, bite, integrity, gathering, the purse itself — and the
+brush's own two upgrades. **No charm ever unlocks a weapon**: a brush arrives
+by the seals alone and speaks through the in-game picks.
 
 | Charm | kanji | Ranks | Cost (ink) | What it presses |
 |---|---|---|---|---|
-| INK HUNGER | 引 | 3 | 60 · 150 · 380 | gathering radius widens, rank by rank |
-| LONG BREATH | 息 | 3 | 80 · 200 · 500 | the hand's strokes fly 10% farther per rank |
-| FLICK | 歩 | 3 | 90 · 230 · 560 | the hand moves 8% lighter per rank |
-| QUICK HAND | 疾 | 3 | 100 · 260 · 640 | the brush lifts 8% faster per rank |
-| THICK PAPER | 厚 | 3 | 160 · 420 · 960 | one more integrity, pressed into every run |
-| RED TIP | 赤 | 3 | 180 · 460 · 1050 | six strokes in a hundred bite twice as deep |
-| BITTER INK | 重 | 3 | 190 · 500 · 1250 | every stroke the hand lays bites one deeper |
-| THE OLD INK | 遺 | 3 | 300 · 700 · 1500 | every mote is worth a fourth more |
+| INK HUNGER | 引 | 8 | 90 · 220 · 520 · 1,100 · 2,200 · 4,200 · 7,200 · 11,500 | gathering radius widens, rank by rank |
+| LONG BREATH | 息 | 8 | 100 · 260 · 600 · 1,300 · 2,600 · 4,900 · 8,200 · 13,000 | the hand's strokes fly 7% farther per rank |
+| FLICK | 歩 | 8 | 110 · 280 · 650 · 1,400 · 2,800 · 5,200 · 8,600 · 13,500 | the hand moves 5% lighter per rank |
+| QUICK HAND | 疾 | 8 | 120 · 300 · 700 · 1,500 · 3,000 · 5,600 · 9,200 · 14,500 | the brush lifts 5% faster per rank |
+| THICK PAPER | 厚 | 8 | 160 · 400 · 900 · 1,900 · 3,700 · 6,800 · 11,000 · 17,000 | one more integrity, pressed into every run |
+| RED TIP | 赤 | 8 | 170 · 420 · 980 · 2,100 · 4,100 · 7,500 · 12,000 · 18,500 | five strokes in a hundred bite twice as deep |
+| BITTER INK | 重 | 8 | 190 · 480 · 1,100 · 2,300 · 4,500 · 8,200 · 13,000 · 20,000 | every stroke the hand lays bites one deeper |
+| THE OLD INK | 遺 | 5 | 300 · 700 · 1,500 · 3,000 · 5,600 | every mote is worth a fourth more |
 | THE PAPER WARD | 守 | 1 | 560 | every run begins warded |
-| **THE FIRST STROKE** | 筆 | 3 | 260 · 620 · 1400 | the brush you carry bites one deeper — its own ink only |
-| **THE SWIFT HAND** | 手 | 2 | 240 · 580 | the brush you carry casts 10% sooner per rank |
-| **THE SCHOLAR** | 学 | 2 | 380 · 860 | every wave survived presses 10% deeper into the purse |
+| **THE FIRST STROKE** | 筆 | 8 | 260 · 620 · 1,400 · 2,900 · 5,600 · 10,000 · 15,500 · 24,000 | the brush you carry bites one deeper — its own ink only |
+| **THE SWIFT HAND** | 手 | 5 | 240 · 580 · 1,300 · 2,700 · 5,200 | the brush you carry casts 10% sooner per rank |
+| **THE SCHOLAR** | 学 | 4 | 380 · 860 · 1,800 · 3,600 | every wave survived presses 10% deeper into the purse |
 
 ### The purse (符) — ink that survives the paper
 
@@ -462,7 +479,7 @@ Every run ends with the press: the ink is squeezed back into the purse. It is
 read on the title's 符 chip and spent in the charm room — a currency that
 survives the paper.
 
-| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — the whole board costs 15,820 ink, ranks worn in pips |
+| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — the sealed ladder: the scrolls keep the deep ranks, the board costs 351,450 ink |
 |---|---|
 | ![The endless leaderboard](screenshots/08-board.png) | ![The charm room](screenshots/07-charms.png) |
 
@@ -742,9 +759,9 @@ one-more/
 ├── js/
 │   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, charms
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
-│   ├── ui.js                   # DOM screens, HUD, ink gauge, boss seal, brush picker
+│   ├── ui.js                   # DOM screens, HUD, wrist ink chip, boss seal, brush picker
 │   ├── game.js                 # run state, waves, arenas, guardians, weapons, economy
-│   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains
+│   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains, the ensō ink ring
 │   ├── charms.js               # the charm ladder (符) — ranks, costs, application
 │   ├── share.js                # the 1080×1350 share card
 │   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
@@ -835,3 +852,10 @@ Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+## Where the paper goes next
+
+The development roadmap lives one floor up: [../ROADMAP.md](../ROADMAP.md) —
+the six Guardian thrones (v20), the study's possible return (v21), the deep
+shelf (v22), the go-live gate (v23). Current build **v19.3 THE PURSE**;
+deployment held until the word "go".

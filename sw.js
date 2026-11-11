@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v19.3-cloud-1';
+const VER = 'v20.0';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -22,7 +22,6 @@ const CORE = [
   'css/style.css',
   'js/audio.js',
   'js/charms.js',
-  'js/cloud-save.js',
   'js/config.js',
   'js/cutscene.js',
   'js/supabase-config.js',

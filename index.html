@@ -62,13 +62,9 @@
     </div>
     <div class="hud-bl">
       <div class="hud-loadout" id="hudLoadout"></div>
-      <span class="hud-time" id="hudTime">00:00</span>
-    </div>
-    <div class="hud-bc">
-      <div class="hud-xp">
-        <span class="xp-label"><span class="xp-kanji" aria-hidden="true">墨</span><span class="xp-word">INK</span></span>
-        <div class="xp-track"><div class="xp-fill" id="hudXpFill"></div></div>
-        <span class="xp-lv" id="hudXpLv">1</span>
+      <div class="hud-foot">
+        <span class="hud-ink"><span class="hud-ink-k" aria-hidden="true">墨</span><span class="hud-ink-n" id="hudInkLv">1</span></span>
+        <span class="hud-time" id="hudTime">00:00</span>
       </div>
     </div>
     <div class="boss-bar hidden" id="hudBoss">
@@ -160,7 +156,7 @@
     </div>
 
     <div class="title-foot">
-      <span class="foot-stamp" id="verStamp">BUILD V19.3</span>
+      <span class="foot-stamp" id="verStamp">BUILD V20.0</span>
     </div>
 
     <button id="settingsBtn" class="opening-btn settings-btn" type="button" title="Settings — the account and its mark, the sound, the ghost rival, REALLY HARD, and the paper itself">
@@ -419,7 +415,6 @@
 <script src="./js/intro.js"></script>
 <script src="./js/supabase-config.js"></script>
 <script src="./js/lb.js"></script>
-<script src="./js/cloud-save.js"></script>
 <script src="./js/share.js"></script>
 <script src="./js/charms.js"></script>
 <script src="./js/main.js"></script>

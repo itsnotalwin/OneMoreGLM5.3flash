@@ -1170,48 +1170,26 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    and the three brushes on the title sheet
    ============================================================ */
 
-/* --- ink gauge (bottom center) --- */
-.hud-bc{
-  position: absolute;
-  bottom: 18px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; justify-content: center;
-  pointer-events: none;
+/* --- the ink gauge lives on the wrist now: a 墨 chip beside the
+   timer, and the ring itself is drawn around the brush on the
+   canvas (render.js drawInkRing) — no screen bar to cross the
+   world's pressed borders anymore --- */
+.hud-foot{
+  display: flex; align-items: baseline; gap: 12px;
 }
-.hud-xp{
-  display: flex; align-items: center; gap: 8px;
-}
-.xp-label{
+.hud-ink{
   display: inline-flex; align-items: baseline; gap: 4px;
-  font-family: var(--display);
-  font-size: 15px; line-height: 1;
-  color: var(--ink-70);
 }
-.xp-word{
+.hud-ink-k{
+  font-size: 11px; line-height: 1;
+  color: var(--ink);
+  opacity: .8;
+}
+.hud-ink-n{
   font-family: var(--mono);
-  font-size: 7.5px; font-weight: 600;
-  letter-spacing: .22em; text-indent: .22em;
-  color: var(--ink-62);
-  transform: translateY(-1px);
-}
-.xp-track{
-  width: min(300px, 34vw);
-  height: 5px;
-  background: var(--ink-12);
-  border: 1px solid var(--ink-25);
-  position: relative;
-  overflow: hidden;
-}
-.xp-fill{
-  height: 100%; width: 0%;
-  background: var(--ink);
-  transition: width .18s ease;
-}
-.xp-lv{
-  font-family: var(--display);
-  font-size: 13px; line-height: 1;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .18em;
   color: var(--ink-70);
-  min-width: 1.2em; text-align: left;
 }
 
 /* --- guardian seal (top center) --- */
@@ -1332,7 +1310,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .mode-row{ margin-top: 14px; }
   .mode-row .play-btn, .endless-btn{ padding: 12px 20px 12px 14px; }
 
-  .xp-track{ width: 40vw; }
+  .hud-foot{ gap: 9px; }
+  .hud-ink-k{ font-size: 10px; }
   .boss-bar{ width: 62vw; top: 64px; }
   .intro-skip{ right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); }
   .opening-btn{ right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); }
@@ -2301,6 +2280,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transform: rotate(45deg);
 }
 .charm-pips .pip.on{ background: var(--red); border-color: var(--red); }
+/* v20 the sealed ladder: pips the scrolls keep shut wear the 封 dim */
+.charm-pips .pip.sealed{ border-style: dotted; opacity: .55; }
 
 /* the three states of a charm row */
 .charm-row.is-buyable .set-state{
@@ -2315,6 +2296,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .charm-row.is-max .set-state{ color: var(--ink-45); background: var(--paper); }
 .charm-row.is-max:hover{ transform: none; }
 .charm-row.is-max:hover .set-kanji{ color: var(--ink-45); }
+/* v20 the sealed ladder: a rank the scrolls keep is not the purse's refusal */
+.charm-row.is-scrolllocked{ cursor: default; }
+.charm-row.is-scrolllocked .set-state{
+  color: var(--red); background: transparent;
+  border-color: var(--red); opacity: .8;
+}
+.charm-row.is-scrolllocked:hover{ transform: none; }
 /* the stone is short — the row shakes its head, once */
 .charm-row.deny{ animation: charmDeny .3s ease; }
 @keyframes charmDeny{ 0%,100%{ transform: translateX(0);} 30%{ transform: translateX(-4px);} 60%{ transform: translateX(3px);} }

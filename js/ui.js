@@ -24,7 +24,7 @@ const UI = (() => {
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
-    hudLoadout: $('hudLoadout'), hudXpFill: $('hudXpFill'), hudXpLv: $('hudXpLv'),
+    hudLoadout: $('hudLoadout'), hudInkLv: $('hudInkLv'),
     hudBoss: $('hudBoss'), hudBossName: $('hudBossName'), hudBossFill: $('hudBossFill'),
     hudBossKick: $('hudBossKick'),
     runNo: $('runNo'), bestLine: $('bestLine'),
@@ -435,15 +435,15 @@ const UI = (() => {
     flashTimer = setTimeout(() => el.flash.classList.remove('on'), 130);
   }
 
-  /* the ink gauge — how close the next stroke rises */
+  /* the ink gauge — the ring around the brush is drawn on the canvas
+     (render.js reads the live purse each frame); the wrist's 墨 chip
+     carries the rise count, nothing crosses the world's borders */
   function setXp(frac, level) {
-    if (!el.hudXpFill) return;
+    if (!el.hudInkLv) return;
     if (level == null) level = lastXp.lv > 0 ? lastXp.lv : 0;
-    const v = Math.max(0, Math.min(1, frac));
-    if (Math.abs(v - lastXp.f) < 0.002 && level === lastXp.lv) return;
-    lastXp.f = v; lastXp.lv = level;
-    el.hudXpFill.style.width = (v * 100).toFixed(1) + '%';
-    if (el.hudXpLv) el.hudXpLv.textContent = level + 1;
+    lastXp.f = Math.max(0, Math.min(1, frac)); lastXp.lv = level;
+    const n = String(level + 1);
+    if (el.hudInkLv.textContent !== n) el.hudInkLv.textContent = n;
   }
 
   /* the red beast's seal, worn at the top of the sheet */

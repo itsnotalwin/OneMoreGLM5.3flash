@@ -24,6 +24,6 @@
    ============================================================ */
 
 window.OM_SUPABASE = {
-  url: 'https://sffpyvxbgmhepftxoesy.supabase.co',       /* shared Pinpoint project */
-  anonKey: 'sb_publishable___dIulfnvx74SjfXuyFXZg_LPnlZv7I',   /* public publishable key, RLS secures data */
+  url: '',       /* e.g. 'https://your-project.supabase.co' */
+  anonKey: '',   /* the anon public key — safe to ship, RLS is the lock */
 };

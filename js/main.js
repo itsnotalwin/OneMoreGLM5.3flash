@@ -245,7 +245,6 @@
     SFX.ensure();
     SFX.page();               /* the study door slides */
     settingsReturn = (from === 'board' || from === 'over') ? from : 'title';
-    if (typeof LB !== 'undefined') LB.authReturnTo = settingsReturn;
     wipeArmed = false;
     refreshSettings();
     if (typeof LB !== 'undefined' && LB.renderAccount) LB.renderAccount();
@@ -302,10 +301,8 @@
       wipeTimer = setTimeout(() => { wipeArmed = false; refreshSettings(); }, 4000);
       return;
     }
-    /* Local WIPE never silently erases or replaces the cloud save. */
+    /* the second press closes the book */
     clearTimeout(wipeTimer);
-    try { if (window.OM_CLOUD) window.OM_CLOUD.beforeLocalWipe(); }
-    catch (e) { wipeArmed = false; refreshSettings(); return; }
     try {
       const kill = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -612,14 +609,7 @@
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   UI.setInkLine(G.getInk());                        /* the purse reads itself */
   if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
-  /* Restore the account room and previous leaderboard tab after Google PKCE. */
-  const oauthReturn = LB.consumeOAuthReturn();
-  if (oauthReturn) {
-    enterTitle();
-    if (oauthReturn.from === 'board') LB.open('title', oauthReturn.tab);
-    openSettings(oauthReturn.from);
-    LB.initAuth().catch(() => {});
-  } else if (G.S.reduced || introSeen()) {
+  if (G.S.reduced || introSeen()) {
     enterTitle();          /* the opening is a film — stillness and repeat visits go straight to the title */
   } else if (location.search.length > 1) {
     enterTitle();          /* a URL that asks questions is QA — the gate would hold the probes */

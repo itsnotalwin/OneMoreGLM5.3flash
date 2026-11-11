@@ -157,12 +157,19 @@ const rand = (a, b) => a + RNG() * (b - a);
   const charmLv = id => (charmsSave().lv[id] || 0);
   if (qaCharms >= 0) setInk(qaCharms);   /* ?charms=N — seed the purse for probes */
   const charmRankCount = () => Object.values(charmsSave().lv).reduce((a, b) => a + (b | 0), 0);
+  /* v20 THE SEALED LADDER: the scrolls gate the board. The highest
+     sheet the journey has unrolled caps every charm — the first
+     scroll sells three ranks of anything, and every unrolled scroll
+     opens one more (2 + unlocked). A rank beyond the cap cannot be
+     bought, whatever the purse holds. */
+  const charmCap = () => 2 + getUnlocked();
   function buyCharm(id) {
     const def = CHARMS.find(c => c.id === id);
     if (!def) return false;
     const c = charmsSave();
     const rank = c.lv[id] || 0;
     if (rank >= def.cost.length) return false;
+    if (rank + 1 > charmCap()) return false;   /* the scroll keeps it sealed */
     const price = def.cost[rank];
     if ((c.ink | 0) < price) return false;
     c.ink -= price; c.lv[id] = rank + 1;
@@ -808,9 +815,17 @@ const rand = (a, b) => a + RNG() * (b - a);
     return best;
   }
 
-  /* ---------------- waves ---------------- */
-  function buildQueue(budget, wave, roster, featured) {
+  /* ---------------- waves ----------------
+     buildQueue(budget, wave, roster, featured, carry):
+     the STANDING ARMY (v19.4) wades at seven-tenths weight — each
+     paper's own newcomers lead the roll, the beasts of every sheet
+     before it walk behind them, and the debut beast still reads ×3 */
+  function buildQueue(budget, wave, roster, featured, carry) {
     const pool = roster.filter(k => ENEMIES[k].cost > 0 && ENEMIES[k].intro <= wave);
+    const wOf = k => {
+      const w = ENEMY_WEIGHTS[k] || 1;
+      return (carry && carry.indexOf(k) >= 0) ? w * 0.7 : w;
+    };
     const q = [];
     let guard = 0;
     while (budget > 0 && guard++ < 900) {
@@ -818,11 +833,11 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (!avail.length) break;
       let total = 0;
       for (const k of avail) {
-        total += (ENEMY_WEIGHTS[k] || 1) * (k === featured ? 3 : 1);
+        total += wOf(k) * (k === featured ? 3 : 1);
       }
       let r = RNG() * total, pick = avail[0];
       for (const k of avail) {
-        r -= (ENEMY_WEIGHTS[k] || 1) * (k === featured ? 3 : 1);
+        r -= wOf(k) * (k === featured ? 3 : 1);
         if (r <= 0) { pick = k; break; }
       }
       q.push(pick);
@@ -885,7 +900,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (ENEMIES[k].intro === n && ENEMIES[k].cost > 0) { featured = k; break; }
     }
     S.queue = buildQueue(Math.round(budget), n, as.area.roster,
-      (as.waveInLevel === 3 || as.waveInLevel === 6) ? featured : null);
+      (as.waveInLevel === 3 || as.waveInLevel === 6) ? featured : null,
+      as.area.carry);
     /* a true-debut wave: the new ink-born walks in force, not by chance */
     if (featured && ENEMIES[featured].intro === n) {
       S.queue.push(featured, featured, featured);
@@ -1255,7 +1271,13 @@ const rand = (a, b) => a + RNG() * (b - a);
       const sheet = Math.max(1, Math.min(AREAS.length, Math.min(opts.sheet | 0, getUnlocked())));
       const level = Math.max(1, Math.min(frontierLevel(sheet),
         Math.min(CFG.wave.levelsPerArea, (opts.level | 0) || 1)));
-      applyQAPower(checkpointPower(sheet, level));
+      /* v20 THE HONEST HAND: a resumed scene wears the STAT kit a run
+         this far would carry — never the QA power kit. The old call
+         handed resumed runs the learned weapons (arc, orbit, spirits,
+         the fan, the stamp…) — so a brush born without projectiles
+         woke firing a volley the hand never picked. NO WEAPON EVER
+         ARRIVES THE HAND DID NOT PICK. */
+      applyCheckpoint(checkpointPower(sheet, level));
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
@@ -1269,7 +1291,9 @@ const rand = (a, b) => a + RNG() * (b - a);
       const sheet = Math.max(1, Math.min(AREAS.length,
         Math.floor((prevWave - 1) / (CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea)) + 1));
       const clamped = Math.max(1, Math.min(frontierLevel(sheet), areaStateFor(prevWave).level));
-      applyQAPower(checkpointPower(sheet, clamped));
+      /* the ONE MORE retry wears the honest STAT kit too — see the
+         shelf resume above; the QA kit is for ?power= probes alone */
+      applyCheckpoint(checkpointPower(sheet, clamped));
       UI.setHp(S.stats.hp, S.stats.maxHp);
       UI.setLoadout(S.stats.levels);
       UI.setXp(0, S.stats.xpLevel);
@@ -5126,9 +5150,14 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- api ---------------- */
-  /* cutscene handoff: a scroll film resumes the run, the finale shows the sheet */
+  /* cutscene handoff: a scroll film resumes the run, the unroll film
+     hands the sealed sheet to the level-clear rest (the seal was
+     earned — the SCROLL TURNS box must follow the film, or the run
+     stalls on an empty page and the tenth seal never records), the
+     finale shows the sheet */
   CUT.onEnd = () => {
     if (CUT.lastKind === 'finale') { showOver(true); return; }
+    if (CUT.lastKind === 'unroll') { showLevelClear(); return; }
     S.mode = 'playing';
     UI.hud(true);
   };
@@ -5143,7 +5172,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
     /* the purse (v8.8): the charm room and the QA probes read these */
-    getInk, setInk, charmLv, charmRankCount, buyCharm, getThemeSetting, setThemeSetting,
+    getInk, setInk, charmLv, charmRankCount, charmCap, buyCharm, getThemeSetting, setThemeSetting,
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
     qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },
