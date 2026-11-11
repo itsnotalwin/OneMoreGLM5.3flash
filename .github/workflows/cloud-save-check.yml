@@ -2,7 +2,7 @@ name: Cloud save safety checks
 
 on:
   push:
-    branches: [main, feature/cloud-saves-2026-11-04]
+    branches: [main]
   pull_request:
     branches: [main]
     paths:

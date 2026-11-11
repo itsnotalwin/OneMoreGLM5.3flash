@@ -666,6 +666,18 @@ create policy "a scribe raises only their week" on om_weekly
 > );
 > create index if not exists om_weekly_week_idx on om_weekly (week, score desc);
 > alter table om_weekly enable row level security;
+> -- cap the echo: ghost is the ledger's only unbounded column, and every
+> -- visitor's browser downloads strangers' echoes to race beside. 64 KB
+> -- is ~4x the largest legitimate recording (GHOST_MAX = 14000 frames).
+> alter table om_scores add constraint om_scores_ghost_len
+>   check (ghost is null or octet_length(ghost) < 65536) not valid;
+> alter table om_daily add constraint om_daily_ghost_len
+>   check (ghost is null or octet_length(ghost) < 65536) not valid;
+> alter table om_weekly add constraint om_weekly_ghost_len
+>   check (ghost is null or octet_length(ghost) < 65536) not valid;
+> -- NOT VALID: existing rows are not re-checked, only new/updated ones —
+> -- safe to run on a live ledger. Validate later at a quiet hour with:
+> --   alter table om_scores validate constraint om_scores_ghost_len; (etc.)
 > drop policy if exists "the week is public" on om_weekly;
 > create policy "the week is public" on om_weekly for select using (true);
 > drop policy if exists "a scribe signs only their week" on om_weekly;
