@@ -5,16 +5,18 @@
 
 :root{
   --paper: #ede7d9;
-  --paper-92: rgba(237, 231, 217, 0.94);
+  --paper-92: rgba(237, 231, 217, 0.97);
   --paper-80: rgba(237, 231, 217, 0.82);
   --paper-55: rgba(237, 231, 217, 0.6);
   --ink: #1a1714;
-  --ink-70: rgba(26, 23, 20, 0.7);
-  /* text tier — 4.7:1 on washi; the floor for every readable glyph */
-  --ink-62: rgba(26, 23, 20, 0.62);
-  /* component tier — 3.8:1; the floor for icons, dots and state marks */
-  --ink-55: rgba(26, 23, 20, 0.55);
-  --ink-45: rgba(26, 23, 20, 0.45);
+  --ink-70: rgba(26, 23, 20, 0.82);
+  /* text tier — the floor for every readable glyph. Pre-strengthened:
+     the room panels sit over the painted sheet, so raw alphas stack —
+     these hold their contrast after that stacking. */
+  --ink-62: rgba(26, 23, 20, 0.8);
+  /* component tier — the floor for icons, dots and state marks */
+  --ink-55: rgba(26, 23, 20, 0.7);
+  --ink-45: rgba(26, 23, 20, 0.58);
   --ink-25: rgba(26, 23, 20, 0.25);
   --ink-12: rgba(26, 23, 20, 0.12);
   --red: #b23a2b;
@@ -29,14 +31,14 @@
    banners and the sheets keep their contrast on dark paper */
 body[data-theme="dark"]{
   --paper: #3e372b;
-  --paper-92: rgba(62, 55, 43, 0.94);
+  --paper-92: rgba(62, 55, 43, 0.97);
   --paper-80: rgba(62, 55, 43, 0.82);
   --paper-55: rgba(62, 55, 43, 0.6);
   --ink: #e9e2d2;
-  --ink-70: rgba(233, 226, 210, 0.7);
-  --ink-62: rgba(233, 226, 210, 0.62);
-  --ink-55: rgba(233, 226, 210, 0.55);
-  --ink-45: rgba(233, 226, 210, 0.45);
+  --ink-70: rgba(233, 226, 210, 0.82);
+  --ink-62: rgba(233, 226, 210, 0.8);
+  --ink-55: rgba(233, 226, 210, 0.7);
+  --ink-45: rgba(233, 226, 210, 0.58);
   --ink-25: rgba(233, 226, 210, 0.25);
   --ink-12: rgba(233, 226, 210, 0.12);
   /* vermillion lifts on the dark sheet — 5.7:1 on pale → 4.0:1 on the washed night */
@@ -48,54 +50,54 @@ body[data-theme="dark"]{
    (ink pulled toward the sheet's tint, as render.js mixes it) */
 body[data-theme="red"]{
   --paper: #eadbc4;
-  --paper-92: rgba(234, 219, 196, 0.94);
+  --paper-92: rgba(234, 219, 196, 0.97);
   --paper-80: rgba(234, 219, 196, 0.82);
   --paper-55: rgba(234, 219, 196, 0.6);
   --ink: #2e1b17;
-  --ink-70: rgba(46, 27, 23, 0.7);
-  --ink-62: rgba(46, 27, 23, 0.62);
-  --ink-55: rgba(46, 27, 23, 0.55);
-  --ink-45: rgba(46, 27, 23, 0.45);
+  --ink-70: rgba(46, 27, 23, 0.82);
+  --ink-62: rgba(46, 27, 23, 0.8);
+  --ink-55: rgba(46, 27, 23, 0.7);
+  --ink-45: rgba(46, 27, 23, 0.58);
   --ink-25: rgba(46, 27, 23, 0.25);
   --ink-12: rgba(46, 27, 23, 0.12);
 }
 body[data-theme="storm"]{
   --paper: #c7cdc9;
-  --paper-92: rgba(199, 205, 201, 0.94);
+  --paper-92: rgba(199, 205, 201, 0.97);
   --paper-80: rgba(199, 205, 201, 0.82);
   --paper-55: rgba(199, 205, 201, 0.6);
   --ink: #19252d;
-  --ink-70: rgba(25, 37, 45, 0.7);
-  --ink-62: rgba(25, 37, 45, 0.62);
-  --ink-55: rgba(25, 37, 45, 0.55);
-  --ink-45: rgba(25, 37, 45, 0.45);
+  --ink-70: rgba(25, 37, 45, 0.82);
+  --ink-62: rgba(25, 37, 45, 0.8);
+  --ink-55: rgba(25, 37, 45, 0.7);
+  --ink-45: rgba(25, 37, 45, 0.58);
   --ink-25: rgba(25, 37, 45, 0.25);
   --ink-12: rgba(25, 37, 45, 0.12);
 }
 body[data-theme="gilt"]{
   --paper: #e7d6ad;
-  --paper-92: rgba(231, 214, 173, 0.94);
+  --paper-92: rgba(231, 214, 173, 0.97);
   --paper-80: rgba(231, 214, 173, 0.82);
   --paper-55: rgba(231, 214, 173, 0.6);
   --ink: #342710;
-  --ink-70: rgba(52, 39, 16, 0.7);
-  --ink-62: rgba(52, 39, 16, 0.62);
-  --ink-55: rgba(52, 39, 16, 0.55);
-  --ink-45: rgba(52, 39, 16, 0.45);
+  --ink-70: rgba(52, 39, 16, 0.82);
+  --ink-62: rgba(52, 39, 16, 0.8);
+  --ink-55: rgba(52, 39, 16, 0.7);
+  --ink-45: rgba(52, 39, 16, 0.58);
   --ink-25: rgba(52, 39, 16, 0.25);
   --ink-12: rgba(52, 39, 16, 0.12);
 }
 /* the blank silk — the brightest paper, its ink cool and violet-grey */
 body[data-theme="silk"]{
   --paper: #f3eee1;
-  --paper-92: rgba(243, 238, 225, 0.94);
+  --paper-92: rgba(243, 238, 225, 0.97);
   --paper-80: rgba(243, 238, 225, 0.82);
   --paper-55: rgba(243, 238, 225, 0.6);
   --ink: #2a2532;
-  --ink-70: rgba(42, 37, 50, 0.7);
-  --ink-62: rgba(42, 37, 50, 0.62);
-  --ink-55: rgba(42, 37, 50, 0.55);
-  --ink-45: rgba(42, 37, 50, 0.45);
+  --ink-70: rgba(42, 37, 50, 0.82);
+  --ink-62: rgba(42, 37, 50, 0.8);
+  --ink-55: rgba(42, 37, 50, 0.7);
+  --ink-45: rgba(42, 37, 50, 0.58);
   --ink-25: rgba(42, 37, 50, 0.25);
   --ink-12: rgba(42, 37, 50, 0.12);
 }
@@ -443,7 +445,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   z-index: 1;
   animation: riseIn .7s ease 3.75s backwards;
 }
-.foot-stamp{ font-size: 8px; letter-spacing: .28em; color: var(--ink-25); }
+.foot-stamp{ font-size: 8px; letter-spacing: .28em; color: var(--ink-55); }
 
 /* ============================================================
    UPGRADE SCREEN — a hand of three strokes, always on one page.
@@ -1291,7 +1293,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   color: var(--ink);
 }
 .be-copy{ display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.be-kicker{ font-size: 7.5px; letter-spacing: .3em; color: var(--ink-45); }
+.be-kicker{ font-size: 8px; letter-spacing: .3em; color: var(--ink-55); }
 .be-name{ font-size: 12px; letter-spacing: .22em; font-weight: 600; color: var(--ink); }
 .be-open{ font-size: 10px; color: var(--ink-45); transition: transform .18s ease, color .15s ease; }
 .brush-entry:hover .be-open{ transform: translateY(1.5px); color: var(--ink); }
@@ -1328,7 +1330,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-sub{ display: none; }
   .brush-entry{ margin-top: 8px; padding: 5px 12px 5px 10px; gap: 9px; box-shadow: 2px 3px 0 rgba(26,23,20,.14); }
   .be-kanji{ font-size: 17px; }
-  .be-kicker{ font-size: 6.5px; }
+  .be-kicker{ font-size: 7px; }
   .be-name{ font-size: 9px; }
   .mode-row{ margin-top: 9px; gap: 10px; }
   .mode-row .play-btn, .endless-btn{ width: auto; padding: 8px 16px; font-size: 11px; }
@@ -1369,14 +1371,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    beam, the hint and every strip print in the sheet's tone */
 #screenScrolls[data-wear="dark"]{
   --paper: #3e372b;
-  --paper-92: rgba(62, 55, 43, 0.94);
+  --paper-92: rgba(62, 55, 43, 0.97);
   --paper-80: rgba(62, 55, 43, 0.82);
   --paper-55: rgba(62, 55, 43, 0.6);
   --ink: #e9e2d2;
-  --ink-70: rgba(233, 226, 210, 0.7);
-  --ink-62: rgba(233, 226, 210, 0.62);
-  --ink-55: rgba(233, 226, 210, 0.55);
-  --ink-45: rgba(233, 226, 210, 0.45);
+  --ink-70: rgba(233, 226, 210, 0.82);
+  --ink-62: rgba(233, 226, 210, 0.8);
+  --ink-55: rgba(233, 226, 210, 0.7);
+  --ink-45: rgba(233, 226, 210, 0.58);
   --ink-25: rgba(233, 226, 210, 0.25);
   --ink-12: rgba(233, 226, 210, 0.12);
   --red: #ea7560;
@@ -1387,14 +1389,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 #screenScrolls[data-wear="red"]{
   --paper: #eadbc4;
-  --paper-92: rgba(234, 219, 196, 0.94);
+  --paper-92: rgba(234, 219, 196, 0.97);
   --paper-80: rgba(234, 219, 196, 0.82);
   --paper-55: rgba(234, 219, 196, 0.6);
   --ink: #2e1b17;
-  --ink-70: rgba(46, 27, 23, 0.7);
-  --ink-62: rgba(46, 27, 23, 0.62);
-  --ink-55: rgba(46, 27, 23, 0.55);
-  --ink-45: rgba(46, 27, 23, 0.45);
+  --ink-70: rgba(46, 27, 23, 0.82);
+  --ink-62: rgba(46, 27, 23, 0.8);
+  --ink-55: rgba(46, 27, 23, 0.7);
+  --ink-45: rgba(46, 27, 23, 0.58);
   --ink-25: rgba(46, 27, 23, 0.25);
   --ink-12: rgba(46, 27, 23, 0.12);
   background:
@@ -1404,14 +1406,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 #screenScrolls[data-wear="storm"]{
   --paper: #c7cdc9;
-  --paper-92: rgba(199, 205, 201, 0.94);
+  --paper-92: rgba(199, 205, 201, 0.97);
   --paper-80: rgba(199, 205, 201, 0.82);
   --paper-55: rgba(199, 205, 201, 0.6);
   --ink: #19252d;
-  --ink-70: rgba(25, 37, 45, 0.7);
-  --ink-62: rgba(25, 37, 45, 0.62);
-  --ink-55: rgba(25, 37, 45, 0.55);
-  --ink-45: rgba(25, 37, 45, 0.45);
+  --ink-70: rgba(25, 37, 45, 0.82);
+  --ink-62: rgba(25, 37, 45, 0.8);
+  --ink-55: rgba(25, 37, 45, 0.7);
+  --ink-45: rgba(25, 37, 45, 0.58);
   --ink-25: rgba(25, 37, 45, 0.25);
   --ink-12: rgba(25, 37, 45, 0.12);
   background:
@@ -1421,14 +1423,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 #screenScrolls[data-wear="gilt"]{
   --paper: #e7d6ad;
-  --paper-92: rgba(231, 214, 173, 0.94);
+  --paper-92: rgba(231, 214, 173, 0.97);
   --paper-80: rgba(231, 214, 173, 0.82);
   --paper-55: rgba(231, 214, 173, 0.6);
   --ink: #342710;
-  --ink-70: rgba(52, 39, 16, 0.7);
-  --ink-62: rgba(52, 39, 16, 0.62);
-  --ink-55: rgba(52, 39, 16, 0.55);
-  --ink-45: rgba(52, 39, 16, 0.45);
+  --ink-70: rgba(52, 39, 16, 0.82);
+  --ink-62: rgba(52, 39, 16, 0.8);
+  --ink-55: rgba(52, 39, 16, 0.7);
+  --ink-45: rgba(52, 39, 16, 0.58);
   --ink-25: rgba(52, 39, 16, 0.25);
   --ink-12: rgba(52, 39, 16, 0.12);
   background:
@@ -1438,14 +1440,14 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 #screenScrolls[data-wear="silk"]{
   --paper: #f3eee1;
-  --paper-92: rgba(243, 238, 225, 0.94);
+  --paper-92: rgba(243, 238, 225, 0.97);
   --paper-80: rgba(243, 238, 225, 0.82);
   --paper-55: rgba(243, 238, 225, 0.6);
   --ink: #2a2532;
-  --ink-70: rgba(42, 37, 50, 0.7);
-  --ink-62: rgba(42, 37, 50, 0.62);
-  --ink-55: rgba(42, 37, 50, 0.55);
-  --ink-45: rgba(42, 37, 50, 0.45);
+  --ink-70: rgba(42, 37, 50, 0.82);
+  --ink-62: rgba(42, 37, 50, 0.8);
+  --ink-55: rgba(42, 37, 50, 0.7);
+  --ink-45: rgba(42, 37, 50, 0.58);
   --ink-25: rgba(42, 37, 50, 0.25);
   --ink-12: rgba(42, 37, 50, 0.12);
   background:
@@ -1692,7 +1694,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .scroll-strip .strip-string{ top: -26px; height: 26px; }
   /* the kicker loses its side dashes and a ring of tracking so it
      holds one line on a phone */
-  .scrolls-kicker{ font-size: 8.5px; letter-spacing: .26em; text-indent: .26em; }
+  .scrolls-kicker{ font-size: 9px; letter-spacing: .26em; text-indent: .26em; }
   .scrolls-kicker::before, .scrolls-kicker::after{ display: none; }
   .strip-kanji{ font-size: 38px; }
   .strip-dots{ gap: 3px; margin: 5px 0 1px; }
@@ -1755,7 +1757,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   content: '';
   position: absolute; inset: 0;
   border: 1px solid var(--ink-25);
-  background: var(--paper-55);
+  background: var(--paper-80);
   filter: var(--rough-soft);
   pointer-events: none;
 }
@@ -1829,7 +1831,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   content: '';
   position: absolute; inset: 0;
   border: 1px solid var(--ink-25);
-  background: var(--paper-55);
+  background: var(--paper-80);
   filter: var(--rough-soft);
   pointer-events: none;
 }
@@ -1871,7 +1873,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .board-tab:hover{ color: var(--ink-70); }
 .board-tab.is-on{ color: var(--ink); }
-.board-tab.is-on::before{ border: 1px solid var(--ink-25); background: var(--paper-55); }
+.board-tab.is-on::before{ border: 1px solid var(--ink-25); background: var(--paper-80); }
 
 /* ---- the ledger leaf ---- */
 .screen-board{
@@ -2171,7 +2173,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   padding: clamp(18px, 3.4vh, 34px) clamp(16px, 2.6vw, 30px) clamp(14px, 2.4vh, 24px);
   background: var(--paper-92);
   border: 1.4px solid var(--ink-70);
-  box-shadow: 7px 8px 0 rgba(30,26,22,.16);
+  box-shadow: 7px 8px 0 rgba(30,26,22,.24);
   transform: rotate(-.35deg);
 }
 /* the room's scroll is a thin inked rule — never the browser's gray bar */
@@ -2189,13 +2191,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .set-wrap > *{ position: relative; }
 .set-head{ text-align: center; margin-bottom: 12px; }
-.set-kicker{ font-size: 8.5px; letter-spacing: .3em; color: var(--ink-62); }
+.set-kicker{ font-size: 9px; letter-spacing: .3em; color: var(--ink-62); }
 .set-title{
   font-family: var(--display); font-weight: 400;
   font-size: clamp(21px, 3.6vh, 30px); letter-spacing: .16em;
   margin: 5px 0 4px; color: var(--ink);
 }
-.set-sub{ font-size: 8.5px; letter-spacing: .22em; color: var(--ink-62); margin: 0; }
+.set-sub{ font-size: 9px; letter-spacing: .22em; color: var(--ink-62); margin: 0; }
 .set-rows{ display: flex; flex-direction: column; gap: 9px; margin: 14px 0 12px; }
 .set-row{
   display: grid; grid-template-columns: auto 1fr auto; align-items: center;
@@ -2215,7 +2217,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .set-name{ font-size: 11.5px; letter-spacing: .18em; color: var(--ink); font-weight: 600; white-space: nowrap; }
 /* a long description must not eat the name's column: cap the auto
    third so every row's name keeps its room (it wraps instead) */
-.set-desc{ font-size: 8.5px; letter-spacing: .1em; color: var(--ink-62); max-width: min(46vw, 300px); }
+.set-desc{ font-size: 9px; letter-spacing: .1em; color: var(--ink-62); max-width: min(46vw, 300px); }
 /* very narrow paper: let a long row's name wrap again rather than overflow */
 @media (max-width: 380px){ .set-name{ white-space: normal; } }
 
@@ -2363,7 +2365,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .br-row.is-sealed{ cursor: not-allowed; }
 .br-row.is-sealed .set-kanji{ color: var(--ink-45); }
 .br-row.is-sealed .set-name{ color: var(--ink-70); }
-.br-row.is-sealed .set-desc{ color: var(--ink-45); letter-spacing: .12em; line-height: 1.7; }
+.br-row.is-sealed .set-desc{ color: var(--ink-62); letter-spacing: .12em; line-height: 1.7; }
 .br-row .br-prog{ color: var(--red); font-weight: 600; }
 .br-row.is-sealed:hover{ border-color: var(--ink-25); background: var(--paper-80); transform: none; }
 .br-row.is-sealed:hover .set-kanji{ color: var(--ink-45); }
