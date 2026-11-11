@@ -42,9 +42,69 @@ const LB = (() => {
     debug: false,      // QA: a paper cloud — no network, fake rows
     rows: null,        // cached board rows
     tab: 'all',        // the board's eye: 'all' time, the 'day' sheet, the 'week' sheet
+    oauthError: '',     // message for unsuccessful Google sign-in returns
   };
 
   const SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const oauthReturnKey = 'om_lb_google_return_v1';
+
+  /* Google leaves the PWA and reloads it on return. Remember the account
+     screen and parent board tab, not credentials; allow ?code-only PKCE
+     callbacks if tab storage was unavailable. */
+  function consumeOAuthReturn() {
+    let intent = null;
+    try {
+      const saved = sessionStorage.getItem(oauthReturnKey);
+      if (saved) {
+        sessionStorage.removeItem(oauthReturnKey);
+        const parsed = JSON.parse(saved);
+        if (parsed && Number.isFinite(parsed.at) &&
+            parsed.at <= Date.now() + 60000 &&
+            Date.now() - parsed.at < 15 * 60 * 1000) intent = parsed;
+      }
+    } catch (e) {}
+    let callback = false, description = '';
+    try {
+      const q = new URLSearchParams(location.search);
+      callback = q.has('code') || q.has('error') || q.has('error_code');
+      description = q.get('error_description') || q.get('error') || '';
+    } catch (e) {}
+    if (!intent && !callback) return null;
+    ST.oauthError = description ? authFail({ message: description }) : '';
+
+    /* A failed callback may be refreshed without re-triggering a stale
+       auth error. Preserve successful ?code for Supabase's PKCE exchange. */
+    if (description) {
+      try {
+        const u = new URL(location.href);
+        if (!u.searchParams.has('code')) {
+          ['error', 'error_code', 'error_description'].forEach(k => u.searchParams.delete(k));
+          if (/^#(?:error|error_code|error_description)=/.test(u.hash)) u.hash = '';
+          history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+        }
+      } catch (e) {}
+    }
+    return {
+      tab: intent && ['all', 'day', 'week'].includes(intent.tab) ? intent.tab : 'all',
+      from: intent && intent.from === 'board' ? 'board' : 'title',
+    };
+  }
+
+  /* Used only on OAuth return: initialize the SDK so it exchanges ?code,
+     then refresh the account view when the signed-in session arrives. */
+  async function initAuth() {
+    try {
+      await init();
+      if (ST.user) ST.oauthError = '';
+      renderAccount();
+      renderAuth();
+      if (window.OM_CLOUD) setTimeout(() => window.OM_CLOUD.authChanged(), 0);
+    } catch (e) {
+      ST.oauthError = authFail(e);
+      renderAccount();
+    }
+  }
 
   const cfg = () => {
     const c = window.OM_SUPABASE || {};
@@ -148,12 +208,13 @@ const LB = (() => {
           }
         }
         client.auth.onAuthStateChange((evt, session) => {
-          if (session && session.user) ST.user = session.user;
+          if (session && session.user) { ST.user = session.user; ST.oauthError = ''; }
           else if (evt === 'SIGNED_OUT') {
             ST.user = null; ST.pending = null; persistPending(null);
           }
           renderAuth();
           renderAccount();
+          if (window.OM_CLOUD) setTimeout(() => window.OM_CLOUD.authChanged(), 0);
           if (ST.user && ST.pending) {     /* the sign answered the pending post */
             const run = ST.pending; ST.pending = null; persistPending(null);
             if (run.mode === 'daily') postDailyRun(run);
@@ -175,6 +236,8 @@ const LB = (() => {
   function authFail(e) {
     const s = String((e && (e.message || e.msg)) || e || '');
     const c = String((e && e.code) || '').toLowerCase();
+    if (/unable to exchange external code/i.test(s) || c === 'unexpected_failure')
+      return 'GOOGLE TOKEN EXCHANGE FAILED — CHECK THE GOOGLE CLIENT ID AND SECRET IN SUPABASE';
     if (/anonymous/i.test(s) || c === 'anonymous_provider_disabled')
       return 'ANONYMOUS SIGN-INS ARE OFF — ENABLE THEM UNDER AUTHENTICATION → SIGN IN / UP';
     if (/provider/i.test(s) || /oauth|google/i.test(s + ' ' + c))
@@ -236,20 +299,30 @@ const LB = (() => {
   async function signInGoogle() {
     SFX.ensure();
     if (ST.debug) return signIn();
+    ST.oauthError = '';
     const s = await init();
     if (!s) throw new Error('unconfigured');
     if (ST.pending) persistPending(ST.pending);
-    const { error } = await s.client.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: location.origin + location.pathname },
-    });
-    if (error) {
-      const msg = authFail(error);
+    try {
+      sessionStorage.setItem(oauthReturnKey, JSON.stringify({
+        tab: ST.tab, from: LB.authReturnTo === 'board' ? 'board' : 'title',
+        at: Date.now(),
+      }));
+    } catch (e) {}
+    try {
+      const { error } = await s.client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: location.origin + location.pathname },
+      });
+      if (error) throw error;
+    } catch (e) {
+      try { sessionStorage.removeItem(oauthReturnKey); } catch (_) {}
+      const msg = authFail(e);
       renderAuth(msg); renderAccount(msg);
       throw new Error(msg);
     }
-    /* the page redirects; the session lands back here and the
-       auth listener consumes any pending post */
+    /* The browser navigates back to Settings. main.js initializes
+       Supabase's PKCE callback and restores the previous board tab. */
   }
 
   /* stamp the mark: kept on the device, carried into the identity,
@@ -870,6 +943,7 @@ const LB = (() => {
   /* the board's slim seat: identity is read here; the door itself
      lives in the settings room (印 — THE SCRIBE'S MARK) */
   function renderAuth(err) {
+    err = err || ST.oauthError;
     const box = document.getElementById('boardAuth');
     if (!box) return;
     if (!configured()) { box.innerHTML = ''; return; }
@@ -894,6 +968,7 @@ const LB = (() => {
      the quiet second; the stamped name is the word the board wears,
      and the email stays home — it never reaches the ledger. */
   function renderAccount(err) {
+    err = err || ST.oauthError;
     const box = document.getElementById('accountRows');
     if (!box) return;
     if (!configured()) {
@@ -1009,7 +1084,9 @@ const LB = (() => {
   /* ---------------- api ---------------- */
   return {
     onRunEnd, open, close, signIn, signInGoogle, signOut, setTab,
-    saveName, renderAccount,
+    saveName, renderAccount, consumeOAuthReturn, initAuth,
+    authReturnTo: 'title',
+    cloudAccess() { return ST.sb ? { client: ST.sb.client, user: ST.user } : null; },
     get user() { return me(); },
     get debug() { return ST.debug; },
     get lastDebugPost() { return ST.debugLastPost || null; },
