@@ -92,6 +92,9 @@
     </div>
   </div>
 
+  <!-- the banners paint themselves; this quiet twin speaks them to a screen reader -->
+  <span id="bannerLive" class="sr-only" aria-live="polite"></span>
+
   <!-- ============ TITLE SCREEN ============ -->
   <section id="screenTitle" class="screen screen-title">
     <!-- a hovered seal breathes its sheet's ink into the title air -->
@@ -381,7 +384,7 @@
        browsers keep an AudioContext silent until a finger blesses one:
        a cold boot screens the opening mute. One quiet tap here unlocks
        the audio, then the film plays with its whole voice. -->
-  <div id="introGate" class="intro-gate hidden" role="button" aria-label="Tap to begin — the opening screens with sound">
+  <div id="introGate" class="intro-gate hidden" role="button" tabindex="0" aria-label="Tap to begin — the opening screens with sound">
     <div class="gate-core">
       <span class="gate-seal" aria-hidden="true">墨</span>
       <span class="gate-kicker">A MONOCHROME SURVIVAL</span>

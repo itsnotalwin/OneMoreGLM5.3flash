@@ -314,6 +314,15 @@ const UI = (() => {
     if (t !== lastTimeStr) { lastTimeStr = t; el.hudTime.textContent = t; }
   }
 
+  /* the banners are painted; this twin carries the words to a screen
+     reader — the visual banner stays aria-hidden, the announcement doesn't */
+  function announceLive(txt) {
+    const live = document.getElementById('bannerLive');
+    if (!live) return;
+    live.textContent = '';
+    setTimeout(() => { live.textContent = txt; }, 30);
+  }
+
   function banner(n, surge, kind) {
     el.bannerKicker.textContent =
       kind === 'guardian' ? 'THE GUARDIAN WAKES'
@@ -322,6 +331,7 @@ const UI = (() => {
     el.bannerTitle.innerHTML =
       `<span class="ban-kanji">${toKanji(n)}</span><span class="ban-lat">WAVE ${pad2(n)}${kind === 'guardian' ? ' — GUARDIAN' : kind === 'seal' ? ' — SEAL' : ''}</span>`;
     if (el.bannerSub) el.bannerSub.textContent = '';
+    announceLive(el.bannerKicker.textContent + ' — WAVE ' + n + (kind === 'guardian' ? ', GUARDIAN' : kind === 'seal' ? ', SEAL' : ''));
     el.banner.classList.toggle('surge', !!surge || kind === 'guardian' || kind === 'seal');
     el.banner.classList.toggle('area', false);
     el.banner.classList.remove('show');
@@ -339,6 +349,7 @@ const UI = (() => {
     el.bannerTitle.innerHTML =
       `<span class="ban-kanji">${toKanji(level)}</span><span class="ban-lat">SCENE ${level}${name ? ' — ' + name : ''}</span>`;
     if (el.bannerSub) el.bannerSub.textContent = '';
+    announceLive(el.bannerKicker.textContent + (name ? ' — ' + name : ''));
     el.banner.classList.toggle('area', true);
     el.banner.classList.toggle('surge', false);
     el.banner.classList.remove('show');
