@@ -73,7 +73,7 @@ const R = (() => {
   let lw = 0, lh = 0, ldpr = 1;
   let lastT = 0, lastTrailT = -1;
   /* cached screen-space gradients: key -> gradient object */
-  const vg = { key: '', grad: null, rbKey: '', rGrad: null };
+  const vg = { key: '', grad: null, rbKey: '', rGrad: null, bake: null };
 
   /* dried ink lives in world space, each stain its own sprite */
   let stains = [];
@@ -535,6 +535,10 @@ const R = (() => {
     for (const k of WASH_FILES) {
       const d = new Image(); d.src = 'img/wash_' + k + '.webp';
       const p = new Image(); p.src = 'img/wash_' + k + '_p.webp';
+      /* prime the decoders now: the first drawImage of a wash must not
+         stall the frame it lands in */
+      if (d.decode) d.decode().catch(() => {});
+      if (p.decode) p.decode().catch(() => {});
       WASH[k] = { d, p };
     }
   })();
@@ -5791,18 +5795,40 @@ function drawEnemy(c, e, t) {
     for (const m of S.markers) drawMarker(ctx, m);
     for (const r of S.rings) drawRing(ctx, r);
     for (const tg of S.telgs) drawTelg(ctx, tg, t);
-    for (const b of S.bullets) b.kind === 'boomer' ? drawBoomer(ctx, b) : drawBullet(ctx, b);
-    for (const b of S.ebullets) drawEBullet(ctx, b);
-    for (const e of S.enemies) drawEnemy(ctx, e, t);
+    /* off the visible paper, no path is built: the same view rect the
+       stains use culls the crowds — at the horde cap most beasts are
+       typically beyond the eye, and every skipped body is a whole
+       blob-path family the frame never spends */
+    for (const b of S.bullets) {
+      if (b.x < vx0 - 40 || b.x > vx1 + 40 || b.y < vy0 - 40 || b.y > vy1 + 40) continue;
+      if (b.kind === 'boomer') drawBoomer(ctx, b); else drawBullet(ctx, b);
+    }
+    for (const b of S.ebullets) {
+      if (b.x < vx0 - 40 || b.x > vx1 + 40 || b.y < vy0 - 40 || b.y > vy1 + 40) continue;
+      drawEBullet(ctx, b);
+    }
+    for (const e of S.enemies) {
+      if (e.x < vx0 - 120 || e.x > vx1 + 120 || e.y < vy0 - 120 || e.y > vy1 + 120) continue;
+      drawEnemy(ctx, e, t);
+    }
     /* the wanderers keep to the valley, faint, like distant spirits */
     if (S.idle.length) {
       ctx.save();
       ctx.globalAlpha = 0.24;
-      for (const d of S.idle) drawEnemy(ctx, d, t);
+      for (const d of S.idle) {
+        if (d.x < vx0 - 120 || d.x > vx1 + 120 || d.y < vy0 - 120 || d.y > vy1 + 120) continue;
+        drawEnemy(ctx, d, t);
+      }
       ctx.restore();
     }
-    for (const mt of S.motes) drawMote(ctx, mt, t);
-    for (const pk of S.pickups) drawPickup(ctx, pk, t);
+    for (const mt of S.motes) {
+      if (mt.x < vx0 - 60 || mt.x > vx1 + 60 || mt.y < vy0 - 60 || mt.y > vy1 + 60) continue;
+      drawMote(ctx, mt, t);
+    }
+    for (const pk of S.pickups) {
+      if (pk.x < vx0 - 60 || pk.x > vx1 + 60 || pk.y < vy0 - 60 || pk.y > vy1 + 60) continue;
+      drawPickup(ctx, pk, t);
+    }
     for (const sc of S.scribes) drawScribe(ctx, sc);
     for (const sp of S.spirits) drawSpirit(ctx, sp);
     /* the echo walks under the living brush — a pale elder stroke */
@@ -5814,7 +5840,10 @@ function drawEnemy(c, e, t) {
     for (const s of S.stamps) drawStamp(ctx, s);
     for (const ar of S.arcs) drawArcFx(ctx, ar);
     for (const bo of S.bolts) drawBolt(ctx, bo);
-    for (const p of S.particles) drawParticle(ctx, p);
+    for (const p of S.particles) {
+      if (p.x < vx0 - 60 || p.x > vx1 + 60 || p.y < vy0 - 60 || p.y > vy1 + 60) continue;
+      drawParticle(ctx, p);
+    }
     for (const p of S.popups) drawPopup(ctx, p);
 
     /* the ambient rain and the visitor's ink live in screen space */
@@ -5835,20 +5864,26 @@ function drawEnemy(c, e, t) {
     if (S.mode === 'title') rtFrame(t, dt);
 
     /* the rim of the eye: a quiet vignette, deeper when the ink is low.
-       the gradient is rebuilt only when its shape truly changes —
-       two gradient constructions a frame is two too many. */
+       baked once into a quarter-res offscreen sheet (a smooth gradient
+       survives the stretch) — the frame then blits it instead of paying
+       a full-screen gradient fill every pass. */
     const th = THEMES[themeKey];
     const lowHp = S.stats && S.stats.hp === 1 && (S.mode === 'playing' || S.mode === 'paused');
     const vgKey = `${S.W | 0}|${S.H | 0}|${themeKey}|${lowHp ? 1 : 0}|${(S.dpr * 100) | 0}`;
-    if (vgKey !== vg.key) {
+    if (vgKey !== vg.key || !vg.bake) {
       vg.key = vgKey;
-      const g = ctx.createRadialGradient(S.W / 2, S.H / 2, Math.min(S.W, S.H) * 0.42, S.W / 2, S.H / 2, Math.max(S.W, S.H) * 0.74);
+      const bw = Math.max(2, (S.W | 0) >> 2), bh = Math.max(2, (S.H | 0) >> 2);
+      if (!vg.bake) vg.bake = document.createElement('canvas');
+      vg.bake.width = bw; vg.bake.height = bh;
+      const bc = vg.bake.getContext('2d');
+      const g = bc.createRadialGradient(bw / 2, bh / 2, Math.min(bw, bh) * 0.42, bw / 2, bh / 2, Math.max(bw, bh) * 0.74);
       g.addColorStop(0, `rgba(${th.vig},0)`);
       g.addColorStop(1, `rgba(${th.vig},${lowHp ? 0.3 : 0.17})`);
-      vg.grad = g;
+      bc.clearRect(0, 0, bw, bh);
+      bc.fillStyle = g;
+      bc.fillRect(0, 0, bw, bh);
     }
-    ctx.fillStyle = vg.grad;
-    ctx.fillRect(0, 0, S.W, S.H);
+    ctx.drawImage(vg.bake, 0, 0, S.W, S.H);
 
     /* bleeding seal: low integrity stains the edges red (cached shape,
        the pulse rides on globalAlpha instead of a rebuilt gradient) */

@@ -3,6 +3,10 @@
 ## Purpose
 Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderboard.
 
+## v20.3 render performance pass (11 Nov 2026)
+
+Three render-side savings, all additive to the existing cache discipline: the entities that can crowd the sheet (bullets, enemy bullets, enemies, idle wanderers, motes, pickups, particles) now cull against the same world-space view rect the stains already used — off-paper bodies no longer build blob paths at all (at the horde cap most beasts are usually beyond the eye); the eye's vignette is baked once into a quarter-res offscreen sheet keyed by the existing `vgKey` and blitted per frame instead of a full-screen gradient fill (the low-HP red rim keeps its cached gradient + alpha pulse); and the twelve wash pairs call `decode()` at load so the first `drawImage` of a wash no longer stalls the frame it lands in. Wash-chunk baking (compositing master washes into world-space chunk canvases) remains the next documented step. Cache `v20.3`.
+
 ## v20.1 correctness pass (11 Nov 2026)
 
 Six audit fixes, all verified against source: the hit-grid pool now clears reused cell arrays (`arr.length = 0` in `buildHitGrid`) — stale enemies no longer accumulate across frames, so pierce/blade/boomerang no longer multi-hit one body and long runs keep their collision speed; daily runs pin their sheet at `startRun` (`S.dailyDay`) so a run crossing midnight files under the day it began (ghost included, via `ghostSave`'s day override); corrupt-typed saves can no longer NaN-cascade into `charmCap`/`frontierLevel` (`num`/`obj` validators on every numeric read); the bomb pickup's damage now matches its visible ring radius instead of striking the whole sheet; the global keydown handler no longer steals Space from focused buttons; and `drawEnemy` composes its ink strength through `EN_ALPHA` (caller alpha × tracer factor) instead of ~28 branches snapping to full opacity — faint wanderers and tracer echoes now stay faint end to end. Cache `v20.1`.
