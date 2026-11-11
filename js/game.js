@@ -320,17 +320,21 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- persistence ---------------- */
-  const getBest = () => store.get('om_best_v1', null);
-  const getRuns = () => store.get('om_runs_v1', 0);
+  /* a corrupt save must never NaN its way into charmCap or the frontier:
+     wrong-typed values fall back to their defaults here, in one place */
+  const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+  const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+  const getBest = () => obj(store.get('om_best_v1', null));
+  const getRuns = () => num(store.get('om_runs_v1', 0)) || 0;
   /* the shelf of scrolls: what is unrolled, what lies finished.
      om_unlocked_v1 — the highest sheet the journey may enter (1-based).
      om_cleared_v1  — the highest sheet whose Guardian has fallen.
      om_prog_v1     — per sheet, the deepest level the brush has reached. */
-  const getUnlocked = () => Math.max(1, store.get('om_unlocked_v1', 1), store.get('om_furthest_v1', 1));
+  const getUnlocked = () => Math.max(1, num(store.get('om_unlocked_v1', 1)) || 1, num(store.get('om_furthest_v1', 1)) || 1);
   function setUnlocked(n) { if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
-  const getCleared = () => store.get('om_cleared_v1', 0);
+  const getCleared = () => num(store.get('om_cleared_v1', 0)) || 0;
   function setCleared(n) { if (n > getCleared()) store.set('om_cleared_v1', n); }
-  const getProg = () => store.get('om_prog_v1', {});
+  const getProg = () => obj(store.get('om_prog_v1', {})) || {};
   function noteLevel(sheet, level) {
     const p = getProg();
     if ((p[sheet] || 0) < level) { p[sheet] = level; store.set('om_prog_v1', p); }
@@ -338,7 +342,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* om_seal_v1 — per sheet, the deepest scene whose seal was pressed
      (a scene may be entered without ever being sealed — the fall sees
      to that — and the shelf must tell the two apart) */
-  const getSeals = () => store.get('om_seal_v1', {});
+  const getSeals = () => obj(store.get('om_seal_v1', {})) || {};
   function noteSeal(sheet, level) {
     const p = getSeals();
     if ((p[sheet] || 0) < level) { p[sheet] = level; store.set('om_seal_v1', p); }
@@ -1084,14 +1088,14 @@ const rand = (a, b) => a + RNG() * (b - a);
   const GHOST_DT = 0.12;          /* one stroke every eighth of a breath */
   const GHOST_MAX = 14000;        /* ~28 minutes of paper, then the pen rests */
 
-  function ghostSave(kind, stats) {
+  function ghostSave(kind, stats, dayOverride) {
     try {
       const rec = S.rec;
       if (!rec || rec.frames.length < 8) return false;
       const payload = {
         score: stats.score | 0, wave: Math.max(1, stats.wave | 0),
         kills: stats.kills | 0, hard: !!S.hardMode,
-        date: dayKey(), dt: GHOST_DT, n: rec.frames.length,
+        date: dayOverride || dayKey(), dt: GHOST_DT, n: rec.frames.length,
         data: rec.frames.join(';'),
       };
       localStorage.setItem(kind === 'daily' ? GHOST_DAILY_KEY : GHOST_ENDLESS_KEY, JSON.stringify(payload));
@@ -1206,9 +1210,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.runMode === 'daily') {
       RNG = mulberry32(seedOf(dailyState().day));
       S.dailyCounting = !dailyState().played;
+      S.dailyDay = dailyState().day;      /* pin the sheet: a run that crosses midnight files where it began */
     } else {
       RNG = Math.random;
       S.dailyCounting = false;
+      S.dailyDay = null;
     }
     /* the ghost's scribe dips its pen: endless and daily runs record
        their strokes (the journey's scenes are too short to race) */
@@ -1543,13 +1549,13 @@ const rand = (a, b) => a + RNG() * (b - a);
     let dailyDay = null, dailyCounting = false;
     if (S.runMode === 'daily') {
       const ds = dailyState();
-      dailyDay = ds.day; dailyCounting = !!S.dailyCounting;
+      dailyDay = S.dailyDay || ds.day; dailyCounting = !!S.dailyCounting;
       if (S.dailyCounting) {
         store.set(DAILY_KEY, {
-          day: ds.day, wave: Math.max(1, st.wave | 0), score: st.score | 0,
+          day: dailyDay, wave: Math.max(1, st.wave | 0), score: st.score | 0,
           kills: st.kills | 0, time: st.time || 0, hard: S.hardMode,
         });
-        ghostSave('daily', st);   /* today's counting sheet becomes tomorrow's rival */
+        ghostSave('daily', st, dailyDay);   /* today's counting sheet becomes tomorrow's rival */
         if (UI.setDailyChip) UI.setDailyChip(dailyState());
       }
     } else if (S.runMode === 'endless') {
@@ -2396,7 +2402,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       const key = hitKey(Math.floor(e.x / HIT), Math.floor(e.y / HIT));
       let arr = hitGrid.get(key);
       if (!arr) {
-        if (hitPoolN < hitPool.length) arr = hitPool[hitPoolN++];
+        if (hitPoolN < hitPool.length) { arr = hitPool[hitPoolN++]; arr.length = 0; }
         else { arr = []; hitPool.push(arr); hitPoolN++; }
         hitGrid.set(key, arr);
       }
@@ -2538,9 +2544,12 @@ const rand = (a, b) => a + RNG() * (b - a);
           SFX.magnet();
         } else if (pk.kind === 'bomb') {
           S.shake = Math.max(S.shake, 11);
-          S.rings.push({ x: p.x, y: p.y, max: Math.max(S.W, S.H) * 0.55, life: 0.6, maxLife: 0.6, red: true });
+          const RAD = Math.max(S.W, S.H) * 0.55;   /* the blast hurts only what the ring reaches */
+          S.rings.push({ x: p.x, y: p.y, max: RAD, life: 0.6, maxLife: 0.6, red: true });
           for (let j = S.enemies.length - 1; j >= 0; j--) {
             const e = S.enemies[j];
+            const bdx = e.x - p.x, bdy = e.y - p.y;
+            if (bdx * bdx + bdy * bdy > RAD * RAD) continue;
             e.hp -= 7;
             e.hitFlash = 0.1;
             e.stun = Math.max(e.stun, 0.5);

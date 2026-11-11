@@ -342,7 +342,11 @@
 
   window.addEventListener('keydown', e => {
     const k = e.code;
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(k)) e.preventDefault();
+    /* the page must not scroll on arrows/space — but a focused control
+       (button, field) owns its Space and keeps it */
+    const tg = e.target;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(k) &&
+        !(tg && tg.closest && tg.closest('button, a, input, textarea, select'))) e.preventDefault();
     SFX.ensure();
     if (G.mode === 'intro') { INTRO.skip(); return; }  /* any key leaves the opening */
     if (G.mode === 'cutscene') {                       /* any key leaves a cutscene */

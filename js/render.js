@@ -1440,7 +1440,11 @@ const R = (() => {
     return bossInk();
   }
 
-  function drawEnemy(c, e, t) {
+  /* the ink strength a caller wants from this enemy: the whole body
+   composes with it (faint wanderers, tracer echoes) instead of any
+   branch snapping itself back to full opacity mid-draw */
+let EN_ALPHA = 1;
+function drawEnemy(c, e, t) {
     const S = G.S;
     const tick = Math.floor(t / CFG.ink.boilRate);
     const sd = seedFor(e, tick);
@@ -1458,7 +1462,8 @@ const R = (() => {
     c.lineJoin = 'round';
     c.lineCap = 'round';
     /* the tracer's copies are only half-inked — faint as a remembered shadow */
-    if (e.trace) c.globalAlpha = 0.55;
+    EN_ALPHA = c.globalAlpha * (e.trace ? 0.55 : 1);
+    if (e.trace) c.globalAlpha = EN_ALPHA;
 
     let silhouette = null; /* path fn for hit-flash overlay */
 
@@ -1531,7 +1536,7 @@ const R = (() => {
           c.fillStyle = RED;
           c.globalAlpha = 0.55 + 0.45 * Math.sin(e.t * 11 + e.seed);
           c.beginPath(); c.arc(r * 0.15, 0, 1.9, 0, TAU); c.fill();
-          c.globalAlpha = 1;
+          c.globalAlpha = EN_ALPHA;
           c.fillStyle = INK;
         }
         silhouette = () => { c.save(); c.rotate(e.ang); teardrop(c, r * 1.1); c.restore(); };
@@ -1621,7 +1626,7 @@ const R = (() => {
             const rx = -r * 0.5 + i * r * 0.5;
             c.globalAlpha = 0.5;
             c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx, ry + r * 0.34); c.stroke();
-            c.globalAlpha = 1;
+            c.globalAlpha = EN_ALPHA;
           }
         }
         eyeSlits(c, ang, r, 0.6);
@@ -1694,7 +1699,7 @@ const R = (() => {
           c.fillStyle = RED;
           c.globalAlpha = alpha * 0.8;
           c.beginPath(); c.arc(0, r * 0.08, r * 0.16, 0, TAU); c.fill();
-          c.fillStyle = INK; c.globalAlpha = 1;
+          c.fillStyle = INK; c.globalAlpha = EN_ALPHA;
         }
         silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.3, 9);
         break;
@@ -1774,7 +1779,7 @@ const R = (() => {
         blobPath(c, 0, 0, r * 0.92, sd, 0.3, 9);
         c.stroke();
         const oa = e.t * 4 + e.seed;
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.beginPath();
         c.arc(Math.cos(oa) * (r + 5), Math.sin(oa) * (r + 5), 2.6, 0, TAU);
         c.fill();
@@ -1868,7 +1873,7 @@ const R = (() => {
         c.closePath();
         c.globalAlpha = st === 'aim' ? 0.85 : 0.28;
         c.fill();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.lineWidth = 1.9;
         c.stroke();
         /* a single paper eye */
@@ -2169,7 +2174,7 @@ const R = (() => {
         c.lineWidth = 1.3;
         c.beginPath(); c.moveTo(-r * 0.5, -r * 0.3); c.lineTo(r * 0.4, -r * 0.55); c.stroke();
         c.beginPath(); c.moveTo(-r * 0.3, r * 0.4); c.lineTo(r * 0.5, r * 0.2); c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         /* drips hanging from the seams */
         const drips = mulberry(sd >> 5);
         for (let i = 0; i < 2; i++) {
@@ -2216,7 +2221,7 @@ const R = (() => {
         c.fillStyle = RED;
         c.globalAlpha = 0.7;
         c.beginPath(); c.arc(r * 0.35, -r * 0.2, 1.7, 0, TAU); c.fill();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.fillStyle = INK;
         eyeSlits(c, 0, r, 0.65);
         silhouette = () => blobPath(c, 0, 0, r * 1.08, sd, 0.1, 12);
@@ -2230,7 +2235,7 @@ const R = (() => {
         c.lineWidth = 1;
         c.beginPath(); c.moveTo(-r * 0.3, -r * 0.4); c.lineTo(-r * 1.7, -r * 1.1 - fy); c.stroke();
         c.beginPath(); c.moveTo(-r * 0.3, r * 0.4); c.lineTo(-r * 1.7, r * 1.1 + fy); c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         silhouette = () => blobPath(c, 0, 0, r * 1.2, sd, 0.3, 7);
         break;
       }
@@ -2254,7 +2259,7 @@ const R = (() => {
           c.stroke();
         }
         c.restore();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         eyeSlits(c, ang, r * bl, 0.5);
         silhouette = () => blobPath(c, 0, 0, r * bl * 1.12, sd, 0.26, 11);
         break;
@@ -2278,7 +2283,7 @@ const R = (() => {
         c.globalAlpha = 0.95;
         c.beginPath(); c.arc(-r * 0.32, -r * 0.12, r * 0.3 * blinkK, 0, TAU); c.fill();
         c.beginPath(); c.arc(r * 0.32, -r * 0.12, r * 0.3 * blinkK, 0, TAU); c.fill();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.fillStyle = INK;
         c.beginPath(); c.arc(0, -r * 0.12, r * 0.11, 0, TAU); c.fill();
         silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.14, 10);
@@ -2301,7 +2306,7 @@ const R = (() => {
             { x: dx + (drips() - 0.5) * 3, y: r * 0.35 + len },
           ], 2.4, { alpha: 0.5 });
         }
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang, r * 0.9, 0.5);
         silhouette = () => { c.save(); c.scale(1.5, 0.6); blobPath(c, 0, 0, r * 1.1, sd, 0.3, 12); c.restore(); };
@@ -2387,7 +2392,7 @@ const R = (() => {
             c.fill();
             c.restore();
           }
-          c.globalAlpha = 1;
+          c.globalAlpha = EN_ALPHA;
         }
         silhouette = () => { c.save(); c.scale(crest * 1.4, crest * 0.8); teardrop(c, r * 1.08); c.restore(); };
         break;
@@ -2412,7 +2417,7 @@ const R = (() => {
           c.lineTo(Math.cos(a + 0.14) * 198, Math.sin(a + 0.14) * 198);
           c.stroke();
         }
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         silhouette = () => blobPath(c, 0, 0, r * 0.62, sd, 0.3, 9);
         break;
       }
@@ -2446,7 +2451,7 @@ const R = (() => {
         c.globalAlpha = 0.7;
         c.lineWidth = 1.4;
         c.beginPath(); c.arc(0, 0, r * 0.42, 0, TAU); c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         silhouette = () => { c.save(); c.scale(1.3, 0.85); blobPath(c, 0, 0, r * 1.1, sd, 0.12, 10); c.restore(); };
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang, r * 0.8, 0.55);
@@ -2516,7 +2521,7 @@ const R = (() => {
           c.fill();
         }
         c.fillStyle = INK;
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.arc(0, 0, r * 1.08, 0, TAU); c.restore(); };
         break;
       }
@@ -2545,7 +2550,7 @@ const R = (() => {
         c.beginPath();
         c.ellipse(0, r * 0.05, r * 0.86, r * 0.2, 0, 0, TAU);
         c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.fillStyle = RED;
         c.beginPath(); c.arc(r * 0.3, r * 0.42, r * 0.14, 0, TAU); c.fill();
         c.fillStyle = INK;
@@ -2611,7 +2616,7 @@ const R = (() => {
         c.moveTo(-r * 1.5, 0);
         c.lineTo(-r * 2.1, Math.sin(e.t * 9 + e.seed) * 2);
         c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         /* the needle head: a small solid drop */
         c.beginPath();
         c.ellipse(r * 0.55, 0, r * 0.42, r * 0.3, 0, 0, TAU);
@@ -2622,7 +2627,7 @@ const R = (() => {
           c.beginPath();
           c.arc(0, 0, r * 1.3, 0, TAU);
           c.stroke();
-          c.globalAlpha = 1;
+          c.globalAlpha = EN_ALPHA;
         }
         c.restore();
         silhouette = () => { c.save(); c.rotate(e.ang); c.beginPath(); c.ellipse(0, 0, r * 1.5, r * 0.6, 0, 0, TAU); c.restore(); };
@@ -2647,7 +2652,7 @@ const R = (() => {
         if (rose) {
           c.globalAlpha = 0.85;
           c.fillRect(s4 * 0.5, s4 * 0.6, s4 * 1.1, s4 * 1.1);
-          c.globalAlpha = 1;
+          c.globalAlpha = EN_ALPHA;
         }
         c.fillStyle = INK;
         /* the paper shows through the stamp: its mark, unread */
@@ -2678,7 +2683,7 @@ const R = (() => {
         c.globalAlpha = 0.8;
         blobPath(c, 0, 0, r * 0.94, sd, 0.24, 11);
         c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.restore();
         const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang2, r * 0.75, 0.55);
@@ -2705,7 +2710,7 @@ const R = (() => {
         c.moveTo(-r * 0.2, -r * 0.62);
         c.lineTo(-r * 0.2, r * 0.62);
         c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.restore();
         /* the herd-marks: three faint arrows on its face, pointing ahead */
         c.save();
@@ -2757,7 +2762,7 @@ const R = (() => {
           c.lineTo(Math.cos(ta + 2.6) * r * 1.9, Math.sin(ta + 2.6) * r * 1.9);
           c.stroke();
         }
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.restore();
         const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang2, r * 0.7, 0.6);
@@ -2775,7 +2780,7 @@ const R = (() => {
         c.globalAlpha = 0.5;
         blobPath(c, 0, 0, r * 0.8, sd, 0.18, 12);
         c.fill();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.setLineDash([]);
         /* the copy-line: wherever it has traced, a thread still runs */
         c.globalAlpha = 0.3;
@@ -2787,7 +2792,7 @@ const R = (() => {
           c.quadraticCurveTo(Math.cos(ta) * r * 1.6, Math.sin(ta) * r * 1.6 - 6, Math.cos(ta) * r * 2.3, Math.sin(ta) * r * 2.3);
           c.stroke();
         }
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.restore();
         const ang2 = Math.atan2(S.player.y - e.y, S.player.x - e.x);
         eyeSlits(c, ang2, r * 0.7, 0.7);
@@ -2850,7 +2855,7 @@ const R = (() => {
         c.globalAlpha = 0.88;
         blobPath(c, 0, 0, r, sd, 0.24, 14);
         c.fill();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         c.lineWidth = 2.2;
         blobPath(c, 0, 0, r * 0.94, sd ^ 61, 0.26, 14);
         c.stroke();
@@ -3007,7 +3012,7 @@ const R = (() => {
         c.fill();
         c.globalAlpha = 0.85;
         c.stroke();
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         /* the underdrawing that haunts its own surface — faint marks that
            surface with every phase, the page remembering what it erased */
         c.strokeStyle = bossInk();
@@ -3021,14 +3026,14 @@ const R = (() => {
           c.quadraticCurveTo(ux2 + (ur() - 0.5) * 14, uy2 + (ur() - 0.5) * 14, ux2 + (ur() - 0.5) * 22, uy2 + (ur() - 0.5) * 22);
           c.stroke();
         }
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         /* the red margin: a corner seal pressed on the page's lower right —
            it deepens through the phases until the whole edge burns */
         c.fillStyle = phase === 2 ? bossInk() : RED;
         c.globalAlpha = 0.55 + phase * 0.2;
         const ms = r * 0.16 + phase * r * 0.05;
         c.fillRect(pw - ms - 3, ph2 - ms - 3, ms, ms);
-        c.globalAlpha = 1;
+        c.globalAlpha = EN_ALPHA;
         /* the eyes: two slits torn where a face was almost drawn */
         c.strokeStyle = bossInk();
         c.fillStyle = bossInk();
