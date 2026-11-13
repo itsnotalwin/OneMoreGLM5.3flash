@@ -1984,171 +1984,165 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- the autobrush's own hand (自) ----------------
-     A danger-field walker, not a radius-counter: every body of spite
-     pushes by inverse square, so the field itself shows the gap in a
-     horde and sets the equilibrium distance to a lone wolf. The hunt
-     pulls toward the nearest flesh only while the field stays shallow —
-     that balance IS the aggression. Spite in the air is dodged along
-     its own travel, drawn slams are stepped out of, loose ink is raided
-     when the air clears, and the page's walls always win. The hand
-     outranks it all — one key or one finger and it yields. Its runs
+     A sampling steerer, not a bag of springs. Each frame the walker
+     scores a ring of candidate steps — the danger each one lands in,
+     the margin it leaves, the ink it promises — and takes the best.
+     Nothing cancels, so nothing cancels into a corner: the walker
+     simply never chooses a step that leads there. The margin is priced
+     behind a long, steep shoulder and its weight is blind to heading,
+     so a border is never a road to run along — and the beasts are
+     judged where they are marching, not where they stand. The hand
+     outranks it all: one key, one finger, and it yields. Its runs
      press half the ink and half the score. */
+  const BOT = { nx: 0, ny: 0, spin: 1 };   /* heading, and which way it circles */
+
   function autoSteer(p) {
-    let ax = 0, ay = 0;
-    let danger = 0;
+    const A = arenaOn() ? CFG.world.arena : null;
+    const STEP = 108;                  /* how far one judged step reaches */
+    const N = 24;                      /* candidate steps around the ring */
+    const lead = 0.42;                 /* seconds of a beast's march, judged */
 
-    /* ---- the danger field: the whole horde, weighed by its bodies ---- */
-    let hunt = null, huntD = Infinity;
+    /* ---- the frame's terrain, read once: the bodies and the spite
+       near enough to matter to any candidate step ---- */
+    const REACH = STEP + 200;
+    const bodies = [], shots = [], rings = [];
+    let near = 1e9, nearE = null, press = 0;
     for (const e of S.enemies) {
-      const dx = p.x - e.x, dy = p.y - e.y;
-      const d2 = dx * dx + dy * dy + 600;       // the soft core: no infinities
-      const d = Math.sqrt(d2);
-      const def = ENEMIES[e.type];
-      const w = def && def.boss ? 4.2 : def && def.captain ? 2.4 : e.r > 26 ? 1.8 : 1;
-      const f = (w * 26000) / d2;
-      danger += f;
-      ax += (dx / d) * f;
-      ay += (dy / d) * f;
-      if (d < huntD) { hunt = e; huntD = d; }
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const d2 = dx * dx + dy * dy;
+      const d = Math.sqrt(d2) - (e.r || 12);
+      if (d < near) { near = d; nearE = e; }
+      if (d2 < REACH * REACH) bodies.push(e);
+      if (d < 200) press += ((200 - d) / 200) * ((ENEMIES[e.type] || {}).boss ? 3 : 1);
     }
-
-    /* the hunt: seek flesh while the field stays shallow — the pull
-       fades as the field thickens, so the walker fights the moment a
-       wolf appears and threads the horde when it does not. Bleeding
-       halves the nerve. */
-    const bleed = S.stats && S.stats.hp <= 2 ? 0.5 : 1;
-    const safe = Math.max(0, 1 - danger / 2.8) * bleed;
-    if (hunt && safe > 0.05) {
-      const dx = (hunt.x - p.x) / huntD, dy = (hunt.y - p.y) / huntD;
-      ax += dx * safe * 1.35;
-      ay += dy * safe * 1.35;
-    }
-
-    /* spite in the air: predicted closest approach — sidestep along the
-       stroke's own travel, and count the dread so hunting waits */
     for (const b of S.ebullets) {
-      const bv = Math.hypot(b.vx || 0, b.vy || 0);
-      if (bv < 20) continue;
-      const rvx = p.x - b.x, rvy = p.y - b.y;
-      const t = -(rvx * b.vx + rvy * b.vy) / (bv * bv);
-      if (t < 0 || t > 0.75) continue;          // behind it, or too far ahead
-      const cx = b.x + b.vx * t - p.x, cy = b.y + b.vy * t - p.y;
-      const rr = 36 + (b.r || 6);
-      const miss = Math.hypot(cx, cy);
-      if (miss > rr) continue;                  // it will miss on its own
-      const urg = (rr - miss) / rr;
-      danger += urg * 1.2;
-      const pxn = -b.vy / bv, pyn = b.vx / bv;
-      const side = (rvx * pxn + rvy * pyn) >= 0 ? 1 : -1;
-      ax += pxn * side * urg * 2.0;
-      ay += pyn * side * urg * 2.0;
+      const dx = b.x - p.x, dy = b.y - p.y;
+      if (dx * dx + dy * dy < 700 * 700) shots.push(b);
     }
-    /* the keepers' marked slams: the ring drawn on the paper is the
-       strike itself — the walker steps out of every circle */
     for (const tg of S.telgs) {
-      if (tg.kind !== 'ring' || !tg.e || tg.e.dead) continue;
-      const dx = p.x - tg.e.x, dy = p.y - tg.e.y;
-      const d = Math.hypot(dx, dy);
-      const rr = (tg.r || 200) * 0.92;
-      if (d >= rr) continue;
-      if (d < 8) {
-        /* the strike lands on the walker's own feet: step aside —
-           toward the page's middle unless the feet already stand on
-           it, then a steady diagonal (the ring is symmetric; any
-           step but here is out) */
-        let ex = 0.71, ey = 0.71;
-        if (arenaOn()) {
-          const A = CFG.world.arena;
-          const cx = -p.x, cy = -p.y;
-          if (Math.hypot(cx, cy) >= 60) { ex = cx; ey = cy; }
-        }
-        const ed = Math.hypot(ex, ey) || 1;
-        ax += (ex / ed) * 1.5;
-        ay += (ey / ed) * 1.5;
-        continue;
-      }
-      const w = (rr - d) / rr;
-      ax += (dx / d) * w * 2.2;
-      ay += (dy / d) * w * 2.2;
+      if (tg.kind === 'ring' && tg.e && !tg.e.dead) rings.push(tg);
     }
-    /* the ink: raided when the air is clear — a mote past the margin is
-       not worth walking into the wall for */
-    let best = null, bestD = 420 * 420;
-    if (arenaOn()) {
-      const A = CFG.world.arena, hx = A.w / 2 - 24, vy = A.h / 2 - 24;
-      for (const mt of S.motes) {
-        if (mt.x < -hx || mt.x > hx || mt.y < -vy || mt.y > vy) continue;
-        const dx = mt.x - p.x, dy = mt.y - p.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestD) { bestD = d2; best = mt; }
-      }
-    } else {
-      for (const mt of S.motes) {
-        const dx = mt.x - p.x, dy = mt.y - p.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestD) { bestD = d2; best = mt; }
-      }
+    /* the nearest ink worth a detour */
+    let mote = null, moteD2 = 1e9;
+    for (const mt of S.motes) {
+      const dx = mt.x - p.x, dy = mt.y - p.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < moteD2) { moteD2 = d2; mote = mt; }
     }
-    if (best) {
-      const d = Math.sqrt(bestD) || 1;
-      /* near ink tempts, far ink fades: a mote across the page never
-         outbids the hunt for the walker's feet */
-      const greed = (0.7 + 0.65 * safe) * (d < 260 ? 1 : 260 / d);
-      ax += ((best.x - p.x) / d) * greed;
-      ay += ((best.y - p.y) / d) * greed;
-    }
-    if (arenaOn()) {
-      const A = CFG.world.arena;
-      const BAND = 210;                     /* how far out the wall is felt */
-      const bx = A.w / 2 - 26, by = A.h / 2 - 26;
-      const pxx = Math.max(0, Math.min(1, (Math.abs(p.x) - (bx - BAND)) / BAND));
-      const pyy = Math.max(0, Math.min(1, (Math.abs(p.y) - (by - BAND)) / BAND));
-      const sx = p.x >= 0 ? -1 : 1, sy = p.y >= 0 ? -1 : 1;
-      /* the edge is a slope, not a line: the lean inward builds across
-         the whole band, so the walker turns long before it is pressed
-         against the margin (the old spring only woke inside the last
-         twenty-six pixels, and a hunt or a mote easily outbid it) */
-      ax += sx * (pxx * pxx * 3.6 + pxx * 0.3);
-      ay += sy * (pyy * pyy * 3.6 + pyy * 0.3);
-      /* CORNERS: two walls at once are a trap — the diagonal out is
-         committed to, and a slow lateral shuffle keeps a symmetric
-         horde from pinning the walker on the seam */
-      if (pxx > 0.3 && pyy > 0.3) {
-        const grip = Math.min(pxx, pyy);
-        const wob = Math.sin((S.stats.time || 0) * 1.7) * 0.5;
-        ax += sx * grip * 2.4 + sy * wob * grip;
-        ay += sy * grip * 2.4 + sx * wob * grip;
+    const calm = Math.max(0, Math.min(1, 1 - press / 2.6));
+    const hurt = (S.stats && S.stats.maxHp) ? 1 - S.stats.hp / S.stats.maxHp : 0;
+    const want = 150 + 120 * hurt;     /* the standoff the walker keeps */
+
+    function cost(x, y) {
+      let c = 0;
+      /* the margin: a hard wall behind a long, steep shoulder. Blind
+         to heading, so no border is ever a road — and the shoulder
+         starts far enough out that the walker turns while it still
+         has room to turn. */
+      if (A) {
+        const room = A.w / 2 - 48 - Math.abs(x);
+        const vert = A.h / 2 - 48 - Math.abs(y);
+        /* a keep-out band, priced quadratically: at the rim it costs more
+           than a beast at arm's length, so the walker gives up the border
+           before it gives up the room to dodge */
+        c += room < 0 ? 9e6 + room * room * 4000 : (room < 170 ? (170 - room) * (170 - room) * 7 : 0);
+        c += vert < 0 ? 9e6 + vert * vert * 4000 : (vert < 170 ? (170 - vert) * (170 - vert) * 7 : 0);
       }
-      /* the rim vetoes the outward lean outright — the edge is a death
-         dimension, never a campsite */
-      if (pxx > 0.6) ax = p.x >= 0 ? Math.min(ax, 0) : Math.max(ax, 0);
-      if (pyy > 0.6) ay = p.y >= 0 ? Math.min(ay, 0) : Math.max(ay, 0);
-      /* a breath toward the middle, only while the field is quiet —
-         when the beasts press, the field itself picks the road */
-      if (danger < 0.6) {
-        ax += (-p.x / (A.w / 2)) * 0.3;
-        ay += (-p.y / (A.h / 2)) * 0.3;
+      /* the horde, led by its march: where a body is going, not where
+         it was — a closing pack is judged at the place it will stand */
+      let dmin = 1e9;
+      for (const e of bodies) {
+        const sp = e.speed || 0, an = e.ang || 0;
+        const ex = e.x + Math.cos(an) * sp * lead * 0.9;
+        const ey = e.y + Math.sin(an) * sp * lead * 0.9;
+        const d = Math.hypot(x - ex, y - ey) - (e.r || 12);
+        if (d < dmin) dmin = d;
+        if (d > 170) continue;
+        const def = ENEMIES[e.type] || {};
+        const w = def.boss ? 3.4 : def.captain ? 2.2 : 1;
+        const k = 170 - d;
+        c += w * k * k * 1.1;
       }
-    }
-    const m = Math.hypot(ax, ay);
-    if (m < 0.08) {
-      /* a dead-still walker beside a wall is a walker about to be pinned:
-         the page's middle outranks standing still */
-      if (arenaOn()) {
-        const A2 = CFG.world.arena;
-        if (Math.abs(p.x) > A2.w / 2 - 140 || Math.abs(p.y) > A2.h / 2 - 140) {
-          const d = Math.hypot(p.x, p.y) || 1;
-          return { x: -p.x / d, y: -p.y / d };
+      /* spite in the air: the closest approach of every stroke */
+      for (const b of shots) {
+        const vx = b.vx || 0, vy = b.vy || 0;
+        const v2 = vx * vx + vy * vy;
+        if (v2 < 400) continue;
+        let t = ((x - b.x) * vx + (y - b.y) * vy) / v2;
+        t = t < 0 ? 0 : (t > 0.62 ? 0.62 : t);
+        const m = Math.hypot(b.x + vx * t - x, b.y + vy * t - y) - (b.r || 6);
+        if (m < 54) c += (54 - m) * (54 - m) * 30;
+      }
+      /* the keepers' marked circles are the strike itself */
+      for (const tg of rings) {
+        const rr = tg.r || 200;
+        const d = Math.hypot(x - tg.e.x, y - tg.e.y);
+        if (d < rr * 0.95) c += 1e5 + (rr - d) * 120;
+      }
+      /* the ink: ink is worth a step across the whole sheet — a mote
+         nine hundred paces off still outbids wandering — and worth
+         more while the air is calm */
+      if (mote) {
+        const d = Math.hypot(x - mote.x, y - mote.y);
+        const reach = d < 1150 ? 1 - d / 1150 : 0;
+        c -= reach * reach * 2600 * (0.45 + 0.55 * calm);
+      }
+      /* the hunt: at ease the walker closes to its standoff and holds
+         there — near enough to kill, never near enough to be buried */
+      if (dmin > want) c -= 520 * calm * Math.max(0, 1 - (dmin - want) / 460);
+      else if (dmin < 70) c += (70 - dmin) * 240;
+      /* and when the horde is far off the page, a weak scent of it */
+      if (nearE && dmin > want) {
+        const dh = Math.hypot(x - nearE.x, y - nearE.y);
+        c -= 80 * calm * Math.max(0, 1 - dh / 900);
+      }
+      /* the sweep: with the air calm the walker circles the pack — a
+         moving brush is harder to lead than a standing one, and the
+         horde is always entered from its flank, never its face */
+      if (nearE && calm > 0.35) {
+        const ox = x - nearE.x, oy = y - nearE.y;
+        if (ox * ox + oy * oy > 70 * 70) {
+          const here = Math.atan2(p.y - nearE.y, p.x - nearE.x);
+          let da = Math.atan2(oy, ox) - here;
+          while (da > Math.PI) da -= TAU;
+          while (da < -Math.PI) da += TAU;
+          c -= Math.max(0, da * BOT.spin) * 110 * calm;
         }
       }
-      return { x: 0, y: 0 };        /* the paper is at peace */
+      return c;
     }
-    /* surrounded: opposing fears cancel into a jitter — when the field
-       burns, the walker commits at speed toward the thinnest side */
-    let mag = Math.min(1, m);
-    if (danger > 1.5) mag = Math.max(mag, 0.9);
-    return { x: (ax / m) * mag, y: (ay / m) * mag };
+
+    /* ---- the ring of candidate steps, and the honest option to hold ---- */
+    let bx = 0, by = 0, best = Infinity, found = false;
+    const tick = (S.stats && S.stats.time) || 0;
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * TAU;
+      const cx = Math.cos(a), cy = Math.sin(a);
+      let c = cost(p.x + cx * STEP, p.y + cy * STEP);
+      /* a steady hand: turning every frame is its own kind of noise */
+      if (BOT.nx || BOT.ny) c += (1 - (cx * BOT.nx + cy * BOT.ny)) * 26;
+      /* a symmetric noose has no cheapest side — a slow breath of noise
+         keeps the walker from freezing on the precise middle */
+      c += Math.sin(tick * 2.1 + i * 1.7) * 3;
+      if (!found || c < best) { found = true; best = c; bx = cx; by = cy; }
+    }
+    /* standing still is a choice only on a page with nothing to do:
+       a brush that never stops moving is harder to lead, and the horde
+       is always entered from its flank */
+    if (!mote && near > 700 && press < 0.25) { BOT.nx = 0; BOT.ny = 0; return { x: 0, y: 0 }; }
+    /* a committed heading: the walker leans into its choice instead of
+       chattering between two equally cheap ones */
+    let ox = bx, oy = by;
+    if (BOT.nx || BOT.ny) {
+      ox = bx * 0.62 + BOT.nx * 0.38;
+      oy = by * 0.62 + BOT.ny * 0.38;
+      const om = Math.hypot(ox, oy) || 1;
+      ox /= om; oy /= om;
+    }
+    BOT.nx = ox; BOT.ny = oy;
+    return { x: ox, y: oy };
   }
+
   /* main.js's input poll consults this when the hand is still */
   function autoVec(mx, my) {
     if (!S || S.mode !== 'playing' || !S.autoRun) return { x: mx, y: my };
