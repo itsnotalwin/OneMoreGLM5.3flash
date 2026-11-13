@@ -406,7 +406,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.runMode === 'endless') {
       const turn = Math.floor((w - 1) / CFG.wave.wavesPerLevel);
       const inTurn = (w - 1) % CFG.wave.wavesPerLevel;
-      const themeIdxE = turn % AREAS.length;
+      const era = Math.floor((w - 1) / per);              // the ink changes every hundred waves
+      const themeIdxE = era % AREAS.length;
       const areaE = AREAS[themeIdxE];
       hp = areaE.mult.hp;
       sp = areaE.mult.sp;
@@ -417,7 +418,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (S.hardMode) { hp *= CFG.hard.hp; sp *= CFG.hard.sp; budget *= CFG.hard.budget; }
       const lv = inTurn + 1;
       const turnEnd = inTurn === CFG.wave.wavesPerLevel - 1;
-      return { cycle: turn, level: lv, waveInLevel: lv, themeIdx: themeIdxE, area: areaE,
+      return { cycle: era, level: lv, waveInLevel: lv, themeIdx: themeIdxE, area: areaE,
                hp, sp, budget, depth: w - 1,
                isLevelEnd: turnEnd, isGuardianWave: turnEnd,
                isSurge: !turnEnd && CFG.wave.surgeWaves.indexOf(lv) >= 0,
@@ -894,11 +895,16 @@ const rand = (a, b) => a + RNG() * (b - a);
     const st = S.stats;
     st.wave = n;
     const as = areaStateFor(n);
+    const prevAreaIdx = S.areaIdx;
     S.areaIdx = as.themeIdx;
-    const paperStart = as.level === 1 && as.waveInLevel === 1;
+    /* the paper turns when the ink changes: journey sheets at their
+       first scene, the endless scroll at each hundred-wave era */
+    const paperStart = S.runMode === 'endless'
+      ? (n === 1 || prevAreaIdx !== as.themeIdx)
+      : as.level === 1 && as.waveInLevel === 1;
     /* the sheet paints itself, one scene per LEVEL — the tenth
        level presses the red seal and the page is complete */
-    S.landscapeWave = as.level;
+    S.landscapeWave = S.runMode === 'endless' ? ((n - 1) % 100) + 1 : as.level;
     S.waveRevealT = performance.now() / 1000;
     if (paperStart) {
       S.levelMarks = [];

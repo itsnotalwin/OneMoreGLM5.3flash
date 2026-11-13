@@ -3,6 +3,10 @@
 ## Purpose
 Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderboard.
 
+## v21.1 — the endless ink turns per era (13 Nov 2026)
+
+Owner retune on v21.0: the endless scroll's ink changes **every hundred waves** (the full six-scroll palette cycle), not every ten. `areaStateFor`'s endless branch splits the two rhythms — **turns** (ten waves: the Guardian milestone, the difficulty step, the 守 mark) stay on the ten-wave beat, while **eras** (`cycle = floor((w-1)/100)`) drive `themeIdx`/area. `cycle` returning the era keeps the paper-turn banner's "the sheet returns" flavor and `S.landscapeWave` (`((n-1)%100)+1`) on the same rhythm, and `paperStart` is endless-aware — it fires on run start and when the ink actually changes (comparing the previous `areaIdx`), so the gong-and-banner turn moment lands exactly at the palette flip. Verified by sprint (ink constant waves 1-29, guardians at 10/20) and an era-boundary jump (ink flips exactly at wave 101; HUD `WAVE 103 · TURN 11` wearing era 1's ink). Journey/daily untouched. Cache `v21.1`.
+
 ## v21.0 — THE ENDLESS SCROLL, rebuilt as pure waves (13 Nov 2026)
 
 Endless no longer borrows the journey's scene engine. **`areaStateFor` returns a dedicated endless branch**: the raw wave is the only counter — the sheet's ink turns every ten waves at that scroll's own Guardian (a milestone duel, `isGuardianWave` per turn), difficulty steps at the turn (`hpGrowth^turn`) and breathes per wave (`waveBudget`/`waveSp` linear growth, new in `CFG.endless`), and **the kit is never surrendered** — `pendingSeal` never sets in endless, so no seal banner, no clear popup, no naked restart; the wave-end upgrade hand follows each fallen guardian and the build compounds. HUD: `WAVE N · TURN T` with the 守 mark on guardian waves (setArea/setWave/banner/setUpgradeHeader all take the endless wave). Journey and daily are untouched — their scene engine, seals and clear flow are verbatim. Verified end-to-end on a clean boot: waves 1→13 continuous, guardian + boss banner + 守 at wave 10, sheet turn (areaIdx 0→1) at wave 11, no clear popup, zero errors. Cache `v21.0`.
