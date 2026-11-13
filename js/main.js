@@ -66,6 +66,11 @@
     }
     const m = Math.hypot(x, y);
     if (m > 1) { x /= m; y /= m; }
+    /* a still hand lets the autobrush walk — any real input outranks it */
+    if (m === 0 && G.autoVec) {
+      const v = G.autoVec(0, 0);
+      x = v.x; y = v.y;
+    }
     G.S.inputVec.x = x; G.S.inputVec.y = y;
   }
 
@@ -232,6 +237,16 @@
     const muted = document.getElementById('muteBtn').classList.contains('muted');
     on('setSound', !muted);
     on('setGhost', localStorage.getItem('om_ghost_off_v1') !== '1');
+    /* THE AUTOBRUSH — the second scroll's gift: the row itself stays
+       sealed until the brush has walked past the first sheet */
+    const autoRow = document.getElementById('setAuto');
+    if (autoRow) {
+      const autoOn = G.getAutoBrush();
+      autoRow.classList.toggle('hidden', G.getUnlocked() < 2);
+      const ast = document.getElementById('setAutoState');
+      if (ast) ast.textContent = autoOn ? 'ON' : 'OFF';
+      autoRow.classList.toggle('is-on', autoOn);
+    }
     on('setHard', G.getHard());
     /* the sheet's ink: AUTO wears the highest unlocked scroll */
     const tst = document.getElementById('setThemeState');
@@ -269,6 +284,12 @@
     const off = localStorage.getItem('om_ghost_off_v1') === '1';
     if (off) localStorage.removeItem('om_ghost_off_v1');
     else localStorage.setItem('om_ghost_off_v1', '1');
+    SFX.pick(1);
+    refreshSettings();
+  });
+  document.getElementById('setAuto').addEventListener('click', () => {
+    SFX.ensure();
+    G.setAutoBrush(!G.getAutoBrush());
     SFX.pick(1);
     refreshSettings();
   });
@@ -592,8 +613,10 @@
   document.getElementById('clearHomeBtn').addEventListener('click', clearHome);
   document.getElementById('muteBtn').addEventListener('click', toggleMute);
 
-  window.addEventListener('blur', pause);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+  /* the run is never paused out from under the hand: leaving the
+     window or the tab keeps the sheet live (the browser itself
+     stills a hidden tab's frames — the paper waits, unpaused).
+     REST stays a choice — Escape, the button. */
 
   /* ---------------- init ---------------- */
   /* the wordmark pressed in letter by letter, like wet type */

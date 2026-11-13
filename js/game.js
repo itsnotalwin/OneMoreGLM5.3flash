@@ -137,6 +137,15 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
   S.hardMode = getHard();
 
+  /* THE AUTOBRUSH — the second scroll's gift (自). The settings room's
+     quiet toggle, kept on this device like REALLY HARD: a run begun in
+     its keep walks itself, and the ledger pays half for a walked run —
+     the paper knows which strokes were the hand's. */
+  const getAutoBrush = () => !!store.get('om_autobrush_v1', false);
+  function setAutoBrush(v) {
+    store.set('om_autobrush_v1', !!v);
+  }
+
   /* ---------------- the ink purse (符) — v8.8 ----------------
      what the runs press out, kept between runs. om_charms_v1
      carries the ink, every charm's rank, and the one-time feats
@@ -553,7 +562,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.comboT = CFG.combo.decay;
     const pts = Math.round((def.score * mult * (e.elite ? 6 : 1) * comboMult() *
       (S.hardMode ? CFG.hard.score : 1)) / 5) * 5;
-    S.stats.score += pts;
+    /* the walked run pays half — floored to the sheet's own 5-grid */
+    S.stats.score += S.autoRun ? Math.max(5, Math.floor(pts / 10) * 5) : pts;
     S.stats.kills++;
     UI.setScore(S.stats.score);
     UI.setCombo(S.combo, comboMult());
@@ -1216,6 +1226,10 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.dailyCounting = false;
       S.dailyDay = null;
     }
+    /* the autobrush is read once per run: a toggle mid-run never
+       re-prices the ink already spilled */
+    S.autoRun = getAutoBrush();
+    if (UI.setAutoBadge) UI.setAutoBadge(S.autoRun);
     /* the ghost's scribe dips its pen: endless and daily runs record
        their strokes (the journey's scenes are too short to race) */
     S.rec = S.runMode === 'journey' ? null : { t: 0, acc: 0, frames: [] };
@@ -1854,6 +1868,65 @@ const rand = (a, b) => a + RNG() * (b - a);
     });
     S.shake = Math.max(S.shake, 4);
     SFX.vortex();
+  }
+
+  /* ---------------- the autobrush's own hand (自) ----------------
+     A modest walker, not a master: repelled by the near horde and
+     every flying spite, drawn to the nearest loose mote of ink,
+     drifting off a bounded page's margins. The hand always outranks
+     it — one key or one finger and it yields for as long as they
+     stay. Its runs pay half; this is comfort, not a scoring tool. */
+  function autoSteer(p) {
+    let ax = 0, ay = 0;
+    const NEAR = 240, NEAR2 = NEAR * NEAR;
+    for (const e of S.enemies) {
+      const dx = p.x - e.x, dy = p.y - e.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= NEAR2 || d2 < 1) continue;
+      const d = Math.sqrt(d2);
+      const w = (NEAR - d) / NEAR;
+      const scare = e.r > 26 ? 2.2 : 1;         /* the big ones bite harder */
+      ax += (dx / d) * w * scare;
+      ay += (dy / d) * w * scare;
+    }
+    const BNear = 180, BNear2 = BNear * BNear;
+    for (const b of S.ebullets) {
+      const dx = p.x - b.x, dy = p.y - b.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= BNear2 || d2 < 1) continue;
+      const d = Math.sqrt(d2);
+      const w = (BNear - d) / BNear;
+      ax += (dx / d) * w * 1.6;
+      ay += (dy / d) * w * 1.6;
+    }
+    let best = null, bestD = 420 * 420;
+    for (const mt of S.motes) {
+      const dx = mt.x - p.x, dy = mt.y - p.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD) { bestD = d2; best = mt; }
+    }
+    if (best) {
+      const d = Math.sqrt(bestD) || 1;
+      ax += ((best.x - p.x) / d) * 0.9;
+      ay += ((best.y - p.y) / d) * 0.9;
+    }
+    if (arenaOn()) {
+      const A = CFG.world.arena, mx = A.w / 2 - 90, my = A.h / 2 - 90;
+      if (p.x > mx) ax -= (p.x - mx) / 60;
+      if (p.x < -mx) ax += (-mx - p.x) / 60;
+      if (p.y > my) ay -= (p.y - my) / 60;
+      if (p.y < -my) ay += (-my - p.y) / 60;
+    }
+    const m = Math.hypot(ax, ay);
+    if (m < 0.08) return { x: 0, y: 0 };        /* the paper is at peace */
+    const cap = m > 1 ? 1 / m : 1;
+    return { x: ax * cap, y: ay * cap };
+  }
+  /* main.js's input poll consults this when the hand is still */
+  function autoVec(mx, my) {
+    if (!S || S.mode !== 'playing' || !S.autoRun) return { x: mx, y: my };
+    if (mx !== 0 || my !== 0) return { x: mx, y: my };
+    return autoSteer(S.player);
   }
 
   /* ---------------- updates ---------------- */
@@ -5180,6 +5253,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
+    getAutoBrush, setAutoBrush, autoVec,
     /* the purse (v8.8): the charm room and the QA probes read these */
     getInk, setInk, charmLv, charmRankCount, charmCap, buyCharm, getThemeSetting, setThemeSetting,
     get qaDaily() { return qaDaily; },

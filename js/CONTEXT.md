@@ -3,6 +3,10 @@
 ## Purpose
 Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderboard.
 
+## v20.5 — no auto-pause, THE AUTOBRUSH (13 Nov 2026)
+
+Two behavior changes, both additive. **The run is never paused out from under the hand any more**: the `blur`/`visibilitychange` pause hooks are gone from `main.js` — REST stays a choice (Escape, the button). A hidden tab still stills its own frames (the browser throttles rAF), but returning finds the sheet live, not the REST door. **THE AUTOBRUSH (自)** — the second scroll's gift: a settings-room toggle (`om_autobrush_v1`, device-local like REALLY HARD, WIPE sweeps it) whose row stays hidden until `getUnlocked() >= 2`. A run begun in its keep is steered by `autoSteer` (repelled by the near horde and spite-drops, drawn to the nearest mote, drifting off bounded margins) — fed in through `main.js`'s per-frame `vec()` poll via `G.autoVec(0, 0)`, which yields to any real key or finger. Its score pays half (`killEnemy`, floored to the 5-grid), the HUD wears the inked 自 beside the 難, and the toggle is read once per run so mid-run changes never re-price spilled ink. The purse/ink economy is deliberately untouched — only score is halved.
+
 ## v20.3 render performance pass (11 Nov 2026)
 
 Three render-side savings, all additive to the existing cache discipline: the entities that can crowd the sheet (bullets, enemy bullets, enemies, idle wanderers, motes, pickups, particles) now cull against the same world-space view rect the stains already used — off-paper bodies no longer build blob paths at all (at the horde cap most beasts are usually beyond the eye); the eye's vignette is baked once into a quarter-res offscreen sheet keyed by the existing `vgKey` and blitted per frame instead of a full-screen gradient fill (the low-HP red rim keeps its cached gradient + alpha pulse); and the twelve wash pairs call `decode()` at load so the first `drawImage` of a wash no longer stalls the frame it lands in. Wash-chunk baking (compositing master washes into world-space chunk canvases) remains the next documented step. Cache `v20.3`.

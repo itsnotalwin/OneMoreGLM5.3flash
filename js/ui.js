@@ -381,6 +381,13 @@ const UI = (() => {
     if (el.hudHard) el.hudHard.classList.toggle('hidden', !v);
   }
 
+  /* the autobrush's own mark: the inked 自 rides beside the 難 —
+     the sheet tells you whose hand it is, and what the ledger pays */
+  function setAutoBadge(v) {
+    const badge = document.getElementById('hudAuto');
+    if (badge) badge.classList.toggle('hidden', !v);
+  }
+
   /* a level's seal breaks — the scene is complete. Red, brief,
      unmistakable: the counter is about to climb, not restart. */
   function sealBanner(area, level) {
@@ -1008,7 +1015,7 @@ const UI = (() => {
 
   return {
     show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
-    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected,
+    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected, setAutoBadge,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
     setInkLine,

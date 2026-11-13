@@ -1803,6 +1803,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   box-shadow: 1px 1px 0 rgba(26,23,20,.3);
   white-space: nowrap;
 }
+/* the walked run's own seal — ink, not vermilion: comfort, not danger */
+.hud-auto{
+  background: var(--ink-70);
+  transform: rotate(3deg);
+}
 
 /* the ghost's verdict: a quiet line between the tally and the doors */
 .ghost-line{
