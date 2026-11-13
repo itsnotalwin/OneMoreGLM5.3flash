@@ -25,6 +25,8 @@ const SFX = (() => {
       master.connect(comp); comp.connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
+    /* a room asked for music before the first blessing — answer it now */
+    MUSIC.retry();
   }
 
   function tone(o) {
@@ -87,6 +89,81 @@ const SFX = (() => {
     tone({ f: 170 - 40 * size, f2: 52, type: 'sine', dur: 0.1 + 0.06 * size, vol: 0.09 + 0.07 * size, delay });
   }
 
+  /* ============================================================
+     THE SCORE'S VOICE — the painted loops (SoundCraft-bounced FLAC).
+     A title's breath and the scroll's pulse: the paper asks for one
+     or the other, the walker of rooms is answered with a crossfade.
+     Lazy-decoded after the first tap; the mute stills it with all.
+     ============================================================ */
+  const MUSIC = (() => {
+    const FILES = { title: 'snd/om_title.flac', scroll: 'snd/om_scroll.flac' };
+    const bufs = {};
+    let current = null;   // the room the paper asked for
+    let src = null, gain = null;
+    let pending = null;   // asked before the context existed
+
+    async function buf(kind) {
+      if (bufs[kind]) return bufs[kind];
+      const res = await fetch(FILES[kind]);
+      if (!res.ok) throw new Error('the music could not be fetched');
+      const ab = await res.arrayBuffer();
+      const b = await ctx.decodeAudioData(ab);
+      bufs[kind] = b;
+      return b;
+    }
+    function walkIn(buffer) {
+      const old = src, oldG = gain;
+      if (old) {
+        try {
+          oldG.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.5);
+          old.stop(ctx.currentTime + 1.8);
+        } catch (e) {}
+      }
+      src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      gain = ctx.createGain();
+      gain.gain.value = 0.0001;
+      gain.gain.setTargetAtTime(0.34, ctx.currentTime + 0.05, 1.1);
+      src.connect(gain); gain.connect(master);
+      src.start();
+    }
+    function start(kind) {
+      if (!FILES[kind]) return;
+      current = kind;
+      if (!ctx) { pending = kind; return; }      // remembered; the next tap wakes it
+      if (muted) return;                         // remembered; unmute wakes it
+      buf(kind).then((b) => {
+        if (current !== kind) return;            // the paper changed its mind mid-fetch
+        walkIn(b);
+      }).catch(() => {});
+    }
+    function stop(fade = 1.2) {
+      if (!src) return;
+      try {
+        gain.gain.setTargetAtTime(0.0001, ctx.currentTime, fade / 3);
+        src.stop(ctx.currentTime + fade);
+      } catch (e) {}
+      src = null; gain = null;
+    }
+    return {
+      start,
+      stop,
+      retry() {                                   // the first blessing landed: wake the remembered room
+        if (pending && !muted && ctx) { const k = pending; pending = null; start(k); }
+      },
+      warm() {                                    // prime both sheets after the gate
+        if (!ctx) return;
+        Object.keys(FILES).forEach((k) => { buf(k).catch(() => {}); });
+      },
+      refresh() {                                 // the mute toggle's other hand
+        if (muted) { stop(0.6); return; }
+        if (current && !src && ctx) start(current);
+      },
+      get current() { return current; },
+    };
+  })();
+
   /* the flood guard: a hundred beasts bursting in a breath must not
      become a hundred audio nodes — each listed sound answers at most
      once per its window, and the soundscape loses nothing (the
@@ -105,9 +182,11 @@ const SFX = (() => {
   return {
     get muted() { return muted; },
     ensure,
+    music: MUSIC,
     toggle() {
       muted = !muted;
       try { localStorage.setItem('om_muted_v1', muted ? '1' : '0'); } catch (e) {}
+      MUSIC.refresh();
       return muted;
     },
 

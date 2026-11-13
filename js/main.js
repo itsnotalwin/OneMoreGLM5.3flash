@@ -91,6 +91,7 @@
   let lastMode = 'journey';
   function start(mode, opts) {
     SFX.ensure();
+    SFX.music.start('scroll');     /* the scroll's pulse carries the run */
     R.resetStains(); /* a fresh sheet */
     ADAPT.grace = 4; /* spawn bursts are allowed their jank */
     G.startRun(mode || lastMode, opts);
@@ -520,10 +521,13 @@
     if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     UI.show('title');
     G.mode = 'title';
+    SFX.ensure();
+    SFX.music.start('title');      /* the title's breath — mute stills it with all */
   }
 
   function playIntro() {
     SFX.ensure();
+    SFX.music.warm();              /* prime both loops while the film plays */
     UI.show(null);
     UI.hud(false);
     document.body.classList.add('intro-live');

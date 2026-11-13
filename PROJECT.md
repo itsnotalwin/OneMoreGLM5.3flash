@@ -6,6 +6,14 @@ An ink-brush survival browser game with journey, endless, and daily modes. This 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
 
+## v20.6 — the bounded page holds its beasts, the walker learns the walls; autobrush penalty retuned (13 Nov 2026)
+
+Owner-reported fixes: bounded sheets no longer show beasts on the desk around the paper — `spawnEnemy` births at the page margin (the 420px off-page walk-in is gone), `updateEnemies` clamps every beast per tick against knockback, and motes clamp in `updateMotes`. THE AUTOBRUSH's walker learned the walls (outward lean zeroed at the bound, center gravity, out-of-margin ink refused) and now dodges keeper ring-telegraphs, including the standing-on-center case. Penalty retuned per owner: **levels/XP are never reduced**, while purse ink and score each pay half. Cache `v20.6`.
+
+## v20.7 — music: the score's voice (13 Nov 2026)
+
+Owner request: add music and use SoundCraft to upgrade the sound. A 16-bar ink-wash theme (hirajoshi on A, 72 BPM) was composed as MIDI and voiced in SoundCraft with the built-in subtractive synth (drone / koto-pluck / flute) and drum synth (taiko), plate reverb + chorus on the melodic tracks; its sparse title half and denser scroll half were bounced to `snd/om_title.flac` and `snd/om_scroll.flac` (~2.6MB total, 16-bit FLAC, normalized). `audio.js` now carries a MUSIC engine (looped buffers into the SFX master chain, mute-aware, gate-aware with pending-retry, room crossfades, warm-priming during the opening); `main.js` asks for the title loop on `enterTitle` and the scroll loop on `start`. The SoundCraft session + MIDI sources are preserved at `_music/` beside the repo. Cache `v20.7`.
+
 ## v20.5 — no auto-pause and THE AUTOBRUSH (13 Nov 2026)
 
 Owner requests landed additively: leaving the window no longer pauses a run (blur/visibilitychange hooks removed; REST is Escape/button only), and **THE AUTOBRUSH** — an unlockable settings toggle visible from scroll 2 (`getUnlocked() >= 2`) — lets the brush walk itself (`autoSteer` in `game.js`, fed through the per-frame input poll, hand input always outranks it) while the player only chooses the upgrades. Its runs score half (floored to the 5-grid), marked by an inked 自 HUD badge; the charm/ink economy is untouched. Toggle stored in `om_autobrush_v1` (device-local). Cache `v20.5`.

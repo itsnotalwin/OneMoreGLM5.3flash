@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v20.6';
+const VER = 'v20.7';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -20,6 +20,8 @@ const CORE = [
   'index.html',
   'manifest.json',
   'css/style.css',
+  'snd/om_title.flac',
+  'snd/om_scroll.flac',
   'js/audio.js',
   'js/charms.js',
   'js/cloud-save.js',
