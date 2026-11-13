@@ -451,7 +451,16 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   z-index: 1;
   animation: riseIn .7s ease 3.75s backwards;
 }
-.foot-stamp{ font-size: 8px; letter-spacing: .28em; color: var(--ink-55); }
+.foot-stamp{
+  display: inline-block;
+  font-size: 9px; letter-spacing: .28em; text-indent: .28em;
+  color: var(--ink-62);
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  padding: 4px 10px 3px;
+  transform: rotate(-1.1deg);
+  box-shadow: 2px 2px 0 rgba(26,23,20,.12);
+}
 
 /* ============================================================
    UPGRADE SCREEN — a hand of three strokes, always on one page.

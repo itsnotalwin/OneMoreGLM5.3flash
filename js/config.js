@@ -5,6 +5,10 @@
    paper. Edit this file to rebalance the world.
    ============================================================ */
 
+/* the build's own mark: one source of truth — the title wears it,
+   the service worker bumps beside it */
+window.OM_VERSION = 'v21.3';
+
 const CFG = {
   player: {
     r: 10,

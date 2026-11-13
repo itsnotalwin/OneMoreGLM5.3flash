@@ -623,6 +623,11 @@
      REST stays a choice — Escape, the button. */
 
   /* ---------------- init ---------------- */
+  /* the build's mark, worn where the title signs its name */
+  {
+    const stamp = document.getElementById('verStamp');
+    if (stamp && window.OM_VERSION) stamp.textContent = 'BUILD ' + String(window.OM_VERSION).toUpperCase();
+  }
   /* the wordmark pressed in letter by letter, like wet type */
   (function wrapLetters() {
     const w = document.querySelector('.title-word');
