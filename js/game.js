@@ -398,6 +398,31 @@ const rand = (a, b) => a + RNG() * (b - a);
       : Math.min(cycle, AREAS.length - 1);
     const area = AREAS[themeIdx];
     let hp = area.mult.hp, sp = area.mult.sp, budget = area.mult.budget;
+    /* THE ENDLESS SCROLL (v21): pure waves. No scenes, no seals, no
+       resets — the sheet's ink turns at every tenth wave where that
+       scroll's own Guardian waits, difficulty steps at the turn and
+       breathes per wave, compounding forever. The kit you grow is
+       the kit you keep: the build never surrenders. */
+    if (S.runMode === 'endless') {
+      const turn = Math.floor((w - 1) / CFG.wave.wavesPerLevel);
+      const inTurn = (w - 1) % CFG.wave.wavesPerLevel;
+      const themeIdxE = turn % AREAS.length;
+      const areaE = AREAS[themeIdxE];
+      hp = areaE.mult.hp;
+      sp = areaE.mult.sp;
+      budget = areaE.mult.budget;
+      hp *= Math.pow(CFG.endless.hpGrowth, turn);
+      sp *= 1 + CFG.endless.waveSp * (w - 1);
+      budget *= 1 + CFG.endless.waveBudget * (w - 1);
+      if (S.hardMode) { hp *= CFG.hard.hp; sp *= CFG.hard.sp; budget *= CFG.hard.budget; }
+      const lv = inTurn + 1;
+      const turnEnd = inTurn === CFG.wave.wavesPerLevel - 1;
+      return { cycle: turn, level: lv, waveInLevel: lv, themeIdx: themeIdxE, area: areaE,
+               hp, sp, budget, depth: w - 1,
+               isLevelEnd: turnEnd, isGuardianWave: turnEnd,
+               isSurge: !turnEnd && CFG.wave.surgeWaves.indexOf(lv) >= 0,
+               isElite: turnEnd, endless: true };
+    }
     /* the climb inside a sheet: each level presses harder than the last,
        so a sheet's tenth level always bites far harder than its first */
     hp *= CFG.wave.levelHp(level);
@@ -956,8 +981,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.spawnTimer = 1.0;
     S.clearedT = 0;
     S.pendingUnroll = null;
-    UI.setWave(as.waveInLevel);
-    UI.setArea(as.area, as.level, as.waveInLevel, as.isLevelEnd);
+    UI.setWave(S.runMode === 'endless' ? n : as.waveInLevel);
+    UI.setArea(as.area, as.level, as.waveInLevel, as.isLevelEnd, S.runMode === 'endless' ? n : 0);
     UI.setProgress(0);
     if (opts.quiet) return;   /* a cutscene announces this sheet — no banners */
     if (paperStart) {
@@ -978,7 +1003,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       UI.levelBanner(as.area, as.level, as.area.names[as.level - 1]);
       SFX.wave(true);
     } else {
-      UI.banner(as.waveInLevel, as.isSurge, as.isGuardianWave ? 'guardian' : as.isLevelEnd ? 'seal' : 'wave');
+      UI.banner(S.runMode === 'endless' ? n : as.waveInLevel, as.isSurge,
+        as.isGuardianWave ? 'guardian' : as.isLevelEnd ? 'seal' : 'wave');
       SFX.wave(as.isSurge || as.isLevelEnd);
     }
     if (as.isGuardianWave) {
@@ -1029,7 +1055,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.choices = pickUpgrades(3);
     S.selected = null;
     const as = areaStateFor(S.stats.wave);
-    UI.setUpgradeHeader(as.waveInLevel, as.level, as.area, S.upKind, S.stats.xpLevel);
+    UI.setUpgradeHeader(as.waveInLevel, as.level, as.area, S.upKind, S.stats.xpLevel,
+      S.runMode === 'endless' ? S.stats.wave : 0);
     UI.fillUpgrades(S.choices, S.stats.levels);
     UI.markSelected(null);
     const nxt = areaStateFor(S.stats.wave + 1);
@@ -5240,7 +5267,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.clearedT = 0.7;
       /* if the seal earned a pick and a mote-upgrade steals the screen,
          the pick is still owed — remember it */
-      S.pendingSeal = areaStateFor(st.wave).isLevelEnd;
+      S.pendingSeal = S.runMode !== 'endless' && areaStateFor(st.wave).isLevelEnd;
       /* the seal breaks — cry the scene complete before the counter
          climbs, so a new level never reads as the wave restarting */
       if (S.pendingSeal) {

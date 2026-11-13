@@ -140,8 +140,11 @@ const CFG = {
     showAt: 8,         // chain count before the chip appears
   },
 
-  /* the endless paper keeps growing teeth — and the teeth grow fangs */
-  endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32 },
+  /* the endless paper keeps growing teeth — and the teeth grow fangs:
+     a step of teeth at every turn of the sheet (hpGrowth, ten waves),
+     and a breath of pressure on every single wave (waveBudget/waveSp) */
+  endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32,
+             waveBudget: 0.05, waveSp: 0.006 },
 
   /* ---- REALLY HARD ----
      the title's red toggle, remembered on this device. A hard page

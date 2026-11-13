@@ -275,10 +275,18 @@ const UI = (() => {
   /* the sheet's crest, and where the run stands within it:
      第二景 · wave X of ten — the scene number leads, in red,
      so a new level never reads as the counter resetting */
-  function setArea(area, level, waveInLevel, isLevelEnd) {
+  function setArea(area, level, waveInLevel, isLevelEnd, endlessWave) {
     if (!el.hudArea) return;
     el.hudAreaKanji.textContent = area.kanji;
     el.hudAreaName.textContent = area.name;
+    if (endlessWave) {
+      /* the endless scroll: pure waves — the count climbs forever,
+         the turn (ten waves, one guardian) is the only milestone */
+      const turn = Math.floor((endlessWave - 1) / CFG.wave.wavesPerLevel) + 1;
+      el.hudWaveTotal.innerHTML =
+        `<b class="lv-num">WAVE ${endlessWave}</b><span class="lv-sep">·</span><span class="lv-wave">TURN ${turn}${isLevelEnd ? ' <span class="lv-keep">守</span>' : ''}</span>`;
+      return;
+    }
     el.hudWaveTotal.innerHTML =
       `<b class="lv-num">SCENE ${level}</b><span class="lv-sep">·</span><span class="lv-wave">${waveInLevel}/${CFG.wave.wavesPerLevel}${isLevelEnd && level === CFG.wave.levelsPerArea ? ' <span class="lv-keep">守</span>' : ''}</span>`;
   }
@@ -882,23 +890,32 @@ const UI = (() => {
         : `DEPLOY — SCENE ${level}`);
   }
 
-  function setUpgradeHeader(waveInLevel, level, area, kind, xpLevel) {
+  function setUpgradeHeader(waveInLevel, level, area, kind, xpLevel, endlessWave) {
     if (kind === 'level') {
       el.upKicker.innerHTML =
-        `THE INK RISES — INK LEVEL ${xpLevel}`;
+      `THE INK RISES — INK LEVEL ${xpLevel}`;
       el.upNext.innerHTML = `LV&nbsp;${xpLevel + 1}`;
       return;
     }
     if (kind === 'chest') {
       el.upKicker.innerHTML =
-        'THE CHEST OPENS — <span class="kanji-inline">宝</span> A GIFT FROM THE GUARDIAN';
+      'THE CHEST OPENS — <span class="kanji-inline">宝</span> A GIFT FROM THE GUARDIAN';
       el.upNext.innerHTML = 'GIFT';
+      return;
+    }
+    if (endlessWave) {
+      /* the endless scroll's hand: a guardian fell, the sheet turned —
+         the kit endures, the wave count never looks back */
+      const turn = Math.floor((endlessWave - 1) / CFG.wave.wavesPerLevel) + 1;
+      el.upKicker.innerHTML =
+      `THE GUARDIAN FALLS — SHEET TURNS · <span class="kanji-inline">${area.kanji}</span> TURN ${turn}`;
+      el.upNext.innerHTML = String(endlessWave + 1);
       return;
     }
     /* a level's seal was just broken */
     const lastLevel = level >= CFG.wave.levelsPerArea;
     el.upKicker.innerHTML =
-      `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — SCENE ${level} SEALED`;
+    `SHEET <span class="kanji-inline">${area.kanji}</span> ${area.name} — SCENE ${level} SEALED`;
     el.upNext.innerHTML = lastLevel
       ? '<span class="kanji-inline">?</span>'
       : String(level + 1);
