@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v21.6';
+window.OM_VERSION = 'v21.7';
 
 const CFG = {
   player: {

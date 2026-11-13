@@ -877,5 +877,5 @@ deployment held until the word "go".
 All audio is free for commercial use:
 
 - **Title music** — [Japanese Shakuhachi Flute - Zen](https://pixabay.com/music/ambient-japanese-shakuhachi-flute-zen-379144/) by Turning_Pages (Pixabay Content License, free for use, no attribution required)
-- **Endless battle music** — [Japan Taiko](https://pixabay.com/music/percussion-japan-taiko-490663/) by Alec_Koff (Pixabay Content License, free for use, no attribution required)
-- **Impact sound effects** — [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds) by Kenney (Creative Commons Zero / CC0 — free for any use)
+- **Endless battle music** — [Petals On The Water (Japanese Fusion LoFi)](https://pixabay.com/music/beats-petals-on-the-water-full-version-japanese-fusion-lofi-392739/) by kaazoom (Pixabay Content License, free for use, no attribution required)
+- **Impact & swish sound effects** — [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds) by Kenney (CC0) and swish/splat/hit samples from [Freesound](https://freesound.org) (Creative Commons Zero — sounds 877978, 879261, 460876)

@@ -98,8 +98,9 @@ const SFX = (() => {
      sample is missing, still decoding, or the sheet is muted.
      ============================================================ */
   const SAMPLE_FILES = {
-    hit: 'snd/sfx/hit.ogg',
-    kill: 'snd/sfx/kill.ogg',
+    shoot: 'snd/sfx/shoot.mp3',
+    hit: 'snd/sfx/hit.mp3',
+    kill: 'snd/sfx/kill.mp3',
     hurt: 'snd/sfx/hurt.ogg',
     wave: 'snd/sfx/wave.ogg',
     pickup: 'snd/sfx/pickup.ogg',
@@ -176,7 +177,7 @@ const SFX = (() => {
       src.loop = true;
       gain = ctx.createGain();
       gain.gain.value = 0.0001;
-      gain.gain.setTargetAtTime(0.34, ctx.currentTime + 0.05, 1.1);
+      gain.gain.setTargetAtTime(0.26, ctx.currentTime + 0.05, 1.1);
       src.connect(gain); gain.connect(master);
       src.start();
     }
@@ -243,8 +244,9 @@ const SFX = (() => {
       return muted;
     },
 
-    /* brush flicks a droplet */
+    /* brush flicks a droplet — recorded swish when decoded */
     shoot: rate('shoot', 55, () => {
+      if (trySample('shoot', 0.5, 0.92, 1.1)) return;
       tone({ f: 1350, f2: 780, type: 'triangle', dur: 0.035, vol: 0.026 });
       noise({ dur: 0.025, vol: 0.014, hp: 2600 });
     }),
