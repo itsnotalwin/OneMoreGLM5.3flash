@@ -529,6 +529,7 @@
   function playIntro() {
     SFX.ensure();
     SFX.music.warm();              /* prime both loops while the film plays */
+    SFX.warmSamples();             /* and the recorded impacts with them */
     UI.show(null);
     UI.hud(false);
     document.body.classList.add('intro-live');

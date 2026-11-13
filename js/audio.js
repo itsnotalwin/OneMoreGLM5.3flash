@@ -90,13 +90,64 @@ const SFX = (() => {
   }
 
   /* ============================================================
-     THE SCORE'S VOICE — the painted loops (SoundCraft-bounced FLAC).
-     A title's breath and the scroll's pulse: the paper asks for one
-     or the other, the walker of rooms is answered with a crossfade.
-     Lazy-decoded after the first tap; the mute stills it with all.
+     THE SAMPLED CLOTHES — recorded CC0 impacts (Kenney's impact
+     set) for the loudest, most repeated voices. Each mapped voice
+     tries its recorded sample first — decoded lazily on first
+     mention, played with a hair of rate variance so no two land
+     alike — and falls back to the procedural voice whenever a
+     sample is missing, still decoding, or the sheet is muted.
+     ============================================================ */
+  const SAMPLE_FILES = {
+    hit: 'snd/sfx/hit.ogg',
+    kill: 'snd/sfx/kill.ogg',
+    hurt: 'snd/sfx/hurt.ogg',
+    wave: 'snd/sfx/wave.ogg',
+    pickup: 'snd/sfx/pickup.ogg',
+    thud: 'snd/sfx/thud.ogg',
+    gong: 'snd/sfx/gong.ogg',
+    deploy: 'snd/sfx/deploy.ogg',
+  };
+  const sbufs = Object.create(null);
+  let sampleFetches = 0;
+  function sampleBuf(name) {
+    if (!ctx) return Promise.resolve(null);
+    if (sbufs[name]) return Promise.resolve(sbufs[name]);
+    if (sbufs[name] === null) return Promise.resolve(null);   // known missing
+    return fetch(SAMPLE_FILES[name])
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('no file'))))
+      .then((ab) => ctx.decodeAudioData(ab))
+      .then((b) => { sbufs[name] = b; return b; })
+      .catch(() => { sbufs[name] = null; return null; });
+  }
+  function trySample(name, vol, rateMin, rateMax) {
+    if (!ctx || muted) return false;
+    const b = sbufs[name];
+    if (b === undefined) { sampleBuf(name); return false; }   // first mention: procedural covers while it decodes
+    if (b === null) return false;
+    const src = ctx.createBufferSource();
+    src.buffer = b;
+    src.playbackRate.value = rateMin + Math.random() * (rateMax - rateMin);
+    const g = ctx.createGain();
+    g.gain.value = vol;
+    src.connect(g); g.connect(master);
+    src.start();
+    return true;
+  }
+  function warmSamples() {
+    if (!ctx || sampleFetches) return;
+    sampleFetches = 1;
+    Object.keys(SAMPLE_FILES).forEach((k) => sampleBuf(k));
+  }
+
+  /* ============================================================
+     THE SCORE'S VOICE — recorded loops (Pixabay-licensed MP3):
+     a shakuhachi-zen title and a taiko-driven scroll. The paper
+     asks for one or the other, the walker of rooms is answered
+     with a crossfade. Lazy-decoded after the first tap; the mute
+     stills it with all.
      ============================================================ */
   const MUSIC = (() => {
-    const FILES = { title: 'snd/om_title.flac', scroll: 'snd/om_scroll.flac' };
+    const FILES = { title: 'snd/om_title.mp3', scroll: 'snd/om_scroll.mp3' };
     const bufs = {};
     let current = null;   // the room the paper asked for
     let src = null, gain = null;
@@ -198,19 +249,30 @@ const SFX = (() => {
       noise({ dur: 0.025, vol: 0.014, hp: 2600 });
     }),
     /* droplet breaks on a blot */
-    hit: rate('hit', 45, () => { noise({ dur: 0.03, vol: 0.05, lp: 1800, q: 1.2 }); }),
+    hit: rate('hit', 45, () => {
+      if (trySample('hit', 0.55, 0.94, 1.08)) return;
+      noise({ dur: 0.03, vol: 0.05, lp: 1800, q: 1.2 });
+    }),
     /* a creature bursts into stain */
-    kill: rate('kill', 50, () => { splat(1); tone({ f: 520, f2: 240, type: 'triangle', dur: 0.06, vol: 0.045, delay: 0.015 }); }),
+    kill: rate('kill', 50, () => {
+      if (trySample('kill', 0.6, 0.95, 1.06)) return;
+      splat(1); tone({ f: 520, f2: 240, type: 'triangle', dur: 0.06, vol: 0.045, delay: 0.015 });
+    }),
     /* big creature dies */
     bigKill() { splat(2.1); tone({ f: 96, f2: 38, type: 'sine', dur: 0.3, vol: 0.2 }); },
     /* the player bleeds ink */
     hurt() {
+      if (trySample('hurt', 0.72, 0.9, 1.06)) return;
       tone({ f: 130, f2: 42, type: 'sawtooth', dur: 0.3, vol: 0.24 });
       noise({ dur: 0.22, vol: 0.17, lp: 420, q: 1 });
       noise({ dur: 0.08, vol: 0.06, hp: 900, delay: 0.02 });
     },
     /* taiko announces the wave */
     wave(surge) {
+      if (trySample('wave', 0.85, 0.86, 1.0)) {
+        if (surge) tone({ f: 1308, type: 'triangle', dur: 0.2, vol: 0.05, delay: 0.24 });
+        return;
+      }
       tone({ f: 108, f2: 44, type: 'sine', dur: 0.42, vol: surge ? 0.34 : 0.26 });
       noise({ dur: 0.06, vol: 0.1, lp: 300, delay: 0.004 });
       if (surge) {
@@ -225,10 +287,12 @@ const SFX = (() => {
     },
     /* a sealed strip refuses the hand — a dull wooden knock */
     thud() {
+      if (trySample('thud', 0.7, 0.9, 1.06)) return;
       tone({ f: 118, f2: 52, type: 'sine', dur: 0.16, vol: 0.2 });
       noise({ dur: 0.05, vol: 0.07, lp: 500 });
     },
     deploy() {
+      if (trySample('deploy', 0.6, 0.95, 1.06)) return;
       tone({ f: 587.3, type: 'triangle', dur: 0.1, vol: 0.1 });
       tone({ f: 880, type: 'triangle', dur: 0.14, vol: 0.1, delay: 0.08 });
       splat(0.6, 0.08);
@@ -259,6 +323,7 @@ const SFX = (() => {
     }),
     /* the scroll turns — a low bronze gong with a breath of shimmer */
     gong() {
+      if (trySample('gong', 0.85, 0.96, 1.02)) return;
       tone({ f: 138, f2: 128, type: 'sine', dur: 1.3, vol: 0.3 });
       tone({ f: 276, f2: 252, type: 'triangle', dur: 0.9, vol: 0.1, delay: 0.02 });
       tone({ f: 552, f2: 530, type: 'sine', dur: 0.6, vol: 0.045, delay: 0.04 });
@@ -306,6 +371,7 @@ const SFX = (() => {
     /* ---- v4: the scrolls ---- */
     /* a mote of ink finds the brush */
     pickup: rate('pickup', 40, () => {
+      if (trySample('pickup', 0.38, 0.88, 1.18)) return;
       tone({ f: 1560, f2: 2100, type: 'sine', dur: 0.045, vol: 0.022 });
     }),
     /* the paper mends / the pot is drunk */
@@ -371,5 +437,13 @@ const SFX = (() => {
       noise({ dur: 0.08, vol: 0.028 * v, hp: 1400, lp: 4800, q: 1.4, delay: 0.015 });
       tone({ f: 220, f2: 130, type: 'sine', dur: 0.1, vol: 0.03 * v, delay: 0.01 });
     },
+
+    /* ---- v21.5: the sampled clothes (Kenney CC0 impacts) ----
+       the loudest, most repeated voices wear recorded impacts —
+       decoded lazily, played with a hair of rate variance so no two
+       land alike — and fall back to the procedural voice whenever a
+       sample is missing, still decoding, or the sheet is muted */
+    warmSamples,
+    trySample,
   };
 })();

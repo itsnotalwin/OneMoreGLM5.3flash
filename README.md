@@ -871,3 +871,11 @@ The development roadmap lives one floor up: [../ROADMAP.md](../ROADMAP.md) —
 the six Guardian thrones (v20), the study's possible return (v21), the deep
 shelf (v22), the go-live gate (v23). Current build **v19.3 THE PURSE**;
 deployment held until the word "go".
+
+## Sound & Music Credits
+
+All audio is free for commercial use:
+
+- **Title music** — [Japanese Shakuhachi Flute - Zen](https://pixabay.com/music/ambient-japanese-shakuhachi-flute-zen-379144/) by Turning_Pages (Pixabay Content License, free for use, no attribution required)
+- **Endless battle music** — [Japan Taiko](https://pixabay.com/music/percussion-japan-taiko-490663/) by Alec_Koff (Pixabay Content License, free for use, no attribution required)
+- **Impact sound effects** — [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds) by Kenney (Creative Commons Zero / CC0 — free for any use)
