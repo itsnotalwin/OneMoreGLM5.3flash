@@ -528,10 +528,15 @@ const rand = (a, b) => a + RNG() * (b - a);
       speed, elite: !!opts.elite,
       ang: Math.atan2(S.player.y - y, S.player.x - x),
       t: rand(0, 10), hitFlash: 0, kbx: 0, kby: 0,
+    };
+    /* the bounded page holds its beasts: they are born at the page's
+       own margin and walk in — never across the desk around it */
+    if (arenaOn()) clampArena(e, e.r + 2);
+    Object.assign(e, {
       state: 'cruise', stateT: rand(0.3, 1.5), seed: rand(0, 6.28), stun: 0,
       slowT: 0, orbCd: 0, dirT: 0, spawnT: type === 'titan' || def.boss ? 2.5 : 0,
       px: 0, py: 0, // kage perch / crane pass target
-    };
+    });
     S.enemies.push(e);
     S.rings.push({ x, y, max: r * 2.4, life: 0.3, maxLife: 0.3 });
     return e;
@@ -1590,6 +1595,10 @@ const rand = (a, b) => a + RNG() * (b - a);
         practice: S.runMode === 'daily' && !S.dailyCounting,
         hard: !!S.hardMode, best: !!nb,
       });
+      /* the walked run presses half into the purse (自) — the hand's
+         runs keep the whole pour. Levels were never the walker's to
+         lose: every mote and every rise stays untouched. */
+      if (S.autoRun) inkGain = Math.floor(inkGain / 2);
       if (inkGain > 0) {
         cs.ink = (cs.ink | 0) + inkGain;
         cs.earned = (cs.earned | 0) + inkGain;
@@ -1899,11 +1908,51 @@ const rand = (a, b) => a + RNG() * (b - a);
       ax += (dx / d) * w * 1.6;
       ay += (dy / d) * w * 1.6;
     }
+    /* the keepers' marked slams: the ring drawn on the paper is the
+       strike itself — the walker steps out of every circle */
+    for (const tg of S.telgs) {
+      if (tg.kind !== 'ring' || !tg.e || tg.e.dead) continue;
+      const dx = p.x - tg.e.x, dy = p.y - tg.e.y;
+      const d = Math.hypot(dx, dy);
+      const rr = (tg.r || 200) * 0.92;
+      if (d >= rr) continue;
+      if (d < 8) {
+        /* the strike lands on the walker's own feet: step aside —
+           toward the page's middle unless the feet already stand on
+           it, then a steady diagonal (the ring is symmetric; any
+           step but here is out) */
+        let ex = 0.71, ey = 0.71;
+        if (arenaOn()) {
+          const A = CFG.world.arena;
+          const cx = -p.x, cy = -p.y;
+          if (Math.hypot(cx, cy) >= 60) { ex = cx; ey = cy; }
+        }
+        const ed = Math.hypot(ex, ey) || 1;
+        ax += (ex / ed) * 1.5;
+        ay += (ey / ed) * 1.5;
+        continue;
+      }
+      const w = (rr - d) / rr;
+      ax += (dx / d) * w * 2.2;
+      ay += (dy / d) * w * 2.2;
+    }
+    /* the ink it chases must live on the page — a mote past the margin
+       is not worth walking into the wall for */
     let best = null, bestD = 420 * 420;
-    for (const mt of S.motes) {
-      const dx = mt.x - p.x, dy = mt.y - p.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < bestD) { bestD = d2; best = mt; }
+    if (arenaOn()) {
+      const A = CFG.world.arena, hx = A.w / 2 - 24, vy = A.h / 2 - 24;
+      for (const mt of S.motes) {
+        if (mt.x < -hx || mt.x > hx || mt.y < -vy || mt.y > vy) continue;
+        const dx = mt.x - p.x, dy = mt.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestD) { bestD = d2; best = mt; }
+      }
+    } else {
+      for (const mt of S.motes) {
+        const dx = mt.x - p.x, dy = mt.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestD) { bestD = d2; best = mt; }
+      }
     }
     if (best) {
       const d = Math.sqrt(bestD) || 1;
@@ -1911,11 +1960,16 @@ const rand = (a, b) => a + RNG() * (b - a);
       ay += ((best.y - p.y) / d) * 0.9;
     }
     if (arenaOn()) {
-      const A = CFG.world.arena, mx = A.w / 2 - 90, my = A.h / 2 - 90;
-      if (p.x > mx) ax -= (p.x - mx) / 60;
-      if (p.x < -mx) ax += (-mx - p.x) / 60;
-      if (p.y > my) ay -= (p.y - my) / 60;
-      if (p.y < -my) ay += (-my - p.y) / 60;
+      const A = CFG.world.arena;
+      const bx = A.w / 2 - 26, by = A.h / 2 - 26;
+      /* walls: the walker never leans into the page's edge */
+      if (p.x >= bx && ax > 0) ax = 0;
+      if (p.x <= -bx && ax < 0) ax = 0;
+      if (p.y >= by && ay > 0) ay = 0;
+      if (p.y <= -by && ay < 0) ay = 0;
+      /* a breath toward the middle keeps the idle walker off the rim */
+      ax += (-p.x / (A.w / 2)) * 0.3;
+      ay += (-p.y / (A.h / 2)) * 0.3;
     }
     const m = Math.hypot(ax, ay);
     if (m < 0.08) return { x: 0, y: 0 };        /* the paper is at peace */
@@ -2543,6 +2597,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     const pulse = S.magnetT > 0 || S.vacuum;
     for (let i = S.motes.length - 1; i >= 0; i--) {
       const mt = S.motes[i];
+      /* ink stays on the page: a mote born of a border kill or shoved
+         by its drift never rests past the margin */
+      if (arenaOn()) clampArena(mt, mt.r);
       mt.age += dt;
       if (mt.age > CFG.xp.moteLife) { S.motes.splice(i, 1); continue; }
       /* the ledger's claimed ink flies to the ledger's mouth, not to the hand */
@@ -3147,6 +3204,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     let ashigaru = null;
     for (const w of S.enemies) if (w.type === 'ashigaru') (ashigaru || (ashigaru = [])).push(w);
     for (const e of S.enemies) {
+      /* the bounded page holds its beasts: knockback and circling
+         never carry one back past the margin (spawns walk in from it) */
+      if (arenaOn()) clampArena(e, e.r + 2);
       e.t += dt;
       if (e.hitFlash > 0) e.hitFlash -= dt;
       if (e.orbCd > 0) e.orbCd -= dt;
