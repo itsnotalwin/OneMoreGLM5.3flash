@@ -469,6 +469,25 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    whole, at a glance, on a phone held sideways as much as a
    desktop monitor.
    ============================================================ */
+/* the AUTO hand: a ghost chip beside DEPLOY — the walker picks */
+.auto-btn{
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  font-family: inherit; font-size: 10px; font-weight: 600;
+  letter-spacing: .22em; text-indent: .1em;
+  color: var(--ink-70);
+  background: none; border: 1px dashed var(--ink-45);
+  padding: 8px 14px; cursor: pointer;
+  transition: color .14s ease, border-color .14s ease, background .14s ease;
+}
+.auto-btn:hover{ color: var(--ink); border-color: var(--ink-70); }
+.auto-btn.is-on{
+  color: var(--paper);
+  background: var(--red);
+  border-color: var(--red);
+  border-style: solid;
+}
+.auto-btn .ab-kanji{ font-family: var(--display); font-size: 13px; line-height: 1; transform: rotate(-3deg); }
 .screen-upgrade{ align-items: center; justify-content: center; padding: clamp(10px, 1.8vh, 18px) clamp(10px, 1.6vw, 18px); }
 .panel{
   width: min(880px, 100%);
@@ -1776,6 +1795,22 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   filter: var(--rough-soft);
   pointer-events: none;
 }
+/* the endless checkpoint door: a smaller paper chip under the modes */
+.checkpoint-btn{
+  display: inline-block;
+  margin-top: 12px;
+  font-family: inherit;
+  font-size: 10px; font-weight: 600; letter-spacing: .24em; text-indent: .1em;
+  color: var(--ink-70);
+  background: var(--paper-80);
+  border: 1px dashed var(--ink-45);
+  padding: 9px 20px;
+  cursor: pointer;
+  transform: rotate(-.5deg);
+  transition: color .14s ease, border-color .14s ease, transform .14s ease;
+  animation: riseIn .7s ease 4s backwards;
+}
+.checkpoint-btn:hover{ color: var(--ink); border-color: var(--ink-70); border-style: solid; transform: rotate(-.5deg) translateY(-1px); }
 .board-btn .board-kanji{
   position: relative; z-index: 1;
   font-family: var(--display); font-size: 17px; line-height: 1;

@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v21.5';
+window.OM_VERSION = 'v21.6';
 
 const CFG = {
   player: {
@@ -148,9 +148,12 @@ const CFG = {
      every wave presses a little deeper (waveHp +2.2%/wave, budget
      +5%/wave) and walks a little faster, with a hard cap on speed so
      the chase stays winnable no matter how deep the brush wanders.
+     Levels cost xpMult× their journey price; the sheet's ink turns
+     every eraWaves (20) — the guardian turn stays at ten.
      (hpGrowth/spGrowth/budgetGrowth still serve the daily sheets.) */
   endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32,
-             waveHp: 0.022, waveBudget: 0.05, waveSp: 0.006, spCap: 2.5 },
+             waveHp: 0.022, waveBudget: 0.05, waveSp: 0.006, spCap: 2.5,
+             eraWaves: 20, xpMult: 4 },
 
   /* ---- REALLY HARD ----
      the title's red toggle, remembered on this device. A hard page

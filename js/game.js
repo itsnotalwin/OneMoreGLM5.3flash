@@ -185,6 +185,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     store.set(CHARMS_KEY, c);
     return true;
   }
+  /* the endless record: how deep the walker has ever pressed the
+     endless paper — the checkpoint door reads it, the title wears it */
+  const getEndlessBest = () => store.get('om_endless_best_v1', 0);
+  function setEndlessBest(w) { if (w > getEndlessBest()) store.set('om_endless_best_v1', w); }
+
   /* the earned line: waves pressed into drops, sheet-falls and the
      victory feat ride on top, the multipliers press deeper. paid
      marks what this run already surrendered (a continued run —
@@ -271,11 +276,18 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   function moteValue(v) { return Math.max(1, Math.round(v * (1 + 0.25 * S.stats.well))); }
 
+  /* the endless ink costs more to rise: every level's price is
+     multiplied there — deeper waves must earn their climbs */
+  function xpReqFor(level) {
+    const base = CFG.xp.req(level);
+    return S.runMode === 'endless' ? Math.round(base * CFG.endless.xpMult) : base;
+  }
+
   function collectXP(v) {
     const st = S.stats;
     st.xp += v;
-    while (st.xp >= CFG.xp.req(st.xpLevel)) {
-      st.xp -= CFG.xp.req(st.xpLevel);
+    while (st.xp >= xpReqFor(st.xpLevel)) {
+      st.xp -= xpReqFor(st.xpLevel);
       st.xpLevel++;
       S.pendingLevels++;
       S.popups.push({ x: S.player.x, y: S.player.y - 22, txt: 'INK RISES', life: 1.1, max: 1.1, red: true });
@@ -406,7 +418,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.runMode === 'endless') {
       const turn = Math.floor((w - 1) / CFG.wave.wavesPerLevel);
       const inTurn = (w - 1) % CFG.wave.wavesPerLevel;
-      const era = Math.floor((w - 1) / per);              // the ink changes every hundred waves
+      const era = Math.floor((w - 1) / CFG.endless.eraWaves);   // the ink changes every era
       const themeIdxE = era % AREAS.length;
       const areaE = AREAS[themeIdxE];
       hp = areaE.mult.hp;
@@ -1073,6 +1085,21 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.runMode === 'endless' ? S.stats.wave : 0);
     UI.fillUpgrades(S.choices, S.stats.levels);
     UI.markSelected(null);
+    /* the AUTO hand: when the walker's choice is on, the upgrade picks
+       itself after a breath — the cards flash, the strongest ink wins
+       by luck, and the run rolls on without the toll of tapping */
+    if (S.autoUpgrade) {
+      setTimeout(() => {
+        if (S.mode !== 'upgrade' || S.selected != null) return;
+        const pick = Math.floor(Math.random() * S.choices.length);
+        S.selected = pick;
+        UI.markSelected(pick);
+        const nx2 = areaStateFor(S.stats.wave + 1);
+        UI.setDeploy(true, S.upKind === 'wave' && nx2.level === 1 ? nx2.area : null, nx2.level, nx2.cycle, S.upKind);
+        SFX.pick();
+        setTimeout(() => { if (S.mode === 'upgrade' && S.selected === pick) deploy(); }, 240);
+      }, 430);
+    }
     const nxt = areaStateFor(S.stats.wave + 1);
     UI.setDeploy(false, S.upKind === 'wave' && nxt.level === 1 ? nxt.area : null, nxt.level, nxt.cycle, S.upKind);
     UI.show('upgrade');
@@ -1276,6 +1303,7 @@ const rand = (a, b) => a + RNG() * (b - a);
        re-prices the ink already spilled */
     S.autoRun = getAutoBrush();
     if (UI.setAutoBadge) UI.setAutoBadge(S.autoRun);
+    S.autoUpgrade = false;                 /* a fresh run walks its own hands */
     /* the ghost's scribe dips its pen: endless and daily runs record
        their strokes (the journey's scenes are too short to race) */
     S.rec = S.runMode === 'journey' ? null : { t: 0, acc: 0, frames: [] };
@@ -1383,6 +1411,21 @@ const rand = (a, b) => a + RNG() * (b - a);
       startWave(qaWave, { runStart: true });
       return;
     }
+    /* the endless checkpoint: the shelf remembers the deepest wave —
+       a run may open at the era the ink has already turned on, never
+       past it, wearing the honest kit a journey run that far would
+       carry (sheet = ceil(wave/100), level = ceil(remainder/10)) */
+    if (opts.startWave > 1 && S.runMode === 'endless') {
+      const jw = opts.startWave;
+      const jsheet = Math.ceil(jw / 100);
+      const jlevel = Math.max(1, Math.ceil((jw - (jsheet - 1) * 100) / 10));
+      applyCheckpoint(checkpointPower(jsheet, jlevel));
+      UI.setHp(S.stats.hp, S.stats.maxHp);
+      UI.setLoadout(S.stats.levels);
+      UI.setXp(0, S.stats.xpLevel);
+      startWave(jw, { runStart: true });
+      return;
+    }
     startWave(1, { runStart: true });
   }
 
@@ -1414,7 +1457,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.pendingLevels = 0; S.pendingChests = 0; S.vacuum = false; S.pendingSeal = false;
     S.stats.hp = S.stats.maxHp;   /* the continue refills what the fall spilled */
     UI.setHp(S.stats.hp, S.stats.maxHp);
-    UI.setXp(Math.min(1, S.stats.xp / CFG.xp.req(S.stats.xpLevel)), S.stats.xpLevel);
+    UI.setXp(Math.min(1, S.stats.xp / xpReqFor(S.stats.xpLevel)), S.stats.xpLevel);
     const p = S.player;
     p.vx = 0; p.vy = 0; p.fireT = 0.3; p.recoil = 0;
     S.beginT = 1.15;               // a shorter wash — the sheet is already known
@@ -1575,6 +1618,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.mode !== 'upgrade') return;
     const u = S.choices[i];
     if (!u) return;
+    S.autoUpgrade = false;   /* a hand-chosen card reclaims the walker's choices */
     if (S.selected === i) { deploy(); return; }
     S.selected = i;
     UI.markSelected(i);
@@ -1609,6 +1653,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     const best = getBest();
     const nb = st.score > (best ? best.score : 0);
     if (nb) store.set('om_best_v1', { score: st.score, wave: cleared });
+    /* the endless record: the deepest wave this mode has ever walked —
+       the checkpoint door opens only as far as the ink has been */
+    if (S.runMode === 'endless') setEndlessBest(st.wave);
     if (victory) SFX.victory();
     /* the daily sheet files its one true entry on the day it is walked
        (declared before the over sheet reads it — no ink before its name) */
@@ -5246,7 +5293,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.rings.length > CFG.fx.ringCap) S.rings.splice(0, S.rings.length - CFG.fx.ringCap);
     if (S.popups.length > CFG.fx.popupCap) S.popups.splice(0, S.popups.length - CFG.fx.popupCap);
 
-    UI.setXp(st.xp / CFG.xp.req(st.xpLevel), st.xpLevel);
+    UI.setXp(st.xp / xpReqFor(st.xpLevel), st.xpLevel);
 
     /* the red beast's seal, worn on the top of the sheet.
        The Guardian outranks its echoes; when several stand, the
@@ -5402,7 +5449,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
-    getAutoBrush, setAutoBrush, autoVec,
+    getAutoBrush, setAutoBrush, autoVec, xpReqFor, getEndlessBest,
     /* the purse (v8.8): the charm room and the QA probes read these */
     getInk, setInk, charmLv, charmRankCount, charmCap, buyCharm, getThemeSetting, setThemeSetting,
     get qaDaily() { return qaDaily; },

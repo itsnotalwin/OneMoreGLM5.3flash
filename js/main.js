@@ -96,6 +96,7 @@
     ADAPT.grace = 4; /* spawn bursts are allowed their jank */
     G.startRun(mode || lastMode, opts);
     lastMode = mode || lastMode;
+    UI.markAuto(G.S.autoUpgrade);  /* the AUTO hand re-arms per run */
     /* the first-run whisper: startRun has already counted this run,
        so a first count of 1 is the only run the hint ever speaks in */
     if (G.getRuns() === 1) showRunHint();
@@ -615,6 +616,24 @@
   document.getElementById('resumeBtn').addEventListener('click', resume);
   document.getElementById('pauseMenuBtn').addEventListener('click', goMenu);
   document.getElementById('deployBtn').addEventListener('click', () => G.deploy());
+  document.getElementById('autoBtn').addEventListener('click', () => {
+    SFX.ensure();
+    const on = !G.S.autoUpgrade;
+    G.S.autoUpgrade = on;
+    UI.markAuto(on);
+    SFX.pick(1);
+    if (on && G.mode === 'upgrade') {
+      /* the hand answers at once: pick, flash, deploy */
+      G.S.selected = Math.floor(Math.random() * Math.max(1, G.S.choices.length));
+      UI.markSelected(G.S.selected);
+      setTimeout(() => { if (G.mode === 'upgrade' && G.S.selected != null) G.deploy(); }, 300);
+    }
+  });
+  const checkpointBtn = document.getElementById('endlessCheckpoint');
+  if (checkpointBtn) checkpointBtn.addEventListener('click', () => {
+    SFX.ensure();
+    start('endless', { startWave: Number(checkpointBtn.dataset.startWave || 0) });
+  });
   document.getElementById('clearNextBtn').addEventListener('click', clearNext);
   document.getElementById('clearHomeBtn').addEventListener('click', clearHome);
   document.getElementById('muteBtn').addEventListener('click', toggleMute);
@@ -654,8 +673,22 @@
   UI.buildBrushes(G.getBrush());
   UI.muteVisual(SFX.muted);
   UI.setRunNo(G.getRuns() + 1);
-  UI.setBest(G.getBest());
+  UI.setBest(G.getBest(), G.getEndlessBest());
   UI.setSheetContinue(G.getFurthest());
+  /* the endless checkpoint door: open only to the era the ink has
+     already turned on — never past the deepest wave walked */
+  {
+    const chip = document.getElementById('endlessCheckpoint');
+    const eb = G.getEndlessBest();
+    if (chip && eb >= CFG.endless.eraWaves) {
+      const era = Math.floor((eb - 1) / CFG.endless.eraWaves);
+      const sw2 = era * CFG.endless.eraWaves + 1;
+      chip.dataset.startWave = sw2;
+      chip.innerHTML = '⟳ THE ENDLESS — START AT WAVE ' + sw2 + ' · TURN ' + (era * 2 + 1) +
+        ' · SCROLL ' + (era + 1);
+      chip.classList.remove('hidden');
+    } else if (chip) chip.classList.add('hidden');
+  }
 
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
   UI.setInkLine(G.getInk());                        /* the purse reads itself */

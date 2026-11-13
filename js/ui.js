@@ -829,13 +829,32 @@ const UI = (() => {
     }, 3400);
   }
 
-  function setBest(b) {
+  function setBest(b, endlessBest) {
     if (b && b.score > 0) {
       el.bestLine.classList.remove('hidden');
-      el.bestLine.innerHTML = `BEST — WAVE ${b.wave} · ${b.score.toLocaleString('en-US')} PTS`;
+      let txt = `BEST — WAVE ${b.wave} · ${b.score.toLocaleString('en-US')} PTS`;
+      /* the endless record names its scroll: ink turns every 20 waves */
+      if (endlessBest >= 20) {
+        const era = Math.floor((endlessBest - 1) / 20) + 1;
+        txt += ` · ENDLESS SCROLL ${toKanji(era)} — ${endlessBest} WAVES`;
+      }
+      el.bestLine.innerHTML = txt;
+    } else if (endlessBest >= 20) {
+      const era = Math.floor((endlessBest - 1) / 20) + 1;
+      el.bestLine.classList.remove('hidden');
+      el.bestLine.innerHTML = `ENDLESS SCROLL ${toKanji(era)} — ${endlessBest} WAVES`;
     } else {
       el.bestLine.classList.add('hidden');
     }
+  }
+
+  /* the AUTO hand's own mark: the button wears its state */
+  function markAuto(on) {
+    const btn = document.getElementById('autoBtn');
+    if (!btn) return;
+    btn.classList.toggle('is-on', on);
+    const label = btn.querySelector('.ab-label');
+    if (label) label.textContent = on ? 'AUTO — ON · A CARD TAPS IT OUT' : 'AUTO — LET THE HAND CHOOSE';
   }
 
   function fillUpgrades(choices, levels) {
@@ -1034,7 +1053,7 @@ const UI = (() => {
 
   return {
     show, hud, setWave, setProgress, setHp, setScore, setTime, banner, areaBanner, levelBanner, flash,
-    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected, setAutoBadge,
+    setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected, setAutoBadge, markAuto,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
     setInkLine,
