@@ -5,6 +5,7 @@
 
 :root{
   --paper: #ede7d9;
+  --glaze: 237,231,217;
   --paper-92: rgba(237, 231, 217, 0.97);
   --paper-80: rgba(237, 231, 217, 0.82);
   --paper-55: rgba(237, 231, 217, 0.6);
@@ -31,6 +32,7 @@
    banners and the sheets keep their contrast on dark paper */
 body[data-theme="dark"]{
   --paper: #3e372b;
+  --glaze: 62,55,43;
   --paper-92: rgba(62, 55, 43, 0.97);
   --paper-80: rgba(62, 55, 43, 0.82);
   --paper-55: rgba(62, 55, 43, 0.6);
@@ -50,6 +52,7 @@ body[data-theme="dark"]{
    (ink pulled toward the sheet's tint, as render.js mixes it) */
 body[data-theme="red"]{
   --paper: #eadbc4;
+  --glaze: 234,219,196;
   --paper-92: rgba(234, 219, 196, 0.97);
   --paper-80: rgba(234, 219, 196, 0.82);
   --paper-55: rgba(234, 219, 196, 0.6);
@@ -63,6 +66,7 @@ body[data-theme="red"]{
 }
 body[data-theme="storm"]{
   --paper: #c7cdc9;
+  --glaze: 199,205,201;
   --paper-92: rgba(199, 205, 201, 0.97);
   --paper-80: rgba(199, 205, 201, 0.82);
   --paper-55: rgba(199, 205, 201, 0.6);
@@ -76,6 +80,7 @@ body[data-theme="storm"]{
 }
 body[data-theme="gilt"]{
   --paper: #e7d6ad;
+  --glaze: 231,214,173;
   --paper-92: rgba(231, 214, 173, 0.97);
   --paper-80: rgba(231, 214, 173, 0.82);
   --paper-55: rgba(231, 214, 173, 0.6);
@@ -90,6 +95,7 @@ body[data-theme="gilt"]{
 /* the blank silk — the brightest paper, its ink cool and violet-grey */
 body[data-theme="silk"]{
   --paper: #f3eee1;
+  --glaze: 243,238,225;
   --paper-92: rgba(243, 238, 225, 0.97);
   --paper-80: rgba(243, 238, 225, 0.82);
   --paper-55: rgba(243, 238, 225, 0.6);
@@ -2511,13 +2517,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .run-hint.gone{ opacity: 0; }
 .run-hint .rh-touch, .run-hint .rh-key{
   font-size: 12px; letter-spacing: .3em; text-indent: .3em;
-  color: #1a1714;
-  text-shadow: 0 0 7px rgba(237,231,217,.95), 0 0 2px rgba(237,231,217,.95);
+  color: var(--ink);
+  text-shadow: 0 0 7px rgba(var(--glaze),.95), 0 0 2px rgba(var(--glaze),.95);
 }
 .run-hint .rh-tail{
   font-size: 8.5px; letter-spacing: .26em; text-indent: .26em;
-  color: rgba(26,23,20,.7);
-  text-shadow: 0 0 7px rgba(237,231,217,.95);
+  color: var(--ink-70);
+  text-shadow: 0 0 7px rgba(var(--glaze),.95);
 }
 .run-hint .rh-key{ display: none; }
 @media (hover: hover) and (pointer: fine){
@@ -2528,11 +2534,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 /* ---- glaze: the chip and the tagline keep their ink legible
    where the ring, the drops and the visitors cross them ---- */
 .title-chip{
-  background: radial-gradient(ellipse 150% 130% at 50% 50%, rgba(237,231,217,.85) 30%, rgba(237,231,217,0) 78%);
+  background: radial-gradient(ellipse 150% 130% at 50% 50%, rgba(var(--glaze),.85) 30%, rgba(var(--glaze),0) 78%);
   padding: 5px 0 4px;
 }
 .title-sub{
-  background: radial-gradient(ellipse 130% 140% at 50% 50%, rgba(237,231,217,.8) 25%, rgba(237,231,217,0) 80%);
+  background: radial-gradient(ellipse 130% 140% at 50% 50%, rgba(var(--glaze),.8) 25%, rgba(var(--glaze),0) 80%);
   padding: 4px 14px 5px;
   max-width: min(88vw, 560px);
   text-wrap: balance;

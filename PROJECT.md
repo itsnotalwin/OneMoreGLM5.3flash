@@ -6,6 +6,10 @@ An ink-brush survival browser game with journey, endless, and daily modes. This 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
 
+## v20.8 — the hunter walker; the night title's glaze (13 Nov 2026)
+
+Start-to-finish quality pass. The opening film was frame-stepped through all 13 beats (drop → flood → title cards → strokes → beasts → spirit → slam → vermilion → wash) — verdict: no changes needed. The night theme's title screen was swept and its **hardcoded pale-washi glazes made theme-aware** (`--glaze` per theme) — the chip/sub strips and run-hint glow no longer glare as light strips on dark sheets. **THE AUTOBRUSH doctrine rewritten** to the hunter: hold firing range (adaptive to crowd size and low HP, orbit while holding), touch-only personal space, predicted-travel spite sidesteps, slam-circle escapes, greedy ink raids when clear — simulated 36.5s battle: 14 kills, +2100 score, mean range 203px, integrity never below 4, zero wall or off-page incidents. Cache `v20.8`.
+
 ## v20.6 — the bounded page holds its beasts, the walker learns the walls; autobrush penalty retuned (13 Nov 2026)
 
 Owner-reported fixes: bounded sheets no longer show beasts on the desk around the paper — `spawnEnemy` births at the page margin (the 420px off-page walk-in is gone), `updateEnemies` clamps every beast per tick against knockback, and motes clamp in `updateMotes`. THE AUTOBRUSH's walker learned the walls (outward lean zeroed at the bound, center gravity, out-of-margin ink refused) and now dodges keeper ring-telegraphs, including the standing-on-center case. Penalty retuned per owner: **levels/XP are never reduced**, while purse ink and score each pay half. Cache `v20.6`.

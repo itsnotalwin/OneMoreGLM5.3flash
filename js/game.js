@@ -1880,33 +1880,84 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- the autobrush's own hand (自) ----------------
-     A modest walker, not a master: repelled by the near horde and
-     every flying spite, drawn to the nearest loose mote of ink,
-     drifting off a bounded page's margins. The hand always outranks
-     it — one key or one finger and it yields for as long as they
-     stay. Its runs pay half; this is comfort, not a scoring tool. */
+     A hunter, not a coward: it walks to firing range of the nearest
+     flesh, holds ~165px (more from the tall ones and guardians),
+     gives ground only to what is about to touch it, sidesteps spite
+     along its own travel, steps out of drawn slams, and raids every
+     loose mote of ink. The hand always outranks it — one key or one
+     finger and it yields for as long as they stay. Its runs press
+     half the ink and half the score; this is comfort, not a scoring
+     tool. */
   function autoSteer(p) {
     let ax = 0, ay = 0;
-    const NEAR = 240, NEAR2 = NEAR * NEAR;
+
+    /* ---- the hunt: the brush fires itself, so the walker's only job
+       is keeping the shot landing — hold ~165px from small beasts,
+       more from the tall ones and the guardians ---- */
+    let hunt = null, huntD = Infinity, huntScore = Infinity;
+    for (const e of S.enemies) {
+      const d = Math.hypot(e.x - p.x, e.y - p.y) || 1;
+      const def = ENEMIES[e.type];
+      const s = d - (def && def.boss ? 90 : e.r > 26 ? 40 : 0) - (def && def.captain ? 30 : 0);
+      if (s < huntScore) { hunt = e; huntD = d; huntScore = s; }
+    }
+    if (hunt) {
+      const dx = (hunt.x - p.x) / huntD, dy = (hunt.y - p.y) / huntD;
+      const def = ENEMIES[hunt.type];
+      let ideal = def && def.boss ? 235 : hunt.r > 26 ? 205 : 165;
+      /* the tide's weight: an overwhelmed walker yields ground and lives —
+         a bleeding walker yields more */
+      let crowd = 0;
+      for (const e of S.enemies) {
+        const ddx = e.x - p.x, ddy = e.y - p.y;
+        if (ddx * ddx + ddy * ddy < 240 * 240) crowd++;
+      }
+      ideal += crowd > 4 ? 85 : crowd > 2 ? 40 : 0;
+      if (S.stats && S.stats.hp <= 2) ideal += 70;
+      const err = huntD - ideal;
+      const w = err > 0 ? Math.min(1, err / 150) : 0;
+      ax += dx * w * 0.95;
+      ay += dy * w * 0.95;
+      /* the orbit: a holding walker circles its prey — a moving brush
+         spreads its fire and never offers a still target */
+      if (Math.abs(err) < 46 && huntD < ideal + 70) {
+        const ox = -dy, oy = dx;
+        const dir = Math.sin(performance.now() / 1500 + p.x * 0.013 + p.y * 0.011) >= 0 ? 1 : -1;
+        ax += ox * dir * 0.42;
+        ay += oy * dir * 0.42;
+      }
+    }
+
+    /* ---- personal space: only what is about to touch pushes ---- */
     for (const e of S.enemies) {
       const dx = p.x - e.x, dy = p.y - e.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 >= NEAR2 || d2 < 1) continue;
-      const d = Math.sqrt(d2);
-      const w = (NEAR - d) / NEAR;
-      const scare = e.r > 26 ? 2.2 : 1;         /* the big ones bite harder */
+      const d = Math.hypot(dx, dy) || 1;
+      const def = ENEMIES[e.type];
+      const touch = e.r + (def && def.boss ? 96 : e.r > 26 ? 62 : 42);
+      if (d >= touch) continue;
+      const w = (touch - d) / touch;
+      const scare = def && def.boss ? 2.4 : e.r > 26 ? 1.7 : 1.25;
       ax += (dx / d) * w * scare;
       ay += (dy / d) * w * scare;
     }
-    const BNear = 180, BNear2 = BNear * BNear;
+
+    /* ---- the weave: spite that will actually hit is sidestepped
+       along its own travel — a predicted dodge, not a wide fear ---- */
     for (const b of S.ebullets) {
-      const dx = p.x - b.x, dy = p.y - b.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 >= BNear2 || d2 < 1) continue;
-      const d = Math.sqrt(d2);
-      const w = (BNear - d) / BNear;
-      ax += (dx / d) * w * 1.6;
-      ay += (dy / d) * w * 1.6;
+      const bv = Math.hypot(b.vx || 0, b.vy || 0);
+      if (bv < 20) continue;
+      const rvx = p.x - b.x, rvy = p.y - b.y;
+      const t = -(rvx * b.vx + rvy * b.vy) / (bv * bv);
+      if (t < 0 || t > 0.75) continue;          // behind it, or too far ahead
+      const cx = b.x + b.vx * t - p.x, cy = b.y + b.vy * t - p.y;
+      const rr = 36 + (b.r || 6);
+      const miss = Math.hypot(cx, cy);
+      if (miss > rr) continue;                  // it will miss on its own
+      const pxn = -b.vy / bv, pyn = b.vx / bv;
+      const side = (rvx * pxn + rvy * pyn) >= 0 ? 1 : -1;
+      const urg = (rr - miss) / rr;
+      ax += pxn * side * urg * 1.7;
+      ay += pyn * side * urg * 1.7;
     }
     /* the keepers' marked slams: the ring drawn on the paper is the
        strike itself — the walker steps out of every circle */
@@ -1956,8 +2007,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     if (best) {
       const d = Math.sqrt(bestD) || 1;
-      ax += ((best.x - p.x) / d) * 0.9;
-      ay += ((best.y - p.y) / d) * 0.9;
+      /* greed: when nothing breathes nearby, the walker raids the ink */
+      const threat = hunt ? Math.min(1, huntD / 300) : 1;
+      const greed = 0.85 + 0.45 * threat;
+      ax += ((best.x - p.x) / d) * greed;
+      ay += ((best.y - p.y) / d) * greed;
     }
     if (arenaOn()) {
       const A = CFG.world.arena;
