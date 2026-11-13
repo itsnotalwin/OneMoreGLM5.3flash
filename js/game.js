@@ -1090,8 +1090,11 @@ const rand = (a, b) => a + RNG() * (b - a);
        by luck, and the run rolls on without the toll of tapping */
     if (S.autoUpgrade) {
       setTimeout(() => {
+        /* the hand may take the choice back inside the breath: a second
+           press of AUTO (or a card) cancels the walker's pick outright */
+        if (!S.autoUpgrade) return;
         if (S.mode !== 'upgrade' || S.selected != null) return;
-        const pick = Math.floor(Math.random() * S.choices.length);
+        const pick = Math.floor(RNG() * S.choices.length);
         S.selected = pick;
         UI.markSelected(pick);
         const nx2 = areaStateFor(S.stats.wave + 1);
@@ -1490,6 +1493,12 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     UI.showClear({ area: as.area, level: as.level, guardian, nextArea });
     SFX.victory();
+    /* the AUTO hand answers the seal too: the rest is the journey's own
+       card, so a walker left alone takes the road onward after a breath
+       instead of stalling on a screen no one is there to press */
+    if (S.autoUpgrade) {
+      setTimeout(() => { if (S.mode === 'clear' && S.autoUpgrade) clearNext(); }, 1500);
+    }
   }
 
   /* onward: a washed page, a naked brush — the build is surrendered
@@ -1619,6 +1628,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const u = S.choices[i];
     if (!u) return;
     S.autoUpgrade = false;   /* a hand-chosen card reclaims the walker's choices */
+    if (UI.markAuto) UI.markAuto(false);   /* the button wears the truth */
     if (S.selected === i) { deploy(); return; }
     S.selected = i;
     UI.markSelected(i);
@@ -2089,14 +2099,30 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     if (arenaOn()) {
       const A = CFG.world.arena;
+      const BAND = 210;                     /* how far out the wall is felt */
       const bx = A.w / 2 - 26, by = A.h / 2 - 26;
-      /* the rim repels: within the margin band the wall springs the
-         walker inward — the edge is a death dimension, never a campsite
-         (the spring swallows the outward lean by force, not by veto) */
-      if (p.x >= bx) ax -= (p.x - bx) / 26 + 0.35;
-      else if (p.x <= -bx) ax += (-bx - p.x) / 26 + 0.35;
-      if (p.y >= by) ay -= (p.y - by) / 26 + 0.35;
-      else if (p.y <= -by) ay += (-by - p.y) / 26 + 0.35;
+      const pxx = Math.max(0, Math.min(1, (Math.abs(p.x) - (bx - BAND)) / BAND));
+      const pyy = Math.max(0, Math.min(1, (Math.abs(p.y) - (by - BAND)) / BAND));
+      const sx = p.x >= 0 ? -1 : 1, sy = p.y >= 0 ? -1 : 1;
+      /* the edge is a slope, not a line: the lean inward builds across
+         the whole band, so the walker turns long before it is pressed
+         against the margin (the old spring only woke inside the last
+         twenty-six pixels, and a hunt or a mote easily outbid it) */
+      ax += sx * (pxx * pxx * 3.6 + pxx * 0.3);
+      ay += sy * (pyy * pyy * 3.6 + pyy * 0.3);
+      /* CORNERS: two walls at once are a trap — the diagonal out is
+         committed to, and a slow lateral shuffle keeps a symmetric
+         horde from pinning the walker on the seam */
+      if (pxx > 0.3 && pyy > 0.3) {
+        const grip = Math.min(pxx, pyy);
+        const wob = Math.sin((S.stats.time || 0) * 1.7) * 0.5;
+        ax += sx * grip * 2.4 + sy * wob * grip;
+        ay += sy * grip * 2.4 + sx * wob * grip;
+      }
+      /* the rim vetoes the outward lean outright — the edge is a death
+         dimension, never a campsite */
+      if (pxx > 0.6) ax = p.x >= 0 ? Math.min(ax, 0) : Math.max(ax, 0);
+      if (pyy > 0.6) ay = p.y >= 0 ? Math.min(ay, 0) : Math.max(ay, 0);
       /* a breath toward the middle, only while the field is quiet —
          when the beasts press, the field itself picks the road */
       if (danger < 0.6) {
@@ -2105,7 +2131,18 @@ const rand = (a, b) => a + RNG() * (b - a);
       }
     }
     const m = Math.hypot(ax, ay);
-    if (m < 0.08) return { x: 0, y: 0 };        /* the paper is at peace */
+    if (m < 0.08) {
+      /* a dead-still walker beside a wall is a walker about to be pinned:
+         the page's middle outranks standing still */
+      if (arenaOn()) {
+        const A2 = CFG.world.arena;
+        if (Math.abs(p.x) > A2.w / 2 - 140 || Math.abs(p.y) > A2.h / 2 - 140) {
+          const d = Math.hypot(p.x, p.y) || 1;
+          return { x: -p.x / d, y: -p.y / d };
+        }
+      }
+      return { x: 0, y: 0 };        /* the paper is at peace */
+    }
     /* surrounded: opposing fears cancel into a jitter — when the field
        burns, the walker commits at speed toward the thinnest side */
     let mag = Math.min(1, m);
@@ -2389,7 +2426,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     return base + (S.stats.dmg - 1) + ownInk();
   }
   function primaryCd(atk) {
-    let cd = atk.cd * S.stats.fireCdMult * Math.pow(0.90, S.stats.swiftbrush || 0);
+    let cd = atk.cd * S.stats.fireCdMult * Math.pow(0.93, S.stats.swiftbrush || 0);
     if (atk.bkind === 'wisp') cd *= Math.pow(0.88, S.stats.whaunt || 0);
     return Math.max(0.09, cd);
   }
