@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v21.8';
+window.OM_VERSION = 'v21.9';
 
 const CFG = {
   player: {
@@ -108,7 +108,7 @@ const CFG = {
     groupInterval: w => Math.max(0.18, 1.12 - w * 0.07),
     groupSize: (w, depth) => Math.min(16, 3 + Math.floor(w / 2.5) + Math.floor(depth / 2.6)),
     concurrentCap: (w, depth) => Math.min(150, 13 + w * 2.0 + depth * 3.3),
-    hpScale: (base, w, intro) => Math.max(1, Math.round(base * (1 + 0.05 * (w - intro)))),
+    hpScale: (base, w, intro) => Math.max(1, Math.round(base * (1 + 0.075 * (w - intro)))),
     spScale: (w, intro) => Math.min(1.5, 1 + 0.007 * (w - intro)),
     eliteHpMult: 6.5,
     eliteR: 1.62,
@@ -145,15 +145,16 @@ const CFG = {
   },
 
   /* the endless paper keeps growing teeth — a slope, not a wall:
-     every wave presses a little deeper (waveHp +2.2%/wave, budget
+     every wave presses a little deeper (waveHp +2.8%/wave, budget
      +5%/wave) and walks a little faster, with a hard cap on speed so
      the chase stays winnable no matter how deep the brush wanders.
-     Levels cost xpMult× their journey price; the sheet's ink turns
+     Levels cost xpMult× their journey price — 1.5, not the 4× that
+     starved the hand to a single pick a run; the sheet's ink turns
      every eraWaves (20) — the guardian turn stays at ten.
      (hpGrowth/spGrowth/budgetGrowth still serve the daily sheets.) */
   endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32,
-             waveHp: 0.022, waveBudget: 0.05, waveSp: 0.006, spCap: 2.5,
-             eraWaves: 20, xpMult: 4 },
+             waveHp: 0.028, waveBudget: 0.05, waveSp: 0.006, spCap: 2.5,
+             eraWaves: 20, xpMult: 1.5 },
 
   /* ---- REALLY HARD ----
      the title's red toggle, remembered on this device. A hard page
@@ -602,7 +603,7 @@ const UPGRADES = [
      depth of every stroke the hand lays); split/pierce/velo/echo
      speak to cast strokes and hide for the projectile-less brushes
      (Tide, Red Seal, Scribe); the rest are the scribe's body. */
-  { id: 'rapid',  name: 'Quick Hand',   desc: 'The brush lifts 12% sooner between casts. Whatever it lays.',  max: 5, apply: s => { s.fireCdMult *= 0.88; } },
+  { id: 'rapid',  name: 'Quick Hand',   desc: 'The brush lifts 15% sooner between casts. Whatever it lays.',  max: 5, apply: s => { s.fireCdMult *= 0.85; } },
   { id: 'heavy',  name: 'Bitter Ink',   desc: 'Every stroke the hand lays bites one deeper — bolt, surge, stamp, scribe.', max: 4, apply: s => { s.dmg += 1; } },
   { id: 'split',  name: 'Twin Stroke',  desc: '+1 stroke per cast, fanned like brush hairs.',                max: 3, proj: 1, apply: s => { s.shots += 1; } },
   { id: 'pierce', name: 'Through Mist', desc: 'Cast strokes pass through +1 target before breaking.',        max: 3, proj: 1, apply: s => { s.pierce += 1; } },
@@ -749,8 +750,8 @@ const CHARMS = [
     desc: 'The hand\u2019s strokes fly seven parts farther in ten, rank by rank.',
     apply: s => { s.bulletSpeedMult *= 1.07; } },
   { id: 'quick',  kanji: '疾', name: 'QUICK HAND',   cost: [120, 300, 700, 1500, 3000, 5600, 9200, 14500],
-    desc: 'The brush lifts three parts in a hundred sooner between casts, rank by rank.',
-    apply: s => { s.fireCdMult *= 0.97; } },
+    desc: 'The brush lifts five parts in a hundred sooner between casts, rank by rank.',
+    apply: s => { s.fireCdMult *= 0.95; } },
   { id: 'flick',  kanji: '歩', name: 'FLICK',        cost: [110, 280, 650, 1400, 2800, 5200, 8600, 13500],
     desc: 'The hand moves lighter. Be elsewhere before the ink lands.',
     apply: s => { s.moveMult *= 1.05; } },
@@ -758,11 +759,11 @@ const CHARMS = [
     desc: 'One more integrity, pressed into every run. The sheet holds.',
     apply: s => { s.maxHp += 1; s.hp += 1; } },
   { id: 'bitter', kanji: '重', name: 'BITTER INK',   cost: [190, 480, 1100, 2300, 4500, 8200, 13000, 20000],
-    desc: 'Every stroke the hand lays bites a half deeper. Dense, dark, permanent.',
-    apply: s => { s.dmg += 0.5; } },
+    desc: 'Every stroke the hand lays bites one deeper. Dense, dark, permanent.',
+    apply: s => { s.dmg += 1; } },
   { id: 'redtip', kanji: '赤', name: 'RED TIP',      cost: [170, 420, 980, 2100, 4100, 7500, 12000, 18500],
-    desc: 'Three strokes in a hundred bite twice as deep, whatever the hand carries.',
-    apply: s => { s.critC += 0.03; } },
+    desc: 'Five strokes in a hundred bite twice as deep, whatever the hand carries.',
+    apply: s => { s.critC += 0.05; } },
   { id: 'oldink', kanji: '遺', name: 'THE OLD INK',  cost: [300, 700, 1500, 3000, 5600],
     desc: 'Every mote of ink is worth a fourth more to the brush. The old ink remembers.',
     apply: s => { s.well += 1; } },
@@ -771,8 +772,8 @@ const CHARMS = [
     apply: s => { s.ward = true; } },
   /* the brush's own tracks — the weapon itself, pressed permanent */
   { id: 'firststroke', kanji: '筆', name: 'THE FIRST STROKE', cost: [260, 620, 1400, 2900, 5600, 10000, 15500, 24000],
-    desc: 'The brush you carry bites a half deeper — its own ink, and nothing else\u2019s.',
-    apply: s => { s.firststroke += 0.5; } },
+    desc: 'The brush you carry bites one deeper — its own ink, and nothing else\u2019s.',
+    apply: s => { s.firststroke += 1; } },
   { id: 'swiftbrush', kanji: '手', name: 'THE SWIFT HAND', cost: [240, 580, 1300, 2700, 5200],
     desc: 'The brush you carry casts a tenth part sooner, rank by rank.',
     apply: s => { s.swiftbrush += 1; } },

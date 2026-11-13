@@ -2091,6 +2091,14 @@ const rand = (a, b) => a + RNG() * (b - a);
          there — near enough to kill, never near enough to be buried */
       if (dmin > want) c -= 520 * calm * Math.max(0, 1 - (dmin - want) / 460);
       else if (dmin < 70) c += (70 - dmin) * 240;
+      /* the middle: the walker wants the open heart of the page, not
+         the rim — a soft pull that wins whenever nothing else does, so
+         the brush is never idling beside a margin */
+      if (A) {
+        const cd = Math.hypot(x, y);
+        const lim = Math.min(A.w, A.h) * 0.5;
+        c += (cd / lim) * (cd / lim) * 900;
+      }
       /* and when the horde is far off the page, a weak scent of it */
       if (nearE && dmin > want) {
         const dh = Math.hypot(x - nearE.x, y - nearE.y);
@@ -2420,7 +2428,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     return base + (S.stats.dmg - 1) + ownInk();
   }
   function primaryCd(atk) {
-    let cd = atk.cd * S.stats.fireCdMult * Math.pow(0.93, S.stats.swiftbrush || 0);
+    let cd = atk.cd * S.stats.fireCdMult * Math.pow(0.90, S.stats.swiftbrush || 0);
     if (atk.bkind === 'wisp') cd *= Math.pow(0.88, S.stats.whaunt || 0);
     return Math.max(0.09, cd);
   }
