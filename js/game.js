@@ -412,8 +412,13 @@ const rand = (a, b) => a + RNG() * (b - a);
       hp = areaE.mult.hp;
       sp = areaE.mult.sp;
       budget = areaE.mult.budget;
-      hp *= Math.pow(CFG.endless.hpGrowth, turn);
-      sp *= 1 + CFG.endless.waveSp * (w - 1);
+      /* the endless climb is a slope, not a wall: every wave presses a
+         little deeper — ink, speed (capped: the chase stays winnable),
+         budget — and the sheet's own weight rides on top. Nothing
+         compounds past the hand's reach, so a journey continued at
+         wave 600 walks into a slope it can still climb. */
+      hp *= 1 + CFG.endless.waveHp * (w - 1);
+      sp *= Math.min(CFG.endless.spCap, 1 + CFG.endless.waveSp * (w - 1));
       budget *= 1 + CFG.endless.waveBudget * (w - 1);
       if (S.hardMode) { hp *= CFG.hard.hp; sp *= CFG.hard.sp; budget *= CFG.hard.budget; }
       const lv = inTurn + 1;
@@ -593,14 +598,16 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.comboT = CFG.combo.decay;
     const pts = Math.round((def.score * mult * (e.elite ? 6 : 1) * comboMult() *
       (S.hardMode ? CFG.hard.score : 1)) / 5) * 5;
-    /* the walked run pays half — floored to the sheet's own 5-grid */
-    S.stats.score += S.autoRun ? Math.max(5, Math.floor(pts / 10) * 5) : pts;
+    /* the walked run pays half — floored to the sheet's own 5-grid —
+       and the popup prints what actually lands, never the full price */
+    const landed = S.autoRun ? Math.max(5, Math.floor(pts / 10) * 5) : pts;
+    S.stats.score += landed;
     S.stats.kills++;
     UI.setScore(S.stats.score);
     UI.setCombo(S.combo, comboMult());
     S.popups.push({
       x: e.x, y: e.y - e.r - 4,
-      txt: isBoss ? def.name + ' +' + pts : e.elite ? 'GUARDIAN +' + pts : def.captain ? 'CAPTAIN +' + pts : '+' + pts,
+      txt: (isBoss ? def.name : e.elite ? 'GUARDIAN' : def.captain ? 'CAPTAIN' : '') + (isBoss || e.elite || def.captain ? ' +' : '+') + landed,
       life: isBoss || e.elite || def.captain ? 1.4 : 0.7, max: isBoss || e.elite || def.captain ? 1.4 : 0.7, red: e.elite || isBoss || def.captain,
     });
     const keeper = isBoss && def.boss === 2;
@@ -902,9 +909,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     const paperStart = S.runMode === 'endless'
       ? (n === 1 || prevAreaIdx !== as.themeIdx)
       : as.level === 1 && as.waveInLevel === 1;
-    /* the sheet paints itself, one scene per LEVEL — the tenth
-       level presses the red seal and the page is complete */
-    S.landscapeWave = S.runMode === 'endless' ? ((n - 1) % 100) + 1 : as.level;
+    /* the sheet paints itself: journey scenes climb one LEVEL a step,
+       the endless scroll regrows per TURN (ten layers to a spec) */
+    S.landscapeWave = S.runMode === 'endless' ? ((n - 1) % CFG.wave.wavesPerLevel) + 1 : as.level;
     S.waveRevealT = performance.now() / 1000;
     if (paperStart) {
       S.levelMarks = [];
@@ -913,12 +920,13 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     /* the deeper the brush walks into a sheet, the more the paper remembers */
     if (S.runMode === 'journey') noteLevel(as.cycle + 1, as.level);
-    /* the painter inscribes the scene where the brush now stands */
+    /* the painter inscribes the scene where the brush now stands —
+       journey scenes wear their names; endless turns wear the sheet's */
     if (as.waveInLevel === 1) {
       S.levelMarks.push({
         x: S.player.x + ((as.cycle * 7 + as.level * 13) % 2 ? 130 : -130),
         y: S.player.y - 40,
-        kanji: as.area.names[as.level - 1] || '無題',
+        kanji: S.runMode === 'endless' ? (as.area.name || '無題') : (as.area.names[as.level - 1] || '無題'),
         t: performance.now() / 1000,
         seal: as.level === CFG.wave.levelsPerArea,
       });
@@ -1004,7 +1012,7 @@ const rand = (a, b) => a + RNG() * (b - a);
           if (S.mode === 'playing' && S.stats && S.stats.wave === n) UI.hardBanner();
         }, 2650);
       }
-    } else if (as.waveInLevel === 1) {
+    } else if (as.waveInLevel === 1 && S.runMode !== 'endless') {
       /* a new scene grows on the same page */
       UI.levelBanner(as.area, as.level, as.area.names[as.level - 1]);
       SFX.wave(true);
@@ -1381,6 +1389,12 @@ const rand = (a, b) => a + RNG() * (b - a);
   function continueEndless() {
     if (S.mode !== 'over') return;
     S.runMode = 'endless';
+    /* the continued sheet re-reads the room's own toggles and arms its
+       recorder fresh — nothing may ride in stale from the fallen run */
+    S.autoRun = getAutoBrush();
+    if (UI.setAutoBadge) UI.setAutoBadge(S.autoRun);
+    S.hardMode = getHard();
+    S.rec = null; S.ghost = null;
     UI.setMode(S.runMode);   /* a daily continue becomes an endless sheet */
     UI.show(null);
     UI.hud(true);

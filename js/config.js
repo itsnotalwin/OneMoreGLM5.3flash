@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v21.3';
+window.OM_VERSION = 'v21.4';
 
 const CFG = {
   player: {
@@ -144,11 +144,13 @@ const CFG = {
     showAt: 8,         // chain count before the chip appears
   },
 
-  /* the endless paper keeps growing teeth — and the teeth grow fangs:
-     a step of teeth at every turn of the sheet (hpGrowth, ten waves),
-     and a breath of pressure on every single wave (waveBudget/waveSp) */
+  /* the endless paper keeps growing teeth — a slope, not a wall:
+     every wave presses a little deeper (waveHp +2.2%/wave, budget
+     +5%/wave) and walks a little faster, with a hard cap on speed so
+     the chase stays winnable no matter how deep the brush wanders.
+     (hpGrowth/spGrowth/budgetGrowth still serve the daily sheets.) */
   endless: { hpGrowth: 1.24, spGrowth: 1.016, budgetGrowth: 1.32,
-             waveBudget: 0.05, waveSp: 0.006 },
+             waveHp: 0.022, waveBudget: 0.05, waveSp: 0.006, spCap: 2.5 },
 
   /* ---- REALLY HARD ----
      the title's red toggle, remembered on this device. A hard page

@@ -122,6 +122,7 @@
     SFX.thud();               /* a knock: the run is set down */
     R.resetStains();
     G.abandon();
+    SFX.music.start('title'); /* the paper set down asks for its breath again */
   }
 
   /* the level-clear rest: onward naked, or home */
@@ -620,7 +621,17 @@
   /* the run is never paused out from under the hand: leaving the
      window or the tab keeps the sheet live (the browser itself
      stills a hidden tab's frames — the paper waits, unpaused).
-     REST stays a choice — Escape, the button. */
+     REST stays a choice — Escape, the button. But a key held across
+     a lost focus never hears its own keyup — the board is cleared
+     on blur and hide, or a stuck walk stays on and the autobrush
+     waits behind it forever */
+  const clearKeys = () => {
+    for (const k in keys) keys[k] = false;
+    G.S.joy = null;
+    vec();
+  };
+  window.addEventListener('blur', clearKeys);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearKeys(); });
 
   /* ---------------- init ---------------- */
   /* the build's mark, worn where the title signs its name */

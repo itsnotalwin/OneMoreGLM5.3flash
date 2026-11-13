@@ -112,6 +112,7 @@ const SFX = (() => {
       return b;
     }
     function walkIn(buffer) {
+      if (muted) return;                         // the toggle may have fallen mid-decode
       const old = src, oldG = gain;
       if (old) {
         try {
@@ -130,11 +131,12 @@ const SFX = (() => {
     }
     function start(kind) {
       if (!FILES[kind]) return;
+      if (current === kind && src) return;       // already walking this room
       current = kind;
       if (!ctx) { pending = kind; return; }      // remembered; the next tap wakes it
       if (muted) return;                         // remembered; unmute wakes it
       buf(kind).then((b) => {
-        if (current !== kind) return;            // the paper changed its mind mid-fetch
+        if (current !== kind || muted) return;   // the paper changed its mind mid-fetch
         walkIn(b);
       }).catch(() => {});
     }

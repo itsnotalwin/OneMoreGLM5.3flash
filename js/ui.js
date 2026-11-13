@@ -54,15 +54,17 @@ const UI = (() => {
   /* kanji numerals — the calligraphic count of waves and levels */
   function toKanji(n) {
     if (n <= 0) return '〇';
-    if (n > 999) return String(n);
     const D = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
     if (n < 10) return D[n];
     if (n < 100) {
       const t = Math.floor(n / 10), o = n % 10;
       return (t > 1 ? D[t] : '') + '十' + (o ? D[o] : '');
     }
-    const h = Math.floor(n / 100), r = n % 100;
-    return D[h] + '百' + (r ? toKanji(r) : '');
+    if (n < 10000) {
+      const h = Math.floor(n / 1000), r = n % 1000;
+      return D[h] + '千' + (r ? (r < 100 ? '零' + toKanji(r) : toKanji(r)) : '');
+    }
+    return String(n);
   }
 
   /* hand-brushed upgrade glyphs */
