@@ -276,35 +276,50 @@ const R = (() => {
     };
   }
 
-  /* ---------------- brush primitives ---------------- */
+  /* ---------------- brush primitives ----------------
+     The two hot path builders write into module-level typed scratch —
+     at the horde cap the old per-call arrays and closures added up to
+     a few thousand short-lived objects every frame. */
+  const BLOB = new Float64Array(2 * 24);
   function blobPath(c, x, y, r, seed, wob = 0.16, n = 11) {
     const rnd = mulberry(seed);
-    const pts = [];
     for (let i = 0; i < n; i++) {
       const a = (i / n) * TAU;
       const rr = r * (1 + (rnd() * 2 - 1) * wob);
-      pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
+      BLOB[i * 2] = x + Math.cos(a) * rr;
+      BLOB[i * 2 + 1] = y + Math.sin(a) * rr;
     }
     c.beginPath();
-    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    let m = mid(pts[n - 1], pts[0]);
-    c.moveTo(m[0], m[1]);
+    let mx = (BLOB[(n - 1) * 2] + BLOB[0]) / 2;
+    let my = (BLOB[(n - 1) * 2 + 1] + BLOB[1]) / 2;
+    c.moveTo(mx, my);
     for (let i = 0; i < n; i++) {
-      const q = pts[(i + 1) % n];
-      m = mid(pts[i], q);
-      c.quadraticCurveTo(pts[i][0], pts[i][1], m[0], m[1]);
+      const j = ((i + 1) % n) * 2;
+      mx = (BLOB[i * 2] + BLOB[j]) / 2;
+      my = (BLOB[i * 2 + 1] + BLOB[j + 1]) / 2;
+      c.quadraticCurveTo(BLOB[i * 2], BLOB[i * 2 + 1], mx, my);
     }
     c.closePath();
   }
 
-  /* tapered calligraphic stroke through pts (max width at belly) */
+  /* tapered calligraphic stroke through pts (max width at belly) —
+     same typed-scratch discipline: the edge offsets land in reusable
+     buffers that grow once and never again */
+  let _stN = 0, _stL = new Float64Array(0), _stR = new Float64Array(0);
+  function strokeScratch(n) {
+    if (n > _stN) {
+      _stN = n;
+      _stL = new Float64Array(n * 2);
+      _stR = new Float64Array(n * 2);
+    }
+  }
   function inkStroke(c, pts, maxW, o = {}) {
     if (pts.length < 2) return;
     const n = pts.length;
+    strokeScratch(n);
     const rnd = mulberry(o.seed ?? 7);
     const taper = o.taper ?? 0.75;
     const jit = o.jit ?? 0.18;
-    const left = [], right = [];
     for (let i = 0; i < n; i++) {
       const q = pts[Math.min(n - 1, i + 1)], r0 = pts[Math.max(0, i - 1)];
       let dx = q.x - r0.x, dy = q.y - r0.y;
@@ -312,14 +327,16 @@ const R = (() => {
       const t = i / (n - 1);
       const prof = Math.pow(Math.sin(Math.PI * Math.min(0.999, Math.max(0.001, t))), taper);
       const w = Math.max(0.35, maxW * prof * (1 - jit + rnd() * jit * 2));
-      left.push({ x: pts[i].x - dy * w / 2, y: pts[i].y + dx * w / 2 });
-      right.push({ x: pts[i].x + dy * w / 2, y: pts[i].y - dx * w / 2 });
+      _stL[i * 2] = pts[i].x - dy * w / 2;
+      _stL[i * 2 + 1] = pts[i].y + dx * w / 2;
+      _stR[i * 2] = pts[i].x + dy * w / 2;
+      _stR[i * 2 + 1] = pts[i].y - dx * w / 2;
     }
     c.save();
     c.beginPath();
-    c.moveTo(left[0].x, left[0].y);
-    for (let i = 1; i < n; i++) c.lineTo(left[i].x, left[i].y);
-    for (let i = n - 1; i >= 0; i--) c.lineTo(right[i].x, right[i].y);
+    c.moveTo(_stL[0], _stL[1]);
+    for (let i = 1; i < n; i++) c.lineTo(_stL[i * 2], _stL[i * 2 + 1]);
+    for (let i = n - 1; i >= 0; i--) c.lineTo(_stR[i * 2], _stR[i * 2 + 1]);
     c.closePath();
     c.globalAlpha = o.alpha ?? 1;
     c.fillStyle = o.color ?? INK;
@@ -404,22 +421,42 @@ const R = (() => {
     c.restore();
   }
 
-  /* ---------------- stains: dried ink, cached as sprites ---------------- */
+  /* ---------------- stains: dried ink, cached as sprites ----------------
+     Sprites come from a reuse pool — a boss death used to mint a
+     1136px canvas and a synchronous texture upload mid-frame; the
+     pool hands back an old sheet instead, cleared and re-stamped. */
+  const stainPool = [];
+  function acquireStain(half) {
+    const need = half * 2 * 2;
+    for (let i = 0; i < stainPool.length; i++) {
+      if (stainPool[i].width >= need) return stainPool.splice(i, 1)[0];
+    }
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = need;
+    return cv;
+  }
+  function releaseStain(cv) {
+    if (stainPool.length < 24) stainPool.push(cv);
+  }
   function stampStains(S) {
     if (!S.stainQueue.length) return;
     for (const q of S.stainQueue) {
       const r = Math.max(2.4, q.r);
       const scale = 2; /* render sprites at 2x for crisp hidpi */
       const half = Math.ceil(r * 3.3);   /* headroom: no splat ever clips square */
-      const spr = document.createElement('canvas');
-      spr.width = spr.height = half * 2 * scale;
+      const spr = acquireStain(half);
       const g = spr.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, spr.width, spr.height);
       g.setTransform(scale, 0, 0, scale, half * scale, half * scale);
       splatPaint(g, 0, 0, r, (Math.random() * 1e9) | 0, q.alpha ?? 0.5, q.red ? RED : INK);
       stains.push({ x: q.x, y: q.y, a: q.alpha ?? 0.5, age: 0, spr, half });
     }
     S.stainQueue.length = 0;
-    while (stains.length > CFG.world.stainCap) stains.shift();
+    while (stains.length > CFG.world.stainCap) {
+      releaseStain(stains[0].spr);
+      stains.shift();
+    }
   }
 
   function updateStains(dt) {
@@ -428,13 +465,17 @@ const R = (() => {
       const st = stains[i];
       st.age += dt;
       if (st.a * (1 - st.age * fade) <= 0.02) {
+        releaseStain(st.spr);
         stains[i] = stains[stains.length - 1];
         stains.pop();
       }
     }
   }
 
-  function resetStains() { stains.length = 0; }
+  function resetStains() {
+    for (const st of stains) releaseStain(st.spr);
+    stains.length = 0;
+  }
 
   /* ---------------- ambient paper marks (world decor) ----------------
      faint hairs, flecks and ghost seals scattered across the sheet,
@@ -546,6 +587,29 @@ const R = (() => {
     const w = WASH[key];
     const i = themeKey === 'dark' ? w.p : w.d;
     return (i.complete && i.naturalWidth > 0) ? i : null;
+  }
+
+  /* pre-scaled wash rasters: widths quantized to 48px buckets and the
+     mirror baked — the frame blits a ready sheet instead of resampling
+     a 1050px master a dozen times a frame (the cache breathes: rare
+     sizes re-bake once when an old one is retaken) */
+  const washCache = new Map();
+  function washRaster(img, wid, flip) {
+    const key = img.src + '|' + wid + '|' + flip;
+    let cv = washCache.get(key);
+    if (cv) return cv;
+    const hgt = Math.max(1, Math.round(wid * img.naturalHeight / img.naturalWidth));
+    cv = document.createElement('canvas');
+    cv.width = wid;
+    cv.height = hgt;
+    const g = cv.getContext('2d');
+    if (flip === -1) { g.translate(wid, 0); g.scale(-1, 1); }
+    g.drawImage(img, 0, 0, wid, hgt);
+    washCache.set(key, cv);
+    if (washCache.size > 48) {
+      washCache.delete(washCache.keys().next().value);
+    }
+    return cv;
   }
 
   /* --- near-scenery sprites, rebuilt per theme (ink is baked in) --- */
@@ -964,17 +1028,15 @@ const R = (() => {
               const x = gx * RG + h1 * RG * 0.7 + RG * 0.15;
               const y = gy * RG + hash2(gx * 7 - k * 3, gy * 11 + k * 41) * RG * 0.6 + RG * 0.2;
               const wid = L.w0 + h1 * (L.w1 - L.w0);
-              const hgt = wid * img.naturalHeight / img.naturalWidth;
+              const widQ = Math.max(48, Math.round(wid / 48) * 48);
+              const hgt = widQ * img.naturalHeight / img.naturalWidth;
               const flip = hash2(gx + k * 5, gy * 3 - k) > 0.5 ? -1 : 1;
               const a = (L.a0 + hash2(gx * 3, gy * 5 + k) * (L.a1 - L.a0)) * fade;
-              c.save();
-              c.translate(x, y);
-              c.scale(flip, 1);
+              const ras = washRaster(img, widQ, flip);
               c.globalAlpha = a;
-              c.drawImage(img, -wid / 2, -hgt / 2, wid, hgt);
-              c.restore();
+              c.drawImage(ras, x - widQ / 2, y - hgt / 2);
               if (L.label && hash2(gx * 17 + k, gy * 5) > 0.7) {
-                drawInscription(c, x + flip * wid * 0.44, y - hgt * 0.36, L.label, Math.min(0.5, a * 3));
+                drawInscription(c, x + flip * widQ * 0.44, y - hgt * 0.36, L.label, Math.min(0.5, a * 3));
               }
             }
           }
@@ -5753,16 +5815,20 @@ function drawEnemy(c, e, t) {
     }
     ctx.translate(S.W / 2 + shx - camX, S.H / 2 + shy - camY);
 
-    /* the endless paper, tiled beneath everything */
+    /* the endless paper, tiled beneath everything — the tile pass
+       rides an integer-aligned transform: exact-size draws at exact
+       pixels, no per-frame resample, no hairline seams (the paper
+       may rest a hair from the entities — invisible at these sizes) */
     const vx0 = camX - S.W / 2 - 8, vx1 = camX + S.W / 2 + 8;
     const vy0 = camY - S.H / 2 - 8, vy1 = camY + S.H / 2 + 8;
     const tile = tiles[themeKey] || tiles.pale;
+    {
+      const wtx = S.W / 2 + shx - camX, wty = S.H / 2 + shy - camY;
+      ctx.translate(Math.round(wtx) - wtx, Math.round(wty) - wty);
+    }
     for (let ty = Math.floor(vy0 / TILE); ty <= Math.floor(vy1 / TILE); ty++) {
       for (let tx = Math.floor(vx0 / TILE); tx <= Math.floor(vx1 / TILE); tx++) {
-        /* one pixel of overlap: under a fractional camera and a
-           fractional dpr the tile rims used to antialias apart and
-           print a phantom grid of hairline seams across the sheet */
-        ctx.drawImage(tile, tx * TILE, ty * TILE, TILE + 1, TILE + 1);
+        ctx.drawImage(tile, tx * TILE, ty * TILE, TILE, TILE);
       }
     }
 
