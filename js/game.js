@@ -24,7 +24,7 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   /* QA hooks (hidden): ?wave=N starts mid-journey, &power=N seeds a build.
      For testing the deep sheets, the Guardians and the ending on film. */
-  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false, qaCharms = -1;
+  let qaWave = 0, qaPower = 0, qaHard = false, qaDaily = false, qaDay = '', qaGod = false;
   let qaScenes = -1;   /* ?scenes=N — probe the sealed-brush gate without sealing scenes */
   try {
     const q = new URLSearchParams(location.search);
@@ -35,8 +35,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaDay = (q.get('day') || '').slice(0, 10);
     qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
                                        must outlive a wave-300 instant swarm */
-    if (q.get('charms') != null) qaCharms = Math.max(0, parseInt(q.get('charms'), 10) || 0);
-    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(60, parseInt(q.get('scenes'), 10) || 0));
+    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(20, parseInt(q.get('scenes'), 10) || 0));
   } catch (e) {}
 
   const store = {
@@ -91,10 +90,15 @@ const rand = (a, b) => a + RNG() * (b - a);
      brushes wake as the journey's scenes are SEALED — a scene
      seals when its Keeper falls on the tenth wave. The count is
      the key; the title's cards show the lid. */
-  const getBrush = () => store.get('om_brush_v1', 'needle');
+  /* the chosen brush, remembered on this device — a save carrying a
+     brush the four-shelf no longer holds falls back to the needle */
+  const getBrush = () => {
+    const b = store.get('om_brush_v1', 'needle');
+    return CFG.brushes[b] ? b : 'needle';
+  };
   /* the sheet's ink by CHOICE (v19): 'auto' wears the highest unlocked
      scroll's ink; any named theme pins the paper to itself */
-  const THEME_KEYS = ['auto', 'pale', 'dark', 'red', 'storm', 'gilt', 'silk'];
+  const THEME_KEYS = ['auto', 'pale', 'dark'];   /* v22.3: the two papers' own inks */
   const getThemeSetting = () => {
     const v = store.get('om_theme_v1', 'auto');
     return THEME_KEYS.indexOf(v) >= 0 ? v : 'auto';
@@ -146,71 +150,14 @@ const rand = (a, b) => a + RNG() * (b - a);
     store.set('om_autobrush_v1', !!v);
   }
 
-  /* ---------------- the ink purse (符) — v8.8 ----------------
-     what the runs press out, kept between runs. om_charms_v1
-     carries the ink, every charm's rank, and the one-time feats
-     (the six sheets signed). The settings room's WIPE already
-     sweeps every om_* key — the purse empties with the rest. */
-  const CHARMS_KEY = 'om_charms_v1';
-  function charmsSave() {
-    const c = store.get(CHARMS_KEY, null);
-    return c && typeof c === 'object'
-      ? { ink: c.ink | 0, earned: c.earned | 0, lv: c.lv || {}, feats: c.feats || {} }
-      : { ink: 0, earned: 0, lv: {}, feats: {} };
-  }
-  const getInk = () => charmsSave().ink;
-  function setInk(n) {   /* QA probe: ?charms=1 seeds the purse */
-    const c = charmsSave(); c.ink = Math.max(0, n | 0);
-    store.set(CHARMS_KEY, c);
-  }
-  const charmLv = id => (charmsSave().lv[id] || 0);
-  if (qaCharms >= 0) setInk(qaCharms);   /* ?charms=N — seed the purse for probes */
-  const charmRankCount = () => Object.values(charmsSave().lv).reduce((a, b) => a + (b | 0), 0);
-  /* v20 THE SEALED LADDER: the scrolls gate the board. The highest
-     sheet the journey has unrolled caps every charm — the first
-     scroll sells three ranks of anything, and every unrolled scroll
-     opens one more (2 + unlocked). A rank beyond the cap cannot be
-     bought, whatever the purse holds. */
-  const charmCap = () => 2 + getUnlocked();
-  function buyCharm(id) {
-    const def = CHARMS.find(c => c.id === id);
-    if (!def) return false;
-    const c = charmsSave();
-    const rank = c.lv[id] || 0;
-    if (rank >= def.cost.length) return false;
-    if (rank + 1 > charmCap()) return false;   /* the scroll keeps it sealed */
-    const price = def.cost[rank];
-    if ((c.ink | 0) < price) return false;
-    c.ink -= price; c.lv[id] = rank + 1;
-    store.set(CHARMS_KEY, c);
-    return true;
-  }
+  /* v21.9 the ink purse and the charm room are retired — a run is
+     built from its own picks alone; nothing survives the paper but
+     the records, the seals and the chosen brush. */
+
   /* the endless record: how deep the walker has ever pressed the
      endless paper — the checkpoint door reads it, the title wears it */
   const getEndlessBest = () => store.get('om_endless_best_v1', 0);
   function setEndlessBest(w) { if (w > getEndlessBest()) store.set('om_endless_best_v1', w); }
-
-  /* the earned line: waves pressed into drops, sheet-falls and the
-     victory feat ride on top, the multipliers press deeper. paid
-     marks what this run already surrendered (a continued run —
-     the finale's endless sheet — pays only its further waves). */
-  function inkForRun(cleared, paid, opts) {
-    const E = CFG.charmEarn;
-    let sum = 0;
-    for (let w = paid + 1; w <= cleared; w++) sum += E.perWave * (w > E.loopFrom ? E.loopMult : 1);
-    if (sum <= 0 && !(opts.victory && !opts.victoryPaid)) return 0;
-    sum += (Math.floor(cleared / 100) - Math.floor(paid / 100)) * E.sheetFall;
-    /* THE SCHOLAR: study pays — every wave presses a tenth deeper per rank */
-    sum *= 1 + 0.1 * charmLv('scholar');
-    if (opts.practice) {
-      sum *= E.practiceMult;                    /* practice presses a fifth */
-    } else {
-      if (opts.hard) sum *= E.hardMult;
-      if (opts.best) sum *= E.bestMult;
-    }
-    if (opts.victory && !opts.victoryPaid) sum += E.victoryFeat;
-    return Math.round(sum);
-  }
 
   function freshStats() {
     const bdef = CFG.brushes[S.brush] || {};
@@ -237,25 +184,14 @@ const rand = (a, b) => a + RNG() * (b - a);
       score: 0, kills: 0, time: 0, wave: 0,
     };
     /* ONE BRUSH, ONE BLADE: the brush's born power wakes at rank 1 —
-       the Wisp's spirit, the Fan's gust, the Tide's surge, the Red
-       Seal's stamp, the Scribe's living stroke */
+       the Wisp's spirit. The four-shelf carries its own arms; the
+       learned loops come from the picks alone. */
     ret.spirit = bm.spirit || 0;
     ret.fan = bm.fan || 0;
     ret.nova = bm.nova || 0;
     ret.hanko = bm.hanko || 0;
     ret.scribe = bm.scribe || 0;
-    /* the charms ride every fresh page — journey, endless, daily,
-       the shelf's resumed scenes, the ONE MORE retry, all of them */
-    applyCharms(ret);
     return ret;
-  }
-
-  function applyCharms(st) {
-    const lv = charmsSave().lv;
-    for (const c of CHARMS) {
-      const n = lv[c.id] | 0;
-      for (let i = 0; i < n; i++) c.apply(st);
-    }
   }
 
   /* ---------------- ink motes & level-ups ---------------- */
@@ -341,7 +277,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   }
 
   /* ---------------- persistence ---------------- */
-  /* a corrupt save must never NaN its way into charmCap or the frontier:
+  /* a corrupt save must never NaN its way into the frontier level:
      wrong-typed values fall back to their defaults here, in one place */
   const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
@@ -351,7 +287,9 @@ const rand = (a, b) => a + RNG() * (b - a);
      om_unlocked_v1 — the highest sheet the journey may enter (1-based).
      om_cleared_v1  — the highest sheet whose Guardian has fallen.
      om_prog_v1     — per sheet, the deepest level the brush has reached. */
-  const getUnlocked = () => Math.max(1, num(store.get('om_unlocked_v1', 1)) || 1, num(store.get('om_furthest_v1', 1)) || 1);
+  /* v22.3: old saves walked six sheets — the getters clamp to the
+     two-scroll paper so no save can point past the shelf */
+  const getUnlocked = () => Math.min(AREAS.length, Math.max(1, num(store.get('om_unlocked_v1', 1)) || 1, num(store.get('om_furthest_v1', 1)) || 1));
   function setUnlocked(n) { if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
   const getCleared = () => num(store.get('om_cleared_v1', 0)) || 0;
   function setCleared(n) { if (n > getCleared()) store.set('om_cleared_v1', n); }
@@ -385,7 +323,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     return 1 + Math.floor(((sheet - 1) * CFG.wave.levelsPerArea + (level - 1)) / 2);
   }
   /* legacy name — the title's continue door reads the unlocked shelf */
-  const getFurthest = getUnlocked;
+  const getFurthest = getUnlocked;   /* clamped above — the shelf cannot point past the paper */
 
   /* ---------------- helpers ---------------- */
   function shuffle(a) {
@@ -578,10 +516,18 @@ const rand = (a, b) => a + RNG() * (b - a);
     Object.assign(e, {
       state: 'cruise', stateT: rand(0.3, 1.5), seed: rand(0, 6.28), stun: 0,
       slowT: 0, orbCd: 0, dirT: 0, spawnT: type === 'titan' || def.boss ? 2.5 : 0,
+      enterT: def.boss ? CFG.lord.enter : 0,   /* v21.8: a boss is poured onto the page */
       px: 0, py: 0, // kage perch / crane pass target
     });
     S.enemies.push(e);
     S.rings.push({ x, y, max: r * 2.4, life: 0.3, maxLife: 0.3 });
+    if (def.boss) {
+      /* v21.8 the duel announces itself: wide red rings telegraph the
+         ground the pool will spread over, and the paper shivers */
+      S.rings.push({ x, y, max: r * 4.2, life: 0.9, maxLife: 0.9, red: true });
+      S.rings.push({ x, y, max: r * 2.3, life: 1.5, maxLife: 1.5 });
+      S.shake = Math.max(S.shake, 7);
+    }
     return e;
   }
 
@@ -624,6 +570,9 @@ const rand = (a, b) => a + RNG() * (b - a);
     });
     const keeper = isBoss && def.boss === 2;
     burst(e.x, e.y, e.r, isBoss || e.type === 'titan' || e.elite, isBoss);
+    /* v22.6 the death splash: the kill leaves its own ground mark,
+       sized by the body — the sheet remembers where each beast fell */
+    S.stainQueue.push({ x: e.x, y: e.y, r: e.r * 1.5, alpha: 0.3, red: isBoss });
     S.stainQueue.push({
       x: e.x, y: e.y, r: e.r * (isBoss ? 3 : e.elite ? 2.2 : 1.45),
       alpha: isBoss ? 0.65 : e.elite ? 0.6 : 0.5,
@@ -1047,15 +996,13 @@ const rand = (a, b) => a + RNG() * (b - a);
     const st = S.stats;
     /* the shelf answers the hand: the brush's own arts ride only for
        their brush (u.for), the cast-stroke arts only for brushes that
-       cast (u.proj), and no trap picks — the Paper Ward charm owns
-       the ward, so its in-run pick retires while the charm rides */
+       cast (u.proj) */
     const atk = CFG.brushes[S.brush] && CFG.brushes[S.brush].atk;
     const projBrush = !!atk && (atk.kind === 'bolts' || atk.kind === 'gust');
     const avail = shuffle(UPGRADES.filter(u =>
       (st.levels[u.id] || 0) < u.max &&
       !(u.for && u.for !== S.brush) &&
-      !(u.proj && !projBrush) &&
-      !(u.id === 'ward' && charmLv('ward') > 0)));
+      !(u.proj && !projBrush)));
     const out = avail.slice(0, n);
     let i = 0;
     while (out.length < n) {
@@ -1317,7 +1264,6 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (!brushUnlocked(S.brush)) S.brush = 'needle';
     S.hardMode = qaHard || getHard();   /* the red toggle rides every fresh page */
     S.stats = freshStats();
-    S.inkWave = 0;   /* the purse counts this run's waves from zero */
     S.bullets = []; S.ebullets = []; S.enemies = []; S.markers = []; S.telgs = [];
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = [];
     S.puddles = []; S.spirits = []; S.stamps = [];
@@ -1687,31 +1633,9 @@ const rand = (a, b) => a + RNG() * (b - a);
       const prev = ghostLoadOwn('endless');
       if (!prev || (st.score | 0) > (prev.score | 0)) ghostSave('endless', st);
     }
-    /* ---- the purse: the run presses its ink back (v8.8) ----
-       death and victory alike press; a run continued past the
-       finale pays only the waves it walked further. Practice
-       sheets press a fifth; the ledger's double still stands. */
-    let inkGain = 0, inkTotal = 0;
-    {
-      const cs = charmsSave();
-      inkGain = inkForRun(cleared, S.inkWave | 0, {
-        victory: !!victory, victoryPaid: !!cs.feats.victory,
-        practice: S.runMode === 'daily' && !S.dailyCounting,
-        hard: !!S.hardMode, best: !!nb,
-      });
-      /* the walked run presses half into the purse (自) — the hand's
-         runs keep the whole pour. Levels were never the walker's to
-         lose: every mote and every rise stays untouched. */
-      if (S.autoRun) inkGain = Math.floor(inkGain / 2);
-      if (inkGain > 0) {
-        cs.ink = (cs.ink | 0) + inkGain;
-        cs.earned = (cs.earned | 0) + inkGain;
-        if (victory && !cs.feats.victory) cs.feats.victory = true;
-        store.set(CHARMS_KEY, cs);
-      }
-      S.inkWave = cleared;
-      inkTotal = cs.ink | 0;
-    }
+    /* ---- the purse is retired (v21.9) — the run ends on the paper ----
+       nothing presses back between runs; the over sheet reads the
+       run's own ledgers only. */
     /* the brush's last recording rides to the ledger — the echo another
        scribe may race (a death inside a breath leaves too few strokes) */
     const recPayload = S.rec && S.rec.frames.length >= 8
@@ -1726,14 +1650,10 @@ const rand = (a, b) => a + RNG() * (b - a);
       day: dailyDay, practice: S.runMode === 'daily' && !dailyCounting,
       ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score,
                          name: S.ghost.name || null } : null,
-      ink: inkGain, inkTotal,
-      charms: charmRankCount(),
     });
     UI.hud(false);
     UI.show('over');
     S.mode = 'over';
-    UI.setInkLine(inkTotal);            /* the title's purse, freshly read */
-    if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     /* the endless ledger takes its entry when an endless run truly
        ends — the journey answers only to its own seals (LB is the
        ledger module; absent it, the game plays exactly as before) */
@@ -2456,7 +2376,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         splash: atk.splash ? atk.splash * Math.pow(1.45, st.sshat || 0) : 0,
         quake: atk.bkind === 'stone' && st.squake ? 1 : 0,
         slow: atk.bkind === 'drop' && st.bwet ? CFG.slow.dur : 0,
-        push: atk.bkind === 'drop' ? 150 : 0,
+        push: atk.bkind === 'drop' ? 90 : 0,   /* v22.4: the sweep no longer clears its own lane */
       });
     };
     for (let i = 0; i < n; i++) {
@@ -3387,6 +3307,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (e.orbCd > 0) e.orbCd -= dt;
       if (e.slowT > 0) e.slowT -= dt;
       if (e.auraT > 0) e.auraT -= dt;
+      if (e.enterT > 0) e.enterT -= dt;   /* v21.8: the pour-in rises while it runs */
       if (e.stun > 0) {
         e.stun -= dt;
       } else {
@@ -5436,10 +5357,14 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.idle = [];
     const types = ['pulse', 'dart', 'spit', 'split', 'moth', 'wraith'];
     const [bandTop, bandBot] = attractBand();
+    /* v22.0 the roam follows the paper's width — walkers cross the
+       whole sheet, not a fist of it (the vertical band stays where
+       v15 put it: behind the words, never over the rail) */
+    const rx = Math.max(460, S.W * 0.5 - 120);
     for (let i = 0; i < 5; i++) {
       const type = types[Math.floor(rand(0, types.length))];
       const r = ENEMIES[type].r * 0.62;
-      const x = rand(-420, 420);
+      const x = rand(-rx, rx);
       const y = rand(bandTop, bandBot);
       const ang = rand(0, 6.28);
       const sp = rand(9, 19);
@@ -5454,11 +5379,12 @@ const rand = (a, b) => a + RNG() * (b - a);
 
   function updateIdle(dt) {
     const [bandTop, bandBot] = attractBand();
+    const rx = Math.max(460, S.W * 0.5 - 120);
     for (const d of S.idle) {
       d.x += d.vx * dt; d.y += d.vy * dt; d.t += dt;
       d.ang += dt * 0.25;
       /* the band keeps them: a soft pull home, below the words */
-      if (d.x > 460) d.vx -= 30 * dt; else if (d.x < -460) d.vx += 30 * dt;
+      if (d.x > rx) d.vx -= 30 * dt; else if (d.x < -rx) d.vx += 30 * dt;
       if (d.y > bandBot) d.vy -= 34 * dt; else if (d.y < bandTop) d.vy += 34 * dt;
       const sp = Math.hypot(d.vx, d.vy);
       if (sp > 22) { d.vx *= 22 / sp; d.vy *= 22 / sp; }
@@ -5489,8 +5415,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
     getAutoBrush, setAutoBrush, autoVec, xpReqFor, getEndlessBest,
-    /* the purse (v8.8): the charm room and the QA probes read these */
-    getInk, setInk, charmLv, charmRankCount, charmCap, buyCharm, getThemeSetting, setThemeSetting,
+    /* the paper themes read these (v21.9: the purse is retired) */
+    getThemeSetting, setThemeSetting,
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
     qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },

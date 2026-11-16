@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v21.9';
+const VER = 'v22.7';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -32,7 +32,6 @@ const CORE = [
   'snd/sfx/gong.ogg',
   'snd/sfx/deploy.ogg',
   'js/audio.js',
-  'js/charms.js',
   'js/cloud-save.js',
   'js/config.js',
   'js/cutscene.js',

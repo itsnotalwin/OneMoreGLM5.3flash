@@ -88,7 +88,6 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
   const pc = createDevice(db);
   pc.local.setItem('om_runs_v1', '4');
   pc.local.setItem('om_unlocked_v1', '3');
-  pc.local.setItem('om_charms_v1', '{"ink":55,"earned":60,"lv":{"ward":1},"feats":{}}');
 
   await test('new PC progress stays local until explicitly uploaded', async () => {
     await pc.cloud.check(true);
@@ -102,7 +101,6 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     assert.equal(db.row.revision, 1);
     assert.equal(db.row.data.values.om_runs_v1, '4');
     assert.equal(pc.cloud.state.mode, 'synced');
-    assert.equal(pc.local.getItem('om_charms_v1').includes('"ink":55'), true);
   });
 
   await test('cloud signatures ignore JSONB map key ordering', () => {
@@ -193,8 +191,8 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     assert.equal(guest.reloads, 0);
   });
 
-  await test('v19.3 ten-seal gameplay and OAuth/cloud-save entrypoints are preserved', () => {
-    assert.match(game, /om_charms_v1/);
+  await test('v21.9 four-shelf gameplay and OAuth/cloud-save entrypoints are preserved', () => {
+    assert.doesNotMatch(game, /om_charms_v1/);
     assert.match(game, /om_unlocked_v1/);
     assert.match(game, /TEN SEALS/);
     assert.match(lobby, /om_lb_google_return_v1/);
@@ -207,7 +205,7 @@ function createDevice(db, local = new DeviceStorage(), signedIn = true) {
     assert.match(main, /LB\.authReturnTo = settingsReturn/);
     assert.match(main, /beforeLocalWipe\(\)/);
     assert.ok(html.includes('id="boardTabWeek"'));
-    assert.ok(html.includes('id="charmBtn"') && html.includes('id="charmInk"'));
+    assert.ok(!html.includes('id="charmBtn"') && !html.includes('id="charmInk"'));
     assert.ok(html.indexOf('js/supabase-config.js') < html.indexOf('js/lb.js'));
     assert.ok(html.indexOf('js/lb.js') < html.indexOf('js/cloud-save.js'));
     assert.ok(html.indexOf('js/cloud-save.js') < html.indexOf('js/main.js'));

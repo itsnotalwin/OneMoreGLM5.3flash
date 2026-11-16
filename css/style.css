@@ -291,10 +291,13 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .screen-title{
   align-items: center; justify-content: center; padding: 0 0 40px;
   /* the canvas below already paints the washi — the overlay only
-     breathes a little light and warmth over it, never veils it */
+     breathes a little light and warmth over it, never veils it.
+     v22.0: a third plane — the low air settles a breath darker so
+     the mountains read as receding, not flat */
   background:
     radial-gradient(ellipse at 22% 14%, rgba(255,252,242,.4), transparent 55%),
-    radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.08), transparent 60%);
+    radial-gradient(ellipse at 82% 88%, rgba(120,104,76,.08), transparent 60%),
+    linear-gradient(rgba(26,23,20,0) 58%, rgba(26,23,20,.055) 100%);
 }
 
 /* ---- entrance choreography: each element settles like wet ink ---- */
@@ -305,11 +308,15 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   from{ opacity: 0; }
 }
 
-/* ---- the great brush circle behind the name ---- */
+/* ---- the great brush circle behind the name ----
+   v22.0: the ring grows and leans off the paper's right edge — a
+   circle cropped by the sheet is composition, bare paper is not.
+   The baked ink breathes: its alpha swells on a slow sine, the
+   held breath of a brush still wet. */
 .enso-wrap{
   position: absolute;
-  left: 50%; top: 31%;
-  width: min(64vh, 520px); height: min(64vh, 520px);
+  left: 72%; top: 30%;
+  width: min(92vh, 700px); height: min(92vh, 700px);
   transform: translate(-50%, -50%) rotate(-4deg);
   pointer-events: none;
   z-index: 0;
@@ -317,6 +324,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .enso-bake, .enso-front{
   position: absolute; inset: 0;
   width: 100%; height: 100%;
+}
+.enso-bake{ animation: ensoBreathe 7.5s ease-in-out infinite; }
+@keyframes ensoBreathe{
+  0%, 100%{ opacity: .84; }
+  50%{ opacity: 1; }
 }
 
 /* ---- colophons: vertical inscriptions, as on a mounted scroll ---- */
@@ -327,20 +339,20 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   z-index: 1;
   pointer-events: none;
 }
-.side-r{ right: clamp(16px, 4.5vw, 76px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.45s backwards; }
-.side-l{ left: clamp(16px, 4.5vw, 76px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.62s backwards; }
+.side-r{ right: clamp(14px, 3.6vw, 64px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.45s backwards; }
+.side-l{ left: clamp(14px, 3.6vw, 64px); animation: riseIn .9s cubic-bezier(.22,.7,.25,1) 2.62s backwards; }
 .ins-col{
   writing-mode: vertical-rl;
   font-family: var(--display);
-  font-size: 20px; line-height: 1;
+  font-size: 26px; line-height: 1;
   letter-spacing: .38em;
   color: var(--ink);
 }
-.ins-col-pale{ color: var(--ink-70); font-size: 15px; letter-spacing: .3em; }
+.ins-col-pale{ color: var(--ink-70); font-size: 19px; letter-spacing: .3em; }
 .ins-seal{
-  width: 23px; height: 23px;
+  width: 30px; height: 30px;
   display: grid; place-items: center;
-  font-family: var(--display); font-size: 13px; line-height: 1;
+  font-family: var(--display); font-size: 17px; line-height: 1;
   color: var(--paper); background: var(--red);
   transform: rotate(-3deg);
   box-shadow: 1.5px 1.5px 0 rgba(26,23,20,.18);
@@ -379,6 +391,23 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   text-shadow: 5px 5px 0 rgba(26,23,20,.08);
   --tilt: -1.2deg;
   transform: rotate(var(--tilt));
+}
+/* v22.0 the wordmark wears its signature: a red hanko pressed at
+   the name's shoulder, as a painter signs the finished leaf */
+.word-row{
+  position: relative;
+  display: inline-block;
+}
+.word-seal{
+  position: absolute;
+  right: -16px; top: 0;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 17px; line-height: 1;
+  color: var(--paper); background: var(--red);
+  transform: rotate(-8deg);
+  box-shadow: 2px 2px 0 rgba(26,23,20,.2);
+  animation: riseIn .5s cubic-bezier(.22,.7,.25,1) 3.1s backwards;
 }
 /* each letter pressed into the paper like wet type, one after another */
 .title-word .tl{
@@ -965,13 +994,75 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 }
 .hud-mode.endless{ color: var(--red); border-color: rgba(178,58,43,.45); }
 
-.mode-row{
-  margin-top: 26px;
-  display: flex; gap: 14px; align-items: stretch; justify-content: center;
-  flex-wrap: wrap;
+/* ---- v22.0 THE RAIL: one inked column, weights by rank ----
+   The eye reads it without thinking: the tool, the hero road, the
+   second road, the quiet doors. Nothing floats loose any more. */
+.title-rail{
+  margin-top: 24px;
+  width: min(430px, 92vw);
+  display: flex; flex-direction: column; gap: 10px;
+  align-items: stretch;
   animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.35s backwards;
 }
-.mode-row .play-btn{ margin-top: 0; animation: none; }
+/* every row bleeds a little ink under the hand — the same wash the
+   seals breathe, tuned quiet, red only where the road is the hero */
+.title-rail button{
+  position: relative;
+}
+.title-rail button::after{
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, var(--bleed, rgba(26,23,20,.11)), transparent 72%);
+  opacity: 0;
+  transition: opacity .28s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.title-rail button:hover::after{ opacity: 1; }
+.title-rail button:active::after{ opacity: .7; transition-duration: .1s; }
+
+.title-rail .rail-crown{
+  width: 100%; margin: 0;
+  --bleed: rgba(26,23,20,.13);
+}
+.title-rail .rail-hero{
+  width: 100%;
+  margin-top: 0;
+  justify-content: flex-start;
+  padding: 13px 20px 13px 14px;
+  --bleed: rgba(178,58,43,.2);
+}
+.title-rail .rail-hero .hero-copy{
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 3px;
+  position: relative; z-index: 1;
+}
+.title-rail .rail-hero .play-label{ font-size: 14px; }
+.journey-sub{
+  font-size: 8px; font-weight: 600;
+  letter-spacing: .34em; text-indent: .05em;
+  color: var(--paper-55);
+}
+.title-rail .rail-second{
+  width: 100%;
+  --bleed: rgba(26,23,20,.12);
+}
+.rail-utility{
+  margin-top: 2px;
+  display: flex; gap: 8px; justify-content: center; align-items: stretch;
+  flex-wrap: nowrap;
+}
+.rail-utility button{
+  --bleed: rgba(26,23,20,.12);
+  white-space: nowrap;
+}
+/* the doors ride the rail's own entrance — no private re-animation */
+.rail-utility .board-btn, .rail-utility .daily-btn, .rail-utility .sheet-btn{
+  margin-top: 0; animation: none;
+}
+.rail-utility .board-btn, .rail-utility .daily-btn{ padding: 9px 12px 9px 10px; font-size: 9px; letter-spacing: .16em; }
+.rail-utility .sheet-btn{ padding: 9px 11px; font-size: 9px; letter-spacing: .16em; }
+.rail-utility .board-btn .board-kanji, .rail-utility .daily-btn .daily-kanji, .rail-utility .sheet-btn .sheet-kanji{ font-size: 14px; }
 .endless-btn{
   position: relative;
   display: inline-flex; align-items: center; gap: 12px;
@@ -1128,6 +1219,16 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   transform: rotate(-3deg);
 }
 .opening-label{ position: relative; }
+/* v22.0 the corners sign the sheet: the settings kanji pressed in a
+   red seal, the opening a ghost outline — the colophons' own duality */
+.settings-btn .opening-kanji{
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  color: var(--paper); background: var(--red);
+  font-size: 12px;
+  transform: rotate(-4deg);
+  box-shadow: 1.5px 1.5px 0 rgba(26,23,20,.18);
+}
 
 /* ============================================================
    RESPONSIVE
@@ -1155,9 +1256,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .wave-progress{ width: 72px; }
   .hud-area-name{ display: none; }
   .hud-mode{ display: none; }
-  .mode-row{ flex-direction: column; align-items: center; gap: 11px; }
-  .mode-row .play-btn, .endless-btn{ width: min(320px, 86vw); justify-content: center; }
-  .minor-row{ margin-top: 11px; }
+  .title-rail{ width: min(340px, 88vw); gap: 9px; }
+  .rail-utility{ flex-wrap: wrap; }
   .hud-hard{ font-size: 9px; padding: 2.5px 3px 1.5px; }
   .wm{ font-size: 130px; }
 }
@@ -1196,8 +1296,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .wave-banner.show{ animation-duration: .8s; }
   .play-btn, .endless-btn, .up-card, .block-btn, .deploy-btn{ transition: none; }
   .title-chip, .title-word .tl, .title-sub, .play-btn, .best-line,
-  .title-foot, .mode-row, .brush-entry, .opening-btn, .side-ins,
+  .title-foot, .title-rail, .brush-entry, .opening-btn, .side-ins,
   .sheet-btn{ animation: none; }
+  .enso-bake{ animation: none; }
+  .title-rail button::after{ display: none; }
   .screen-clear.rise .clear-box{ animation: none; }
 }
 
@@ -1334,7 +1436,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 @media (max-width: 720px){
   .side-ins{ display: none; }
-  .enso-wrap{ width: min(46vh, 118vw, 380px); height: min(46vh, 118vw, 380px); top: 27%; }
+  .enso-wrap{ left: 50%; width: min(46vh, 118vw, 380px); height: min(46vh, 118vw, 380px); top: 27%; }
+  .word-seal{ right: -12px; top: -2px; width: 24px; height: 24px; font-size: 14px; }
   .title-word{ font-size: clamp(52px, 15vw, 96px); }
 
   /* the entry rides where the tile hand was — one breath taller than
@@ -1343,8 +1446,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .be-kanji{ font-size: 23px; }
   .be-name{ font-size: 11px; }
 
-  .mode-row{ margin-top: 14px; }
-  .mode-row .play-btn, .endless-btn{ padding: 12px 20px 12px 14px; }
+  .title-rail{ margin-top: 14px; }
+  .title-rail .rail-hero{ padding: 11px 18px 11px 13px; }
+  .title-rail .rail-hero .play-label{ font-size: 13px; }
 
   .hud-foot{ gap: 9px; }
   .hud-ink-k{ font-size: 10px; }
@@ -1366,12 +1470,11 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .be-kanji{ font-size: 17px; }
   .be-kicker{ font-size: 7px; }
   .be-name{ font-size: 9px; }
-  .mode-row{ margin-top: 9px; gap: 10px; }
-  .mode-row .play-btn, .endless-btn{ width: auto; padding: 8px 16px; font-size: 11px; }
-  .minor-row{ margin-top: 8px; }
+  .title-rail{ margin-top: 9px; gap: 7px; width: auto; max-width: 92vw; }
+  .rail-utility{ flex-wrap: wrap; }
   .best-line{ display: none; }
-  .sheet-btn{ margin-top: 8px; padding: 7px 16px; font-size: 10px; }
-  .enso-wrap{ width: 76vh; height: 76vh; top: 20%; opacity: .5; }
+  .sheet-btn{ padding: 7px 16px; font-size: 10px; }
+  .enso-wrap{ width: 84vh; height: 84vh; top: 20%; opacity: .5; }
 }
 
 /* ============================================================
@@ -1819,16 +1922,8 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .board-btn .play-label{ position: relative; z-index: 1; color: inherit; }
 .board-btn:hover{ color: var(--ink); transform: rotate(var(--tilt)) translateY(-1px); }
 
-/* the minor row: the desk rail — ledger, daily, charms, stone, hard.
-   One row, never ragged: labels fold away before the row can wrap */
-.minor-row{
-  margin-top: 14px;
-  display: flex; justify-content: center; align-items: stretch; gap: 10px;
-  flex-wrap: nowrap;
-  max-width: 100%;
-  animation: riseIn .7s cubic-bezier(.22,.7,.25,1) 3.6s backwards;
-}
-.minor-row .board-btn{ margin-top: 0; animation: none; padding: 10px 16px 10px 12px; font-size: 10px; letter-spacing: .26em; }
+/* v21.9: the old minor row folded into the title rail — its fold
+   rules now ride .rail-utility (see the 860px block at file's end) */
 /* the purse seal on the stone chip — the wallet, readable at the rail */
 .chip-count{
   position: absolute; z-index: 2; bottom: -8px; right: -9px;
@@ -2476,17 +2571,17 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 /* the rail folds below the belt line: chips go vertical — kanji
    above its word — so a thumb reads every door with no tooltip */
 @media (max-width: 860px){
-  .minor-row{ gap: 7px; }
+  .rail-utility{ gap: 7px; }
   /* every chip goes vertical — kanji above its word — daily-btn
      included (it wears its own class, so the row's children rule) */
-  .minor-row > *{ flex-direction: column; gap: 4px; }
-  .minor-row > *, .minor-row .board-btn{ padding: 8px 10px 7px; }
-  .minor-row .play-label{
+  .rail-utility > *{ flex-direction: column; gap: 4px; }
+  .rail-utility > *, .rail-utility .board-btn{ padding: 8px 10px 7px; }
+  .rail-utility .play-label{
     display: block; font-size: 6.5px; letter-spacing: .18em; text-indent: .18em;
   }
   /* the daily chip wears one word on the rail — TODAY lives in its own room */
-  .minor-row #dailyLabel{ display: none; }
-  .minor-row .board-kanji{ font-size: 16px; }
+  .rail-utility #dailyLabel{ display: none; }
+  .rail-utility .board-kanji{ font-size: 16px; }
   .chip-count{ bottom: -6px; right: -6px; font-size: 7px; }
 }
 

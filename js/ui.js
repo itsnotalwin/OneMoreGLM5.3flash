@@ -19,7 +19,7 @@ const UI = (() => {
     screens: {
       title: $('screenTitle'), scrolls: $('screenScrolls'), upgrade: $('screenUpgrade'),
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
-      board: $('screenBoard'), settings: $('screenSettings'), charms: $('screenCharms'),
+      board: $('screenBoard'), settings: $('screenSettings'),
       brush: $('screenBrush'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
@@ -573,10 +573,20 @@ const UI = (() => {
     const btn = document.getElementById('sheetBtn');
     if (!btn) return;
     btn.classList.remove('hidden');
-    const area = AREAS[Math.min(AREAS.length, Math.max(1, n || 1)) - 1];
-    btn.innerHTML = n >= 2
-      ? `<span class="sheet-kanji" aria-hidden="true">續</span>SCENES — SCROLL <span class="kanji-inline">${area ? area.kanji : toKanji(n)}</span> ONWARD`
-      : `<span class="sheet-kanji" aria-hidden="true">章</span>SCENES — SIX SCROLLS`;
+    /* v22.0 the rail chip wears one word — the scroll detail lives in
+       the shelf itself and the hero's progress line */
+    btn.innerHTML = `<span class="sheet-kanji" aria-hidden="true">章</span>SCENES`;
+  }
+
+  /* v22.0 the hero road wears its distance: a fresh scribe reads the
+     whole journey ahead, a returning one reads how far the brush has
+     already walked — hierarchy and memory in one quiet line */
+  function setJourneyProg(sheet, scene) {
+    const line = document.getElementById('journeyProg');
+    if (!line) return;
+    line.textContent = scene > 0
+      ? `SCROLL ${sheet} · SCENE ${scene} REACHED`
+      : 'TWO SCROLLS · TWENTY SCENES';
   }
 
   /* ---------------- the shelf of scrolls ----------------
@@ -588,8 +598,8 @@ const UI = (() => {
   let onScrollsBack = null;     /* main.js answers with the title */
   let ladderSheet = 0;          /* 0 = the shelf; n = the ten scenes of scroll n */
   const SCROLLS_HEAD = {
-    kick: 'THE JOURNEY — SIX SCROLLS · SIXTY SCENES',
-    title: 'SIX SCROLLS',
+    kick: 'THE JOURNEY — TWO SCROLLS · TWENTY SCENES',
+    title: 'TWO SCROLLS',
     sub: "Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.",
   };
   function setScrollsHead(kick, title, sub) {
@@ -977,7 +987,7 @@ const UI = (() => {
     const vict = !!d.victory;
     el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
     el.overSub.textContent = vict
-      ? 'Six sheets painted, every guardian felled. The paper asks for more.'
+      ? 'Two sheets painted, every guardian felled. The paper asks for more.'
       : d.mode === 'daily' && d.practice
         ? 'Practice sheet — today\u2019s ink is already on the ledger.'
         : 'The paper keeps every stroke. Even this one.';
@@ -988,10 +998,6 @@ const UI = (() => {
     el.statKills.textContent = d.kills.toLocaleString('en-US');
     el.statTime.textContent = fmtTime(d.time);
     el.statScore.textContent = d.score.toLocaleString('en-US');
-    /* the purse: what this run pressed out for the charms */
-    const inkRow = document.getElementById('inkStatRow');
-    if (inkRow) inkRow.classList.toggle('hidden', !(d.ink > 0));
-    if (d.ink > 0) el.statInk.textContent = '+' + d.ink.toLocaleString('en-US');
     el.newBestBadge.classList.toggle('hidden', !d.newBest);
     if (el.continueBtn) {
       el.continueBtn.classList.toggle('hidden', !vict);
@@ -1020,16 +1026,6 @@ const UI = (() => {
 
   function muteVisual(m) { el.muteBtn.classList.toggle('muted', m); }
 
-  /* the purse lives on the 符 chip — the rail reads the wallet.
-     It stays quiet until the first press lands. */
-  function setInkLine(total) {
-    const badge = document.getElementById('charmInk');
-    if (!badge) return;
-    const t = Math.max(0, total | 0);
-    badge.textContent = t.toLocaleString('en-US');
-    badge.classList.toggle('hidden', t <= 0);
-  }
-
   /* the brush's current loadout, worn on the wrist — a completed
      weapon wears MAX instead of a number. The shelf reads in three
      clusters, hairline-separated: the brush's own ARTS, the learned
@@ -1056,8 +1052,7 @@ const UI = (() => {
     setRunNo, setBest, setSheetContinue, buildBrushes, fillUpgrades, markSelected, setAutoBadge, markAuto,
     setDeploy, setUpgradeHeader, showOver, muteVisual, setLoadout, setArea, setMode, setXp,
     setBoss, setCombo, bossBanner, bossFalls, guardianBanner, guardianFalls, sealBanner, showClear, el, toKanji,
-    setInkLine,
-    buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard, setDailyChip,
+    buildScrolls, buildLevels, setScrollsHint, unlockBanner, hardBanner, setHard, setDailyChip, setJourneyProg,
     get onScrollPick() { return onScrollPick; },
     set onScrollPick(fn) { onScrollPick = fn; },
     get onOpenScroll() { return onOpenScroll; },

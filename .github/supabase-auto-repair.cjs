@@ -77,7 +77,6 @@ function healthy(path, text) {
       'openSettings(oauthReturn.from)',
       'LB.initAuth()',
       'showIntroGate()',
-      'CH.open()',
       'LB.launchRun',
       'beforeLocalWipe()',
     ].every(piece => text.includes(piece));
@@ -99,7 +98,7 @@ function validate(content) {
   }
   const sw = content[SW];
   for (const cached of [
-    ...SOURCE_FILES, 'js/cloud-save.js', 'js/charms.js',
+    ...SOURCE_FILES, 'js/cloud-save.js',
   ]) {
     if (!sw.includes("'" + cached + "'")) {
       throw new Error('Service worker missing asset ' + cached + '; refusing repair');
@@ -321,7 +320,7 @@ function plan(current, knownBad, knownGood) {
   if (edits.length || !proposed[SW].includes("'js/cloud-save.js'")) {
     let sw = proposed[SW];
     if (!sw.includes("'js/cloud-save.js'")) {
-      const anchor = "'js/charms.js',";
+      const anchor = "'js/audio.js',";
       if (sw.split(anchor).length !== 2) {
         throw new Error('Unknown PWA cache layout. No files changed.');
       }
@@ -373,7 +372,6 @@ function selfTest(bad, good) {
     const p = plan(changed, bad, good);
     assert.match(p.proposed[SW], /const VER = 'v99-supabase-1'/);
     assert.ok(p.proposed[SW].includes("'js/cloud-save.js'"));
-    assert.ok(p.proposed[SW].includes("'js/charms.js'"));
   });
   test('cloud script missing from a new HTML upload gets a minimal patch diff', () => {
     const changed = { ...good,

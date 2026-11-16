@@ -135,17 +135,13 @@
     c.fillText(modeLine(d, day), W / 2, 876);
     let line2 = '';
     if (d.hard) line2 = 'REALLY HARD · 難';
-    else if (d.victory) line2 = 'THE SIX SCROLLS ARE SIGNED';
+    else if (d.victory) line2 = 'THE TWO SCROLLS ARE SIGNED';
     else if (d.practice) line2 = 'A PRACTICE SHEET';
     if (d.ghost && d.ghost.wave) {
       const gv = d.ghost.name
         ? String(d.ghost.name).toUpperCase().slice(0, 16) + "'S ECHO FELL AT WAVE " + d.ghost.wave
         : 'THE GHOST FELL AT WAVE ' + d.ghost.wave;
       line2 = (line2 ? line2 + '   ·   ' : '') + gv;
-    }
-    /* the charms the scribe wore ride the honours too (v8.8) */
-    if (d.charms) {
-      line2 = (line2 ? line2 + '   ·   ' : '') + '符 ' + d.charms + ' CHARMS';
     }
     if (line2) {
       c.globalAlpha = 0.62;

@@ -22,35 +22,84 @@ const INTRO = (() => {
   const VOID = '#131009';
   const TAU = Math.PI * 2;
 
-  /* ---------------- timeline ---------------- */
-  const T_DROP_FORM = 0.45;   // the drop begins to gather
-  const T_FALL = 1.7;         // the drop lets go
-  const T_IMPACT = 2.45;      // the drop bursts
-  const T_FLOOD = 2.75;       // the paper floods outward
-  const T_FLOOD_END = 5.2;
-  const T_STROKES = [5.3, 6.95, 8.85];  // three strokes, staggered
-  const T_POOLS = 10.1;       // ink pools bloom
-  const T_RISE = 10.55;       // the beasts rise
-  const T_EYES = 11.95;       // the eyes open
-  const T_GATHER = 13.9;      // the ink gathers one last time
-  const T_STAND = 14.45;      // the spirit stands
-  const T_AWAKE = 14.9;       // its eye opens
-  const T_STAMP = 15.75;      // it raises the brush
-  const T_SLAM = 16.1;        // the mark lands
-  const T_RED = 16.5;         // the seal's vermilion floods the sheet
-  const T_WASH = 17.6;        // the pale washi floods back — the title's sheet
-  const DUR = 18.5;           // handoff (a breath of clean washi at the end)
+  /* ---------------- timeline ----------------
+     v22.1 THE GRAND OPENING — six acts, ~33s. The old cut's beloved
+     beats all keep their places; the ceremony the film was missing
+     (the horde in depth, the captain's standard, the six lords
+     answering) is built between them, and the camera now moves per
+     act instead of one slow push. */
+  /* ACT I — THE VOID */
+  const T_DROP_FORM = 0.6;    // the drop begins to gather
+  const T_FALL = 3.4;         // the drop lets go (a slow-mo stretch)
+  /* ACT II — THE DROP AND THE FLOOD */
+  const T_IMPACT = 4.5;       // the drop bursts — cracks radiate
+  const T_FLOOD = 4.85;       // the paper floods outward
+  const T_FLOOD_END = 7.6;
+  /* ACT III — THE THREE STROKES (the camera sweeps with each) */
+  const T_STROKES = [8.0, 10.2, 12.4];
+  /* ACT IV — THE HORDE WAKES */
+  const T_POOLS = 14.2;       // ink pools bloom
+  const T_RISE = 14.8;        // the beasts rise — three depths
+  const T_EYES = 16.4;        // the eyes open in a wave
+  const T_FLAG = 18.2;        // the captain's standard rises; a keeper's seal glows
+  /* ACT V — THE KEEPERS ANSWER */
+  const T_LORDS = 20.6;       // the first sheet's ten keepers rise along the horizon
+  const T_LORD_STEP = 0.38;   // one keeper per breath, seals flaring behind
+  /* ACT VI — THE SCRIBE AND THE SEAL */
+  const T_GATHER = 27.0;      // the ink gathers one last time
+  const T_STAND = 27.55;      // the spirit stands
+  const T_AWAKE = 28.0;       // its eye opens
+  const T_STAMP = 28.9;       // it raises the brush
+  const T_SLAM = 29.3;        // the mark lands
+  const T_RED = 29.75;        // the seal's vermilion floods the sheet
+  const T_WASH = 31.6;        // the pale washi floods back — the title's sheet
+  const DUR = 33.0;           // handoff (a breath of clean washi at the end)
 
   const CAPTIONS = [
-    { kanji: '墨', en: 'IN THE BEGINNING, THERE WAS INK.', t0: 3.9, t1: 6.1 },
-    { kanji: '紙', en: 'THEN A SHEET THAT REMEMBERS EVERY STROKE.', t0: 6.5, t1: 8.7 },
-    { kanji: '筆', en: 'ONE BRUSH WAS CUT FROM THE REED.', t0: 9.0, t1: 11.1 },
-    { kanji: '生', en: 'AND THE INK BEGAN TO MOVE.', t0: 11.4, t1: 13.4 },
+    { kanji: '墨', en: 'IN THE BEGINNING, THERE WAS INK.', t0: 5.3, t1: 7.5 },
+    { kanji: '紙', en: 'THEN A SHEET THAT REMEMBERS EVERY STROKE.', t0: 8.9, t1: 11.0 },
+    { kanji: '筆', en: 'ONE BRUSH WAS CUT FROM THE REED.', t0: 11.6, t1: 13.7 },
+    { kanji: '生', en: 'AND THE INK BEGAN TO MOVE.', t0: 16.9, t1: 19.1 },
+    { kanji: '守', en: 'AND THE PAPER RAISED ITS OWN.', t0: 21.6, t1: 24.4 },
   ];
+  const CAP_VOID = { kanji: '始', en: 'BEFORE THE FIRST STROKE, A DARKNESS.', t0: 1.3, t1: 3.2 };
+  const CAP_END = { kanji: '終', en: 'ONE MORE.', t0: 30.35, t1: 31.9 };
 
-  /* the ending is one move, not five: the hanko bleeds, the frame
-     goes vermilion, and the pale washi floods back for the title.
-     The scrolls announce themselves in their own films — the
+  /* the camera rides keyframes now: zoom around a point, eased
+     between acts — the push-in, the sweeps, the pull-back, the
+     tilt to the horizon, the slam's punch */
+  const CAM_KEYS = [
+    { t: 0.0, s: 1.00, x: 0.50, y: 0.50 },
+    { t: 3.2, s: 1.07, x: 0.50, y: 0.40 },   // ACT I — push toward the hanging drop
+    { t: 4.5, s: 1.13, x: 0.50, y: 0.50 },   // ACT II — the impact
+    { t: 5.6, s: 1.00, x: 0.50, y: 0.52 },   // settle as the flood lands
+    { t: 9.3, s: 1.05, x: 0.36, y: 0.42 },   // ACT III — stroke I sweeps left
+    { t: 11.5, s: 1.04, x: 0.62, y: 0.52 },  // stroke II sweeps right
+    { t: 13.7, s: 1.06, x: 0.55, y: 0.62 },  // stroke III sweeps low
+    { t: 15.0, s: 1.00, x: 0.50, y: 0.55 },  // ACT IV — settle for the horde
+    { t: 18.8, s: 0.95, x: 0.50, y: 0.58 },  // pull back — the horde revealed
+    { t: 20.4, s: 1.00, x: 0.50, y: 0.50 },
+    { t: 23.5, s: 0.97, x: 0.50, y: 0.40 },  // ACT V — tilt up to the keepers' horizon
+    { t: 26.6, s: 1.02, x: 0.50, y: 0.50 },
+    { t: 28.6, s: 1.10, x: 0.50, y: 0.58 },  // ACT VI — push in on the scribe
+    { t: 29.4, s: 1.16, x: 0.50, y: 0.56 },  // the slam
+    { t: 30.6, s: 1.00, x: 0.50, y: 0.52 },  // settle for the red
+  ];
+  function camAt(t) {
+    if (t <= CAM_KEYS[0].t) return CAM_KEYS[0];
+    for (let i = 1; i < CAM_KEYS.length; i++) {
+      const a = CAM_KEYS[i - 1], b = CAM_KEYS[i];
+      if (t <= b.t) {
+        const p = easeInOut(clamp01((t - a.t) / (b.t - a.t)));
+        return { s: a.s + (b.s - a.s) * p, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p };
+      }
+    }
+    return CAM_KEYS[CAM_KEYS.length - 1];
+  }
+
+  /* the ending keeps one continuous move: the hanko bleeds, the
+     frame goes vermilion, and the pale washi floods back for the
+     title. The scrolls announce themselves in their own films — the
      opening spends its last breath on a single continuous shot. */
 
   /* ---------------- state ---------------- */
@@ -66,6 +115,7 @@ const INTRO = (() => {
   let satellite = [];    // paper splats ahead of the flood edge
   let sealSplats = [];   // red splatter around the slam
   let redEdge = [];      // red satellites tearing ahead of the vermilion flood
+  let cracks = [];       // jagged ink lines radiating from the impact (v22.1)
   let motes = [];        // dust breathing in the void
   let shakeAmp = 0;
   let sealSlammed = false;
@@ -406,6 +456,26 @@ const INTRO = (() => {
       });
     }
 
+    /* v22.1 the impact cracks: jagged ink lines radiating from the
+       blow, jagged twice over — once in the curve, once in the ink */
+    cracks = [];
+    const ix = W / 2, iy = H * 0.52;
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU + rnd() * 0.28;
+      const len = W * (0.10 + rnd() * 0.09);
+      const bend = (rnd() - 0.5) * 0.35;
+      cracks.push({
+        pts: curvePts(
+          ix, iy,
+          ix + Math.cos(a + bend * 0.4) * len * 0.55, iy + Math.sin(a + bend * 0.4) * len * 0.55,
+          ix + Math.cos(a) * len, iy + Math.sin(a) * len,
+          7, 5 * u, 700 + i),
+        w: 1.6 + rnd() * 2.4,
+        a: 0.5 + rnd() * 0.4,
+        seed: 700 + i,
+      });
+    }
+
     /* dust motes breathing in the void */
     motes = [];
     for (let i = 0; i < 30; i++) {
@@ -462,6 +532,8 @@ const INTRO = (() => {
     if (crossed(T_STROKES[1])) SFX.pick(1);
     if (crossed(T_STROKES[2])) SFX.pick(2);
     if (crossed(T_RISE)) SFX.nova();          // the beasts stir
+    if (crossed(T_FLAG)) SFX.wave(true);      // the standard rises — the rank musters
+    if (crossed(T_LORDS)) SFX.gong();         // the keepers answer
     if (crossed(T_STAND)) SFX.spirit();       // the ink stands
     if (crossed(T_SLAM)) SFX.hanko();         // the mark lands
     if (crossed(T_RED)) SFX.elite();          // the vermilion rises
@@ -671,6 +743,240 @@ const INTRO = (() => {
   }
 
   /* ---------------- master draw ---------------- */
+  /* v22.1 one caption renderer for every surface — void, paper, red.
+     The kanji settles like wet ink, bigger now; the english line
+     rides beneath, flanked by hairlines; a red seal dot signs it. */
+  function drawCaption(c, cap, a, x, y, inkColor, u) {
+    const kSize = Math.round(Math.max(64, Math.min(150, 118 * u)));
+    const eSize = Math.max(11, Math.min(16, 13 * u));
+    c.save();
+    c.translate(x, y);
+    c.rotate(-0.018);
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+
+    const settle = 1 + (1 - easeOutCubic(a)) * 0.07;
+    c.save();
+    c.scale(settle, settle);
+    c.globalAlpha = a;
+    c.fillStyle = inkColor;
+    c.shadowColor = inkColor === INK ? 'rgba(26,23,20,0.5)' : 'rgba(0,0,0,0)';
+    c.shadowBlur = 9 * u;
+    c.font = `${kSize}px "Zen Antique", "Hiragino Mincho ProN", serif`;
+    c.fillText(cap.kanji, 0, 0);
+    c.restore();
+
+    const ey = kSize * 0.68;
+    c.globalAlpha = a * 0.92;
+    c.fillStyle = inkColor;
+    c.font = `500 ${eSize}px "IBM Plex Mono", monospace`;
+    try { c.letterSpacing = `${(3.2 * u).toFixed(1)}px`; } catch (e) {}
+    c.fillText(cap.en, 0, ey);
+    const tw = c.measureText(cap.en).width;
+    try { c.letterSpacing = '0px'; } catch (e) {}
+    c.strokeStyle = inkColor === INK ? 'rgba(26,23,20,0.3)' : 'rgba(237,231,217,0.35)';
+    c.lineWidth = 1;
+    const gap = tw / 2 + 18 * u;
+    const rl = 34 * u;
+    c.beginPath();
+    c.moveTo(-gap - rl, ey); c.lineTo(-gap, ey);
+    c.moveTo(gap, ey); c.lineTo(gap + rl, ey);
+    c.stroke();
+
+    c.globalAlpha = a * 0.9;
+    c.fillStyle = RED;
+    c.save();
+    c.translate(kSize * 0.62, -kSize * 0.5);
+    c.rotate(0.12);
+    const sd = Math.max(6, 8 * u);
+    c.fillRect(-sd / 2, -sd / 2, sd, sd);
+    c.restore();
+
+    c.restore();
+  }
+
+  /* v22.2 the level bosses, seen vast on the horizon — the ten
+     keepers of the first sheet, the beasts every new hand actually
+     fights: THE POOL, THE SAPLING, THE FAR PEAK, THE DRIFT, THE
+     RISING MIST, THE DEW, THE DANCING CRANE, THE OLD PINE, THE
+     FIRST DUSK, and THE BLIGHT closing scene ten. Drawn centred at
+     the caller's origin. */
+  function drawLordSil(c, k, u) {
+    c.fillStyle = INK; c.strokeStyle = INK;
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    switch (k) {
+      case 0: { /* THE POOL — a spill that learned to hunger */
+        blobPath(c, 0, 14 * u, 62 * u, 91, 0.12, 16); c.fill();
+        c.save(); c.globalAlpha *= 0.4; c.fillStyle = INK;
+        blobPath(c, 0, 6 * u, 30 * u, 92, 0.16, 12); c.fill();
+        c.restore();
+        c.save(); c.globalAlpha *= 0.5; c.strokeStyle = PAPER; c.lineWidth = 1.8 * u;
+        for (let i = 1; i <= 2; i++) {
+          c.beginPath();
+          c.arc(0, 14 * u, (26 + i * 18) * u, 0, TAU);
+          c.stroke();
+        }
+        c.restore();
+        break;
+      }
+      case 1: { /* THE SAPLING — a young tree, canopy of blots */
+        inkStroke(c, [{ x: 0, y: 66 * u }, { x: -3 * u, y: 10 * u }, { x: 3 * u, y: -34 * u }], 13 * u, { alpha: 0.95, seed: 31 });
+        blobPath(c, 0, -44 * u, 46 * u, 92, 0.18, 12); c.fill();
+        c.save(); c.globalAlpha *= 0.85;
+        teardrop(c, 9 * u);
+        c.save(); c.translate(38 * u, -26 * u); c.rotate(1.1); c.fill(); c.restore();
+        c.save(); c.translate(-40 * u, -14 * u); c.rotate(-1.2); c.fill(); c.restore();
+        c.restore();
+        break;
+      }
+      case 2: { /* THE FAR PEAK — a jagged mass, snow on the high ridge */
+        c.save();
+        c.beginPath();
+        c.moveTo(-74 * u, 58 * u);
+        c.lineTo(-46 * u, -6 * u);
+        c.lineTo(-26 * u, 14 * u);
+        c.lineTo(-2 * u, -52 * u);
+        c.lineTo(24 * u, -2 * u);
+        c.lineTo(44 * u, -22 * u);
+        c.lineTo(76 * u, 58 * u);
+        c.closePath();
+        c.fill();
+        c.restore();
+        c.save(); c.globalAlpha *= 0.6; c.strokeStyle = PAPER; c.lineWidth = 2.4 * u;
+        c.beginPath();
+        c.moveTo(-14 * u, -32 * u); c.lineTo(-2 * u, -52 * u); c.lineTo(12 * u, -28 * u);
+        c.stroke();
+        c.restore();
+        break;
+      }
+      case 3: { /* THE DRIFT — a swimmer, always mid-turn */
+        c.save();
+        c.scale(-1, 1);   /* faces right: the tail clears the peak's mass */
+        c.rotate(-0.12);
+        blobPath(c, 0, 0, 44 * u, 94, 0.11, 14); c.fill();
+        c.beginPath();
+        c.moveTo(-40 * u, 0);
+        c.lineTo(-74 * u, -22 * u + Math.sin(1) * 4 * u);
+        c.lineTo(-70 * u, 22 * u - Math.sin(1) * 4 * u);
+        c.closePath(); c.fill();
+        c.save(); c.globalAlpha *= 0.7; c.strokeStyle = PAPER; c.lineWidth = 1.8 * u;
+        for (const s of [-1, 1]) {
+          c.beginPath();
+          c.moveTo(36 * u, s * 7 * u);
+          c.quadraticCurveTo(58 * u, s * 18 * u, 70 * u, s * 7 * u);
+          c.stroke();
+        }
+        c.restore();
+        c.restore();
+        break;
+      }
+      case 4: { /* THE RISING MIST — a hooded drift, trailing wisps */
+        c.save();
+        c.scale(0.9, 1.12);
+        c.globalAlpha *= 0.9;
+        blobPath(c, 0, -6 * u, 46 * u, 95, 0.18, 12); c.fill();
+        c.restore();
+        c.save(); c.globalAlpha *= 0.5; c.fillStyle = PAPER;
+        blobPath(c, 0, -26 * u, 16 * u, 96, 0.28, 9); c.fill();
+        c.restore();
+        /* the wisps trail outward and thin — never downward, or the
+           drift grows legs (v22.2 fix) */
+        c.save(); c.globalAlpha *= 0.5;
+        inkStroke(c, [
+          { x: -20 * u, y: 18 * u },
+          { x: -52 * u, y: 30 * u },
+          { x: -78 * u, y: 24 * u },
+        ], 5 * u, { alpha: 0.45, seed: 41, taper: 0.9 });
+        inkStroke(c, [
+          { x: 20 * u, y: 20 * u },
+          { x: 54 * u, y: 34 * u },
+          { x: 80 * u, y: 30 * u },
+        ], 5 * u, { alpha: 0.45, seed: 42, taper: 0.9 });
+        c.restore();
+        break;
+      }
+      case 5: { /* THE DEW — a moth, wings as pressed leaves */
+        c.save();
+        blobPath(c, 0, 0, 26 * u, 97, 0.22, 10); c.fill();
+        c.restore();
+        c.save(); c.globalAlpha *= 0.9;
+        const fw = Math.sin(1) * 5 * u;
+        c.save(); c.translate(-40 * u, -14 * u + fw); c.rotate(-0.7); teardrop(c, 30 * u); c.fill(); c.restore();
+        c.save(); c.translate(40 * u, -14 * u + fw); c.rotate(0.7); teardrop(c, 30 * u); c.fill(); c.restore();
+        c.save(); c.translate(-28 * u, 26 * u - fw); c.rotate(-1.35); teardrop(c, 17 * u); c.fill(); c.restore();
+        c.save(); c.translate(28 * u, 26 * u + fw); c.rotate(1.35); teardrop(c, 17 * u); c.fill(); c.restore();
+        c.restore();
+        break;
+      }
+      case 6: { /* THE DANCING CRANE — folded paper, one leg */
+        c.save();
+        c.rotate(-0.06);
+        c.beginPath();
+        c.moveTo(70 * u, -6 * u);            /* beak */
+        c.lineTo(-6 * u, -12 * u);           /* neck ridge */
+        c.lineTo(-14 * u, -46 * u);          /* wing tip, raised */
+        c.lineTo(-30 * u, -8 * u);
+        c.lineTo(-44 * u, 24 * u);
+        c.lineTo(10 * u, 30 * u);
+        c.closePath(); c.fill();
+        /* the standing leg */
+        c.lineWidth = 3.4 * u;
+        c.beginPath(); c.moveTo(0, 30 * u); c.lineTo(4 * u, 68 * u); c.stroke();
+        c.restore();
+        break;
+      }
+      case 7: { /* THE OLD PINE — roots first, needles after */
+        inkStroke(c, [{ x: 0, y: 70 * u }, { x: -4 * u, y: 6 * u }, { x: 2 * u, y: -30 * u }], 15 * u, { alpha: 0.95, seed: 33 });
+        /* the needle fan, pressed in ink — paper needles drown on
+           pale washi (v22.2 fix) */
+        c.save();
+        c.globalAlpha *= 0.75; c.lineWidth = 3.4 * u;
+        for (let i = 0; i < 9; i++) {
+          const na = -Math.PI / 2 + (i / 8 - 0.5) * 2.4;
+          c.beginPath();
+          c.moveTo(2 * u + Math.cos(na) * 16 * u, -40 * u + Math.sin(na) * 16 * u);
+          c.lineTo(2 * u + Math.cos(na) * 56 * u, -40 * u + Math.sin(na) * 56 * u);
+          c.stroke();
+        }
+        c.restore();
+        break;
+      }
+      case 8: { /* THE FIRST DUSK — the noh mask */
+        c.save();
+        c.scale(0.86, 1.1);
+        blobPath(c, 0, 0, 46 * u, 98, 0.1, 12); c.fill();
+        c.restore();
+        /* its two slits, torn pale */
+        c.save(); c.strokeStyle = PAPER; c.lineWidth = 3.2 * u; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(-22 * u, -8 * u); c.lineTo(-6 * u, -4 * u); c.stroke();
+        c.beginPath(); c.moveTo(6 * u, -4 * u); c.lineTo(22 * u, -8 * u); c.stroke();
+        c.restore();
+        /* the crest horn */
+        inkStroke(c, [
+          { x: 0, y: -40 * u },
+          { x: 6 * u, y: -62 * u },
+          { x: 16 * u, y: -72 * u },
+        ], 5 * u, { alpha: 0.9, seed: 44 });
+        break;
+      }
+      case 9: { /* THE BLIGHT — a rolling sea of ink, scene ten */
+        blobPath(c, 0, 10 * u, 64 * u, 99, 0.08, 18); c.fill();
+        c.save(); c.globalAlpha *= 0.45; c.strokeStyle = PAPER; c.lineWidth = 2.6 * u;
+        c.beginPath(); c.arc(0, 10 * u, 36 * u, 0, TAU); c.stroke();
+        c.restore();
+        /* heavy drips dragging behind */
+        for (let i = 0; i < 3; i++) {
+          const dx = (-30 + i * 30) * u;
+          inkStroke(c, [
+            { x: dx, y: 52 * u },
+            { x: dx + (i - 1) * 5 * u, y: 78 * u },
+          ], 7 * u, { alpha: 0.8, seed: 71 + i });
+        }
+        break;
+      }
+    }
+  }
+
   function draw(ctx, t) {
     if (!live) return;
     const S = G.S;
@@ -688,13 +994,13 @@ const INTRO = (() => {
     if (shakeAmp > 0.3 && !S.reduced) {
       ctx.translate((Math.random() - 0.5) * shakeAmp, (Math.random() - 0.5) * shakeAmp);
     }
-    /* the camera breathes in — one slow push toward the mark,
-       settled by the slam (cinema's oldest trick, kept subtle) */
-    const cam = S.reduced ? 1 : 1 + 0.05 * easeInOut(clamp01(T / T_SLAM));
+    /* the camera rides its keyframes: zooms around a point, eased
+       between acts (v22.1). Reduced motion holds the centre still. */
+    const cam = S.reduced ? { s: 1, x: 0.5, y: 0.52 } : camAt(T);
     ctx.save();
-    ctx.translate(W / 2, H * 0.55);
-    ctx.scale(cam, cam);
-    ctx.translate(-W / 2, -H * 0.55);
+    ctx.translate(W * cam.x, H * cam.y);
+    ctx.scale(cam.s, cam.s);
+    ctx.translate(-W * cam.x, -H * cam.y);
 
     /* ===== the void ===== */
     ctx.fillStyle = VOID;
@@ -711,6 +1017,15 @@ const INTRO = (() => {
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+    }
+
+    /* ACT I's caption breathes pale out of the dark — the only words
+       the void is given (v22.1) */
+    if (T >= CAP_VOID.t0 && T <= CAP_VOID.t1 + 0.45) {
+      const fin = clamp01((T - CAP_VOID.t0) / 0.45);
+      const fout = clamp01((T - CAP_VOID.t1) / 0.45);
+      const rise = (1 - easeOutCubic(fin)) * 12 * u;
+      drawCaption(ctx, CAP_VOID, fin * (1 - fout), ix, H * 0.615 + rise, PAPER, u);
     }
 
     /* ===== the drop ===== */
@@ -760,13 +1075,29 @@ const INTRO = (() => {
       ctx.restore();
     }
 
-    /* ===== impact splash & ripples ===== */
+    /* ===== impact splash, cracks & ripples ===== */
     if (T >= T_IMPACT) {
       const it = T - T_IMPACT;
       if (it < 0.45 && shakeAmp < 1) shakeAmp = 11 * (1 - it / 0.45);
       const fade = clamp01(1 - it / 1.5);
       if (fade > 0) {
         splatPaint(ctx, ix, iy, 30 * u, 4242, 0.9 * fade, PAPER);
+        /* v22.1 the sheet cracks: jagged ink lines radiate from the
+           blow, drawn once, fading as the flood swallows them */
+        const crackA = clamp01(it / 0.16) * clamp01(1 - it / 1.35);
+        if (crackA > 0 && cracks.length) {
+          ctx.save();
+          ctx.strokeStyle = PAPER;
+          ctx.lineCap = 'round';
+          for (const cr of cracks) {
+            const seg = slicePts(cr.pts, clamp01(it / 0.34));
+            if (seg.length < 2) continue;
+            ctx.globalAlpha = crackA * cr.a;
+            ctx.lineWidth = cr.w * u;
+            inkStroke(ctx, seg, cr.w * u, { alpha: crackA * cr.a, seed: cr.seed, color: PAPER });
+          }
+          ctx.restore();
+        }
         for (let k = 0; k < 2; k++) {
           const rp = clamp01((it - k * 0.14) / 1.1);
           if (rp <= 0 || rp >= 1) continue;
@@ -832,16 +1163,16 @@ const INTRO = (() => {
         }
       }
 
-      /* ===== captions, once there is paper to write on ===== */
+      /* ===== captions, once there is paper to write on =====
+         v22.1: bigger cards through the shared renderer; 守 rides
+         with the lords now, in the same loop */
       for (let ci = 0; ci < CAPTIONS.length; ci++) {
         const cp = CAPTIONS[ci];
         if (T < cp.t0 || T > cp.t1 + 0.45) continue;
         const fin = clamp01((T - cp.t0) / 0.45);
         const fout = clamp01((T - cp.t1) / 0.45);
         const a = fin * (1 - fout);
-        const rise = (1 - easeOutCubic(fin)) * 12 * u;
-        const kSize = Math.round(Math.max(54, Math.min(118, 92 * u)));
-        const eSize = Math.max(10, Math.min(15, 12 * u));
+        const rise = (1 - easeOutCubic(fin)) * 14 * u;
         const cy = H * 0.615 + rise;
 
         /* a wash of paper behind the words, so strokes never fight them */
@@ -851,62 +1182,19 @@ const INTRO = (() => {
         ctx.fillStyle = wash;
         ctx.fillRect(0, 0, W, H);
 
-        ctx.save();
-        ctx.translate(ix, cy);
-        ctx.rotate(-0.018);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        /* the kanji, settling like wet ink */
-        ctx.save();
-        const settle = 1 + (1 - easeOutCubic(fin)) * 0.07;
-        ctx.scale(settle, settle);
-        ctx.globalAlpha = a;
-        ctx.fillStyle = INK;
-        ctx.shadowColor = 'rgba(26,23,20,0.5)';
-        ctx.shadowBlur = 9 * u;
-        ctx.font = `${kSize}px "Zen Antique", "Hiragino Mincho ProN", serif`;
-        ctx.fillText(cp.kanji, 0, 0);
-        ctx.restore();
-
-        /* the english line, flanked by hairlines */
-        const ey = kSize * 0.68;
-        ctx.globalAlpha = a * 0.92;
-        ctx.fillStyle = INK;
-        ctx.font = `500 ${eSize}px "IBM Plex Mono", monospace`;
-        try { ctx.letterSpacing = `${(3.2 * u).toFixed(1)}px`; } catch (e) {}
-        ctx.fillText(cp.en, 0, ey);
-        const tw = ctx.measureText(cp.en).width;
-        try { ctx.letterSpacing = '0px'; } catch (e) {}
-        ctx.strokeStyle = 'rgba(26,23,20,0.3)';
-        ctx.lineWidth = 1;
-        const gap = tw / 2 + 18 * u;
-        const rl = 34 * u;
-        ctx.beginPath();
-        ctx.moveTo(-gap - rl, ey); ctx.lineTo(-gap, ey);
-        ctx.moveTo(gap, ey); ctx.lineTo(gap + rl, ey);
-        ctx.stroke();
-
-        /* a red seal dot beside the kanji */
-        ctx.globalAlpha = a * 0.9;
-        ctx.fillStyle = RED;
-        ctx.save();
-        ctx.translate(kSize * 0.62, -kSize * 0.5);
-        ctx.rotate(0.12);
-        const sd = Math.max(5, 7 * u);
-        ctx.fillRect(-sd / 2, -sd / 2, sd, sd);
-        ctx.restore();
-
-        ctx.restore();
+        drawCaption(ctx, cp, a, ix, cy, INK, u);
       }
 
-      /* ===== the three strokes ===== */
+      /* ===== the three strokes =====
+         v22.1: they wash away as the lords answer — the horizon
+         belongs to the guardians, not the old ink */
+      const strokeFade = T >= T_LORDS ? clamp01(1 - (T - T_LORDS + 0.4) / 1.1) : 1;
       for (const s of strokes) {
         const p = clamp01((T - s.t0) / s.dur);
-        if (p <= 0) continue;
+        if (p <= 0 || strokeFade <= 0) continue;
         const pe = easeOutQuad(p);
         const seg = slicePts(s.pts, pe);
-        inkStroke(ctx, seg, s.w, { alpha: 0.94, seed: s.seed, dry: true });
+        inkStroke(ctx, seg, s.w, { alpha: 0.94 * strokeFade, seed: s.seed, dry: true });
         if (p < 1) {
           /* the brush tip, still moving */
           const tip = seg[seg.length - 1];
@@ -923,25 +1211,166 @@ const INTRO = (() => {
         drawFlicks(ctx, s, u);
       }
 
-      /* ===== ink pools & the rising beasts ===== */
-      if (T >= T_POOLS) {
-        const pools = [
-          { x: W * 0.20, y: H * 0.80, r: 34 * u },
-          { x: W * 0.50, y: H * 0.86, r: 40 * u },
-          { x: W * 0.80, y: H * 0.78, r: 37 * u },
+      /* ===== ACT V — THE KEEPERS ANSWER (v22.2) =====
+         the first sheet's ten level bosses rise along the horizon,
+         one per breath, each answered by a red seal flare. Drawn
+         before the horde: they stand behind it — the standard and
+         the beasts keep the foreground. The paper was never empty —
+         it raised its own. */
+      if (T >= T_LORDS) {
+        const horizon = H * 0.28;
+        const seats = [
+          { x: 0.07, k: 0, dy: 0.010 },
+          { x: 0.165, k: 1, dy: -0.006 },
+          { x: 0.26, k: 2, dy: 0.012 },
+          { x: 0.355, k: 3, dy: -0.004 },
+          { x: 0.45, k: 4, dy: 0.008 },
+          { x: 0.545, k: 5, dy: -0.008 },
+          { x: 0.64, k: 6, dy: 0.011 },
+          { x: 0.762, k: 7, dy: -0.005 },
+          { x: 0.852, k: 8, dy: 0.009 },
+          { x: 0.925, k: 9, dy: -0.007 },
         ];
-        const eyes = clamp01((T - T_EYES) / 0.6);
-        for (let k = 0; k < pools.length; k++) {
-          const pl = pools[k];
-          const grow = easeOutCubic(clamp01((T - T_POOLS - k * 0.14) / 0.6));
-          if (grow > 0) splatPaint(ctx, pl.x, pl.y, pl.r * grow, 3000 + k * 77, 0.72 * grow, INK);
-          const rp = clamp01((T - T_RISE - k * 0.22) / 1.3);
+        for (let i = 0; i < seats.length; i++) {
+          const st = seats[i];
+          const rp = clamp01((T - T_LORDS - i * T_LORD_STEP) / 1.15);
+          if (rp <= 0) continue;
+          const rise = (1 - easeOutCubic(rp)) * H * 0.22;
+          const sway = Math.sin(T * 0.5 + i * 1.9) * 3 * u;
+          const lx = st.x * W + sway;
+          const ly = horizon + rise + st.dy * H;
+          ctx.save();
+          ctx.globalAlpha = clamp01(rp * 1.4) * 0.92;
+          ctx.translate(lx, ly);
+          drawLordSil(ctx, st.k, u);
+          ctx.restore();
+          /* the seal flare answers each keeper */
+          const sp = clamp01((T - T_LORDS - i * T_LORD_STEP - 0.8) / 0.55);
+          if (sp > 0 && sp < 1) {
+            ctx.save();
+            ctx.strokeStyle = RED;
+            ctx.globalAlpha = (1 - sp) * 0.7;
+            ctx.lineWidth = 2 * u;
+            ctx.beginPath();
+            ctx.arc(lx, ly - 84 * u, 16 * u + sp * 60 * u, 0, TAU);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        /* the horizon mist veils their feet */
+        const mist = ctx.createLinearGradient(0, horizon - H * 0.02, 0, horizon + H * 0.09);
+        mist.addColorStop(0, 'rgba(237,231,217,0)');
+        mist.addColorStop(0.55, 'rgba(237,231,217,0.85)');
+        mist.addColorStop(1, 'rgba(237,231,217,0)');
+        ctx.fillStyle = mist;
+        ctx.fillRect(0, horizon - H * 0.02, W, H * 0.11);
+      }
+
+      /* ===== ink pools & the rising horde =====
+         v22.1 THE HORDE WAKES: eight beasts in three depths — pale
+         kin far back, the sheet's own ink at mid, black shoulders
+         half-cropped by the frame — eyes opening in a wave, bodies
+         swaying as they wait. */
+      if (T >= T_POOLS) {
+        const horde = [
+          { x: 0.15, y: 0.70, r: 0.62, k: 1, a: 0.5, eye: 0.00, ph: 2.1 },
+          { x: 0.44, y: 0.66, r: 0.56, k: 2, a: 0.46, eye: 0.12, ph: 0.7 },
+          { x: 0.73, y: 0.69, r: 0.60, k: 0, a: 0.5, eye: 0.24, ph: 4.4 },
+          { x: 0.06, y: 0.80, r: 0.92, k: 1, a: 0.82, eye: 0.34, ph: 1.3 },
+          { x: 0.50, y: 0.83, r: 1.12, k: 0, a: 0.92, eye: 0.48, ph: 3.0, big: true },
+          { x: 0.93, y: 0.79, r: 0.88, k: 2, a: 0.8, eye: 0.40, ph: 5.2 },
+          { x: 0.26, y: 1.00, r: 1.3, k: 2, a: 1, eye: 0.58, ph: 2.9 },
+          { x: 0.75, y: 1.02, r: 1.24, k: 1, a: 1, eye: 0.68, ph: 0.2 },
+        ];
+        for (let k = 0; k < horde.length; k++) {
+          const b = horde[k];
+          const bx = b.x * W + Math.sin(T * 0.8 + b.ph) * 5 * u;
+          const by = b.y * H + Math.sin(T * 0.6 + b.ph * 1.7) * 3 * u;
+          const br = b.r * 38 * u;
+          const grow = easeOutCubic(clamp01((T - T_POOLS - k * 0.1) / 0.6));
+          if (grow > 0) splatPaint(ctx, bx, by + br * 0.4, br * 0.9 * grow, 3000 + k * 77, 0.72 * grow * b.a, INK);
+          const rp = clamp01((T - T_RISE - k * 0.16) / 1.3);
           if (rp <= 0) continue;
           const rs = easeOutBack(rp);
           const lift = easeOutCubic(rp) * 58 * u;
+          const eyes = clamp01((T - T_EYES - b.eye * 0.5) / 0.5);
           ctx.save();
-          ctx.globalAlpha = clamp01(rp * 1.6);
-          drawBeast(ctx, k, pl.x, pl.y - lift, pl.r * 1.02 * rs, tick + k * 3, u, eyes);
+          ctx.globalAlpha = clamp01(rp * 1.6) * b.a;
+          drawBeast(ctx, b.k, bx, by - lift, br * 1.02 * rs, tick + k * 3, u, eyes);
+          ctx.restore();
+          /* the keeper's seal, stamped on the biggest brow */
+          if (b.big && T >= T_FLAG + 0.25) {
+            const kp = clamp01((T - T_FLAG - 0.25) / 0.3);
+            const ss = 15 * u;
+            ctx.save();
+            ctx.translate(bx, by - lift - br * 1.18);
+            ctx.rotate(-0.08);
+            ctx.globalAlpha = (0.72 + 0.28 * Math.sin(T * 5)) * kp;
+            ctx.fillStyle = RED;
+            sealPath(ctx, ss / 2, 808, 0.06); ctx.fill();
+            ctx.strokeStyle = 'rgba(237,231,217,0.85)';
+            ctx.lineWidth = 1.2 * u;
+            sealPath(ctx, ss / 2 - 3 * u, 809, 0.08); ctx.stroke();
+            ctx.restore();
+            /* one ring burst the moment it lands */
+            const burst = clamp01((T - T_FLAG - 0.25) / 0.5);
+            if (burst > 0 && burst < 1) {
+              ctx.save();
+              ctx.strokeStyle = RED;
+              ctx.globalAlpha = (1 - burst) * 0.6;
+              ctx.lineWidth = 1.6 * u;
+              ctx.beginPath();
+              ctx.arc(bx, by - lift - br * 1.18, ss + burst * 34 * u, 0, TAU);
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+        }
+
+        /* ---- the captain's standard rises among them ----
+           a tall pole, a torn cloth, the run's seal pressed on it —
+           the horde is not a mob, it is MARCHING (v22.1) */
+        const fp = clamp01((T - T_FLAG) / 0.7);
+        if (fp > 0) {
+          const px = W * 0.575, py = H * 0.86;
+          const h = H * 0.50 * easeOutBack(fp);
+          const wave = Math.sin(T * 3.1) * 6 * u;
+          ctx.save();
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = 3 * u;
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + 9 * u, py - h); ctx.stroke();
+          /* the plant */
+          ctx.beginPath(); ctx.moveTo(px - 12 * u, py); ctx.lineTo(px + 14 * u, py); ctx.stroke();
+          /* the cloth: torn hem, live wind */
+          const fw = W * 0.155, fh = H * 0.095, fx = px + 9 * u, fy = py - h;
+          ctx.fillStyle = PAPER;
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          ctx.quadraticCurveTo(fx + fw * 0.5, fy - 5 * u + wave, fx + fw, fy + wave);
+          ctx.lineTo(fx + fw - fw * 0.16, fy + fh * 0.6 + wave);
+          ctx.lineTo(fx + fw * 0.7, fy + fh + wave * 0.5);
+          ctx.lineTo(fx + fw * 0.42, fy + fh * 0.55 + wave);
+          ctx.lineTo(fx + fw * 0.2, fy + fh * 0.9 + wave);
+          ctx.lineTo(fx, fy + fh * 0.48);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.3 * u; ctx.globalAlpha = 0.9; ctx.stroke();
+          /* the seal box pressed into the cloth */
+          const sx2 = fx + fw * 0.5, sy2 = fy + fh * 0.4 + wave * 0.6, ssz = fh * 0.42;
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = RED;
+          ctx.fillRect(sx2 - ssz / 2, sy2 - ssz / 2, ssz, ssz);
+          ctx.fillStyle = PAPER;
+          ctx.font = `${Math.round(ssz * 0.78)}px "Zen Antique", serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('一', sx2, sy2 + 1);
+          /* a pennant tail streams under the cloth */
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.8 * u; ctx.globalAlpha = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(fx + fw * 0.2, fy + fh * 0.8);
+          ctx.quadraticCurveTo(fx + fw * 0.1, fy + fh * 1.3 + wave, fx + fw * 0.3, fy + fh * 1.7 + wave * 1.3);
+          ctx.stroke();
           ctx.restore();
         }
       }
@@ -1092,6 +1521,39 @@ const INTRO = (() => {
           }
         }
         ctx.restore();
+
+        /* v22.2 the keepers dissolve into the red: their pale ghosts
+           stand on the vermilion a last breath, fading as the wash
+           takes the sheet back — the paper's own leaving with the
+           film that summoned them */
+        const gp2 = clamp01((T - T_RED) / 1.1);
+        if (gp2 > 0) {
+          const horizon = H * 0.28;
+          const seats = [
+            { x: 0.07, k: 0 }, { x: 0.165, k: 1 }, { x: 0.26, k: 2 },
+            { x: 0.355, k: 3 }, { x: 0.45, k: 4 }, { x: 0.545, k: 5 },
+            { x: 0.64, k: 6 }, { x: 0.735, k: 7 }, { x: 0.83, k: 8 },
+            { x: 0.925, k: 9 },
+          ];
+          for (let i = 0; i < seats.length; i++) {
+            const st = seats[i];
+            const fade = clamp01(1 - (T - T_RED - i * 0.08) / 1.7);
+            if (fade <= 0) continue;
+            const sway = Math.sin(T * 0.5 + i * 1.9) * 3 * u;
+            ctx.save();
+            ctx.globalAlpha = 0.4 * fade;
+            ctx.translate(st.x * W + sway, horizon);
+            drawLordSil(ctx, st.k, u);
+            ctx.restore();
+          }
+        }
+      }
+
+      /* v22.1 the last word is the title's own: 終 — ONE MORE. */
+      if (T >= CAP_END.t0 && T <= CAP_END.t1 + 0.45) {
+        const fin = clamp01((T - CAP_END.t0) / 0.45);
+        const fout = clamp01((T - CAP_END.t1) / 0.45);
+        drawCaption(ctx, CAP_END, fin * (1 - fout), W / 2, H * 0.44, PAPER, u);
       }
 
       /* beat 2 — the pale washi floods back from the centre */

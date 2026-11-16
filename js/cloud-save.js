@@ -14,7 +14,7 @@ window.OM_CLOUD = (() => {
   const KEYS = Object.freeze([
     'om_best_v1', 'om_runs_v1', 'om_unlocked_v1', 'om_furthest_v1',
     'om_cleared_v1', 'om_prog_v1', 'om_seal_v1', 'om_brush_v1',
-    'om_charms_v1', 'om_stone_v1', 'om_daily_v1', 'om_lb_best_v1',
+    'om_stone_v1', 'om_daily_v1', 'om_lb_best_v1',
     'om_lb_name_v1',
   ]);
 
@@ -92,17 +92,11 @@ window.OM_CLOUD = (() => {
     const number = (k) => {
       try { return Number(JSON.parse(v[k])) || 0; } catch (_) { return 0; }
     };
-    const charms = () => {
-      try {
-        const c = JSON.parse(v.om_charms_v1 || 'null');
-        return c && (c.earned > 0 || c.ink > 0 || Object.keys(c.lv || {}).length > 0);
-      } catch (_) { return false; }
-    };
     return number('om_runs_v1') > 0 || number('om_unlocked_v1') > 1 ||
       number('om_cleared_v1') > 0 || number('om_furthest_v1') > 1 ||
       !!v.om_prog_v1 || !!v.om_seal_v1 || !!v.om_best_v1 ||
       !!v.om_stone_v1 || !!v.om_daily_v1 || !!v.om_brush_v1 ||
-      !!v.om_lb_best_v1 || !!v.om_lb_name_v1 || charms();
+      !!v.om_lb_best_v1 || !!v.om_lb_name_v1;
   }
 
   function summary(payload) {
@@ -114,9 +108,7 @@ window.OM_CLOUD = (() => {
     const sheet = Math.max(1, Number(val('om_unlocked_v1')) || 1,
       Number(val('om_furthest_v1')) || 1);
     const runs = Number(val('om_runs_v1')) || 0;
-    const charms = val('om_charms_v1') || {};
-    return 'SCROLL ' + sheet + ' · ' + runs + ' RUNS · ' +
-      (Number(charms.ink) || 0) + ' INK';
+    return 'SCROLL ' + sheet + ' · ' + runs + ' RUNS';
   }
 
   function metadata(uid) {
@@ -221,7 +213,7 @@ window.OM_CLOUD = (() => {
   function safeToReload() {
     try {
       const s = typeof G !== 'undefined' && G.S && G.S.mode;
-      return !s || ['title', 'settings', 'board', 'scrolls', 'charms', 'brush'].includes(s);
+      return !s || ['title', 'settings', 'board', 'scrolls', 'brush'].includes(s);
     } catch (_) { return false; }
   }
 
@@ -355,7 +347,7 @@ window.OM_CLOUD = (() => {
     if (!a) {
       activeUid = '';
       cloud = null;
-      setMode('signedOut', 'SIGN IN WITH GOOGLE TO SYNC YOUR SCROLLS, INK AND CHARMS.');
+      setMode('signedOut', 'SIGN IN WITH GOOGLE TO SYNC YOUR SCROLLS.');
       return;
     }
     if (!force && Date.now() - lastCheckedAt < 2500) return;

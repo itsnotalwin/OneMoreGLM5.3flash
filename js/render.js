@@ -70,6 +70,7 @@ const R = (() => {
   let patHatchDark = null;   // dark-ink hatch (pale & red sheets)
   let patHatchPale = null;   // pale-ink hatch (night sheet)
   let patHatch = null;       // active hatch, follows theme
+  let patHatchDpr = 0;       // the hatch rebuilds when the DPR changes
   let lw = 0, lh = 0, ldpr = 1;
   let lastT = 0, lastTrailT = -1;
   /* cached screen-space gradients: key -> gradient object */
@@ -79,22 +80,34 @@ const R = (() => {
   let stains = [];
 
   function ensurePatterns(ctx) {
-    if (patHatchDark) return;
+    const dpr = Math.max(1, (G.S && G.S.dpr) || window.devicePixelRatio || 1);
+    if (patHatchDark && patHatchDpr === dpr) return;
+    /* v22.5 the hatch rebuilds at device-crisp resolution: the old
+       10px css-pixel tile upscaled at DPR 2 turned 1.4px lines into
+       soft 2.8-device-pixel bands at ~28% coverage — a black weave
+       that shimmered into hexagonal moiré as the camera moved. Now:
+       device-crisp lines, wider spacing, softer ink, and the pattern
+       transform locks the phase to the device grid. */
     const mk = rgba => {
+      const s = 14;
       const hc = document.createElement('canvas');
-      hc.width = hc.height = 10;
+      hc.width = hc.height = Math.round(s * dpr);
       const h = hc.getContext('2d');
+      h.scale(dpr, dpr);
       h.strokeStyle = rgba;
-      h.lineWidth = 1.4; h.lineCap = 'round';
+      h.lineWidth = 1.05; h.lineCap = 'round';
       h.beginPath();
-      h.moveTo(-2, 9.5); h.lineTo(9.5, -2);
-      h.moveTo(3, 13); h.lineTo(13, 3);
+      h.moveTo(-2, s + 2); h.lineTo(s + 2, -2);
+      h.moveTo(5, s + 2); h.lineTo(s + 2, 5);
       h.stroke();
-      return ctx.createPattern(hc, 'repeat');
+      const pat = ctx.createPattern(hc, 'repeat');
+      try { if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / dpr)); } catch (e) {}
+      return pat;
     };
-    patHatchDark = mk('rgba(26,23,20,0.6)');
-    patHatchPale = mk('rgba(233,226,210,0.5)');
+    patHatchDark = mk('rgba(26,23,20,0.38)');
+    patHatchPale = mk('rgba(233,226,210,0.42)');
     patHatch = patHatchDark;
+    patHatchDpr = dpr;
   }
 
   function setTheme(key) {
@@ -418,6 +431,58 @@ const R = (() => {
       c.lineTo(ex + Math.cos(tilt) * l / 2, ey + Math.sin(tilt) * l / 2);
       c.stroke();
     }
+    c.restore();
+  }
+
+  /* the lords' eyes (v21.8): rank looks back at you. The horde's
+     slits are cute at five pixels; scaled onto a Guardian they read
+     as a mascot. A lord's cut is deeper — a tapered stroke dragged
+     down at the outer end, a fold of ink over its brow, and one bead
+     that never dries, falling toward the page. When the lord burns
+     (wounded past half), the cuts bleed the boss's own red. */
+  function lordEyes(c, ang, r, rage, t) {
+    c.save();
+    c.strokeStyle = rage ? bossInk() : PAPER;
+    c.lineCap = 'round';
+    for (const s of [-1, 1]) {
+      const a = ang + s * 0.5;
+      const ex = Math.cos(a) * r * 0.38, ey = Math.sin(a) * r * 0.38;
+      const tilt = a + s * 0.56;
+      const l = r * 0.66;
+      const x1 = ex - Math.cos(tilt) * l / 2, y1 = ey - Math.sin(tilt) * l / 2;
+      const x2 = ex + Math.cos(tilt) * l / 2, y2 = ey + Math.sin(tilt) * l / 2;
+      /* the cut: heavier at the outer end, as if pressed while drawn */
+      c.lineWidth = Math.max(2.4, r * 0.15);
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+      /* the fold: a shorter stroke riding the brow */
+      c.lineWidth = Math.max(1.9, r * 0.11);
+      const f = tilt - s * 0.3;
+      c.beginPath();
+      c.moveTo(ex - Math.cos(f) * l * 0.32, ey - Math.sin(f) * l * 0.32 - r * 0.16);
+      c.lineTo(ex + Math.cos(f) * l * 0.3, ey + Math.sin(f) * l * 0.3 - r * 0.04);
+      c.stroke();
+      /* the bead: one drop on the outer corner, falling */
+      const dp = ((t || 0) * 0.62 + (s > 0 ? 0.41 : 0)) % 1;
+      const bx = x2 + Math.cos(a) * r * 0.12;
+      const by = y2 + Math.sin(a) * r * 0.12 + dp * r * 0.34;
+      c.globalAlpha = Math.max(0, 0.9 * (1 - dp));
+      c.fillStyle = rage ? bossInk() : PAPER;
+      c.beginPath(); c.arc(bx, by, Math.max(1.2, r * 0.055), 0, TAU); c.fill();
+      c.globalAlpha = 1;
+    }
+    c.restore();
+  }
+
+  /* rank has weight (v21.8): a lord stands in a pool of its own
+     ink, and a Guardian bends the paper around itself — the horde
+     walks, the lords PRESS. Drawn beneath the body in drawEnemy. */
+  function lordGround(c, r, bodyInk, boss) {
+    c.save();
+    c.globalAlpha = boss ? 0.17 : 0.13;
+    c.fillStyle = bodyInk;
+    c.beginPath();
+    c.ellipse(0, r * (boss ? 1.04 : 0.96), r * (boss ? 1.52 : 1.24), r * (boss ? 0.5 : 0.4), 0, 0, TAU);
+    c.fill();
     c.restore();
   }
 
@@ -1531,7 +1596,41 @@ function drawEnemy(c, e, t) {
     EN_ALPHA = c.globalAlpha * (e.trace ? 0.55 : 1);
     if (e.trace) c.globalAlpha = EN_ALPHA;
 
+    /* ---- the lords (v21.8): bosses and captains wear their rank ----
+       Ground first: a lord stands in a pool of its own ink. A
+       Guardian also bends the paper — a slow halo breathing around
+       it says this body is a place, not a beast. And a boss is
+       POURED onto the page: a spreading pool first, then the beast
+       rises out of it (game.js arms e.enterT at the spawn). */
+    const eDef = ENEMIES[e.type];
+    const lord = isBoss || eDef.captain;
+    let entScale = 1;
+    if (lord) lordGround(c, r, bodyInk, isBoss);
+    if (isBoss) {
+      c.save();
+      c.globalAlpha = EN_ALPHA * (0.1 + 0.05 * Math.sin(t * 1.3 + e.seed));
+      c.strokeStyle = bodyInk;
+      c.lineWidth = 2.4;
+      blobPath(c, 0, 0, r * 1.62, (sd ^ 39) >>> 0, 0.12, 16);
+      c.stroke();
+      c.restore();
+    }
+    if (isBoss && e.enterT > 0) {
+      const ent = Math.max(0, 1 - e.enterT / CFG.lord.enter);
+      entScale = 0.2 + 0.8 * ent;
+      c.save();
+      c.globalAlpha = EN_ALPHA * (0.55 + 0.45 * ent);
+      c.fillStyle = bodyInk;
+      c.beginPath();
+      c.ellipse(0, r * 0.5, r * (0.5 + ent * 1.7), r * (0.2 + ent * 0.6), 0, 0, TAU);
+      c.fill();
+      c.restore();
+      c.globalAlpha = EN_ALPHA;
+    }
+
     let silhouette = null; /* path fn for hit-flash overlay */
+
+    if (entScale !== 1) c.scale(entScale, entScale);
 
     switch (e.type) {
       case 'pulse': case 'washling': { /* BLOT — a living drop of ink */
@@ -1581,6 +1680,20 @@ function drawEnemy(c, e, t) {
         } else if (st === 'tele') {
           const jit = (Math.random() - 0.5) * 1.6;
           c.translate(jit, jit);
+          /* v22.6 the lunge road: a dashed ink line draws itself along
+             the spear's aim — the beast shows where it means to be */
+          const tp = Math.min(1, e.stateT / 0.42);
+          c.save();
+          c.globalAlpha = 0.14 + 0.42 * tp;
+          c.strokeStyle = INK;
+          c.lineWidth = 1.4;
+          c.setLineDash([7 * (0.5 + tp), 8]);
+          c.beginPath();
+          c.moveTo(r * 1.3, 0);
+          c.lineTo(r * 1.3 + 330 * (0.4 + 0.6 * tp), 0);
+          c.stroke();
+          c.setLineDash([]);
+          c.restore();
           c.scale(1.14, 1.14);
           teardrop(c, r);
           c.save(); c.fillStyle = patHatch; c.fill(); c.restore();
@@ -1671,6 +1784,23 @@ function drawEnemy(c, e, t) {
         }
         /* the maw — a paper wedge aimed at you */
         const open = st === 'tele' ? 1 : 0.5;
+        /* v22.6 the spit road: while the bladder swells, a dotted line
+           runs from the maw out along the glob's flight */
+        if (st === 'tele') {
+          const pr2 = Math.min(1, e.stateT / 0.5);
+          c.save();
+          c.rotate(ang);
+          c.globalAlpha = 0.12 + 0.4 * pr2;
+          c.strokeStyle = INK;
+          c.lineWidth = 1.3;
+          c.setLineDash([5, 7]);
+          c.beginPath();
+          c.moveTo(r * 1.25, 0);
+          c.lineTo(r * 1.25 + 260 * (0.35 + 0.65 * pr2), 0);
+          c.stroke();
+          c.setLineDash([]);
+          c.restore();
+        }
         c.save();
         c.rotate(ang);
         c.fillStyle = PAPER;
@@ -2898,7 +3028,7 @@ function drawEnemy(c, e, t) {
         c.restore();
         c.rotate(-e.t * 0.5);
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
-        eyeSlits(c, ang, r, 0.9);
+        lordEyes(c, ang, r, e.hp < e.maxHp * 0.5, t);
         silhouette = () => blobPath(c, 0, 0, r * swell * 1.05, sd, 0.1, 18);
         break;
       }
@@ -2927,7 +3057,7 @@ function drawEnemy(c, e, t) {
         c.stroke();
         c.restore();
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
-        eyeSlits(c, ang, r, 1.15);
+        lordEyes(c, ang, r, e.hp < e.maxHp * 0.5, t);
         silhouette = () => blobPath(c, 0, 0, r * 1.1, sd, 0.24, 14);
         break;
       }
@@ -2975,7 +3105,7 @@ function drawEnemy(c, e, t) {
               { x: -r * 0.15, y: s * r * 1.35 },
             ], 2.4, { alpha: 0.9 });
           }
-          eyeSlits(c, 0, r, 0.8);
+          lordEyes(c, 0, r, enraged, t);
           c.restore();
         }
         silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.11, 14);
@@ -3051,7 +3181,7 @@ function drawEnemy(c, e, t) {
         }
         c.restore();
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
-        eyeSlits(c, ang, r * 0.8, 1.05);
+        lordEyes(c, ang, r * 0.8, phase > 0, t);
         silhouette = () => blobPath(c, 0, 0, r * 0.86, sd, 0.14, 14);
         break;
       }
@@ -3209,76 +3339,116 @@ function drawEnemy(c, e, t) {
 
       /* ============ THE CAPTAINS — the horde's officers ============ */
       case 'c_drum': case 'c_choir': case 'c_banner': case 'c_gale': case 'c_gild': case 'c_hush': {
-        /* a plump blot under a tall flag — the sheet's own kanji flies above it */
+        /* v21.8 the officer, not the mascot: a tall lean mass under
+           a torn battle standard. The old plump blot read like a
+           badge; rank should read like a banner bearer. The body
+           leans into the surge; the cloth never stops tearing at the
+           wind of its own march; the sheet's kanji rides as a
+           stamped seal, not a sticker. */
         const K = ({ c_drum: '一', c_choir: '夜', c_banner: '紅', c_gale: '嵐', c_gild: '金', c_hush: '素' })[e.type] || '旗';
         const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
-        const bob = Math.sin(e.t * 3.1 + e.seed) * r * 0.06;
-        /* the pole rises behind the body, the flag hangs to its right */
+        const surge = e.state === 'surge';
+        const sway = Math.sin(e.t * 2.2 + e.seed) * r * 0.05;
+        /* the standard: pole planted, ragged cloth, sealed kanji */
         c.save();
-        c.lineWidth = 2;
-        c.beginPath(); c.moveTo(r * 0.15, r * 0.2); c.lineTo(r * 0.42, -r * 2.55); c.stroke();
-        const fw = r * 1.5, fh = r * 1.05;
+        c.strokeStyle = bossInk();
+        c.lineWidth = 2.2;
+        c.beginPath(); c.moveTo(r * 0.1, r * 0.3); c.lineTo(r * 0.34, -r * 3.0); c.stroke();
+        c.beginPath(); c.moveTo(r * 0.02, r * 0.34); c.lineTo(r * 0.4, r * 0.34); c.stroke(); /* the plant */
+        const pw = r * 1.62, ph = r * 1.06, py0 = -r * 3.0, px0 = r * 0.34;
+        const wind = Math.sin(e.t * 3.4 + e.seed) * r * 0.12;
         c.fillStyle = PAPER;
-        c.strokeStyle = RED;
-        c.lineWidth = 1.6;
-        c.beginPath(); c.rect(r * 0.42, -r * 2.55 - fh, fw, fh); c.fill(); c.stroke();
-        c.fillStyle = RED;
-        c.font = Math.round(fh * 0.72) + 'px "Zen Antique", serif';
+        c.beginPath();
+        c.moveTo(px0, py0);
+        c.quadraticCurveTo(px0 + pw * 0.5, py0 - r * 0.1 + wind, px0 + pw, py0 + wind);
+        /* the torn hem: two teeth, then the notch of a worn war */
+        c.lineTo(px0 + pw - r * 0.28, py0 + ph * 0.62 + wind);
+        c.lineTo(px0 + pw * 0.72, py0 + ph + wind * 0.5);
+        c.lineTo(px0 + pw * 0.45, py0 + ph * 0.58 + wind);
+        c.lineTo(px0 + pw * 0.22, py0 + ph * 0.92 + wind);
+        c.lineTo(px0, py0 + ph * 0.5);
+        c.closePath();
+        c.fill();
+        c.strokeStyle = bossInk();
+        c.lineWidth = 1.4;
+        c.globalAlpha = 0.9;
+        c.stroke();
+        c.globalAlpha = 1;
+        /* the seal: the sheet's kanji pressed into a red box */
+        const sx = px0 + pw * 0.52, sy = py0 + ph * 0.42 + wind * 0.6, ss = ph * 0.44;
+        c.fillStyle = bossInk();
+        c.fillRect(sx - ss / 2, sy - ss / 2, ss, ss);
+        c.fillStyle = PAPER;
+        c.font = Math.round(ss * 0.78) + 'px "Zen Antique", serif';
         c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(K, r * 0.42 + fw / 2, -r * 2.55 - fh / 2 + 1);
+        c.fillText(K, sx, sy + 1);
+        /* the pennant tail: one ribbon streaming under the cloth */
+        c.strokeStyle = bossInk();
+        c.lineWidth = 1.6;
+        c.globalAlpha = 0.75;
+        c.beginPath();
+        c.moveTo(px0 + pw * 0.2, py0 + ph * 0.8);
+        c.quadraticCurveTo(px0 + pw * 0.1, py0 + ph * 1.3 + wind, px0 + pw * 0.3, py0 + ph * 1.7 + wind * 1.4);
+        c.stroke();
+        c.globalAlpha = 1;
         c.restore();
-        /* the body: a marching blot, fattened with rank — v20 the
-           officer wears the bosses' own red, the flag and the rank
-           one colour, unmistakable in any horde */
+        /* the body: tall, lean, marching — v20 the officer wears the
+           bosses' own red; v21.8 it stands like it */
         c.fillStyle = bossInk(); c.strokeStyle = bossInk();
         c.save();
-        c.translate(0, bob);
-        blobPath(c, 0, 0, r, sd, 0.16, 11);
+        c.translate(0, sway);
+        if (surge) c.scale(0.82, 1.26); else c.scale(0.87, 1.17);
+        blobPath(c, 0, 0, r, sd, 0.12, 12);
         c.fill();
+        c.save(); c.globalAlpha = 0.32; c.fillStyle = patHatch; blobPath(c, 0, 0, r, sd, 0.12, 12); c.fill(); c.restore();
+        /* the rank seal worn on the chest */
+        c.fillStyle = RED;
+        c.globalAlpha = 0.9;
+        const cs2 = r * 0.3;
+        c.fillRect(-cs2 / 2, r * 0.12, cs2, cs2);
+        c.globalAlpha = 1;
         c.restore();
-        silhouette = () => blobPath(c, 0, 0, r * 1.05, sd, 0.16, 11);
-        /* the officer's marks */
+        silhouette = () => { c.save(); c.scale(0.9, 1.2); blobPath(c, 0, 0, r * 1.05, sd, 0.12, 12); c.restore(); };
+        /* the officer's crest — one formal mark, pressed in paper */
+        c.save();
+        c.strokeStyle = PAPER; c.globalAlpha = 0.85; c.lineWidth = Math.max(1.6, r * 0.11);
         if (e.type === 'c_drum') {
-          c.save();
-          c.strokeStyle = PAPER; c.lineWidth = 1.8; c.globalAlpha = 0.8;
-          c.beginPath(); c.moveTo(-r * 0.7, -r * 0.5); c.lineTo(r * 0.7, r * 0.5); c.stroke();
-          c.beginPath(); c.moveTo(-r * 0.7, r * 0.5); c.lineTo(r * 0.7, -r * 0.5); c.stroke();
-          c.restore();
+          /* crossed command batons */
+          c.beginPath(); c.moveTo(-r * 0.42, -r * 0.42); c.lineTo(r * 0.42, r * 0.42); c.stroke();
+          c.beginPath(); c.moveTo(-r * 0.42, r * 0.42); c.lineTo(r * 0.42, -r * 0.42); c.stroke();
         } else if (e.type === 'c_choir') {
-          c.save();
-          c.strokeStyle = PAPER; c.lineWidth = 1.3; c.globalAlpha = 0.8;
+          /* three falling song-lines */
           for (let i = -1; i <= 1; i++) {
             c.beginPath();
-            c.arc(i * r * 0.45, r * 0.55, r * 0.16, Math.PI, TAU);
+            c.moveTo(i * r * 0.38 - r * 0.1, -r * 0.3);
+            c.lineTo(i * r * 0.38 + r * 0.1, r * 0.34);
             c.stroke();
           }
-          c.restore();
         } else if (e.type === 'c_gale') {
-          c.save();
-          c.strokeStyle = PAPER; c.lineWidth = 1.6; c.globalAlpha = 0.8;
+          /* the storm: two hard breaks */
           c.beginPath();
-          c.moveTo(-r * 0.6, 0); c.lineTo(-r * 0.2, -r * 0.3); c.lineTo(r * 0.2, r * 0.05); c.lineTo(r * 0.6, -r * 0.25);
+          c.moveTo(-r * 0.5, -r * 0.22); c.lineTo(-r * 0.14, -r * 0.3); c.lineTo(r * 0.08, r * 0.02); c.lineTo(r * 0.5, -r * 0.16);
           c.stroke();
-          c.restore();
+          c.beginPath();
+          c.moveTo(-r * 0.5, r * 0.26); c.lineTo(-r * 0.1, r * 0.18); c.lineTo(r * 0.16, r * 0.46); c.lineTo(r * 0.5, r * 0.3);
+          c.stroke();
         } else if (e.type === 'c_gild') {
-          c.save();
-          c.strokeStyle = '#8a6a1f'; c.fillStyle = '#8a6a1f'; c.lineWidth = 1.4;
-          c.beginPath(); c.arc(0, 0, r * 0.34, 0, TAU); c.stroke();
-          c.beginPath(); c.arc(0, 0, r * 0.12, 0, TAU); c.fill();
-          c.restore();
+          /* the coin: a ring with its square heart punched out */
+          c.beginPath(); c.arc(0, 0, r * 0.32, 0, TAU); c.stroke();
+          const h2 = r * 0.12;
+          c.beginPath(); c.rect(-h2, -h2, h2 * 2, h2 * 2); c.stroke();
         } else if (e.type === 'c_hush') {
-          /* the hush: two closed eyes — the officer that speaks nothing */
-          c.save();
-          c.strokeStyle = PAPER; c.lineWidth = 1.6; c.globalAlpha = 0.85;
-          c.beginPath();
-          c.arc(-r * 0.3, -r * 0.05, r * 0.16, Math.PI * 0.12, Math.PI * 0.88);
-          c.stroke();
-          c.beginPath();
-          c.arc(r * 0.3, -r * 0.05, r * 0.16, Math.PI * 0.12, Math.PI * 0.88);
-          c.stroke();
-          c.restore();
+          /* the hush: two stitched seams where eyes would be */
+          for (const s of [-1, 1]) {
+            const ex2 = s * r * 0.3;
+            c.beginPath();
+            c.moveTo(ex2 - r * 0.12, -r * 0.14); c.lineTo(ex2 + r * 0.12, r * 0.06); c.stroke();
+            c.beginPath();
+            c.moveTo(ex2 - r * 0.12, r * 0.06); c.lineTo(ex2 + r * 0.12, -r * 0.14); c.stroke();
+          }
         }
-        eyeSlits(c, ang, r);
+        c.restore();
+        lordEyes(c, ang, r, e.hp < e.maxHp * 0.5, t);
         break;
       }
 
@@ -3287,7 +3457,7 @@ function drawEnemy(c, e, t) {
           /* THE TEN SEALS — fifteen brush forms, one per kind of beast */
           silhouette = paintKeeperForm(c, e, r, sd, t) || null;
           const ang = Math.atan2(S.player.y - e.y, S.player.x - e.x);
-          eyeSlits(c, ang, r, 0.85);
+          lordEyes(c, ang, r, e.hp < e.maxHp * 0.5, t);
           break;
         }
         /* BLIP — a shard of the drip */
@@ -4737,6 +4907,24 @@ function drawEnemy(c, e, t) {
     try { SFX.arrive(); } catch (e) {}
   }
 
+  /* v22.0 the paper blooms on its own — the splash's silent twin:
+     the same blot language, no sound, smaller, for the title's own
+     occasional falling drop (main.js arms the timer) */
+  function titleInkBloom(x, y) {
+    const S = G.S;
+    if (S.mode !== 'title' || S.reduced) return;
+    const drops = [];
+    const n = 3 + ((Math.random() * 3) | 0);
+    for (let i = 0; i < n; i++) {
+      drops.push({ a: Math.random() * TAU, d: 8 + Math.random() * 26, r: 0.9 + Math.random() * 1.6 });
+    }
+    PI.fx.push({ x, y, t0: performance.now() / 1000, drops, seed: (Math.random() * 1e9) | 0 });
+    if (PI.fx.length > 5) PI.fx.shift();
+    if (S.stainQueue.length < 60) {
+      S.stainQueue.push({ x: x - S.W / 2, y: y - S.H / 2, r: 1.8 + Math.random() * 2.4, alpha: 0.07 + Math.random() * 0.06 });
+    }
+  }
+
   function drawPaint(c, t) {
     const S = G.S;
     if (S.mode !== 'title') {
@@ -4800,38 +4988,10 @@ function drawEnemy(c, e, t) {
       }
       boltT -= dt;
       if (boltT <= 0) { boltT = 7 + Math.random() * 9; flashA = 0.18 + Math.random() * 0.1; SFX.thunder(); }
-    } else if (kind === 'embers') {
-      while (wx.length < 24) wx.push({ x: Math.random() * W, y: H + 10 + Math.random() * 60, v: 16 + Math.random() * 30, sway: Math.random() * 6.28, s: 1 + Math.random() * 1.8 });
-      for (const d of wx) {
-        d.y -= d.v * dt; d.sway += dt;
-        if (d.y < -12) { d.y = H + 12; d.x = Math.random() * W; }
-      }
-    } else if (kind === 'petals') {
-      while (wx.length < 20) wx.push({ x: Math.random() * W, y: Math.random() * -H - 10, v: 34 + Math.random() * 40, sway: Math.random() * 6.28, s: 2.4 + Math.random() * 2.6 });
-      for (const d of wx) {
-        d.y += d.v * dt; d.sway += dt * 1.4; d.x += Math.sin(d.sway) * 22 * dt;
-        if (d.y > H + 16) { d.y = -14; d.x = Math.random() * W; }
-      }
-    } else if (kind === 'gold') {
-      while (wx.length < 24) wx.push({ x: Math.random() * W, y: Math.random() * -H - 10, v: 20 + Math.random() * 26, sway: Math.random() * 6.28, s: 1.4 + Math.random() * 2.2, rot: Math.random() * 6.28 });
-      for (const d of wx) {
-        d.y += d.v * dt; d.sway += dt * 1.1; d.x += Math.sin(d.sway) * 16 * dt; d.rot += dt * 1.6;
-        if (d.y > H + 12) { d.y = -12; d.x = Math.random() * W; }
-      }
-    } else if (kind === 'silk') {
-      /* the blank silk's sky: stray threads drift across, rising and swaying */
-      while (wx.length < 18) wx.push({ x: Math.random() * W, y: Math.random() * H, v: 7 + Math.random() * 12, sway: Math.random() * 6.28, l: 18 + Math.random() * 30, drift: (Math.random() - 0.5) * 10 });
-      for (const d of wx) {
-        d.y -= d.v * dt; d.sway += dt * 0.9; d.x += Math.sin(d.sway) * 12 * dt + d.drift * dt;
-        if (d.y < -14) { d.y = H + 12; d.x = Math.random() * W; }
-        if (d.x < -40) d.x = W + 30; else if (d.x > W + 40) d.x = -30;
-      }
-    } else { /* motes */
-      while (wx.length < 16) wx.push({ x: Math.random() * W, y: Math.random() * H, v: 8 + Math.random() * 14, sway: Math.random() * 6.28, s: 0.8 + Math.random() * 1.4 });
-      for (const d of wx) {
-        d.y -= d.v * dt; d.sway += dt * 0.8; d.x += Math.sin(d.sway) * 9 * dt;
-        if (d.y < -10) { d.y = H + 10; d.x = Math.random() * W; }
-      }
+    } else if (kind === 'embers') { /* v22.7 removed — the night sheet holds no floating embers */
+      wx.length = 0;
+    } else { /* motes: v22.7 removed — the pale sheet holds no floating dust */
+      wx.length = 0;
     }
     if (flashA > 0) flashA *= Math.exp(-5.5 * dt);
   }
@@ -4886,9 +5046,25 @@ function drawEnemy(c, e, t) {
       c.globalAlpha = 1;
     } else {
       c.fillStyle = INK;
+      c.strokeStyle = INK;
+      c.lineCap = 'round';
       for (const d of wx) {
-        c.globalAlpha = 0.1;
-        c.beginPath(); c.arc(d.x, d.y, d.s, 0, TAU); c.fill();
+        if (d.fiber) {
+          /* v22.6: a washi fiber — a short drifting stroke */
+          c.globalAlpha = 0.13;
+          c.lineWidth = 1;
+          c.save();
+          c.translate(d.x, d.y);
+          c.rotate(Math.sin(d.sway) * 0.5);
+          c.beginPath();
+          c.moveTo(-d.l / 2, 0);
+          c.quadraticCurveTo(0, Math.sin(d.sway * 1.3) * 2.5, d.l / 2, Math.sin(d.sway) * 1.5);
+          c.stroke();
+          c.restore();
+        } else {
+          c.globalAlpha = 0.1;
+          c.beginPath(); c.arc(d.x, d.y, d.s, 0, TAU); c.fill();
+        }
       }
       c.globalAlpha = 1;
     }
@@ -5998,5 +6174,5 @@ function drawEnemy(c, e, t) {
     c.restore();
   }
 
-  return { draw, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash };
+  return { draw, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash, titleInkBloom };
 })();

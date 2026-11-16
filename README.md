@@ -1,7 +1,7 @@
 <h1 align="center">ONE MORE</h1>
 
 <p align="center">
-  <i>An ink-born survival. One brush. Six scrolls. The paper never ends.</i>
+  <i>An ink-born survival. One brush. Two scrolls. The paper never ends.</i>
 </p>
 
 <p align="center">
@@ -16,23 +16,21 @@
 
 **ONE MORE** is a Vampire-Survivors-like painted as living sumi-e, written in
 vanilla HTML/CSS/JS. You are a brush spirit walking sheets of washi paper;
-your brush **is** your weapon — choose one of eight and the run begins with
+your brush **is** your weapon — choose one of four and the run begins with
 that arm and nothing else: the needle's thread, the broom's sweep, the
-stone's lob, the wisp's homing breath, the fan's cone of blades, the tide's
-surge, the seal's stamp, or the scribe's living stroke that never fires a
-single projectile. Your only job is to *not be erased*. Every kill spills ink motes — gather them to fill the ink
+stone's lob, or the wisp's homing breath. Your only job is to *not be erased*. Every kill spills ink motes — gather them to fill the ink
 gauge and rise mid-battle. Every kill also splatters real ink that
-**permanently stains the paper**: by the sixth sheet the world is a painting
+**permanently stains the paper**: by the second sheet the world is a painting
 of your whole fight.
 
-The journey is **six scrolls of ten scenes**, each scene ten waves — six
+The journey is **two scrolls of ten scenes**, each scene ten waves — two
 hundred waves on the way to the last Guardian. Each sheet is a different
 paper washed in its own ink, with its own weather, its own Captain, its own
 Keeper on every tenth wave, and a named **Guardian** waiting on scene ten.
-Clear the sixth sheet and **THE JOURNEY'S END** plays — the ink stills, the
-six keepers are remembered, your brush paints one last great ensō around the
+Clear the second sheet and **THE JOURNEY'S END** plays — the ink stills, the
+keepers are remembered, your brush paints one last great ensō around the
 run and seals it — and the scroll offers itself forever: **THE ENDLESS
-SCROLL**, where the paper cycles all six faces and the difficulty never
+SCROLL**, where the paper cycles both faces and the difficulty never
 stops compounding.
 
 Everything here is honest, hand-tuned and local: no engine, no framework,
@@ -51,15 +49,15 @@ optional and can stay dark forever.
 |---|---|
 | ![The scribe on the storm sheet](screenshots/12-scribe.png) | ![The brush arts and powers](screenshots/13-arts.png) |
 
-| The ink rises — CHOOSE ONE MORE, three cards, two of them weapons | CHARMS — what the runs press out, the paper keeps |
+| The ink rises — CHOOSE ONE MORE, three cards, two of them weapons | CHARMS — retired in v21.9 (the room as it stood) |
 |---|---|
-| ![The level-up cards](screenshots/05-levelup.png) | ![The charms room](screenshots/07-charms.png) |
+| ![The level-up cards](screenshots/05-levelup.png) | ![The charms room, retired](screenshots/07-charms.png) |
 
 ---
 
 ## The modes
 
-**THE JOURNEY** — the six scrolls, straight onto the wet frontier. The run
+**THE JOURNEY** — the two scrolls, straight onto the wet frontier. The run
 resumes where the brush last sealed a scene. Every visit opens with
 **THE OPENING** (a short ink cinematic — any key or tap skips it; replay it
 from the title's 序 button). When a sheet is cleared **the scroll literally
@@ -72,19 +70,18 @@ same luck for every scribe on Earth; the first sheet you walk today is the
 one that counts. A practiced daily presses only a fifth of its ink —
 practice is for the hand, not the stone.
 
-**THE ENDLESS SCROLL** — the journey's sixth sheet cleared, the scroll
+**THE ENDLESS SCROLL** — the journey's second sheet cleared, the scroll
 unbound: no arena, no margins, an endless sheet of washi, and every lap the
 beasts stand taller (**hp ×1.24**), think faster (**speed ×1.016**) and
-arrive thicker (**budget ×1.32**). Only endless runs post to the ledger —
-and waves past the six hundred press **double ink** into the purse.
+arrive thicker (**budget ×1.32**). Only endless runs post to the ledger.
 
 **REALLY HARD** — the settings' red toggle (設 — remembered on this device): beasts
 stand ×1.4 taller, arrive ×1.15 faster, waves spend ×1.45 more — and the
 ledger pays **double** for every stroke that survives it.
 
-| The six scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, five still sealed |
+| The scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, one still sealed |
 |---|---|
-| ![The six scrolls shelf](screenshots/02-scrolls.png) | ![The brush room](screenshots/03-brushes.png) |
+| ![The scrolls shelf](screenshots/02-scrolls.png) | ![The brush room](screenshots/03-brushes.png) |
 
 <p align="center">
   <img src="screenshots/11-night.png" width="800" alt="The night scroll — sheet II: lamp-lit umber washi, cream-ink beasts, embers drifting, a chain rising">
@@ -130,23 +127,19 @@ drops dry the page.
 
 ---
 
-## The six scrolls
+## The two scrolls
 
 | # | Sheet | Ink | kanji | hp / budget | Captain | Keeper | Special | Guardian |
 |---|---|---|---|---|---|---|---|---|
 | I | FIRST WASH | 淡墨 pale wash | 一 | ×1.0 / ×1.0 | THE DRUM | THE BLIGHT | — | THE STAIN |
 | II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | ×2.0 / ×1.5 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
-| III | CINNABAR FIELD | 朱墨 vermillion | 紅 | ×3.6 / ×2.1 | THE BANNER | THE CINDER | THE MENDER | THE CINNABAR ONI |
-| IV | STORM SHEET | 雨墨 rain-grey | 嵐 | ×6.0 / ×2.9 | THE STORMCALLER | THE RAINVEIL | THE TOLLER | THE STORM EYE |
-| V | GILT SCROLL | 金墨 gold-dust | 金 | ×9.5 / ×3.8 | THE PAYMASTER | THE NIB | THE LEDGER | THE FIRST BRUSH |
-| VI | THE BLANK SILK | 素墨 cool silk | 素 | ×13.0 / ×4.6 | THE HUSH | THE MARGIN | THE TRACE | THE UNWRITTEN |
 
 Journey and daily runs live **inside a fixed arena** — a page with margins,
 2240 × 1600 on every screen, so a fight plays the same on a phone as on a
 desk. Only THE ENDLESS SCROLL keeps the unbroken sheet.
 
 Every tenth wave of every scene is a **Keeper** fight — and since v19.1, **every
-scene owns its own**: sixty red-sealed bosses, ten to a sheet, each with its own
+    scene owns its own**: twenty red-sealed bosses, ten to a sheet, each with its own
 body (one of fifteen brush forms), its own cry, and its own two abilities cut
 from a kit of eighteen primitives — radial slams, aimed needle fans, volleys,
 broods, mirrors, telegraphed charges, blinks, red seal-stamps, sky-rain,
@@ -193,23 +186,22 @@ Kill them first, or fight the horde they make.
 
 Choose your brush before the run — the choice is remembered. The brush **is**
 the weapon: there is no universal volley hiding behind it, and no weapon ever
-arrives the hand did not pick. Three are free; five are sealed behind the
-journey's scenes, and a scene **seals** when its tenth wave's Keeper falls.
+arrives the hand did not pick. v21.9 hangs **the four-shelf**: three are
+free; one is sealed behind the journey's scenes, and a scene **seals** when
+its tenth wave's Keeper falls. (v21.9 also retired the charms room and the
+ink purse — a run is built from its own picks alone.)
 
 | Brush | kanji | Sealed until | The weapon it is |
 |---|---|---|---|
-| THE NEEDLE | 細 | free | casts a thread of ink every 0.30s — fast, light, true |
-| THE BROOM | 掃 | free | sweeps two wide droplets at once, broad and slow |
-| THE STONE | 岩 | free | lobs a heavy stone — bites 3 deep, splashes where it lands; 4-integrity body |
+| THE NEEDLE | 細 | free | casts a thread of ink every 0.28s — fast, light, true |
+| THE BROOM | 掃 | free | sweeps three droplets at once, deep enough to kill what it touches — the close-range sweep |
+| THE STONE | 岩 | free | lobs a heavy stone — bites 3 deep, splashes wider where it lands; 5-integrity body |
 | THE WISP | 幽 | 3 scenes | breathes homing wisps that lean into the horde — and a spirit wakes beside it |
-| THE FAN | 扇 | 6 scenes | a cone of paper blades with every swing; every fifth snaps full-circle |
-| THE TIDE | 潮 | 10 scenes | no arrows — a black surge rolls outward every few breaths, and the wet wake you leave still bites |
-| THE RED SEAL | 印 | 14 scenes | no arrows — the great hanko falls on the thickest horde, stunning all under it |
-| THE SCRIBE | 書 | 18 scenes | the master's way: one living stroke weaves through the horde, perpetual, biting all it passes |
 
 Every brush carries its own **ART track** — techniques no other hand may
-learn (see The brush arts). The Wisp, Fan, Tide and Seal brushes are born at
-rank 1 of their kindred power; picking that power again deepens it.
+learn (see The brush arts). The Wisp is born at rank 1 of the Spirit Scribes;
+picking that power again deepens it. The learned POWERS (the folded fan, the
+tide's nova, the hanko stamp) remain on the level-up shelf for every hand.
 
 ---
 
@@ -444,49 +436,18 @@ every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
 
 ---
 
-## Charms (符) — what the purse buys
+## The charms and the purse — retired (v21.9)
 
-Permanent upgrades pressed between runs. A charm's rank rides every page the
-hand opens — journey, endless, daily, the resumed frontier. v20 — **THE SEALED
-LADDER**: twelve charms over **79 ranks; the whole board costs 351,450 ink** —
-a full victory run presses about 3,700, so the deep ranks are bought with real
-journeys and the endless loops. And **the scrolls gate the ladder**: the
-highest sheet the journey has unrolled caps every charm (the first scroll
-sells three ranks of anything; each unrolled scroll opens one more), so the
-board grows as the road does. The board buys only the hand's basic arts —
-cadence, footwork, bite, integrity, gathering, the purse itself — and the
-brush's own two upgrades. **No charm ever unlocks a weapon**: a brush arrives
-by the seals alone and speaks through the in-game picks.
+The charm room (符), the ink purse and the between-run economy were removed
+in **v21.9**: nothing is bought, nothing presses back — a run is built from
+its own picks alone, and progress is the seals, the records and the chosen
+brush. Old saves carrying `om_charms_v1` simply stop syncing that key; the
+rest of the cloud bridge is untouched. (The screenshot below shows the room
+as it stood.)
 
-| Charm | kanji | Ranks | Cost (ink) | What it presses |
-|---|---|---|---|---|
-| INK HUNGER | 引 | 8 | 90 · 220 · 520 · 1,100 · 2,200 · 4,200 · 7,200 · 11,500 | gathering radius widens, rank by rank |
-| LONG BREATH | 息 | 8 | 100 · 260 · 600 · 1,300 · 2,600 · 4,900 · 8,200 · 13,000 | the hand's strokes fly 7% farther per rank |
-| FLICK | 歩 | 8 | 110 · 280 · 650 · 1,400 · 2,800 · 5,200 · 8,600 · 13,500 | the hand moves 5% lighter per rank |
-| QUICK HAND | 疾 | 8 | 120 · 300 · 700 · 1,500 · 3,000 · 5,600 · 9,200 · 14,500 | the brush lifts 5% faster per rank |
-| THICK PAPER | 厚 | 8 | 160 · 400 · 900 · 1,900 · 3,700 · 6,800 · 11,000 · 17,000 | one more integrity, pressed into every run |
-| RED TIP | 赤 | 8 | 170 · 420 · 980 · 2,100 · 4,100 · 7,500 · 12,000 · 18,500 | five strokes in a hundred bite twice as deep |
-| BITTER INK | 重 | 8 | 190 · 480 · 1,100 · 2,300 · 4,500 · 8,200 · 13,000 · 20,000 | every stroke the hand lays bites one deeper |
-| THE OLD INK | 遺 | 5 | 300 · 700 · 1,500 · 3,000 · 5,600 | every mote is worth a fourth more |
-| THE PAPER WARD | 守 | 1 | 560 | every run begins warded |
-| **THE FIRST STROKE** | 筆 | 8 | 260 · 620 · 1,400 · 2,900 · 5,600 · 10,000 · 15,500 · 24,000 | the brush you carry bites one deeper — its own ink only |
-| **THE SWIFT HAND** | 手 | 5 | 240 · 580 · 1,300 · 2,700 · 5,200 | the brush you carry casts 10% sooner per rank |
-| **THE SCHOLAR** | 学 | 4 | 380 · 860 · 1,800 · 3,600 | every wave survived presses 10% deeper into the purse |
-
-### The purse (符) — ink that survives the paper
-
-Every run ends with the press: the ink is squeezed back into the purse. It is
-read on the title's 符 chip and spent in the charm room — a currency that
-survives the paper.
-
-| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — the sealed ladder: the scrolls keep the deep ranks, the board costs 351,450 ink |
+| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — retired in v21.9 |
 |---|---|
-| ![The endless leaderboard](screenshots/08-board.png) | ![The charm room](screenshots/07-charms.png) |
-
-**What a run presses**: 6 ink per wave survived — waves past the six hundred
-press **double**; +80 per Guardian felled; +300 once ever for the six sheets
-signed; a new personal best presses ×1.25; REALLY HARD presses the ledger's
-own ×2; a practiced daily only a fifth.
+| ![The endless leaderboard](screenshots/08-board.png) | ![The charm room, retired](screenshots/07-charms.png) |
 
 **The run's report** can be pressed into a share card — 1080 × 1350, stamped
 with the run's hanko (or your ledger rank, #N, when a post landed), ready to
@@ -769,12 +730,11 @@ one-more/
 ├── css/
 │   └── style.css               # the sumi-e design system
 ├── js/
-│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, charms
+│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, brushes
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
 │   ├── ui.js                   # DOM screens, HUD, wrist ink chip, boss seal, brush picker
-│   ├── game.js                 # run state, waves, arenas, guardians, weapons, economy
+│   ├── game.js                 # run state, waves, arenas, guardians, weapons
 │   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains, the ensō ink ring
-│   ├── charms.js               # the charm ladder (符) — ranks, costs, application
 │   ├── share.js                # the 1080×1350 share card
 │   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
 │   ├── intro.js                # THE OPENING — the skippable ink cinematic
@@ -801,18 +761,16 @@ Everything is a knob in `js/config.js` — edit and refresh, no build:
 - `CFG.wave` — the ten-wave shape: budgets, surge cadence, elite scaling,
   the concurrent cap (150) and group size
 - `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
-- `CFG.brushes` — the eight brushes and their weapon bodies (`atk`)
+- `CFG.brushes` — the four-shelf brushes and their weapon bodies (`atk`)
 - `UPGRADES` — the 52 picks — strokes, learned powers and the brushes' own ART tracks
-- `CHARMS` — the twelve charms, their ranks and ink costs
-- `CFG.charmEarn` — what a run presses into the purse
+- `CFG.lord` — the bosses' pour-in entrance
 - `CFG.endless` / `CFG.hard` — the two teeth: lap growth and REALLY HARD
 - `CFG.world` — the fixed arena (2240 × 1600), spawn padding, stain cap
 - `CFG.ranks` — the end-of-run seal thresholds
 
-High score, run counter, brush choice, charms, the ink purse and mute
-preference persist in `localStorage` — no accounts, no tracking. GitHub
-Pages serves static files only, and the game is 100% client-side by
-design.
+High score, run counter, brush choice and mute preference persist in
+`localStorage` — no accounts, no tracking. GitHub Pages serves static files
+only, and the game is 100% client-side by design.
 
 ### QA hooks (hidden)
 
@@ -828,7 +786,6 @@ armed.
 | `&hard=1` | force REALLY HARD for the run |
 | `?daily=1` | walk today's seeded sheet |
 | `&day=YYYY-MM-DD` | a specific day's sheet |
-| `?charms=N` | seed the purse with N ink |
 | `?scenes=N` | probe the sealed-brush gate (0–60 scenes sealed) |
 | `?lbdebug=1` | the ledger's paper cloud — twelve fake scribes to E2E the board |
 | `?fps=1` | the frame-rate stamp |
@@ -850,12 +807,15 @@ Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
   border on screen) and the truly unbounded endless sheet
 - An FX budget: 900 live flecks, thinned over the soft cap, oldest
   recycled past the hard cap — a flood never buries the frame
-- The ink engine also paints the films: THE OPENING (drop physics, the
-  paper flood, calligraphic strokes, the slamming seal), the scroll-turn
-  interludes, and the journey's-end finale (credits, the closing ensō) —
-  all skippable, reduced-motion aware
-- The meta paper: charms, the ink purse pressed from every run, the share
-  card, ghost echoes that walk beside you
+- The ink engine also paints the films: THE OPENING (v22.1 — six acts
+  over ~33 seconds with a moving camera: the void and the drop, the
+  cracking impact and the flood, three camera-swept strokes, the horde
+  waking in depth under its captain's standard, the six guardians
+  answering along the horizon, and the scribe's slam dissolving into
+  vermilion), the scroll-turn interludes, and the journey's-end finale
+  (credits, the closing ensō) — all skippable, reduced-motion aware
+- The meta paper: the share card, ghost echoes that walk beside you (the
+  charms and the ink purse retired in v21.9)
 - Full PWA: web manifest + service worker — installable, offline-capable,
   versioned caches, hanko icon set (32/180/192/512, any + maskable)
 - Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system
@@ -869,7 +829,7 @@ MIT — see [LICENSE](./LICENSE).
 
 The development roadmap lives one floor up: [../ROADMAP.md](../ROADMAP.md) —
 the six Guardian thrones (v20), the study's possible return (v21), the deep
-shelf (v22), the go-live gate (v23). Current build **v19.3 THE PURSE**;
+shelf (v22), the go-live gate (v23). Current build **v22.3 THE TWO SCROLLS**;
 deployment held until the word "go".
 
 ## Sound & Music Credits

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>ONE MORE — An Ink-Born Survival</title>
-<meta name="description" content="An endless sheet of washi. Six scrolls of ten waves, six named Guardians, then the paper never ends. A monochrome survival painted in living ink." />
+<meta name="description" content="An endless sheet of washi. Two scrolls of ten waves, two named Guardians, then the paper never ends. A monochrome survival painted in living ink." />
 <meta name="theme-color" content="#ede7d9" />
 <link rel="manifest" href="./manifest.json" />
 <link rel="icon" type="image/png" sizes="32x32" href="./img/icons/icon-32.png" />
@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="ONE MORE" />
 <meta property="og:title" content="ONE MORE — An Ink-Born Survival" />
-<meta property="og:description" content="No walls. No arena. Six scrolls of ten waves on an endless sheet of washi, six named Guardians, and the ink you gather makes you stronger. How long can the brush last?" />
+<meta property="og:description" content="No walls. No arena. Two scrolls of ten waves on an endless sheet of washi, two named Guardians, and the ink you gather makes you stronger. How long can the brush last?" />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -119,44 +119,46 @@
 
     <div class="title-main">
       <div class="title-chip"><span class="kanji-inline" lang="zh">墨</span>A&nbsp;MONOCHROME&nbsp;SURVIVAL</div>
-      <h1 class="title-word">ONE&nbsp;MORE</h1>
-      <p class="title-sub">One brush. Six scrolls. The paper never ends.</p>
-      <button id="brushBtn" class="brush-entry" type="button" title="STARTER BRUSH — the tool this run begins with. Tap to open the shelf and choose." aria-haspopup="dialog" aria-controls="screenBrush">
-        <span class="be-kanji" id="brushBtnKanji" aria-hidden="true">細</span>
-        <span class="be-copy">
-          <span class="be-kicker">STARTER BRUSH</span>
-          <span class="be-name" id="brushBtnName">THE NEEDLE</span>
-        </span>
-        <span class="be-open" aria-hidden="true">▾</span>
-      </button>
-      <div class="mode-row">
-        <button id="playBtn" class="play-btn" title="THE JOURNEY — straight onto the wet frontier. The SCENES door below picks a sheet by hand.">
-          <span class="play-seal" aria-hidden="true">一</span>
-          <span class="play-label">THE JOURNEY<span class="run-seg">&nbsp;—&nbsp;<span id="runNo">RUN 001</span></span></span>
+      <div class="word-row">
+        <h1 class="title-word">ONE&nbsp;MORE</h1>
+        <span class="word-seal" aria-hidden="true">一</span>
+      </div>
+      <p class="title-sub">One brush. Two scrolls. The paper never ends.</p>
+      <!-- v22.0 THE RAIL: one inked column — the tool above the road,
+           the hero road, the second road, the quiet doors -->
+      <div class="title-rail">
+        <button id="brushBtn" class="brush-entry rail-crown" type="button" title="STARTER BRUSH — the tool this run begins with. Tap to open the shelf and choose." aria-haspopup="dialog" aria-controls="screenBrush">
+          <span class="be-kanji" id="brushBtnKanji" aria-hidden="true">細</span>
+          <span class="be-copy">
+            <span class="be-kicker">STARTER BRUSH</span>
+            <span class="be-name" id="brushBtnName">THE NEEDLE</span>
+          </span>
+          <span class="be-open" aria-hidden="true">▾</span>
         </button>
-        <button id="endlessBtn" class="endless-btn" title="Endless waves across turning sheets">
+        <button id="playBtn" class="play-btn rail-hero" title="THE JOURNEY — straight onto the wet frontier. The SCENES door below picks a sheet by hand.">
+          <span class="play-seal" aria-hidden="true">一</span>
+          <span class="hero-copy">
+            <span class="play-label">THE JOURNEY<span class="run-seg">&nbsp;—&nbsp;<span id="runNo">RUN 001</span></span></span>
+            <span class="journey-sub" id="journeyProg">TWO SCROLLS · TWENTY SCENES</span>
+          </span>
+        </button>
+        <button id="endlessBtn" class="endless-btn rail-second" title="Endless waves across turning sheets">
           <span class="endless-kanji" aria-hidden="true">無</span>
           <span class="play-label">THE ENDLESS SCROLL</span>
         </button>
+        <button id="endlessCheckpoint" class="checkpoint-btn hidden" type="button"></button>
+        <div class="rail-utility">
+          <button id="boardBtn" class="board-btn" type="button" title="THE ENDLESS LEDGER — who carried the ink furthest">
+            <span class="board-kanji" aria-hidden="true">榜</span>
+            <span class="play-label">LEDGER</span>
+          </button>
+          <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
+            <span class="daily-kanji" aria-hidden="true">日</span>
+            <span class="play-label">DAILY<span id="dailyLabel">&nbsp;·&nbsp;TODAY</span></span>
+          </button>
+          <button id="sheetBtn" class="sheet-btn hidden" type="button" title="SCENES — open the shelf of scrolls and walk any sheet by hand"></button>
+        </div>
       </div>
-      <button id="endlessCheckpoint" class="checkpoint-btn hidden" type="button"></button>
-      <div class="minor-row">
-        <button id="boardBtn" class="board-btn" type="button" title="THE ENDLESS LEDGER — who carried the ink furthest">
-          <span class="board-kanji" aria-hidden="true">榜</span>
-          <span class="play-label">LEDGER</span>
-        </button>
-        <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
-          <span class="daily-kanji" aria-hidden="true">日</span>
-          <span class="play-label">DAILY<span id="dailyLabel">&nbsp;·&nbsp;TODAY</span></span>
-        </button>
-        <button id="charmBtn" class="board-btn charm-btn" type="button" title="CHARMS — what the runs press out buys ranks of permanent power">
-          <span class="board-kanji" aria-hidden="true">符</span>
-          <span class="play-label">CHARMS</span>
-          <i class="charm-dot" aria-hidden="true"></i>
-          <span class="chip-count hidden" id="charmInk" aria-live="polite" title="Ink held by the purse"></span>
-        </button>
-      </div>
-      <button id="sheetBtn" class="sheet-btn hidden" type="button" title="SCENES — open the shelf of scrolls and walk any sheet by hand"></button>
       <p class="best-line hidden" id="bestLine"></p>
     </div>
 
@@ -180,8 +182,8 @@
     <div id="shelfWash" aria-hidden="true"></div>
     <span class="wm wm-scrolls" aria-hidden="true">巻</span>
     <div class="scrolls-head">
-      <div class="scrolls-kicker">THE JOURNEY — SIX SCROLLS · SIXTY SCENES</div>
-      <h2 class="scrolls-title">SIX SCROLLS</h2>
+      <div class="scrolls-kicker">THE JOURNEY — TWO SCROLLS · TWENTY SCENES</div>
+      <h2 class="scrolls-title">TWO SCROLLS</h2>
       <p class="scrolls-sub">Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.</p>
     </div>
     <div class="scroll-beam" aria-hidden="true"></div>
@@ -292,7 +294,6 @@
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">BLOTS CLEANED</span><span class="stat-dots"></span><span class="stat-value" id="statKills">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">TIME IN ARENA</span><span class="stat-dots"></span><span class="stat-value" id="statTime">00:00</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
-          <div class="stat-row hidden" id="inkStatRow"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">PRESSED INTO THE PURSE</span><span class="stat-dots"></span><span class="stat-value" id="statInk">+0</span></div>
         </div>
       </div>
       <div class="ghost-line hidden" id="ghostLine" aria-live="polite"></div>
@@ -375,21 +376,6 @@
     </div>
   </section>
 
-  <!-- ============ CHARMS — 符 — the purse's shop ============ -->
-  <section id="screenCharms" class="screen screen-charms hidden">
-    <span class="wm wm-charms" aria-hidden="true">符</span>
-    <div class="set-wrap">
-      <div class="set-head">
-        <div class="set-kicker">THE CHARM ROOM — <span class="kanji-inline">符</span></div>
-        <h2 class="set-title">CHARMS</h2>
-        <p class="set-sub">WHAT THE RUNS PRESS OUT, THE PAPER KEEPS</p>
-        <p class="charm-purse"><span class="purse-kanji" aria-hidden="true">符</span> INK <b id="charmPurse">0</b><span class="charm-worn" id="charmWorn">0 WORN</span></p>
-      </div>
-      <div class="set-rows" id="charmRows"></div>
-      <button id="charmBackBtn" class="set-back" type="button">戻 — BACK TO THE TITLE</button>
-    </div>
-  </section>
-
   <div id="flash" aria-hidden="true"></div>
 
   <!-- ============ THE FIRST TAP — the door that wakes the sound ============
@@ -432,7 +418,6 @@
 <script src="./js/lb.js"></script>
 <script src="./js/cloud-save.js"></script>
 <script src="./js/share.js"></script>
-<script src="./js/charms.js"></script>
 <script src="./js/main.js"></script>
 </body>
 </html>

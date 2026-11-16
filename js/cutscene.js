@@ -100,12 +100,11 @@ const CUT = (() => {
       });
     }
     sheetMarks = [];
-    const six = ['一', '夜', '紅', '嵐', '金', '素'];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < AREAS.length; i++) {
       sheetMarks.push({
-        x: W * (0.5 + (i - 2.5) * 0.105),
+        x: W * (0.5 + (i - (AREAS.length - 1) / 2) * 0.105),
         y: H * 0.40,
-        kanji: SHEET_KANJI[i] || six[i],
+        kanji: SHEET_KANJI[i] || '一',
         t0: 4.65 + i * 0.48,
         seed: 40 + i,
       });
@@ -749,7 +748,7 @@ const CUT = (() => {
     }
 
     /* caption A/B over the stilling world */
-    caption(c, 'THE SIXTH GUARDIAN FALLS.', W / 2, H * 0.3, clamp01((T - 0.55) / 0.5) * (1 - clamp01((T - 2.5) / 0.5)), th.ink, th.paper);
+    caption(c, 'THE LAST GUARDIAN FALLS.', W / 2, H * 0.3, clamp01((T - 0.55) / 0.5) * (1 - clamp01((T - 2.5) / 0.5)), th.ink, th.paper);
     caption(c, 'THE INK STILLS.', W / 2, H * 0.37, clamp01((T - 2.55) / 0.45) * (1 - clamp01((T - 3.35) / 0.6)), th.ink, th.paper);
 
     /* ---- beat 2: the world washes to the eternal sheet (2.9 → 4.4) ---- */
@@ -785,7 +784,7 @@ const CUT = (() => {
       stampGlyph(c, m.kanji, m.x, m.y, 40 * Math.max(0.8, u) * (0.9 + 0.1 * pop), ink, 0.92 * fade, (rr() - 0.5) * 0.06, m.seed * 13);
     }
 
-    caption(c, 'SIX SHEETS. SIX KEEPERS.', W / 2, H * 0.62,
+    caption(c, AREAS.length + ' SHEETS. ' + AREAS.length + ' KEEPERS.', W / 2, H * 0.62,
       clamp01((T - 7.15) / 0.5) * (1 - clamp01((T - 9.2) / 0.7)), ink, paper);
 
     /* ---- beat 4: the brush spirit closes the circle (8.6 → 12.6) ---- */
@@ -927,7 +926,7 @@ const CUT = (() => {
         { t: 'ONE MORE', f: `700 ${Math.round(42 * Math.max(0.8, u))}px "Zen Antique", serif`, col: ink, gap: 14 },
         { t: 'A MONOCHROME SURVIVAL', f: `500 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
         { t: 'INK · PAPER · BEASTS — ONE BRUSH', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 12 },
-        { t: 'SIX SHEETS · SIX KEEPERS · NO ENDINGS', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
+        { t: AREAS.length + ' SHEETS · ' + AREAS.length + ' KEEPERS · NO ENDINGS', f: `400 ${Math.round(13 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 34 },
         { t: 'EVERY STROKE STAYS ON THE SHEET', f: `400 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 10 },
         { t: 'THE PAPER KEEPS WHAT YOU PAINTED', f: `400 ${Math.round(12 * Math.max(0.8, u))}px "IBM Plex Mono", monospace`, col: ink, gap: 40 },
         { t: 'for every player who asked for one more', f: `italic ${Math.round(14 * Math.max(0.8, u))}px "Zen Antique", serif`, col: ink, gap: 40 },

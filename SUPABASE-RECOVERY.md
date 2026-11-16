@@ -1,6 +1,10 @@
 # ONE MORE GLM 5.3 Flash — Supabase integration recovery
 
-> **Read this before manually replacing or uploading game files.** This is the canonical *source-repository recovery runbook*. A separate short BRAIN project record links here instead of duplicating the implementation. Last verified recovery update: **2026-11-11**. Source v12 restoration tested and committed; full real-browser OAuth still needs confirmation. This repo is **not** `itsnotalwin/ONE_MORE`.
+> **Read this before manually replacing or uploading game files.** This is the canonical *source-repository recovery runbook*. A separate short BRAIN project record links here instead of duplicating the implementation. Last verified recovery update: **2026-11-16**. Source v12 restoration tested and committed; full real-browser OAuth still needs confirmation. This repo is **not** `itsnotalwin/ONE_MORE`.
+
+## v21.9 charms retired — guard and planner re-pinned (16 November 2026)
+
+The game retired the charm room, the ink purse and `js/charms.js` (v21.9 THE FOUR SHELF: four brushes, no between-run economy). The integration infra was re-pinned with it: the guard now asserts the weekly board and the cloud bridge **and asserts the retired charms stay retired** (no `js/charms.js` on the page or in the PWA cache, no `charmBtn`/`charmInk` in the shell); the repair planner dropped `js/charms.js` from its source/cache lists and anchors the cloud-save cache insertion after `'js/audio.js',`; the planner's `healthy()` lobby check no longer requires `CH.open()`; `om_charms_v1` left the cloud allowlist, and the cloud-save tests assert the retirement instead of the charm UI. Old saves carrying `om_charms_v1` simply stop syncing that key — no migration, no data loss; every other `om_*` key and the bridge's shape are untouched. Historical sections below still describe the purse/charms as they were at their dates.
 
 ## v19 uploads and one-branch safe recovery (6 November 2026)
 

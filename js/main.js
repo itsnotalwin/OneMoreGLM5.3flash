@@ -173,13 +173,6 @@
     LB.close();
   }
 
-  /* ---------------- the charm room — 符 ----------------
-     what the runs press out buys permanent power.
-     A quiet shop beside the settings room. */
-  const charmsOpen = () => typeof CH !== 'undefined' && CH.isOpen();
-  document.getElementById('charmBtn').addEventListener('click', () => { SFX.ensure(); SFX.page(); CH.open(); });
-  document.getElementById('charmBackBtn').addEventListener('click', () => { SFX.pick(1); CH.close(); });
-
   /* ---------------- the starter brush — 筆 ----------------
      one entry on the title; behind it, the shelf of tools:
      every brush at full length, its whole word on the page. */
@@ -304,8 +297,8 @@
     refreshSettings();
   });
   /* THE SHEET'S INK — the theme cycles AUTO → the six papers */
-  const THEME_CYCLE = ['auto', 'pale', 'dark', 'red', 'storm', 'gilt', 'silk'];
-  const THEME_LABELS = { auto: 'AUTO', pale: 'FIRST WASH', dark: 'NIGHT', red: 'CINNABAR', storm: 'STORM', gilt: 'GILT', silk: 'SILK' };
+  const THEME_CYCLE = ['auto', 'pale', 'dark'];
+  const THEME_LABELS = { auto: 'AUTO', pale: 'FIRST WASH', dark: 'NIGHT' };
   const themeBtn = document.getElementById('setTheme');
   if (themeBtn) themeBtn.addEventListener('click', () => {
     SFX.ensure();
@@ -396,11 +389,6 @@
     /* the settings room answers only its own return keys */
     if (settingsOpen()) {
       if (k === 'Enter' || k === 'Escape') closeSettings();
-      return;
-    }
-    /* the charm room likewise — ENTER must never start a run behind it */
-    if (charmsOpen()) {
-      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') CH.close();
       return;
     }
     /* the ledger overlay answers only its own return keys —
@@ -509,6 +497,22 @@
     if (introSkip) introSkip.classList.toggle('hidden', !v);
   }
 
+  /* v22.0 the paper blooms on its own: every few breaths a drop
+     falls somewhere on the sheet and opens a small blot — the same
+     language the hand's own taps speak, silent, occasional. The
+     timer idles itself whenever the paper is not the title. */
+  let bloomTimer = null;
+  function armBlooms() {
+    if (bloomTimer) return;
+    bloomTimer = setInterval(() => {
+      if (G.mode !== 'title' || document.hidden || Math.random() < 0.45) return;
+      const S = G.S;
+      const x = S.W * (0.12 + Math.random() * 0.76);
+      const y = S.H * (0.14 + Math.random() * 0.66);
+      R.titleInkBloom(x, y);
+    }, 4200);
+  }
+
   function enterTitle() {
     document.body.classList.remove('intro-live');
     setSkipPrompt(false);
@@ -517,12 +521,13 @@
     G.initAttract();
     R.startTitleRitual(performance.now() / 1000);   /* the brush returns */
     UI.setSheetContinue(G.getFurthest());
+    const fr = G.getFurthest();
+    UI.setJourneyProg(fr, G.getProg()[fr] || 0);    /* the hero road wears its distance */
     UI.setHard(G.getHard());                        /* the red toggle remembered */
     UI.setDailyChip(G.dailyState());                /* today's sheet, freshly read */
-    UI.setInkLine(G.getInk());                      /* the purse, freshly read */
-    if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
     UI.show('title');
     G.mode = 'title';
+    armBlooms();
     SFX.ensure();
     SFX.music.start('title');      /* the title's breath — mute stills it with all */
   }
@@ -685,14 +690,12 @@
       const sw2 = era * CFG.endless.eraWaves + 1;
       chip.dataset.startWave = sw2;
       chip.innerHTML = '⟳ THE ENDLESS — START AT WAVE ' + sw2 + ' · TURN ' + (era * 2 + 1) +
-        ' · SCROLL ' + (era + 1);
+        ' · SCROLL ' + (era % AREAS.length + 1);
       chip.classList.remove('hidden');
     } else if (chip) chip.classList.add('hidden');
   }
 
   UI.setDailyChip(G.dailyState());                  /* today's sheet reads itself */
-  UI.setInkLine(G.getInk());                        /* the purse reads itself */
-  if (typeof CH !== 'undefined' && CH.refreshChip) CH.refreshChip();
   /* Resume Google OAuth in Settings, preserving the previous board tab. */
   const oauthReturn = LB.consumeOAuthReturn();
   if (oauthReturn) {

@@ -22,7 +22,6 @@ jobs:
           node --check js/main.js
           node --check js/cloud-save.js
           node --check js/game.js
-          node --check js/charms.js
           node --check sw.js
       - name: Detect overwritten Supabase and Google OAuth wiring
         shell: bash
@@ -81,16 +80,18 @@ jobs:
             index.indexOf('src="./js/cloud-save.js"') < index.indexOf('src="./js/main.js"'),
             'Cloud save script order changed');
 
-          assert(main.includes('LB.launchRun') && main.includes('CH.open()') &&
-            main.includes('G.getInk()'),
-            'v19.3 echo launch, charm room or purse integration missing');
-          assert(index.includes('id="boardTabWeek"') && index.includes('id="charmBtn"') &&
-            index.includes('id="charmInk"'),
-            'v19.3 weekly board or purse charm UI missing');
-          for (const file of ['js/charms.js']) {
-            assert(sw.includes("'" + file + "'"),
-              'v12 PWA cache no longer includes ' + file);
-          }
+          assert(main.includes('LB.launchRun'),
+            'v19.3 echo launch integration missing');
+          assert(index.includes('id="boardTabWeek"'),
+            'v19.3 weekly board missing');
+          /* v21.9 retired the charms/purse: the shop, its chip and its
+             cache entry must stay retired — a resurrected charms.js
+             would reference a purse the game no longer carries */
+          assert(!index.includes('src="./js/charms.js"') &&
+            !sw.includes("'js/charms.js'") && !fs.existsSync('js/charms.js'),
+            'v21.9 retired charms.js must not return to the page or cache');
+          assert(!index.includes('id="charmBtn"') && !index.includes('id="charmInk"'),
+            'v21.9 retired charm UI must not return to the title');
 
           const scripts = ['js/supabase-config.js', 'js/lb.js', 'js/main.js'];
           const scriptPositions = scripts.map(s => index.indexOf('src="./' + s + '"'));
