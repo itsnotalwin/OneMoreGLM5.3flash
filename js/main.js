@@ -625,6 +625,7 @@
     UI.show('title');
     refreshTitleInk();
   }  function refreshChar() {
+    refreshRoster();
     const ink = G.getInk();
     const inkEl = document.getElementById('charInk');
     if (inkEl) inkEl.textContent = String(ink);
@@ -655,6 +656,32 @@
       grid.appendChild(row);
     }
   }
+  function refreshRoster() {
+    const box = document.getElementById('charRoster');
+    if (!box) return;
+    const chars = G.getChars();
+    box.innerHTML = '';
+    for (const cd of chars) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'char-card' + (cd.current ? ' is-current' : '') + (cd.owned ? '' : ' is-locked');
+      el.innerHTML =
+        `<span class="cc-kanji" aria-hidden="true">${cd.kanji}</span>` +
+        `<span class="cc-body"><b class="cc-name">${cd.name}</b>` +
+        `<span class="cc-desc">${cd.desc}</span>` +
+        `<span class="cc-skill">${cd.skill.name} — ${cd.skill.desc}</span></span>` +
+        `<span class="cc-act">${cd.current ? 'WALKING' : cd.owned ? 'WALK WITH THEM' : cd.cost + ' 墨'}</span>`;
+      if (!cd.current && cd.owned) el.addEventListener('click', () => {
+        G.selectChar(cd.id); SFX.ensure(); SFX.page(); refreshRoster(); refreshChar();
+      });
+      if (!cd.owned) el.addEventListener('click', () => {
+        if (G.buyChar(cd.id)) { SFX.ensure(); SFX.heal(); refreshRoster(); refreshChar(); }
+        else { SFX.ensure(); SFX.pick(0); }
+      });
+      box.appendChild(el);
+    }
+  }
+
   function refreshTitleInk() {
     const el = document.getElementById('charInkBadge');
     if (el) el.textContent = G.getInk() > 0 ? '墨 ' + G.getInk() : '';
@@ -679,7 +706,7 @@
     let owned = 0, totalR = 0;
     for (const def of G.SKILLS) { totalR += def.max; owned += Math.min(sk[def.id] || 0, def.max); }
     const redK = totalR ? owned / totalR : 0;
-    if (R.drawScribePreview) R.drawScribePreview(c2, cw / 2, ch * 0.62, Math.min(34, ch * 0.26), performance.now() / 1000, redK, G.getBrush());
+    if (R.drawScribePreview) R.drawScribePreview(c2, cw / 2, ch * 0.62, Math.min(34, ch * 0.26), performance.now() / 1000, redK, G.getBrush(), G.getChar());
     charRaf = requestAnimationFrame(drawCharPreview);
   }
   /* v24.4b the wrapper is retired — the loop lives in openChar/closeChar */

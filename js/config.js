@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.4';
+window.OM_VERSION = 'v24.5';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -36,6 +36,22 @@ const SKILLS = [
    the ranks walk into every run the hand starts after it.
    ------------------------------------------------------------ */
 
+
+/* ------------------------------------------------------------
+   v24.5 THE TWO SCRIBES — the hand wears one of them
+   Each scribe keeps its own ink on every sheet: the first is
+   white vellum that fills black as the study ranks it; the
+   second is lamp-black that fills white. Each carries one
+   power of its own, spent on its own breath.
+   ------------------------------------------------------------ */
+const CHARACTERS = [
+  { id: 'scribe', name: 'THE SCRIBE', kanji: '師', cost: 0, base: '#ece5d6', fill: '#1a1714',
+    desc: 'The first hand. White vellum that fills black with every rank.',
+    skill: { name: 'THE REDIP', every: 30, desc: 'Every 30s the scribe redraws itself — fresh ink shoves and bites all nearby, and the hand holds steady.' } },
+  { id: 'night', name: 'THE NIGHT SCRIBE', kanji: '夜', cost: 5000, base: '#1a1714', fill: '#f3eee1',
+    desc: 'Cut from the Night Scroll\'s own lamp-black. Fills white with every rank.',
+    skill: { name: 'THE PALE EXHALE', every: 26, desc: 'Every 26s the night scribe exhales — a slow ring of pale needles that bites all it touches.' } },
+];
 
 const CFG = {
   player: {
