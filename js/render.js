@@ -3967,116 +3967,124 @@ function drawEnemy(c, e, t) {
     const ap = o.ap === undefined ? 1 : o.ap;
     const type = o.type || 'needle';
     const lean = o.lean || 0;
-    const ink = o.ink || INK;
     const reduced = o.reduced || false;
+    /* the scribe's own inks: base is what it is, fill is what the
+       study has risen — the body never borrows the sheet's ink */
+    const base = o.base || '#1a1714';
+    const fill = o.fill || '#ece5d6';
+    const fillFrac = Math.max(0, Math.min(1, o.fillFrac === undefined ? 0 : o.fillFrac));
 
-    /* the body group: lean into the stride, bob, recoil-squash */
-    c.save();
-    c.rotate(lean * 0.1 * mv);
-    c.translate(0, Math.sin(t * 10.5) * 1.5 * mv);
-    c.scale(1 + rc * 0.08, 1 - rc * 0.06);
-
-    /* a soft ink shadow grounds the figure on the sheet */
+    /* the grounding shadow stays the world's ink */
     c.save();
     c.scale(1, 0.4);
     c.globalAlpha = (blink ? 0.5 : 1) * 0.15;
     blobPath(c, 0, rr * 1.6, rr * 0.95, sd ^ 3, 0.2, 9);
-    c.fillStyle = ink;
+    c.fillStyle = INK;
     c.fill();
     c.restore();
 
-    /* the robe: a brush-cut cone, hem bitten ragged, flaring behind */
-    c.save();
-    c.rotate(Math.sin(t * 7.3) * 0.06 * (0.3 + mv));
-    c.fillStyle = ink;
-    c.globalAlpha = blink ? 0.55 : 1;
-    c.beginPath();
-    c.moveTo(-rr * 0.52, -rr * 0.72);
-    c.quadraticCurveTo(-rr * 0.78, rr * 0.3, -rr * 0.92, rr * 1.02);
-    c.lineTo(-rr * 0.55, rr * 0.92);
-    c.lineTo(-rr * 0.3, rr * 1.05);
-    c.lineTo(0, rr * 0.9);
-    c.lineTo(rr * 0.3, rr * 1.06);
-    c.lineTo(rr * 0.58, rr * 0.92);
-    c.lineTo(rr * 0.95, rr * 1.03);
-    c.quadraticCurveTo(rr * 0.8, rr * 0.3, rr * 0.52, -rr * 0.72);
-    c.quadraticCurveTo(0, -rr * 1.02, -rr * 0.52, -rr * 0.72);
-    c.closePath();
-    c.fill();
-    /* dry creases down the robe */
-    c.globalAlpha = (blink ? 0.55 : 1) * 0.28;
-    c.strokeStyle = PAPER;
-    c.lineWidth = 1.1;
-    c.lineCap = 'round';
-    c.beginPath();
-    c.moveTo(-rr * 0.3, -rr * 0.2);
-    c.quadraticCurveTo(-rr * 0.42, rr * 0.5, -rr * 0.36, rr * 0.95);
-    c.stroke();
-    c.beginPath();
-    c.moveTo(rr * 0.34, -rr * 0.16);
-    c.quadraticCurveTo(rr * 0.5, rr * 0.42, rr * 0.42, rr * 0.95);
-    c.stroke();
-    /* the obi — a pale sash at the waist, knot at the back */
-    c.globalAlpha = (blink ? 0.55 : 1) * 0.8;
-    c.lineWidth = 2.6;
-    c.beginPath();
-    c.moveTo(-rr * 0.55, rr * 0.22);
-    c.quadraticCurveTo(0, rr * 0.38, rr * 0.55, rr * 0.22);
-    c.stroke();
-    c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = ink;
-    c.beginPath(); c.arc(-rr * 0.3, rr * 0.32, 2.1, 0, TAU); c.fill();
-    c.restore();
-
-    /* the head */
-    c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = ink;
-    c.beginPath();
-    c.arc(0, -rr * 1.06, rr * 0.5, 0, TAU);
-    c.fill();
-
-    /* the kasa — a wide shallow hat, rocking with the stride */
-    c.save();
-    c.translate(0, -rr * 1.16);
-    c.rotate(Math.sin(t * 5.2) * 0.06 * (0.4 + mv) + lean * 0.05 * mv);
-    c.beginPath();
-    c.ellipse(0, 0, rr * 1.06, rr * 0.4, 0, 0, TAU);
-    c.fill();
-    c.globalAlpha = (blink ? 0.55 : 1) * 0.45;
-    c.strokeStyle = PAPER;
-    c.lineWidth = 0.9;
-    c.beginPath();
-    c.ellipse(0, -rr * 0.06, rr * 0.6, rr * 0.19, 0, Math.PI * 1.08, Math.PI * 1.92);
-    c.stroke();
-    c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = ink;
-    c.beginPath();
-    c.arc(0, -rr * 0.36, 1.7, 0, TAU);
-    c.fill();
-    c.restore();
-
-    /* the eyes — two pale slits under the brim, toward the aim */
-    {
-      const bl = ((t * 0.9 + (sd % 7) * 0.13) % 3.4) < 0.1 ? 0.25 : 1;
-      const el2 = (rc > 0.4 ? 3.1 : 2.4) * bl;
-      const exOff = Math.cos(aim) * rr * 0.18;
-      const eyY = -rr * 0.9 + Math.sin(aim) * rr * 0.08;
-      c.globalAlpha = (blink ? 0.55 : 1) * 0.95;
-      c.strokeStyle = PAPER;
-      c.lineCap = 'round';
-      c.lineWidth = 1.5;
-      for (const s of [-1, 1]) {
-        const xx = exOff + s * rr * 0.21;
+    /* two passes: the body in its base ink, then the risen ink clipped
+       from the hem upward — the fill literally rises with the ranks */
+    const hemY = rr * 1.12, topY = -rr * 1.5, bodyH = hemY - topY;
+    const passes = [{ body: base, detail: fill, clip: 0 }];
+    if (fillFrac > 0.01) passes.push({ body: fill, detail: base, clip: fillFrac });
+    for (const pass of passes) {
+      c.save();
+      if (pass.clip > 0) {
         c.beginPath();
-        c.moveTo(xx - el2 / 2, eyY);
-        c.lineTo(xx + el2 / 2, eyY);
-        c.stroke();
+        c.rect(-rr * 2.4, hemY - bodyH * pass.clip - rr * 0.06, rr * 4.8, bodyH * pass.clip + rr * 0.28);
+        c.clip();
       }
+      c.globalAlpha = blink ? 0.55 : 1;
+      /* the robe: a brush-cut cone, hem bitten ragged, flaring behind */
+      c.save();
+      c.rotate(Math.sin(t * 7.3) * 0.06 * (0.3 + mv));
+      c.fillStyle = pass.body;
+      c.beginPath();
+      c.moveTo(-rr * 0.52, -rr * 0.72);
+      c.quadraticCurveTo(-rr * 0.78, rr * 0.3, -rr * 0.92, rr * 1.02);
+      c.lineTo(-rr * 0.55, rr * 0.92);
+      c.lineTo(-rr * 0.3, rr * 1.05);
+      c.lineTo(0, rr * 0.9);
+      c.lineTo(rr * 0.3, rr * 1.06);
+      c.lineTo(rr * 0.58, rr * 0.92);
+      c.lineTo(rr * 0.95, rr * 1.03);
+      c.quadraticCurveTo(rr * 0.8, rr * 0.3, rr * 0.52, -rr * 0.72);
+      c.quadraticCurveTo(0, -rr * 1.02, -rr * 0.52, -rr * 0.72);
+      c.closePath();
+      c.fill();
+      /* dry creases down the robe */
+      c.globalAlpha = (blink ? 0.55 : 1) * 0.28;
+      c.strokeStyle = pass.detail;
+      c.lineWidth = 1.1;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(-rr * 0.3, -rr * 0.2);
+      c.quadraticCurveTo(-rr * 0.42, rr * 0.5, -rr * 0.36, rr * 0.95);
+      c.stroke();
+      c.beginPath();
+      c.moveTo(rr * 0.34, -rr * 0.16);
+      c.quadraticCurveTo(rr * 0.5, rr * 0.42, rr * 0.42, rr * 0.95);
+      c.stroke();
+      /* the obi — a pale sash at the waist, knot at the back */
+      c.globalAlpha = (blink ? 0.55 : 1) * 0.8;
+      c.lineWidth = 2.6;
+      c.beginPath();
+      c.moveTo(-rr * 0.55, rr * 0.22);
+      c.quadraticCurveTo(0, rr * 0.38, rr * 0.55, rr * 0.22);
+      c.stroke();
+      c.globalAlpha = blink ? 0.55 : 1;
+      c.fillStyle = pass.body;
+      c.beginPath(); c.arc(-rr * 0.3, rr * 0.32, 2.1, 0, TAU); c.fill();
+      c.restore();
+      /* the head */
+      c.globalAlpha = blink ? 0.55 : 1;
+      c.fillStyle = pass.body;
+      c.beginPath();
+      c.arc(0, -rr * 1.06, rr * 0.5, 0, TAU);
+      c.fill();
+      /* the kasa — a wide shallow hat, rocking with the stride */
+      c.save();
+      c.translate(0, -rr * 1.16);
+      c.rotate(Math.sin(t * 5.2) * 0.06 * (0.4 + mv) + lean * 0.05 * mv);
+      c.beginPath();
+      c.ellipse(0, 0, rr * 1.06, rr * 0.4, 0, 0, TAU);
+      c.fill();
+      c.globalAlpha = (blink ? 0.55 : 1) * 0.45;
+      c.strokeStyle = pass.detail;
+      c.lineWidth = 0.9;
+      c.beginPath();
+      c.ellipse(0, -rr * 0.06, rr * 0.6, rr * 0.19, 0, Math.PI * 1.08, Math.PI * 1.92);
+      c.stroke();
+      c.globalAlpha = blink ? 0.55 : 1;
+      c.fillStyle = pass.body;
+      c.beginPath();
+      c.arc(0, -rr * 0.36, 1.7, 0, TAU);
+      c.fill();
+      c.restore();
+      /* the eyes — two slits that always contrast the ink they sit on */
+      {
+        const bl = ((t * 0.9 + (sd % 7) * 0.13) % 3.4) < 0.1 ? 0.25 : 1;
+        const el2 = (rc > 0.4 ? 3.1 : 2.4) * bl;
+        const exOff = Math.cos(aim) * rr * 0.18;
+        const eyY = -rr * 0.9 + Math.sin(aim) * rr * 0.08;
+        c.globalAlpha = (blink ? 0.55 : 1) * 0.95;
+        c.strokeStyle = pass.detail;
+        c.lineCap = 'round';
+        c.lineWidth = 1.5;
+        for (const s of [-1, 1]) {
+          const xx = exOff + s * rr * 0.21;
+          c.beginPath();
+          c.moveTo(xx - el2 / 2, eyY);
+          c.lineTo(xx + el2 / 2, eyY);
+          c.stroke();
+        }
+      }
+      c.restore();
     }
-    c.restore();
 
-    /* the held brush — two-handed on the aim line, kicked back by
-       the last stroke, a sleeve reaching out to the shaft */
+    /* the held brush — two-handed on the aim line; the sleeve wears the
+       base ink, the tool stays the world's */
     c.save();
     c.rotate(aim - (1 - ap) * 5.2);
     const kick = -rc * 3.4;
@@ -4086,17 +4094,17 @@ function drawEnemy(c, e, t) {
       { x: -rr * 1.05, y: -rr * 0.18 },
       { x: -rr * 0.55, y: -rr * 0.05 },
       { x: -4.5, y: 0.2 },
-    ], 5, { alpha: 1, taper: 0.45, seed: sd, color: ink });
+    ], 5, { alpha: 1, taper: 0.45, seed: sd, color: base });
     drawBrushTool(c, type, { len: 1.02, wet: rc > 0.4 ? 0.9 : 0.22, seed: sd, alpha: blink ? 0.65 : 1 });
     /* the grip hand over the shaft */
     c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
-    c.fillStyle = ink;
+    c.fillStyle = base;
     blobPath(c, -7.2, -0.4, 3.1, sd ^ 7, 0.25, 8);
     c.fill();
     /* the flick: wet ink thrown from the tip right after the stroke */
     if (rc > 0.5 && !reduced) {
       c.globalAlpha = Math.min(1, (rc - 0.5) * 2.6) * (blink ? 0.65 : 1);
-      c.fillStyle = ink;
+      c.fillStyle = base;
       c.save();
       c.translate(12.5, -0.5);
       c.rotate(0.35);
@@ -4105,19 +4113,16 @@ function drawEnemy(c, e, t) {
       c.restore();
     }
     c.restore();
-  }
-
-  /* the menu's portrait: the same figure, posed in the study's air,
+  }  /* the menu's portrait: the same figure, posed in the study's air,
      its ink leaning toward the vermillion as the ranks climb */
-  function drawScribePreview(c, x, y, rr, t, redK, type) {
+  function drawScribePreview(c, x, y, rr, t, fillFrac, type, charId) {
     const mv = 0.22 + 0.18 * Math.sin(t * 1.4);
     const lean = Math.sin(t * 1.1) * 0.55;
-    const k = Math.min(1, Math.max(0, redK || 0));
-    const ink = k > 0 ? mixHex(INK, bossInk(), k) : INK;
+    const def = CHARACTERS.find(c12 => c12.id === (charId || 'scribe')) || CHARACTERS[0];
     const blink = (t % 3.4) < 0.1;
     c.save();
     c.translate(x, y);
-    paintScribeFigure(c, { rr, t, sd: 1234, blink, mv, rc: 0, aim: -0.35, ap: 1, type: type || 'needle', ink, reduced: false, lean });
+    paintScribeFigure(c, { rr, t, sd: 1234, blink, mv, rc: 0, aim: -0.35, ap: 1, type: type || 'needle', base: def.base, fill: def.fill, fillFrac: fillFrac || 0, reduced: false, lean });
     c.restore();
   }
 
@@ -4183,11 +4188,13 @@ function drawEnemy(c, e, t) {
     const sqx = 1 + rc * 0.08, sqy = 1 - rc * 0.06;
     const bob = Math.sin(t * 10.5) * 1.5 * mv;
     const rr = p.r;
-    /* v24.2 THE MASTERED HAND: ink earned in the study reddens the
-       scribe — a full mastery walks the sheet in pure vermillion */
-    const redK = Math.min(1, (S.stats && S.stats.charRed) || 0);
-    const bodyInk = redK > 0 ? mixHex(INK, bossInk(), redK) : INK;
-    paintScribeFigure(c, { rr, t, sd, blink, mv, rc, aim: p.aim, ap, type, ink: bodyInk, reduced: S.reduced, lean });
+    /* v24.5 the scribe wears its own inks in the field — the base and
+       the risen fill come from the study, never from the sheet */
+    paintScribeFigure(c, { rr, t, sd, blink, mv, rc, aim: p.aim, ap, type,
+      base: (S.stats && S.stats.charBase) || '#1a1714',
+      fill: (S.stats && S.stats.charFill) || '#ece5d6',
+      fillFrac: (S.stats && S.stats.charFillFrac) || 0,
+      reduced: S.reduced, lean });
 
     if (S.invulnT > 0) {
       c.globalAlpha = (blink ? 0.55 : 1) * 0.5;
@@ -4333,8 +4340,16 @@ function drawEnemy(c, e, t) {
       c.globalAlpha = 0.34;
       blobPath(c, -9 - b.age * 6, 0.5, 3.2, (b.seed ?? 7) ^ 9, 0.3, 7);
       c.fill();
-    } else if (b.kind === 'silk') {
-      /* a silk dart — a hair-thin thread with a bead of ink */
+    } else if (b.kind === 'pale') {
+      /* the night scribe's exhale — a pale bead with a dark heart,
+         reading on every paper the hand can walk */
+      c.rotate(b.ang);
+      c.strokeStyle = '#f3eee1';
+      c.lineWidth = 1.4;
+      c.beginPath(); c.arc(0, 0, 4.4, 0, TAU); c.stroke();
+      c.fillStyle = '#1a1714';
+      c.beginPath(); c.arc(0, 0, 1.8, 0, TAU); c.fill();
+    } else if (b.kind === 'silk') {      /* a silk dart — a hair-thin thread with a bead of ink */
       c.rotate(b.ang);
       c.fillStyle = INK;
       c.beginPath(); c.arc(3.2, 0, 1.7, 0, TAU); c.fill();

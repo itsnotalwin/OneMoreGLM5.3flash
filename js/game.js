@@ -204,11 +204,16 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (sk.cadence) ret.fireCdMult *= 1 - 0.06 * sk.cadence;
     if (sk.bite) ret.dmg += sk.bite;
     if (sk.gather) ret.magnet += sk.gather;
-    /* v24.2 the mastered hand reddens the scribe — ink earned, ink worn */
+    /* v24.5 THE CHARACTERS: the hand wears its scribe — the fill rises
+       with every rank the study buys, and never changes with the sheet */
     let owned = 0, totalR = 0;
     for (const s5 of SKILLS) { totalR += s5.max; owned += Math.min(sk[s5.id] || 0, s5.max); }
-    ret.charRed = totalR ? Math.min(1, owned / totalR) : 0;
-    return ret;
+    const chr = store.get('om_char_v1', {}) || {};
+    const cur = CHARACTERS.find(c6 => c6.id === (chr.current || 'scribe')) || CHARACTERS[0];
+    ret.charId = cur.id;
+    ret.charBase = cur.base;
+    ret.charFill = cur.fill;
+    ret.charFillFrac = totalR ? Math.min(1, owned / totalR) : 0;    return ret;
   }
 
   /* ---------------- ink motes & level-ups ---------------- */
@@ -2446,6 +2451,43 @@ if (qaProbe()) return;
             SFX.spirit();
           } else S.orbFlingT = 0.8;
         }
+      }
+    }
+
+    /* v24.5 THE CHARACTER'S GIFT: each scribe carries one power of its
+       own, spent on its own breath — the Redip remakes, the Exhale bites */
+    const chrs2 = store.get('om_char_v1', {}) || {};
+    const cur2 = CHARACTERS.find(c7 => c7.id === (chrs2.current || 'scribe')) || CHARACTERS[0];
+    st.charSkillT = (st.charSkillT == null ? cur2.skill.every : st.charSkillT) - dt;
+    if (st.charSkillT <= 0) {
+      st.charSkillT = cur2.skill.every;
+      if (cur2.id === 'night') {
+        /* THE PALE EXHALE: a slow ring of pale needles, biting all it touches */
+        for (let k9 = 0; k9 < 12; k9++) {
+          const a9 = (k9 / 12) * TAU;
+          S.bullets.push({ x: p.x + Math.cos(a9) * 14, y: p.y + Math.sin(a9) * 14,
+            vx: Math.cos(a9) * 190, vy: Math.sin(a9) * 190, ang: a9,
+            dmg: 2 + st.dmg, hits: 1 + st.pierce, age: 0, life: 1.7,
+            kind: 'pale', seed: (Math.random() * 1e9) | 0 });
+        }
+        SFX.spirit();
+      } else {
+        /* THE REDIP: the scribe redraws itself — fresh ink shoves and bites,
+           and the hand holds steady for a breath */
+        S.rings.push({ x: p.x, y: p.y, max: 250, life: 0.5, maxLife: 0.5 });
+        S.invulnT = Math.max(S.invulnT, 1.5);
+        for (let kk9 = S.enemies.length - 1; kk9 >= 0; kk9--) {
+          const e9 = S.enemies[kk9];
+          const dx9 = e9.x - p.x, dy9 = e9.y - p.y;
+          const d9 = Math.hypot(dx9, dy9) || 1;
+          if (d9 < 260) {
+            e9.hp -= 3 + st.dmg;
+            e9.hitFlash = 0.1;
+            e9.kbx += (dx9 / d9) * 240; e9.kby += (dy9 / d9) * 240;
+            if (e9.hp <= 0) { S.enemies.splice(kk9, 1); killEnemy(e9); }
+          }
+        }
+        SFX.heal();
       }
     }
 
@@ -5594,6 +5636,33 @@ if (qaProbe()) return;
     /* v24.1 THE STUDY: ink in, skills up — the menu reads these */
     SKILLS,
     getInk() { return store.get('om_ink_v1', 0) || 0; },
+    CHARACTERS,
+    getChar() { const c8 = store.get('om_char_v1', {}) || {}; return c8.current || 'scribe'; },
+    getChars() { const own = store.get('om_char_v1', {}) || {}; return CHARACTERS.map(c9 => ({ id: c9.id, name: c9.name, kanji: c9.kanji, desc: c9.desc, skill: c9.skill, cost: c9.cost, base: c9.base, fill: c9.fill, owned: c9.cost === 0 || (own.owned || []).includes(c9.id), current: (own.current || 'scribe') === c9.id })); },
+    buyChar(id) {
+      const def = CHARACTERS.find(c10 => c10.id === id);
+      if (!def || def.cost === 0) return false;
+      const st8 = store.get('om_char_v1', {}) || { owned: [], current: 'scribe' };
+      st8.owned = st8.owned || [];
+      if (st8.owned.includes(id)) return false;
+      const ink = store.get('om_ink_v1', 0) || 0;
+      if (ink < def.cost) return false;
+      store.set('om_ink_v1', ink - def.cost);
+      st8.owned.push(id);
+      st8.current = id;
+      store.set('om_char_v1', st8);
+      return true;
+    },
+    selectChar(id) {
+      const def = CHARACTERS.find(c11 => c11.id === id);
+      if (!def) return false;
+      const st9 = store.get('om_char_v1', {}) || {};
+      st9.owned = st9.owned || [];
+      if (def.cost > 0 && !st9.owned.includes(id)) return false;
+      st9.current = id;
+      store.set('om_char_v1', st9);
+      return true;
+    },
     getSkills() { return store.get('om_skill_v1', {}) || {}; },
     buySkill(id) {
       const def = SKILLS.find(s3 => s3.id === id);
