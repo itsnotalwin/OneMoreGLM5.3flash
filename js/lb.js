@@ -569,6 +569,8 @@ const LB = (() => {
 
   /* an endless run has truly ended — the ledger takes its entry */
   function onRunEnd(run) {
+    /* v24.3 probe hygiene: a deep-link run leaves no strip and no local best */
+    if (run && run.probe) { if (run.mode === 'daily') { const b2 = overBox(); if (b2) { b2.classList.add('hidden'); b2.innerHTML = ''; } } return; }
     const box = overBox();
     if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
     ST.pending = null; ST.posting = false;

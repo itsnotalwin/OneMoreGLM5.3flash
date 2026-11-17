@@ -133,10 +133,15 @@ const R = (() => {
       /* a scroll film keeps the OLD sheet's ink beneath its rolling edge */
       if (S.mode === 'cutscene' && typeof CUT !== 'undefined' && CUT.isLive() &&
           CUT.kindName() === 'scroll' && !CUT.covered()) {
-        const prev = AREAS[(S.areaIdx + AREAS.length - 1) % AREAS.length];
+        const papers = AREAS.concat(typeof PAST_SCROLLS !== 'undefined' ? PAST_SCROLLS : []);
+        const prev = papers[(S.areaIdx + papers.length - 1) % papers.length];
         return prev.theme;
       }
-      const area = AREAS[S.areaIdx % AREAS.length];
+      /* v23.3 THE OLD PAPERS RETURN: the endless walks six papers —
+         the ink resolves by the full paper cycle, not the journey's
+         two-scroll table */
+      const papers = AREAS.concat(typeof PAST_SCROLLS !== 'undefined' ? PAST_SCROLLS : []);
+      const area = papers[S.areaIdx % papers.length];
       return area.theme;
     }
     /* the title wears ink by choice (v19): the setting's theme — or,
@@ -505,7 +510,12 @@ const R = (() => {
   }
   function stampStains(S) {
     if (!S.stainQueue.length) return;
-    for (const q of S.stainQueue) {
+    /* v23.2 butter: one kill burst can queue dozens of marks — bake a
+       handful per frame so a wipe-out never buys a stutter. The marks
+       land across a few frames, indistinguishable from one instant. */
+    let budget = 4;
+    while (S.stainQueue.length && budget-- > 0) {
+      const q = S.stainQueue.shift();
       const r = Math.max(2.4, q.r);
       const scale = 2; /* render sprites at 2x for crisp hidpi */
       const half = Math.ceil(r * 3.3);   /* headroom: no splat ever clips square */
@@ -517,13 +527,13 @@ const R = (() => {
       splatPaint(g, 0, 0, r, (Math.random() * 1e9) | 0, q.alpha ?? 0.5, q.red ? RED : INK);
       stains.push({ x: q.x, y: q.y, a: q.alpha ?? 0.5, age: 0, spr, half });
     }
-    S.stainQueue.length = 0;
+    /* the marks are cosmetic: a backlog beyond this is dropped, not deferred */
+    while (S.stainQueue.length > 120) S.stainQueue.shift();
     while (stains.length > CFG.world.stainCap) {
       releaseStain(stains[0].spr);
       stains.shift();
     }
   }
-
   function updateStains(dt) {
     const fade = CFG.world.stainFade;
     for (let i = stains.length - 1; i >= 0; i--) {
@@ -3917,95 +3927,38 @@ function drawEnemy(c, e, t) {
     c.restore();
   }
 
-  function drawPlayer(c, t) {
-    const S = G.S;
-    const p = S.player;
-    /* the hurt-flicker: the scribe shivers, he never vanishes —
-       the old 18 Hz dip to 0.25 read as the figure leaving the sheet */
-    const blink = S.invulnT > 0 && Math.floor(t * 11) % 2 === 0;
-    /* the arrival: the scribe rises out of the ink pool the opening
-       wash leaves behind — growing with a back-out settle */
-    const ap = S.arrived ? 1 : Math.max(0, Math.min(1, (1.42 - S.beginT) / 0.5));
-    const tick = Math.floor(t / CFG.ink.boilRate);
-    const sd = ((p.x * 31 + p.y * 17) | 0) ^ (tick * 7919);
-    /* motion reads from the true velocity, so the tail and the lean
-       follow the glide — not the keypress */
-    const vx = p.vx || 0, vy = p.vy || 0;
-    const spd = Math.hypot(vx, vy);
-    const mv = Math.min(1, spd / (CFG.player.speed * 1.02));
-    const rc = p.recoil > 0 ? p.recoil : 0;
-    const type = S.brush || 'needle';
+  /* v24.2 THE STUDY: the scribe figure painted from one function — the
+     game and the menu preview share this painter, so they can never
+     drift apart. o = { rr, t, sd, blink, mv, rc, aim, ap, type, ink,
+     reduced, lean }; ink is the body's color — mastery reddens it. */
+  function paintScribeFigure(c, o) {
+    const rr = o.rr, t = o.t, sd = o.sd, blink = o.blink || false;
+    const mv = o.mv || 0, rc = o.rc || 0, aim = o.aim || 0;
+    const ap = o.ap === undefined ? 1 : o.ap;
+    const type = o.type || 'needle';
+    const lean = o.lean || 0;
+    const ink = o.ink || INK;
+    const reduced = o.reduced || false;
 
-    /* ink trail: the brush never leaves the paper clean */
-    if (S.mode === 'playing' && mv > 0.15 && t - lastTrailT > CFG.ink.trailGap && !S.reduced) {
-      lastTrailT = t;
-      S.stainQueue.push({ x: p.x + (Math.random() - 0.5) * 6, y: p.y + (Math.random() - 0.5) * 6, r: 2.2, alpha: 0.15 });
-    }
-
-    /* comet tail, streaming behind the motion */
-    if (spd > 26 && ap > 0.6) {
-      const a = Math.atan2(-vy, -vx);
-      const len = 9 + 10 * mv;
-      const sway = Math.sin(t * 9) * 2.2;
-      const x0 = p.x + Math.cos(a) * p.r * 0.5, y0 = p.y + Math.sin(a) * p.r * 0.5;
-      inkStroke(c, [
-        { x: x0, y: y0 },
-        { x: x0 + Math.cos(a) * len * 0.55 - Math.sin(a) * sway, y: y0 + Math.sin(a) * len * 0.55 + Math.cos(a) * sway },
-        { x: x0 + Math.cos(a) * len, y: y0 + Math.sin(a) * len },
-      ], 7, { alpha: blink ? 0.5 : 0.85, taper: 1.1, seed: sd });
-    }
-
-    c.save();
-    c.globalAlpha = blink ? 0.55 : 1;
-    const back = rc * 2.4;
-    c.translate(p.x - Math.cos(p.aim) * back, p.y - Math.sin(p.aim) * back);
-    if (ap < 1) {
-      const b = ap - 1;
-      const ae = 1 + 2.70158 * b * b * b + 1.70158 * b * b;   /* back-out ease */
-      c.globalAlpha *= 0.15 + 0.85 * ap;
-      c.translate(0, (1 - ap) * 10);
-      c.scale(0.55 + 0.45 * ae, 0.55 + 0.45 * ae);
-    }
-
-    /* adrenaline speed ticks */
-    if (S.adrenT > 0 && !blink) {
-      const ma = spd > 20 ? Math.atan2(-vy, -vx) : p.aim + Math.PI;
-      c.save();
-      c.globalAlpha = 0.4;
-      for (const off of [-0.5, 0.5]) {
-        const a = ma + off;
-        inkStroke(c, [
-          { x: Math.cos(a) * 13, y: Math.sin(a) * 13 },
-          { x: Math.cos(a) * 21, y: Math.sin(a) * 21 },
-        ], 2.2, { alpha: 0.5 });
-      }
-      c.restore();
-    }
-
-    /* the body — a small robed scribe of living ink, upright,
-       leaning into the stride, its kasa rocking with the run */
-    const lean = mv > 0.08 ? Math.atan2(vy, vx) : 0;
-    const sqx = 1 + rc * 0.08, sqy = 1 - rc * 0.06;
-    const bob = Math.sin(t * 10.5) * 1.5 * mv;
-    const rr = p.r;
+    /* the body group: lean into the stride, bob, recoil-squash */
     c.save();
     c.rotate(lean * 0.1 * mv);
-    c.translate(0, bob);
-    c.scale(sqx, sqy);
+    c.translate(0, Math.sin(t * 10.5) * 1.5 * mv);
+    c.scale(1 + rc * 0.08, 1 - rc * 0.06);
 
     /* a soft ink shadow grounds the figure on the sheet */
     c.save();
     c.scale(1, 0.4);
     c.globalAlpha = (blink ? 0.5 : 1) * 0.15;
     blobPath(c, 0, rr * 1.6, rr * 0.95, sd ^ 3, 0.2, 9);
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     c.fill();
     c.restore();
 
     /* the robe: a brush-cut cone, hem bitten ragged, flaring behind */
     c.save();
     c.rotate(Math.sin(t * 7.3) * 0.06 * (0.3 + mv));
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     c.globalAlpha = blink ? 0.55 : 1;
     c.beginPath();
     c.moveTo(-rr * 0.52, -rr * 0.72);
@@ -4041,13 +3994,13 @@ function drawEnemy(c, e, t) {
     c.quadraticCurveTo(0, rr * 0.38, rr * 0.55, rr * 0.22);
     c.stroke();
     c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     c.beginPath(); c.arc(-rr * 0.3, rr * 0.32, 2.1, 0, TAU); c.fill();
     c.restore();
 
     /* the head */
     c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     c.beginPath();
     c.arc(0, -rr * 1.06, rr * 0.5, 0, TAU);
     c.fill();
@@ -4066,7 +4019,7 @@ function drawEnemy(c, e, t) {
     c.ellipse(0, -rr * 0.06, rr * 0.6, rr * 0.19, 0, Math.PI * 1.08, Math.PI * 1.92);
     c.stroke();
     c.globalAlpha = blink ? 0.55 : 1;
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     c.beginPath();
     c.arc(0, -rr * 0.36, 1.7, 0, TAU);
     c.fill();
@@ -4074,9 +4027,10 @@ function drawEnemy(c, e, t) {
 
     /* the eyes — two pale slits under the brim, toward the aim */
     {
-      const el2 = rc > 0.4 ? 3.1 : 2.4;
-      const exOff = Math.cos(p.aim) * rr * 0.18;
-      const eyY = -rr * 0.9 + Math.sin(p.aim) * rr * 0.08;
+      const bl = ((t * 0.9 + (sd % 7) * 0.13) % 3.4) < 0.1 ? 0.25 : 1;
+      const el2 = (rc > 0.4 ? 3.1 : 2.4) * bl;
+      const exOff = Math.cos(aim) * rr * 0.18;
+      const eyY = -rr * 0.9 + Math.sin(aim) * rr * 0.08;
       c.globalAlpha = (blink ? 0.55 : 1) * 0.95;
       c.strokeStyle = PAPER;
       c.lineCap = 'round';
@@ -4094,8 +4048,7 @@ function drawEnemy(c, e, t) {
     /* the held brush — two-handed on the aim line, kicked back by
        the last stroke, a sleeve reaching out to the shaft */
     c.save();
-    /* on arrival the brush spins once around the wrist, easing still */
-    c.rotate(p.aim - (1 - ap) * 5.2);
+    c.rotate(aim - (1 - ap) * 5.2);
     const kick = -rc * 3.4;
     c.translate(rr * 1.02 + kick, -rr * 0.42);
     c.globalAlpha = (blink ? 0.6 : 1) * 0.88;
@@ -4103,17 +4056,17 @@ function drawEnemy(c, e, t) {
       { x: -rr * 1.05, y: -rr * 0.18 },
       { x: -rr * 0.55, y: -rr * 0.05 },
       { x: -4.5, y: 0.2 },
-    ], 5, { alpha: 1, taper: 0.45, seed: sd });
+    ], 5, { alpha: 1, taper: 0.45, seed: sd, color: ink });
     drawBrushTool(c, type, { len: 1.02, wet: rc > 0.4 ? 0.9 : 0.22, seed: sd, alpha: blink ? 0.65 : 1 });
     /* the grip hand over the shaft */
     c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
-    c.fillStyle = INK;
+    c.fillStyle = ink;
     blobPath(c, -7.2, -0.4, 3.1, sd ^ 7, 0.25, 8);
     c.fill();
     /* the flick: wet ink thrown from the tip right after the stroke */
-    if (rc > 0.5 && !S.reduced) {
+    if (rc > 0.5 && !reduced) {
       c.globalAlpha = Math.min(1, (rc - 0.5) * 2.6) * (blink ? 0.65 : 1);
-      c.fillStyle = INK;
+      c.fillStyle = ink;
       c.save();
       c.translate(12.5, -0.5);
       c.rotate(0.35);
@@ -4122,6 +4075,89 @@ function drawEnemy(c, e, t) {
       c.restore();
     }
     c.restore();
+  }
+
+  /* the menu's portrait: the same figure, posed in the study's air,
+     its ink leaning toward the vermillion as the ranks climb */
+  function drawScribePreview(c, x, y, rr, t, redK, type) {
+    const mv = 0.22 + 0.18 * Math.sin(t * 1.4);
+    const lean = Math.sin(t * 1.1) * 0.55;
+    const k = Math.min(1, Math.max(0, redK || 0));
+    const ink = k > 0 ? mixHex(INK, bossInk(), k) : INK;
+    const blink = (t % 3.4) < 0.1;
+    c.save();
+    c.translate(x, y);
+    paintScribeFigure(c, { rr, t, sd: 1234, blink, mv, rc: 0, aim: -0.35, ap: 1, type: type || 'needle', ink, reduced: false, lean });
+    c.restore();
+  }
+
+  function drawPlayer(c, t) {
+    const S = G.S;
+    const p = S.player;
+    /* the hurt-flicker: the scribe shivers, he never vanishes —
+       the old 18 Hz dip to 0.25 read as the figure leaving the sheet */
+    const blink = S.invulnT > 0 && Math.floor(t * 11) % 2 === 0;
+    /* the arrival: the scribe rises out of the ink pool the opening
+       wash leaves behind — growing with a back-out settle */
+    const ap = S.arrived ? 1 : Math.max(0, Math.min(1, (1.42 - S.beginT) / 0.5));
+    const tick = Math.floor(t / CFG.ink.boilRate);
+    const sd = ((p.x * 31 + p.y * 17) | 0) ^ (tick * 7919);
+    /* motion reads from the true velocity, so the tail and the lean
+       follow the glide — not the keypress */
+    const vx = p.vx || 0, vy = p.vy || 0;
+    const spd = Math.hypot(vx, vy);
+    const mv = Math.min(1, spd / (CFG.player.speed * 1.02));
+    const rc = p.recoil > 0 ? p.recoil : 0;
+    const type = S.brush || 'needle';
+
+    /* ink trail: the brush never leaves the paper clean */
+    if (S.mode === 'playing' && mv > 0.15 && t - lastTrailT > CFG.ink.trailGap && !S.reduced) {
+      lastTrailT = t;
+      S.stainQueue.push({ x: p.x + (Math.random() - 0.5) * 6, y: p.y + (Math.random() - 0.5) * 6, r: 2.2, alpha: 0.15 });
+    }
+
+    /* v24.3 the tail is gone — the sheet keeps the scribe clean */
+
+    c.save();
+    c.globalAlpha = blink ? 0.55 : 1;
+    const back = rc * 2.4;
+    c.translate(p.x - Math.cos(p.aim) * back, p.y - Math.sin(p.aim) * back);
+    if (ap < 1) {
+      const b = ap - 1;
+      const ae = 1 + 2.70158 * b * b * b + 1.70158 * b * b;   /* back-out ease */
+      c.globalAlpha *= 0.15 + 0.85 * ap;
+      c.translate(0, (1 - ap) * 10);
+      c.scale(0.55 + 0.45 * ae, 0.55 + 0.45 * ae);
+    }
+
+    /* adrenaline speed ticks */
+    if (S.adrenT > 0 && !blink) {
+      const ma = spd > 20 ? Math.atan2(-vy, -vx) : p.aim + Math.PI;
+      c.save();
+      c.globalAlpha = 0.4;
+      for (const off of [-0.5, 0.5]) {
+        const a = ma + off;
+        inkStroke(c, [
+          { x: Math.cos(a) * 13, y: Math.sin(a) * 13 },
+          { x: Math.cos(a) * 21, y: Math.sin(a) * 21 },
+        ], 2.2, { alpha: 0.5 });
+      }
+      c.restore();
+    }
+
+    /* the body — a small robed scribe of living ink, upright,
+       leaning into the stride, its kasa rocking with the run.
+       v24.0: the octopus experiment is over — the scribe keeps the
+       sheet, the kasa, and one new trick: the blink. */
+    const lean = mv > 0.08 ? Math.atan2(vy, vx) : 0;
+    const sqx = 1 + rc * 0.08, sqy = 1 - rc * 0.06;
+    const bob = Math.sin(t * 10.5) * 1.5 * mv;
+    const rr = p.r;
+    /* v24.2 THE MASTERED HAND: ink earned in the study reddens the
+       scribe — a full mastery walks the sheet in pure vermillion */
+    const redK = Math.min(1, (S.stats && S.stats.charRed) || 0);
+    const bodyInk = redK > 0 ? mixHex(INK, bossInk(), redK) : INK;
+    paintScribeFigure(c, { rr, t, sd, blink, mv, rc, aim: p.aim, ap, type, ink: bodyInk, reduced: S.reduced, lean });
 
     if (S.invulnT > 0) {
       c.globalAlpha = (blink ? 0.55 : 1) * 0.5;
@@ -4147,35 +4183,21 @@ function drawEnemy(c, e, t) {
       c.beginPath(); c.arc(0, 0, orbR, 0, TAU); c.stroke();
       c.setLineDash([]);
       c.restore();
-      for (let i = 0; i < st.orb; i++) {
-        const a = base * CFG.orbit.speed + (i / st.orb) * TAU;
-        const ox = Math.cos(a) * orbR, oy = Math.sin(a) * orbR;
-        /* the wet arc each droplet leaves behind it on the ring */
-        c.save();
-        c.globalAlpha = (blink ? 0.45 : 1) * 0.3;
-        c.strokeStyle = INK;
-        c.lineWidth = 2.2;
-        c.beginPath();
-        c.arc(0, 0, orbR, a - 0.85, a - 0.12);
-        c.stroke();
-        c.restore();
-        c.save();
-        c.translate(ox, oy);
-        c.rotate(a + Math.PI / 2);
-        c.globalAlpha = (blink ? 0.6 : 1) * 0.95;
-        c.fillStyle = INK;
-        teardrop(c, 4.6);
-        c.fill();
-        if (maxed) {
-          /* THE GRAVE RING: the hunters wear the red tip */
-          c.globalAlpha = (blink ? 0.6 : 1) * 0.9;
-          c.fillStyle = RED;
-          c.beginPath(); c.arc(3.4, 0, 1.7, 0, TAU); c.fill();
-        }
-        c.globalAlpha = (blink ? 0.5 : 1) * 0.3;
-        inkStroke(c, [{ x: -7, y: 0 }, { x: -16, y: 0.5 }], 2.2, { alpha: 1 });
-        c.restore();
-      }
+      /* the pooled ink wash — swells on every tick, the garlic's breath */
+      const pulse = S.orbPulse || 0;
+      c.save();
+      c.globalAlpha = (blink ? 0.5 : 1) * (0.05 + 0.075 * pulse);
+      c.fillStyle = INK;
+      blobPath(c, 0, 0, orbR * (0.92 + 0.06 * pulse), sd ^ 21, 0.1, 12);
+      c.fill();
+      c.restore();
+      /* the rim: a wet stroke that swells with the pulse */
+      c.save();
+      c.globalAlpha = (blink ? 0.5 : 1) * (0.14 + 0.3 * pulse);
+      c.strokeStyle = INK;
+      c.lineWidth = 1.2 + 2.2 * pulse;
+      c.beginPath(); c.arc(0, 0, orbR, 0, TAU); c.stroke();
+      c.restore();
     }
 
     /* paper ward: a talisman that hangs at the brush's back */
@@ -4258,6 +4280,38 @@ function drawEnemy(c, e, t) {
       c.fill();
       c.globalAlpha = 0.3;
       inkStroke(c, [{ x: -4, y: 0 }, { x: -12 - b.age * 14, y: Math.sin(b.age * 9 + b.seed) * 3 }], 2.2, { alpha: 1 });
+    } else if (b.kind === 'javelin') {
+      /* a heavy ink bolt, thrown flat — a shaft with a fletched tail */
+      c.rotate(b.ang);
+      inkStroke(c, [
+        { x: 13, y: 0 }, { x: 2, y: 0.2 }, { x: -9, y: 0.1 },
+      ], 3.2, { alpha: 0.95, taper: 1.15, seed: (b.seed ?? 7) ^ 3 });
+      c.globalAlpha = 0.55;
+      inkStroke(c, [{ x: -8, y: -2.4 }, { x: -13, y: -4 }], 1.4, { alpha: 1 });
+      inkStroke(c, [{ x: -8, y: 2.4 }, { x: -13, y: 4 }], 1.4, { alpha: 1 });
+      c.globalAlpha = 0.3;
+      inkStroke(c, [{ x: -10, y: 0 }, { x: -20 - b.age * 12, y: 0.4 }], 2, { alpha: 1 });
+    } else if (b.kind === 'mortar') {
+      /* a lobbed quill — a fat body that swells near the burst */
+      c.rotate(b.ang);
+      const swell = 1 + Math.min(0.5, b.age * 0.7);
+      c.fillStyle = INK;
+      blobPath(c, 0, 0, 4.6 * swell, b.seed ?? 7, 0.2, 8);
+      c.fill();
+      c.globalAlpha = 0.6;
+      inkStroke(c, [{ x: 3.5, y: 0 }, { x: -6 - b.age * 8, y: 0.3 }], 1.8, { alpha: 1 });
+      c.globalAlpha = 0.34;
+      blobPath(c, -9 - b.age * 6, 0.5, 3.2, (b.seed ?? 7) ^ 9, 0.3, 7);
+      c.fill();
+    } else if (b.kind === 'silk') {
+      /* a silk dart — a hair-thin thread with a bead of ink */
+      c.rotate(b.ang);
+      c.fillStyle = INK;
+      c.beginPath(); c.arc(3.2, 0, 1.7, 0, TAU); c.fill();
+      c.globalAlpha = 0.8;
+      inkStroke(c, [{ x: 2, y: 0 }, { x: -5, y: 0.2 }, { x: -9, y: -0.6 }], 1.1, { alpha: 1, taper: 2 });
+      c.globalAlpha = 0.28;
+      inkStroke(c, [{ x: -8, y: 0 }, { x: -13 - b.age * 16, y: 0.3 }], 0.9, { alpha: 1 });
     } else { /* a flicked droplet (echo stroke) */
       c.rotate(b.ang);
       c.fillStyle = INK;
@@ -4396,7 +4450,39 @@ function drawEnemy(c, e, t) {
     c.restore();
   }
 
-  /* THE SCRIBE's living stroke — a perpetual serpent of ink that
+  /* the tentacle lash — one wide blade of ink swept out of the
+     mantle: the arc opens fast, holds a beat, dries away */
+  /* the sweep's points land in a grown-once scratch, like every stroke */
+  let _lxN = 0, _lx = [];
+  function lashScratch(k) {
+    if (k > _lxN) {
+      _lxN = k;
+      _lx = [];
+      for (let i = 0; i < k; i++) _lx.push({ x: 0, y: 0 });
+    }
+    return _lx;
+  }
+  function drawLashFx(c, sl) {
+    const tt = 1 - sl.life / sl.max;
+    const open = sl.arc * Math.min(1, tt * 1.8);
+    const fade = sl.life < 0.08 ? sl.life / 0.08 : 1;
+    const r1 = sl.len * (0.55 + 0.45 * Math.min(1, tt * 2.2));
+    const pts = lashScratch(7);
+    for (let k = 0; k < 7; k++) {
+      const a = -open / 2 + open * (k / 6);
+      pts[k].x = Math.cos(a) * r1 * (0.85 + 0.15 * k / 6);
+      pts[k].y = Math.sin(a) * r1;
+    }
+    c.save();
+    c.translate(sl.x, sl.y);
+    c.rotate(sl.ang);
+    c.globalAlpha = 0.9 * fade;
+    inkStroke(c, pts, 6.5, { alpha: 1, taper: 1.25, dry: true, seed: 4242 });
+    c.globalAlpha = 0.25 * fade;
+    for (let k = 0; k < 7; k++) { pts[k].x *= 0.62; pts[k].y *= 0.62; }
+    inkStroke(c, pts, 2.2, { alpha: 1 });
+    c.restore();
+  }  /* THE SCRIBE's living stroke — a perpetual serpent of ink that
      weaves through the horde. Drawn as one long tapered stroke
      snaking along its heading, a tail drying behind it. */
   function drawScribe(c, sc) {
@@ -6080,6 +6166,7 @@ function drawEnemy(c, e, t) {
     if (playing && !washHides) drawInkRing(ctx, t);
     if (playing && !washHides) drawPlayer(ctx, t);
     for (const s of S.stamps) drawStamp(ctx, s);
+    for (const sl of S.slashes) drawLashFx(ctx, sl);
     for (const ar of S.arcs) drawArcFx(ctx, ar);
     for (const bo of S.bolts) drawBolt(ctx, bo);
     for (const p of S.particles) {
@@ -6174,5 +6261,5 @@ function drawEnemy(c, e, t) {
     c.restore();
   }
 
-  return { draw, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash, titleInkBloom };
+  return { draw, drawScribePreview, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash, titleInkBloom };
 })();

@@ -609,6 +609,82 @@
   document.getElementById('boardBackBtn').addEventListener('click', closeBoard);
   /* the SCENES door: the shelf answers here — journey by hand */
   document.getElementById('sheetBtn').addEventListener('click', openScrolls);
+
+  /* ---- v24.1 THE STUDY: the character menu — ink in, skills up ---- */
+  function openChar() {
+    SFX.ensure(); SFX.page();
+    refreshChar();
+    UI.show('char');
+    UI.hud(false);
+  }
+  function closeChar() {
+    UI.show('title');
+    refreshTitleInk();
+  }
+  function refreshChar() {
+    const ink = G.getInk();
+    const inkEl = document.getElementById('charInk');
+    if (inkEl) inkEl.textContent = String(ink);
+    const sk = G.getSkills();
+    const grid = document.getElementById('charSkills');
+    if (!grid) return;
+    grid.innerHTML = '';
+    for (const def of G.SKILLS) {
+      const rank = sk[def.id] || 0;
+      const maxed = rank >= def.max;
+      const cost = maxed ? 0 : def.costs[rank];
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'char-row' + (maxed ? ' is-max' : ink >= cost ? ' is-open' : ' is-poor');
+      const pips = '●'.repeat(rank) + '○'.repeat(def.max - rank);
+      row.innerHTML =
+        `<span class="cr-kanji" aria-hidden="true">${def.kanji}</span>` +
+        `<span class="cr-body"><b class="cr-name">${def.name}</b>` +
+        `<span class="cr-desc">${def.desc}</span>` +
+        `<span class="cr-pips">${pips}</span></span>` +
+        `<span class="cr-cost">${maxed ? 'MASTERED' : cost + ' 墨'}</span>`;
+      if (!maxed) row.addEventListener('click', () => {
+        if (G.buySkill(def.id)) { SFX.ensure(); SFX.heal(); }
+        else { SFX.ensure(); SFX.pick(0); }
+        refreshChar();
+        refreshTitleInk();
+      });
+      grid.appendChild(row);
+    }
+  }
+  function refreshTitleInk() {
+    const el = document.getElementById('charInkBadge');
+    if (el) el.textContent = G.getInk() > 0 ? '墨 ' + G.getInk() : '';
+  }
+  document.getElementById('charBtn').addEventListener('click', openChar);
+
+  /* the portrait breathes: a little loop that lives while the study is open */
+  let charRaf = 0;
+  function drawCharPreview() {
+    const cv = document.getElementById('charPreview');
+    if (!cv || document.getElementById('screenChar').classList.contains('hidden')) { charRaf = 0; return; }
+    const c2 = cv.getContext('2d');
+    const cw = cv.clientWidth || 260, ch = cv.clientHeight || 190;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(cw * dpr)) {
+      cv.width = Math.round(cw * dpr);
+      cv.height = Math.round(ch * dpr);
+    }
+    c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c2.clearRect(0, 0, cw, ch);
+    const sk = G.getSkills();
+    let owned = 0, totalR = 0;
+    for (const def of G.SKILLS) { totalR += def.max; owned += Math.min(sk[def.id] || 0, def.max); }
+    const redK = totalR ? owned / totalR : 0;
+    if (R.drawScribePreview) R.drawScribePreview(c2, cw / 2, ch * 0.62, Math.min(34, ch * 0.26), performance.now() / 1000, redK, G.getBrush());
+    charRaf = requestAnimationFrame(drawCharPreview);
+  }
+  const _openCharPrev = openChar;
+  openChar = function () { _openCharPrev(); if (!charRaf) charRaf = requestAnimationFrame(drawCharPreview); };
+  const _closeCharPrev = closeChar;
+  closeChar = function () { if (charRaf) { cancelAnimationFrame(charRaf); charRaf = 0; } _closeCharPrev(); };
+  document.getElementById('charBackBtn').addEventListener('click', () => { SFX.pick(1); closeChar(); });
+  refreshTitleInk();
   document.getElementById('openingBtn').addEventListener('click', playIntro);
   document.getElementById('continueBtn').addEventListener('click', () => {
     SFX.ensure();

@@ -38,6 +38,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(20, parseInt(q.get('scenes'), 10) || 0));
   } catch (e) {}
 
+  /* v23.8 PROBE HYGIENE: a deep-link run walks deep waves for the probes
+     and never writes the hand's ledgers — unlocks, bests, prog, seals,
+     runs, endless best stay exactly what real play earned */
+  const qaProbe = () => qaWave > 1 || qaGod;
+
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
@@ -57,7 +62,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     areaIdx: 0,
 
     bullets: [], ebullets: [], enemies: [], markers: [], particles: [], popups: [], rings: [], idle: [],
-    puddles: [], spirits: [], scribes: [], stamps: [], motes: [], pickups: [],
+    puddles: [], spirits: [], scribes: [], stamps: [], slashes: [], motes: [], pickups: [],
     arcs: [], vortices: [], bolts: [], telgs: [],   /* telgs: boss attack telegraphs */
     rec: null,          /* the ghost's scribe: this run, stroke by stroke */
     ghost: null,        /* a past run's echo, walking beside the brush */
@@ -70,7 +75,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     invulnT: 0, adrenT: 0, shake: 0, dyingT: 0, novaT: 0, clockT: 0,
     playerSlowT: 0,               /* the smother's grip: the brush wades slow */
     arrived: false, washStamp: false,
-    fanT: 1.2, spiritT: 1.6, hankoT: 1.6, trailT: 0, wakeT: 0, castN: 0,
+    fanT: 1.2, spiritT: 1.6, hankoT: 1.6, trailT: 0, wakeT: 0, castN: 0, lashT: 0.5, javelinT: 0.8, mortarT: 1.0, sdartsT: 0.4,
     arcT: 2.0, boomerT: 1.5, vortexT: 3.0,
     combo: 0, comboT: 0, hitstop: 0, magnetT: 0, pendingSeal: false,
     pendingLevels: 0, pendingChests: 0, upKind: 'wave', vacuum: false,
@@ -157,7 +162,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* the endless record: how deep the walker has ever pressed the
      endless paper — the checkpoint door reads it, the title wears it */
   const getEndlessBest = () => store.get('om_endless_best_v1', 0);
-  function setEndlessBest(w) { if (w > getEndlessBest()) store.set('om_endless_best_v1', w); }
+  function setEndlessBest(w) { if (qaProbe()) return; if (w > getEndlessBest()) store.set('om_endless_best_v1', w); }
 
   function freshStats() {
     const bdef = CFG.brushes[S.brush] || {};
@@ -169,7 +174,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       bulletSpeedMult: 1,
       adren: 0, shock: false, levels: {},
       echo: 0, orb: 0, nova: 0, slow: 0, crit: 0, ward: false, wardCd: 0,
-      fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0,
+      fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0, lash: 0, javelin: 0, mortar: 0, sdarts: 0, focus: 0,
       magnet: 0, mends: 0, well: 0, mendsT: 0, critC: 0,
       /* the brush's own arts (v19) — one track, one hand */
       nrain: 0, ndeep: 0, nsilk: 0, bwide: 0, bbrist: 0, bwet: 0,
@@ -191,6 +196,18 @@ const rand = (a, b) => a + RNG() * (b - a);
     ret.nova = bm.nova || 0;
     ret.hanko = bm.hanko || 0;
     ret.scribe = bm.scribe || 0;
+    /* v24.1 THE CHARACTER: the study's earned skills open every run —
+       ink spent in the menu sharpens the hand on every sheet */
+    const sk = store.get('om_skill_v1', {}) || {};
+    if (sk.vitality) { ret.maxHp += sk.vitality; ret.hp += sk.vitality; }
+    if (sk.swift) ret.moveMult *= 1 + 0.06 * sk.swift;
+    if (sk.cadence) ret.fireCdMult *= 1 - 0.06 * sk.cadence;
+    if (sk.bite) ret.dmg += sk.bite;
+    if (sk.gather) ret.magnet += sk.gather;
+    /* v24.2 the mastered hand reddens the scribe — ink earned, ink worn */
+    let owned = 0, totalR = 0;
+    for (const s5 of SKILLS) { totalR += s5.max; owned += Math.min(sk[s5.id] || 0, s5.max); }
+    ret.charRed = totalR ? Math.min(1, owned / totalR) : 0;
     return ret;
   }
 
@@ -290,11 +307,12 @@ const rand = (a, b) => a + RNG() * (b - a);
   /* v22.3: old saves walked six sheets — the getters clamp to the
      two-scroll paper so no save can point past the shelf */
   const getUnlocked = () => Math.min(AREAS.length, Math.max(1, num(store.get('om_unlocked_v1', 1)) || 1, num(store.get('om_furthest_v1', 1)) || 1));
-  function setUnlocked(n) { if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
+  function setUnlocked(n) { if (qaProbe()) return; if (n > getUnlocked()) store.set('om_unlocked_v1', n); }
   const getCleared = () => num(store.get('om_cleared_v1', 0)) || 0;
-  function setCleared(n) { if (n > getCleared()) store.set('om_cleared_v1', n); }
+  function setCleared(n) { if (qaProbe()) return; if (n > getCleared()) store.set('om_cleared_v1', n); }
   const getProg = () => obj(store.get('om_prog_v1', {})) || {};
   function noteLevel(sheet, level) {
+if (qaProbe()) return;
     const p = getProg();
     if ((p[sheet] || 0) < level) { p[sheet] = level; store.set('om_prog_v1', p); }
   }
@@ -303,6 +321,7 @@ const rand = (a, b) => a + RNG() * (b - a);
      to that — and the shelf must tell the two apart) */
   const getSeals = () => obj(store.get('om_seal_v1', {})) || {};
   function noteSeal(sheet, level) {
+if (qaProbe()) return;
     const p = getSeals();
     if ((p[sheet] || 0) < level) { p[sheet] = level; store.set('om_seal_v1', p); }
   }
@@ -356,9 +375,16 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.runMode === 'endless') {
       const turn = Math.floor((w - 1) / CFG.wave.wavesPerLevel);
       const inTurn = (w - 1) % CFG.wave.wavesPerLevel;
-      const era = Math.floor((w - 1) / CFG.endless.eraWaves);   // the ink changes every era
-      const themeIdxE = era % AREAS.length;
-      const areaE = AREAS[themeIdxE];
+      /* v23.3 THE OLD PAPERS RETURN: the endless walks the v20 sheets
+         again — a hundred waves a paper, the walk the six-sheet
+         journey made: Cinnabar Field, the Storm Sheet, the Gilt
+         Scroll and the Blank Silk ride again, each with its own
+         beasts, officers, keepers and guardian, each beast debuting
+         on its own paper at the wave the old journey gave it */
+      const papers = AREAS.concat(PAST_SCROLLS);
+      const epoch = Math.floor((w - 1) / (CFG.wave.wavesPerLevel * CFG.wave.levelsPerArea));
+      const themeIdxE = epoch % papers.length;
+      const areaE = papers[themeIdxE];
       hp = areaE.mult.hp;
       sp = areaE.mult.sp;
       budget = areaE.mult.budget;
@@ -373,7 +399,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       if (S.hardMode) { hp *= CFG.hard.hp; sp *= CFG.hard.sp; budget *= CFG.hard.budget; }
       const lv = inTurn + 1;
       const turnEnd = inTurn === CFG.wave.wavesPerLevel - 1;
-      return { cycle: era, level: lv, waveInLevel: lv, themeIdx: themeIdxE, area: areaE,
+      return { cycle: epoch, level: lv, waveInLevel: lv, themeIdx: themeIdxE, area: areaE,
                hp, sp, budget, depth: w - 1,
                isLevelEnd: turnEnd, isGuardianWave: turnEnd,
                isSurge: !turnEnd && CFG.wave.surgeWaves.indexOf(lv) >= 0,
@@ -548,6 +574,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
     e.dead = true;
     e._killed = true;
+    S.kills = (S.kills || 0) + 1;   /* the harvest count — balance passes and ledgers read this */
     const def = ENEMIES[e.type];
     const isBoss = !!def.boss;
     const mult = 1 + 0.15 * Math.max(0, S.stats.wave - 1);
@@ -992,6 +1019,28 @@ const rand = (a, b) => a + RNG() * (b - a);
     }
   }
 
+  /* v23.0 THE OCTOPUS: six holds for weapons; the brush holds the first.
+     Stats (cadence, footwork, bite, gathering) never occupy a hold. */
+  function weaponCount() {
+    let arms = 1;   /* the run's own brush holds the first arm */
+    for (const u of UPGRADES) if (u.slot && (S.stats.levels[u.id] || 0) > 0) arms++;
+    return arms;
+  }
+  /* the commit: the most-trained power bites deeper per rank of FOCUS. */
+  /* the best-rank scan is memoized per game frame — a damage-site call
+     must never walk the whole shelf (hundreds of hits a frame) */
+  let _bestStamp = -1, _bestVal = 0;
+  function focusMult(id) {
+    const f = S.stats.focus || 0;
+    if (!f) return 1;
+    const lv = S.stats.levels[id] || 0;
+    if (_bestStamp !== S.clockT) {
+      _bestStamp = S.clockT;
+      _bestVal = 0;
+      for (const u of UPGRADES) if (u.slot) _bestVal = Math.max(_bestVal, S.stats.levels[u.id] || 0);
+    }
+    return (lv > 0 && lv >= _bestVal) ? 1 + CFG.focus.mult * f : 1;
+  }
   function pickUpgrades(n) {
     const st = S.stats;
     /* the shelf answers the hand: the brush's own arts ride only for
@@ -1002,7 +1051,8 @@ const rand = (a, b) => a + RNG() * (b - a);
     const avail = shuffle(UPGRADES.filter(u =>
       (st.levels[u.id] || 0) < u.max &&
       !(u.for && u.for !== S.brush) &&
-      !(u.proj && !projBrush)));
+      !(u.proj && !projBrush) &&
+      !(u.slot && (st.levels[u.id] || 0) === 0 && weaponCount() >= CFG.octopus.slots)));   /* v23.0 the six holds */
     const out = avail.slice(0, n);
     let i = 0;
     while (out.length < n) {
@@ -1266,11 +1316,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.stats = freshStats();
     S.bullets = []; S.ebullets = []; S.enemies = []; S.markers = []; S.telgs = [];
     S.particles = []; S.popups = []; S.rings = []; S.stainQueue = [];
-    S.puddles = []; S.spirits = []; S.stamps = [];
+    S.puddles = []; S.spirits = []; S.stamps = []; S.slashes = [];
     S.motes = []; S.pickups = []; S.arcs = []; S.vortices = []; S.bolts = [];
     S.queue = []; S.waveInitial = 0; S.waveActive = false;
     S.invulnT = 0; S.adrenT = 0; S.shake = 0; S.dyingT = 0; S.novaT = 0;
-    S.fanT = 1.2; S.spiritT = 1.6; S.hankoT = 1.6; S.trailT = 0; S.wakeT = 0;
+    S.fanT = 1.2; S.spiritT = 1.6; S.hankoT = 1.6; S.trailT = 0; S.wakeT = 0; S.lashT = 0.5; S.javelinT = 0.8; S.mortarT = 1.0; S.sdartsT = 0.4;
     S.arcT = 2.0; S.boomerT = 1.5; S.vortexT = 3.0;
     S.scribes = [];   /* the living strokes wake with the run */
     S.castN = 0; S.fanCasts = 0; S.hankoQueue = [];
@@ -1286,7 +1336,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.beginT = S.reduced ? 0.01 : 1.7;   // the brush paints the run in
 
     const runs = getRuns() + 1;
-    store.set('om_runs_v1', runs);
+    if (!qaProbe()) store.set('om_runs_v1', runs);
 
     const p = S.player;
     p.x = 0; p.y = 0;
@@ -1486,7 +1536,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     if (S.mode !== 'clear') return;
     const st = S.stats;
     const best = getBest();
-    if (st.score > (best ? best.score : 0)) {
+    if (st.score > (best ? best.score : 0) && !qaProbe()) {
       store.set('om_best_v1', { score: st.score, wave: Math.max(0, st.wave - 1) });
     }
     if (R.resetStains) R.resetStains();   /* the title receives a clean sheet */
@@ -1607,7 +1657,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     let rank = 'D';
     for (const [min, r] of CFG.ranks) { if (cleared >= min) { rank = r; break; } }
     const best = getBest();
-    const nb = st.score > (best ? best.score : 0);
+    const nb = st.score > (best ? best.score : 0) && !qaProbe();
     if (nb) store.set('om_best_v1', { score: st.score, wave: cleared });
     /* the endless record: the deepest wave this mode has ever walked —
        the checkpoint door opens only as far as the ink has been */
@@ -1620,6 +1670,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       const ds = dailyState();
       dailyDay = S.dailyDay || ds.day; dailyCounting = !!S.dailyCounting;
       if (S.dailyCounting) {
+        /* v24.3 probe hygiene: a deep-link daily never claims the day */
+        if (qaProbe()) return;
         store.set(DAILY_KEY, {
           day: dailyDay, wave: Math.max(1, st.wave | 0), score: st.score | 0,
           kills: st.kills | 0, time: st.time || 0, hard: S.hardMode,
@@ -1631,8 +1683,28 @@ const rand = (a, b) => a + RNG() * (b - a);
       /* the endless echo only turns over when the carry went further
          (ghostLoadOwn — an armed rival must never gate the turnover) */
       const prev = ghostLoadOwn('endless');
-      if (!prev || (st.score | 0) > (prev.score | 0)) ghostSave('endless', st);
+      /* v24.3 probe hygiene: a deep-link run never arms a rival —
+         the hand's own echoes stay earned, never planted */
+      if (!prev || ((st.score | 0) > (prev.score | 0) && !qaProbe())) ghostSave('endless', st);
     }
+    /* v24.1 THE STUDY: the run folds into ink for the character menu —
+       score carries most of it, the road walked adds its own; a probe
+       run (deep links) gathers nothing, practice dailies neither, and
+       the Rich Paper rank pays its tithe */
+    let inkEarned = 0;
+    const practiceDaily = S.runMode === 'daily' && !dailyCounting;
+    if (!qaProbe() && !practiceDaily) {
+      const sk2 = store.get('om_skill_v1', {}) || {};
+      inkEarned = Math.floor(st.score / 10) + cleared * 2;
+      inkEarned = Math.round(inkEarned * (1 + 0.1 * (sk2.fortune || 0)));
+      if (victory) inkEarned += 100;
+      if (inkEarned > 0) {
+        store.set('om_ink_v1', (store.get('om_ink_v1', 0) || 0) + inkEarned);
+        store.set('om_last_ink_v1', inkEarned);
+      }
+    }
+
+
     /* ---- the purse is retired (v21.9) — the run ends on the paper ----
        nothing presses back between runs; the over sheet reads the
        run's own ledgers only. */
@@ -1647,6 +1719,8 @@ const rand = (a, b) => a + RNG() * (b - a);
       run: getRuns(), waves: cleared, kills: st.kills,
       time: st.time, score: st.score, rank, newBest: nb,
       mode: S.runMode, victory: !!victory, hard: S.hardMode,
+      ink: inkEarned,
+      probe: qaProbe(),
       day: dailyDay, practice: S.runMode === 'daily' && !dailyCounting,
       ghost: S.ghost ? { wave: S.ghost.wave, score: S.ghost.score,
                          name: S.ghost.name || null } : null,
@@ -1722,7 +1796,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const fullBloom = S.fanCasts % fullEvery === 0;
     const n = CFG.fan.blades(st.fan) + (st.fedge || 0) + (st.shots - 1);
     const spread = CFG.fan.spread;
-    const dmg = primaryDmg(1);
+    const dmg = primaryDmg(1) * focusMult('fan');
     const cast = (a, bloom) => {
       S.bullets.push({
         x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
@@ -1757,7 +1831,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       tickT: 0.1, seed: (Math.random() * 1e9) | 0,
       /* THE LINGERING POOL: a maxed trail's ink bites twice as fast */
       tickPeriod: maxed ? CFG.trail.tick * 0.5 : CFG.trail.tick,
-      dmg: 1 + (st.dmg - 1),
+      dmg: (1 + (st.dmg - 1)) * focusMult('trail'),
     });
     if (S.puddles.length > (maxed ? 40 : 26)) S.puddles.shift();
   }
@@ -1810,7 +1884,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.hankoT = CFG.hanko.period(st.hanko);
     if (!tgt) { S.hankoT = 0.8; return; }
     const rad = CFG.hanko.radius(st.hanko) * (1 + 0.25 * (st.hbroad || 0));
-    const dmg = CFG.hanko.dmg(st.hanko) + (st.dmg - 1) + (st.hpress || 0) + ownInk();
+    const dmg = (CFG.hanko.dmg(st.hanko) + (st.dmg - 1) + (st.hpress || 0) + ownInk()) * focusMult('hanko');
     S.castN++;
     stampStrike(tgt.x, tgt.y, rad, dmg, 0.8);
     /* THE TWIN STAMP: the seal is followed by a lighter echo */
@@ -1834,7 +1908,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     const maxed = st.arc >= 4;
     const jumps = CFG.arc.jumps(st.arc) + (maxed ? 3 : 0);
     const range = maxed ? CFG.arc.maxRange : CFG.arc.range;
-    const dmg = CFG.arc.dmg(st.arc);
+    const dmg = CFG.arc.dmg(st.arc) * focusMult('arc');
     let from = { x: S.player.x, y: S.player.y };
     let cur = first;
     const hitSet = new Set();
@@ -1871,7 +1945,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     S.bullets.push({
       x: p.x, y: p.y,
       vx: Math.cos(a) * CFG.boomer.speed, vy: Math.sin(a) * CFG.boomer.speed,
-      ang: a, dmg: CFG.boomer.dmg(st.boomer), hits: 99, age: 0, life: CFG.boomer.life,
+      ang: a, dmg: CFG.boomer.dmg(st.boomer) * focusMult('boomer'), hits: 99, age: 0, life: CFG.boomer.life,
       kind: 'boomer', phase: 'out', dist: 0, maxDist: CFG.boomer.dist(st.boomer),
       ox: p.x, oy: p.y,
     });
@@ -1903,6 +1977,83 @@ const rand = (a, b) => a + RNG() * (b - a);
     SFX.vortex();
   }
 
+  /* ---------------- v23.0 THE OCTOPUS'S NEW ARMS ---------------- */
+  /* tentacle lash: one wide arc of ink sweeps out of the mantle */
+  function fireLash() {
+    const p = S.player, st = S.stats;
+    const len = CFG.lash.len(st.lash);
+    const dmg = (CFG.lash.dmg(st.lash) + (st.dmg - 1)) * focusMult('lash');
+    const arc = CFG.lash.arc;
+    (S.slashes = S.slashes || []).push({ ang: p.aim, len, arc, life: 0.22, max: 0.22, x: p.x, y: p.y });
+    let hits = 0;
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const e = S.enemies[k];
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d > len + e.r) continue;
+      let da = Math.atan2(dy, dx) - p.aim;
+      while (da > Math.PI) da -= TAU;
+      while (da < -Math.PI) da += TAU;
+      if (Math.abs(da) > arc / 2 + e.r / Math.max(70, d)) continue;
+      const dead = damageEnemy(e, k, dmg, true, p.aim + da * 0.4);
+      hits++;
+    }
+    S.shake = Math.max(S.shake, Math.min(6, 2 + hits));
+    SFX.fan();
+  }
+  /* ink javelins: heavy flat bolts that pierce a rank of beasts */
+  function fireJavelins() {
+    const p = S.player, st = S.stats;
+    const n = CFG.javelin.shots(st.javelin);
+    const dmg = (CFG.javelin.dmg(st.javelin) + (st.dmg - 1)) * focusMult('javelin');
+    for (let i = 0; i < n; i++) {
+      const off = n === 1 ? 0 : -CFG.javelin.spread / 2 + (CFG.javelin.spread * i) / (n - 1);
+      const a = p.aim + off;
+      S.bullets.push({
+        x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+        vx: Math.cos(a) * CFG.javelin.speed, vy: Math.sin(a) * CFG.javelin.speed,
+        ang: a, dmg, hits: 1 + CFG.javelin.pierce + st.pierce, age: 0, life: CFG.javelin.life,
+        kind: 'javelin', seed: 100000 + ((Math.random() * 899999) | 0),
+      });
+    }
+    SFX.shoot();
+  }
+  /* quill mortar: lobbed quills that burst where beasts gather */
+  function fireMortars() {
+    const p = S.player, st = S.stats;
+    const n = CFG.mortar.shots(st.mortar);
+    const tgt = nearestEnemy(p.x, p.y, 460);
+    const base = tgt ? Math.atan2(tgt.y - p.y, tgt.x - p.x) : p.aim;
+    const dmg = (CFG.mortar.dmg(st.mortar) + (st.dmg - 1)) * focusMult('mortar');
+    for (let i = 0; i < n; i++) {
+      const a = base + (n === 1 ? 0 : (i - (n - 1) / 2) * 0.24);
+      S.bullets.push({
+        x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+        vx: Math.cos(a) * CFG.mortar.speed, vy: Math.sin(a) * CFG.mortar.speed,
+        ang: a, dmg, hits: 99, age: 0, life: CFG.mortar.life,
+        kind: 'mortar', splash: CFG.mortar.splash(st.mortar),
+        seed: 100000 + ((Math.random() * 899999) | 0),
+      });
+    }
+    SFX.thud ? SFX.thud() : SFX.shoot();
+  }
+  /* silk darts: a short fast burst from the mantle */
+  function fireSilkDarts() {
+    const p = S.player, st = S.stats;
+    const n = CFG.sdarts.shots(st.sdarts);
+    const dmg = CFG.sdarts.dmg + (st.dmg - 1);
+    for (let i = 0; i < n; i++) {
+      const off = -CFG.sdarts.spread / 2 + (CFG.sdarts.spread * i) / (n - 1);
+      const a = p.aim + off + rand(-0.05, 0.05);
+      S.bullets.push({
+        x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+        vx: Math.cos(a) * CFG.sdarts.speed, vy: Math.sin(a) * CFG.sdarts.speed,
+        ang: a, dmg, hits: 1, age: 0, life: CFG.sdarts.life,
+        kind: 'silk', seed: 100000 + ((Math.random() * 899999) | 0),
+      });
+    }
+    SFX.shoot();
+  }
   /* ---------------- the autobrush's own hand (自) ----------------
      A sampling steerer, not a bag of springs. Each frame the walker
      scores a ring of candidate steps — the danger each one lands in,
@@ -2218,6 +2369,23 @@ const rand = (a, b) => a + RNG() * (b - a);
       S.vortexT -= dt;
       if (S.vortexT <= 0) { S.vortexT = CFG.vortex.period(st.vortex); fireVortex(); }
     }
+    /* v23.0 the octopus's new arms */
+    if (st.lash > 0) {
+      S.lashT -= dt;
+      if (S.lashT <= 0) { S.lashT = CFG.lash.period(st.lash); fireLash(); }
+    }
+    if (st.javelin > 0) {
+      S.javelinT -= dt;
+      if (S.javelinT <= 0) { S.javelinT = CFG.javelin.period(st.javelin); fireJavelins(); }
+    }
+    if (st.mortar > 0) {
+      S.mortarT -= dt;
+      if (S.mortarT <= 0) { S.mortarT = CFG.mortar.period(st.mortar); fireMortars(); }
+    }
+    if (st.sdarts > 0) {
+      S.sdartsT -= dt;
+      if (S.sdartsT <= 0) { S.sdartsT = CFG.sdarts.period(st.sdarts); fireSilkDarts(); }
+    }
 
     /* paper mends: the sheet heals itself */
     if (st.mends > 0) {
@@ -2234,31 +2402,32 @@ const rand = (a, b) => a + RNG() * (b - a);
       }
     }
 
-    /* ink orbit: droplets circle in a wide ring, grinding ALL they graze */
+    /* ink orbit: THE GARLIC — an ink ring pools around the brush; every
+       beast inside it is ground down, breath by breath */
     if (st.orb > 0) {
       const orbR = CFG.orbit.radius(st.orb);
       const base = G_time();
+      const tick = CFG.orbit.tick(st.orb);
       /* the ring bites with the brush's own ink — Bitter Ink deepens it */
-      const odmg = 1 + Math.ceil(st.dmg * 0.5);
-      for (let i = 0; i < st.orb; i++) {
-        const a = base * CFG.orbit.speed + (i / st.orb) * TAU;
-        const ox = p.x + Math.cos(a) * orbR, oy = p.y + Math.sin(a) * orbR;
+      const odmg = (CFG.orbit.dmg(st.orb) + Math.ceil(st.dmg * 0.5)) * focusMult('orbit');
+      S.orbPulse = Math.max(0, (S.orbPulse || 0) - dt * 2.5);
+      st.orbTick = (st.orbTick == null ? tick : st.orbTick) - dt;
+      if (st.orbTick <= 0) {
+        st.orbTick = tick;
+        S.orbPulse = 1;
         for (let kk = S.enemies.length - 1; kk >= 0; kk--) {
           const e = S.enemies[kk];
-          if (e.orbCd > 0) continue;
-          const dx = e.x - ox, dy = e.y - oy;
-          const rr = e.r + 6.5;
-          if (dx * dx + dy * dy <= rr * rr) {
+          const dx = e.x - p.x, dy = e.y - p.y;
+          const rr2 = e.r + orbR;
+          if (dx * dx + dy * dy <= rr2 * rr2) {
             e.hp -= odmg;
-            e.orbCd = CFG.orbit.dmgCd;
             e.hitFlash = 0.08;
             const d = Math.hypot(dx, dy) || 1;
-            e.kbx += (dx / d) * 170; e.kby += (dy / d) * 170;
-            SFX.hit();
+            e.kbx += (dx / d) * 60; e.kby += (dy / d) * 60;
             if (e.hp <= 0) { S.enemies.splice(kk, 1); killEnemy(e); }
-            /* no break — the ring grinds every body it touches this breath */
           }
         }
+        SFX.hit();
       }
       /* THE GRAVE RING: a maxed ring sends an orbital hunting */
       if (st.orb >= 3) {
@@ -2414,7 +2583,7 @@ const rand = (a, b) => a + RNG() * (b - a);
   function fireNova() {
     const st = S.stats;
     const rad = CFG.nova.radius(st.nova) * (1 + 0.2 * (st.nspring || 0));
-    const dmg = primaryDmg(1 + (st.nswell || 0));
+    const dmg = primaryDmg(1 + (st.nswell || 0)) * focusMult('nova');
     const knock = CFG.nova.knock * (1 + 0.6 * (st.nrip || 0));
     const stun = CFG.nova.stun + 0.15 * (st.nrip || 0);
     S.rings.push({ x: S.player.x, y: S.player.y, max: rad, life: 0.5, maxLife: 0.5 });
@@ -2847,7 +3016,7 @@ const rand = (a, b) => a + RNG() * (b - a);
           const e = S.enemies[j];
           const dx = e.x - vz.x, dy = e.y - vz.y;
           if (dx * dx + dy * dy < vz.r * vz.r) {
-            e.hp -= CFG.vortex.dmg;
+            e.hp -= CFG.vortex.dmg * focusMult('vortex');
             e.hitFlash = 0.07;
             e.slowT = Math.max(e.slowT, 0.4);
             bit = true;
@@ -3025,7 +3194,7 @@ const rand = (a, b) => a + RNG() * (b - a);
         const dx = e.x - sp.x, dy = e.y - sp.y;
         const rr = e.r + 4;
         if (dx * dx + dy * dy <= rr * rr) {
-          damageEnemy(e, j, sp.dmg || CFG.spirit.dmg, true, sp.ang, true);
+          damageEnemy(e, j, (sp.dmg || CFG.spirit.dmg) * focusMult('spirit'), true, sp.ang, true);
           burst(sp.x, sp.y, sp.pierce > 0 ? 3 : 4, false);
           if (sp.pierce > 0) {
             /* THE LITANY: the spirit runs the body through and flies on */
@@ -5203,6 +5372,11 @@ const rand = (a, b) => a + RNG() * (b - a);
       st.life -= dt;
       if (st.life <= 0) S.stamps.splice(i, 1);
     }
+    for (let i = S.slashes.length - 1; i >= 0; i--) {
+      const sl = S.slashes[i];
+      sl.life -= dt;
+      if (sl.life <= 0) S.slashes.splice(i, 1);
+    }
     if (S.shake > 0) S.shake *= Math.exp(-6.5 * dt);
   }
 
@@ -5417,6 +5591,24 @@ const rand = (a, b) => a + RNG() * (b - a);
     getAutoBrush, setAutoBrush, autoVec, xpReqFor, getEndlessBest,
     /* the paper themes read these (v21.9: the purse is retired) */
     getThemeSetting, setThemeSetting,
+    /* v24.1 THE STUDY: ink in, skills up — the menu reads these */
+    SKILLS,
+    getInk() { return store.get('om_ink_v1', 0) || 0; },
+    getSkills() { return store.get('om_skill_v1', {}) || {}; },
+    buySkill(id) {
+      const def = SKILLS.find(s3 => s3.id === id);
+      if (!def) return false;
+      const sk4 = store.get('om_skill_v1', {}) || {};
+      const rank = sk4[id] || 0;
+      if (rank >= def.max) return false;
+      const cost = def.costs[rank] || 0;
+      const ink = store.get('om_ink_v1', 0) || 0;
+      if (ink < cost) return false;
+      store.set('om_ink_v1', ink - cost);
+      sk4[id] = rank + 1;
+      store.set('om_skill_v1', sk4);
+      return true;
+    },
     get qaDaily() { return qaDaily; },
     /* ?god=1 sibling probe: synthetic ink storms for the perf sweep */
     qaBurst(n, big) { for (let i = 0; i < n; i++) burst(S.player.x + (Math.random() - 0.5) * 500, S.player.y + (Math.random() - 0.5) * 500, 12, !!big); },

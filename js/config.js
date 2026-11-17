@@ -7,7 +7,35 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v22.7';
+window.OM_VERSION = 'v24.3';
+
+/* ------------------------------------------------------------
+   v24.1 THE STUDY — the character's earned skills
+   Ink gathered at a run's end buys these in the character menu;
+   the ranks walk into every run the hand starts after it.
+   ------------------------------------------------------------ */
+const SKILLS = [
+  { id: 'vitality', name: 'THICK VELLUM', kanji: '厚', desc: '+1 max integrity per rank. The sheet takes more before it tears.', max: 5, costs: [40, 90, 180, 360, 720] },
+  { id: 'swift', name: 'LIGHT HANDS', kanji: '軽', desc: '+6% stride per rank. Be elsewhere before the ink lands.', max: 5, costs: [30, 70, 140, 280, 560] },
+  { id: 'cadence', name: 'KEEN WRIST', kanji: '敏', desc: 'The brush lifts 6% sooner per rank — strokes land faster.', max: 5, costs: [30, 70, 140, 280, 560] },
+  { id: 'bite', name: 'BITTER RESERVE', kanji: '苦', desc: '+1 bite per rank. Every stroke the hand lays digs deeper.', max: 3, costs: [120, 300, 750] },
+  { id: 'gather', name: 'INK SENSE', kanji: '集', desc: 'The pull reaches a rank deeper per rank — stray ink comes home.', max: 4, costs: [50, 110, 240, 500] },
+  { id: 'fortune', name: 'RICH PAPER', kanji: '富', desc: '+10% ink gathered at the run\'s end, per rank.', max: 4, costs: [60, 150, 320, 680] },
+];
+
+/* ------------------------------------------------------------
+   v24.1 THE STUDY — the character's earned skills
+   Ink gathered at a run's end buys these in the character menu;
+   the ranks walk into every run the hand starts after it.
+   ------------------------------------------------------------ */
+
+
+/* ------------------------------------------------------------
+   v24.1 THE STUDY — the character's earned skills
+   Ink gathered at a run's end buys these in the character menu;
+   the ranks walk into every run the hand starts after it.
+   ------------------------------------------------------------ */
+
 
 const CFG = {
   player: {
@@ -183,7 +211,7 @@ const CFG = {
   adrenaline: { mult: 1.22, dur: lv => 1.4 + 0.45 * (lv - 1) },
 
   /* brush skills */
-  orbit:   { radius: lv => 96 + lv * 28, speed: 2.9, dmgCd: 0.4, flingEvery: 4 },
+  orbit:   { radius: lv => 96 + lv * 28, tick: lv => 0.55 - 0.05 * (lv - 1), dmg: lv => 1 + lv, flingEvery: 4 },
   /* the tide's surge — born at the rhythm a PRIMARY weapon needs
      (the Tide brush answers with it every few breaths); ranks buy
      radius and cadence, the arts buy damage and undertow */
@@ -215,6 +243,14 @@ const CFG = {
   arc:    { period: lv => 2.5 - 0.22 * (lv - 1), jumps: lv => 2 + lv, range: 210, maxRange: 270, dmg: lv => 1 + Math.ceil(lv / 2) },
   boomer: { period: lv => 2.9 - 0.25 * (lv - 1), speed: 620, dist: lv => 300 + lv * 40, dmg: lv => 1 + lv, life: 3 },
   vortex: { period: lv => 7.5 - 0.7 * (lv - 1), radius: lv => 90 + lv * 24, dur: lv => 2 + 0.25 * lv, pull: 340, tick: 0.36, dmg: 1 },
+  /* v23.0 the octopus's new arms */
+  lash:   { period: lv => 2.0 * Math.pow(0.9, lv - 1), len: lv => 120 + lv * 34, dmg: lv => 1 + lv, arc: 1.15 },
+  javelin:{ period: lv => 1.9 * Math.pow(0.88, lv - 1), shots: lv => 1 + lv, dmg: lv => 2 + lv, speed: 560, life: 1.1, spread: 0.16, pierce: 2 },
+  mortar: { period: lv => 2.5 * Math.pow(0.9, lv - 1), shots: lv => 1 + Math.floor((lv - 1) / 2), dmg: lv => 2 + lv, speed: 300, life: 0.8, splash: lv => 42 + lv * 12 },
+  sdarts: { period: lv => 1.5 * Math.pow(0.9, lv - 1), shots: lv => 3 + lv, dmg: 1, speed: 660, life: 0.38, spread: 0.22 },
+  /* the octopus itself: six holds for weapons; stats ride free */
+  octopus:{ slots: 6 },
+  focus:  { mult: 0.3 },
 
   /* enemy ink globs and needles */
   glob:   { speed: 215, life: 2.4, r: 5 },
@@ -333,6 +369,101 @@ const ENEMIES = {
      boss: 2 marks the keeper tier (red, named, bar-worn). */
   k_blight: { name: 'THE BLIGHT',   trait: 'KEEPER I',   cost: 0, intro: 10,  hp: 240,  r: 24, speed: 58, score: 220, shape: 'boss', boss: 2 },
   k_husk:   { name: 'THE HUSK',     trait: 'KEEPER II',  cost: 0, intro: 110, hp: 470, r: 23, speed: 62, score: 300, shape: 'boss', boss: 2 },
+
+  /* ---- v23.3 THE OLD PAPERS RETURN ----
+     the v22.3 cut retired four sheets; their beasts stayed drawn and
+     their behaviors stayed wired in the engine — only the data left.
+     The endless era cycle walks their papers again, so the horde
+     wears every shape the v20 sheets ever debuted. */
+  /* ---- SHEET III · CINNABAR FIELD — v23.3 the old paper walks again ---- */
+  oni:       { name: 'ONI',        trait: 'CHARGER',  cost: 4, intro: 201, hp: 10, r: 18, speed: 44,  score: 60, shape: 'oni'     },
+  ember:     { name: 'EMBER',      trait: 'DASHER',   cost: 2, intro: 206, hp: 2,  r: 9,  speed: 96,  score: 30, shape: 'ember'   },
+  sealbearer:{ name: 'SEALBEARER', trait: 'SEALED',   cost: 4, intro: 216, hp: 9,  r: 15, speed: 40,  score: 65, shape: 'sealbearer' },
+  gate:      { name: 'GATE',       trait: 'SHIELDED', cost: 4, intro: 221, hp: 8,  r: 15, speed: 38,  score: 55, shape: 'gate'    },
+  horn:      { name: 'WARHORN',     trait: 'MUSTER',    cost: 4, intro: 281, hp: 6, r: 15, speed: 46,  score: 80, shape: 'horn' },
+  ashigaru:  { name: 'ASHIGARU',   trait: 'RANK',     cost: 2, intro: 211, hp: 4,  r: 11, speed: 76,  score: 40, shape: 'ashigaru' },
+  stamper:   { name: 'STAMPER',    trait: 'SEALSMITH',cost: 4, intro: 241, hp: 8,  r: 15, speed: 34,  score: 70, shape: 'stamper' },
+  shiki:     { name: 'SHIKI',      trait: 'SUMMONER', cost: 3, intro: 246, hp: 4,  r: 13, speed: 78,  score: 50, shape: 'shiki'   },
+  c_banner:  { name: 'THE BANNER',     trait: 'CAPTAIN · MARCH',  cost: 4, intro: 231, hp: 11, r: 16, speed: 48, score: 125, shape: 'captain', captain: 1, summon: 'ashigaru' },
+  s_mender:  { name: 'THE MENDER',   trait: 'STITCHER',  cost: 3, intro: 236, hp: 6,  r: 12, speed: 76,  score: 85, shape: 'mender', special: 1 },
+  b_warlord: { name: 'THE CINNABAR ONI',trait: 'GUARDIAN III', cost: 0, intro: 300, hp: 820,  r: 33, speed: 50, score: 1200, shape: 'boss', boss: 1 },
+  k_cinder: { name: 'THE CINDER',   trait: 'KEEPER III', cost: 0, intro: 210, hp: 540, r: 25, speed: 56, score: 380, shape: 'boss', boss: 2 },
+  k3_1: { name: 'THE FIRST GATE', trait: 'KEEPER III · SCENE 1', cost: 0, intro: 210, hp: 480, r: 27, speed: 59, score: 325, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE GATE CLOSES', ab: ['stamp', 'ring'] },
+  k3_2: { name: 'THE CINDER FOX', trait: 'KEEPER III · SCENE 2', cost: 0, intro: 210, hp: 500, r: 21, speed: 66, score: 340, shape: 'boss', boss: 2, form: 'koi', cry: 'THE FOX RUNS', ab: ['charge', 'fan'] },
+  k3_3: { name: 'THE WAR FAN', trait: 'KEEPER III · SCENE 3', cost: 0, intro: 210, hp: 525, r: 20, speed: 56, score: 360, shape: 'boss', boss: 2, form: 'moth', cry: 'THE WAR FAN OPENS', ab: ['fan', 'haste'] },
+  k3_4: { name: 'THE GATEWARDEN', trait: 'KEEPER III · SCENE 4', cost: 0, intro: 210, hp: 550, r: 22, speed: 63, score: 380, shape: 'boss', boss: 2, form: 'mask', cry: 'THE WARDEN STEPS', ab: ['stamp', 'brood'], kin: 'ashigaru' },
+  k3_5: { name: 'THE EMBER OX', trait: 'KEEPER III · SCENE 5', cost: 0, intro: 210, hp: 575, r: 27, speed: 53, score: 400, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE OX LOWERS', ab: ['charge', 'ring'] },
+  k3_6: { name: 'THE RED COURIER', trait: 'KEEPER III · SCENE 6', cost: 0, intro: 210, hp: 600, r: 20, speed: 60, score: 420, shape: 'boss', boss: 2, form: 'crane', cry: 'THE COURIER COMES', ab: ['orbit', 'volley'] },
+  k3_7: { name: 'THE FORGE HEART', trait: 'KEEPER III · SCENE 7', cost: 0, intro: 210, hp: 625, r: 27, speed: 67, score: 435, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE FORGE BREATHES', ab: ['rain', 'ring'] },
+  k3_8: { name: 'THE SEALWRIGHT', trait: 'KEEPER III · SCENE 8', cost: 0, intro: 210, hp: 650, r: 21, speed: 57, score: 455, shape: 'boss', boss: 2, form: 'stamp', cry: 'THE SEALWRIGHT DIPS', ab: ['stamp', 'brood'], kin: 'ember' },
+  k3_9: { name: 'THE CLIFF ROAD', trait: 'KEEPER III · SCENE 9', cost: 0, intro: 210, hp: 670, r: 27, speed: 64, score: 475, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE ROAD BREAKS', ab: ['charge', 'spiral'] },
+  crane:     { name: 'CRANE',      trait: 'SWOOPER',  cost: 2, intro: 211, hp: 2,  r: 11, speed: 205, score: 25, shape: 'crane'   },
+  /* ---- SHEET IV · STORM SHEET — v23.3 the old paper walks again ---- */
+  raindrake: { name: 'RAINDRAKE',  trait: 'CALLER',   cost: 3, intro: 301, hp: 3,  r: 12, speed: 88,  score: 48, shape: 'raindrake' },
+  gale:      { name: 'GALE',       trait: 'GUST',     cost: 2, intro: 306, hp: 1,  r: 10, speed: 120, score: 32, shape: 'gale'    },
+  koi:       { name: 'KOI',        trait: 'SINEW',    cost: 2, intro: 311, hp: 2,  r: 10, speed: 195, score: 30, shape: 'koi'     },
+  squall:    { name: 'SQUALL',      trait: 'CIRCLER',   cost: 2, intro: 331, hp: 2, r: 10, speed: 205, score: 45, shape: 'squall' },
+  eel:       { name: 'EEL',         trait: 'RUSHER',    cost: 2, intro: 341, hp: 3, r: 10, speed: 165, score: 42, shape: 'eel' },
+  surge:     { name: 'SURGE',      trait: 'BREAKER',  cost: 3, intro: 316, hp: 6,  r: 16, speed: 48,  score: 55, shape: 'surge'   },
+  maelstrom: { name: 'MAELSTROM',  trait: 'UNDERTOW', cost: 4, intro: 351, hp: 7,  r: 14, speed: 26,  score: 60, shape: 'maelstrom' },
+  crest:     { name: 'WAVE CREST', trait: 'SWELL',    cost: 3, intro: 356, hp: 6,  r: 15, speed: 88,  score: 55, shape: 'crest'   },
+  c_gale:    { name: 'THE STORMCALLER',trait: 'CAPTAIN · STORM',  cost: 4, intro: 346, hp: 9,  r: 15, speed: 60, score: 155, shape: 'captain', captain: 1, summon: 'ember' },
+  s_toller:  { name: 'THE TOLLER',   trait: 'BELL',      cost: 3, intro: 361, hp: 7,  r: 15, speed: 36,  score: 95, shape: 'toller', special: 1 },
+  b_tempest: { name: 'THE STORM EYE',   trait: 'GUARDIAN IV',  cost: 0, intro: 400, hp: 620, r: 30, speed: 58, score: 1700, shape: 'boss', boss: 1 },
+  k_veil:   { name: 'THE RAINVEIL', trait: 'KEEPER IV',  cost: 0, intro: 310, hp: 620, r: 24, speed: 64, score: 460, shape: 'boss', boss: 2 },
+  k4_1: { name: 'THE CLOUD HEAD', trait: 'KEEPER IV · SCENE 1', cost: 0, intro: 310, hp: 550, r: 21, speed: 59, score: 390, shape: 'boss', boss: 2, form: 'wraith', cry: 'THE CLOUD LOWERS', ab: ['rain', 'ring'] },
+  k4_2: { name: 'THE WIND VANE', trait: 'KEEPER IV · SCENE 2', cost: 0, intro: 310, hp: 575, r: 23, speed: 66, score: 415, shape: 'boss', boss: 2, form: 'wheel', cry: 'THE VANE SPINS', ab: ['orbit', 'fan'] },
+  k4_3: { name: 'THE LEAPING KOI', trait: 'KEEPER IV · SCENE 3', cost: 0, intro: 310, hp: 605, r: 21, speed: 56, score: 435, shape: 'boss', boss: 2, form: 'koi', cry: 'THE KOI LEAPS', ab: ['charge', 'rain'] },
+  k4_4: { name: 'THE ROLLING SKY', trait: 'KEEPER IV · SCENE 4', cost: 0, intro: 310, hp: 630, r: 24, speed: 63, score: 460, shape: 'boss', boss: 2, form: 'pool', cry: 'THE SKY ROLLS', ab: ['ring', 'spiral'] },
+  k4_5: { name: 'THE RIVERBEND', trait: 'KEEPER IV · SCENE 5', cost: 0, intro: 310, hp: 660, r: 21, speed: 53, score: 485, shape: 'boss', boss: 2, form: 'ribbon', cry: 'THE RIVER TURNS', ab: ['charge', 'mirror'], kin: 'eel' },
+  k4_6: { name: 'THE DOWNPOUR', trait: 'KEEPER IV · SCENE 6', cost: 0, intro: 310, hp: 690, r: 20, speed: 60, score: 505, shape: 'boss', boss: 2, form: 'moth', cry: 'THE RAIN HARDENS', ab: ['rain', 'haste'] },
+  k4_7: { name: 'THE WHITE CREST', trait: 'KEEPER IV · SCENE 7', cost: 0, intro: 310, hp: 715, r: 21, speed: 67, score: 530, shape: 'boss', boss: 2, form: 'ribbon', cry: 'THE CREST BREAKS', ab: ['charge', 'ring'] },
+  k4_8: { name: 'THE STORM LANTERN', trait: 'KEEPER IV · SCENE 8', cost: 0, intro: 310, hp: 745, r: 22, speed: 57, score: 550, shape: 'boss', boss: 2, form: 'lantern', cry: 'THE LANTERN FLICKERS', ab: ['spiral', 'blink'] },
+  k4_9: { name: 'THE RAIN BANNER', trait: 'KEEPER IV · SCENE 9', cost: 0, intro: 310, hp: 770, r: 22, speed: 64, score: 575, shape: 'boss', boss: 2, form: 'banner', cry: 'THE BANNER SOAKS', ab: ['rain', 'brood1'], kin: 'gale' },
+  /* ---- SHEET V · GILT SCROLL — v23.3 the old paper walks again ---- */
+  gildling:  { name: 'GILDLING',   trait: 'GILDED',   cost: 3, intro: 401, hp: 6,  r: 13, speed: 52,  score: 50, shape: 'gildling' },
+  phoenix:   { name: 'PHOENIX',    trait: 'DIVING',   cost: 3, intro: 406, hp: 3,  r: 12, speed: 235, score: 55, shape: 'phoenix' },
+  golem:     { name: 'GOLEM',      trait: 'COLOSSUS', cost: 5, intro: 411, hp: 26, r: 24, speed: 30,  score: 110, shape: 'golem'   },
+  giltwing:  { name: 'GILTWING',    trait: 'SKIRMISHER',cost: 3, intro: 431, hp: 3, r: 12, speed: 235, score: 80, shape: 'giltwing' },
+  midas:     { name: 'THE MIDAS',   trait: 'ALCHEMIST', cost: 4, intro: 441, hp: 5, r: 14, speed: 40,  score: 120, shape: 'midas' },
+  mirror:    { name: 'MIRROR',     trait: 'REFLECT',  cost: 4, intro: 421, hp: 6,  r: 13, speed: 30,  score: 75, shape: 'mirror'  },
+  koban:     { name: 'KOBAN',      trait: 'GREED',    cost: 2, intro: 436, hp: 3,  r: 10, speed: 148, score: 80, shape: 'koban'   },
+  cask:      { name: 'RELIC CASK', trait: 'TREASURY', cost: 4, intro: 441, hp: 14, r: 18, speed: 34,  score: 70, shape: 'cask'    },
+  c_gild:    { name: 'THE PAYMASTER',  trait: 'CAPTAIN · GREED',  cost: 4, intro: 426, hp: 8,  r: 17, speed: 42, score: 185, shape: 'captain', captain: 1, summon: 'gildling' },
+  s_ledger:  { name: 'THE LEDGER',   trait: 'USURER',    cost: 3, intro: 446, hp: 9,  r: 14, speed: 64,  score: 115, shape: 'ledger', special: 1 },
+  b_origin:  { name: 'THE FIRST BRUSH', trait: 'GUARDIAN V',   cost: 0, intro: 500, hp: 700, r: 36, speed: 44, score: 2400, shape: 'boss', boss: 1 },
+  k_nib:    { name: 'THE NIB',      trait: 'KEEPER V',   cost: 0, intro: 410, hp: 520, r: 27, speed: 52, score: 560, shape: 'boss', boss: 2 },
+  k5_1: { name: 'THE GILD MOTHER', trait: 'KEEPER V · SCENE 1', cost: 0, intro: 410, hp: 460, r: 24, speed: 59, score: 475, shape: 'boss', boss: 2, form: 'spider', cry: 'THE MOTHER COUNTS', ab: ['mirror', 'ring'], kin: 'gildling' },
+  k5_2: { name: 'THE FOUNDRY', trait: 'KEEPER V · SCENE 2', cost: 0, intro: 410, hp: 485, r: 27, speed: 66, score: 505, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE FOUNDRY POURS', ab: ['rain', 'brood1'], kin: 'koban' },
+  k5_3: { name: 'THE ASHEN WING', trait: 'KEEPER V · SCENE 3', cost: 0, intro: 410, hp: 505, r: 20, speed: 56, score: 530, shape: 'boss', boss: 2, form: 'crane', cry: 'THE WING BURNS', ab: ['charge', 'fan'] },
+  k5_4: { name: 'THE WEIGHT', trait: 'KEEPER V · SCENE 4', cost: 0, intro: 410, hp: 530, r: 27, speed: 63, score: 560, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE WEIGHT FALLS', ab: ['charge', 'stamp'] },
+  k5_5: { name: 'THE GILT MASK', trait: 'KEEPER V · SCENE 5', cost: 0, intro: 410, hp: 555, r: 22, speed: 53, score: 590, shape: 'boss', boss: 2, form: 'mask', cry: 'THE MASK GLINTS', ab: ['fan', 'blink'] },
+  k5_6: { name: 'THE COIN RIVER', trait: 'KEEPER V · SCENE 6', cost: 0, intro: 410, hp: 575, r: 21, speed: 60, score: 615, shape: 'boss', boss: 2, form: 'ribbon', cry: 'THE RIVER SPENDS', ab: ['orbit', 'mirror'], kin: 'koban' },
+  k5_7: { name: 'THE IDOL', trait: 'KEEPER V · SCENE 7', cost: 0, intro: 410, hp: 600, r: 27, speed: 67, score: 645, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE IDOL WATCHES', ab: ['stamp', 'ring'] },
+  k5_8: { name: 'THE TRANSMUTE', trait: 'KEEPER V · SCENE 8', cost: 0, intro: 410, hp: 625, r: 23, speed: 57, score: 670, shape: 'boss', boss: 2, form: 'wheel', cry: 'THE WHEEL TURNS ALL', ab: ['spiral', 'haste'] },
+  k5_9: { name: 'THE GOLDEN HOUR', trait: 'KEEPER V · SCENE 9', cost: 0, intro: 410, hp: 645, r: 22, speed: 64, score: 700, shape: 'boss', boss: 2, form: 'lantern', cry: 'THE HOUR BENDS', ab: ['orbit', 'rain'] },
+  /* ---- SHEET VI · THE BLANK SILK — v23.3 the old paper walks again ---- */
+  sketch:    { name: 'SKETCH',      trait: 'UNDRAWN',  cost: 2, intro: 501, hp: 4,  r: 12, speed: 78, score: 55, shape: 'sketch'  },
+  stitch:    { name: 'STITCH',      trait: 'SEAM',     cost: 2, intro: 511, hp: 3,  r: 10, speed: 74, score: 50, shape: 'stitch'  },
+  reseal:    { name: 'RESEAL',      trait: 'RESTAMPED',cost: 4, intro: 521, hp: 9,  r: 15, speed: 42, score: 65, shape: 'reseal'  },
+  sizing:    { name: 'SIZING',      trait: 'GLUE',     cost: 3, intro: 531, hp: 6,  r: 14, speed: 40, score: 60, shape: 'sizing'  },
+  stencil:   { name: 'STENCIL',     trait: 'STAMPER',   cost: 3, intro: 541, hp: 5, r: 13, speed: 50,  score: 70, shape: 'stencil' },
+  fray:      { name: 'THE FRAY',    trait: 'UNRAVELER', cost: 4, intro: 551, hp: 6, r: 14, speed: 58,  score: 80, shape: 'fray' },
+  binder:    { name: 'BINDER',      trait: 'MOUNT',    cost: 4, intro: 541, hp: 10, r: 16, speed: 34, score: 70, shape: 'binder'  },
+  weft:      { name: 'WEFT',        trait: 'LOOM',     cost: 3, intro: 551, hp: 4,  r: 12, speed: 68, score: 58, shape: 'weft'    },
+  s_trace:   { name: 'THE TRACE',    trait: 'TRACER',    cost: 3, intro: 546, hp: 8,  r: 14, speed: 58,  score: 95, shape: 'trace', special: 1 },
+  c_hush:    { name: 'THE HUSH',       trait: 'CAPTAIN · SILENCE',cost: 4, intro: 516, hp: 8,  r: 16, speed: 46, score: 185, shape: 'captain', captain: 1, summon: 'sketch' },
+  b_blank:   { name: 'THE UNWRITTEN',   trait: 'GUARDIAN VI',  cost: 0, intro: 600, hp: 660, r: 32, speed: 50, score: 2600, shape: 'boss', boss: 1 },
+  k_edge:   { name: 'THE MARGIN',   trait: 'KEEPER VI',  cost: 0, intro: 510, hp: 640, r: 24, speed: 60, score: 600, shape: 'boss', boss: 2 },
+  k6_1: { name: 'THE UNDERDRAWING', trait: 'KEEPER VI · SCENE 1', cost: 0, intro: 510, hp: 565, r: 21, speed: 59, score: 510, shape: 'boss', boss: 2, form: 'wraith', cry: 'THE DRAWING SHIFTS', ab: ['mirror', 'fan'], kin: 'stitch' },
+  k6_2: { name: 'THE SEAM', trait: 'KEEPER VI · SCENE 2', cost: 0, intro: 510, hp: 595, r: 21, speed: 66, score: 540, shape: 'boss', boss: 2, form: 'ribbon', cry: 'THE SEAM PULLS', ab: ['charge', 'ring'] },
+  k6_3: { name: 'THE RESTAMPED', trait: 'KEEPER VI · SCENE 3', cost: 0, intro: 510, hp: 625, r: 21, speed: 56, score: 570, shape: 'boss', boss: 2, form: 'stamp', cry: 'THE STAMP PRESSES', ab: ['stamp', 'brood1'], kin: 'stitchling' },
+  k6_4: { name: 'THE GLUEWORK', trait: 'KEEPER VI · SCENE 4', cost: 0, intro: 510, hp: 655, r: 25, speed: 63, score: 600, shape: 'boss', boss: 2, form: 'toad', cry: 'THE GLUE SETS', ab: ['stamp', 'rain'] },
+  k6_5: { name: 'THE MOUNTING', trait: 'KEEPER VI · SCENE 5', cost: 0, intro: 510, hp: 680, r: 22, speed: 53, score: 630, shape: 'boss', boss: 2, form: 'banner', cry: 'THE SILK STRETCHES', ab: ['haste', 'brood1'], kin: 'stitchling' },
+  k6_6: { name: 'THE GRAIN', trait: 'KEEPER VI · SCENE 6', cost: 0, intro: 510, hp: 710, r: 23, speed: 60, score: 660, shape: 'boss', boss: 2, form: 'wheel', cry: 'THE GRAIN RIDGES', ab: ['spiral', 'ring'] },
+  k6_7: { name: 'THE OLD MIRROR', trait: 'KEEPER VI · SCENE 7', cost: 0, intro: 510, hp: 740, r: 22, speed: 67, score: 690, shape: 'boss', boss: 2, form: 'mask', cry: 'THE MIRROR CLOUDS', ab: ['mirror', 'volley'], kin: 'sketch' },
+  k6_8: { name: 'THE MARGINALIA', trait: 'KEEPER VI · SCENE 8', cost: 0, intro: 510, hp: 770, r: 20, speed: 57, score: 720, shape: 'boss', boss: 2, form: 'moth', cry: 'THE MARGIN WRITES', ab: ['blink', 'fan'] },
+  k6_9: { name: 'THE BLANK CROWN', trait: 'KEEPER VI · SCENE 9', cost: 0, intro: 510, hp: 795, r: 27, speed: 64, score: 750, shape: 'boss', boss: 2, form: 'mountain', cry: 'THE CROWN PRESSES', ab: ['stamp', 'rain'] },
 };
 
 /* default weights used by the spawn roll (per roster enemy) */
@@ -350,6 +481,9 @@ const ENEMY_WEIGHTS = {
   s_nest: 0.9,
   /* the second breeding (v19) */
   rill: 2.0, specter: 1.4,
+  /* v23.3 the old papers' weight — the breeds walk again */
+  crane: 1.8, sealbearer: 1.1, stamper: 1.0, shiki: 1.1, giltwing: 1.3, sketch: 1.5,
+  oni: 1.2, gate: 1.2, koi: 1.9, golem: 0.9, ember: 1.8, raindrake: 1.4, gale: 1.9, gildling: 1.1, phoenix: 1.4, ashigaru: 1.9, surge: 1.3, maelstrom: 1.0, mirror: 0.9, koban: 0.85, crest: 1.4, cask: 0.9, c_banner: 1.0, c_gale: 1.0, c_gild: 1.0, c_hush: 1.0, s_mender: 0.8, s_toller: 0.9, s_ledger: 0.8, s_trace: 0.8, stitch: 1.4, reseal: 0.9, sizing: 1.2, binder: 0.9, weft: 1.3, horn: 1.0, squall: 1.7, eel: 1.6, midas: 0.9, stencil: 1.1, fray: 1.0,
 };
 
 /* ------------------------------------------------------------
@@ -384,6 +518,57 @@ const AREAS = [
     keepers: ['k2_1', 'k2_2', 'k2_3', 'k2_4', 'k2_5', 'k2_6', 'k2_7', 'k2_8', 'k2_9', 'k_husk'],
   },
 ];
+/* ---- v23.3 THE PAST SCROLLS — the four papers the v22.3 journey cut
+   retired, kept for the endless era cycle. Their beasts, officers,
+   specials, keepers and guardians are the v20 originals, verbatim:
+   the engine never stopped knowing how to run them. The journey
+   stays two scrolls; past its finale the endless walks all six. */
+const PAST_SCROLLS = [
+  {
+    id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',
+    ink: '朱墨',                                     // vermillion-stained
+    desc: 'A vermillion wash dries underfoot. The last stroke is heaviest.',
+    mult: { hp: 3.6, sp: 1.1, budget: 2.1 },
+    roster: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'horn', 'slab', 'ashigaru', 'stamper', 'shiki', 'c_banner', 's_mender'],
+    order: ['oni', 'ember', 'crane', 'sealbearer', 'gate', 'spit', 'kage', 'titan', 'horn'],
+    names: ['朱土', '飛火', '鶴影', '印卒', '鳥居', '遠崖', '影踏', '古巣', '絕壁', '落款'],
+    elite: 'oni', boss: 'b_warlord', keeper: 'k_cinder',
+    keepers: ['k3_1', 'k3_2', 'k3_3', 'k3_4', 'k3_5', 'k3_6', 'k3_7', 'k3_8', 'k3_9', 'k_cinder'],
+  },
+  {
+    id: 'IV', name: 'STORM SHEET', kanji: '嵐', theme: 'storm',
+    ink: '雨墨',                                     // rain-grey
+    desc: 'Rain hammers the paper. The ink runs like rivers.',
+    mult: { hp: 6.0, sp: 1.16, budget: 2.9 },
+    roster: ['raindrake', 'gale', 'koi', 'squall', 'eel', 'crane', 'dart', 'warden', 'surge', 'maelstrom', 'crest', 'c_gale', 's_toller'],
+    order: ['raindrake', 'gale', 'koi', 'squall', 'eel', 'crane', 'warden', 'surge', 'maelstrom'],
+    names: ['雲垂', '陣風', '鯉躍', '雨晴', '疾矢', '霧海', '旌搖', '雨簾', '怒濤', '落款'],
+    elite: 'stilt', boss: 'b_tempest', keeper: 'k_veil',
+    keepers: ['k4_1', 'k4_2', 'k4_3', 'k4_4', 'k4_5', 'k4_6', 'k4_7', 'k4_8', 'k4_9', 'k_veil'],
+  },
+  {
+    id: 'V', name: 'GILT SCROLL', kanji: '金', theme: 'gilt',
+    ink: '金墨',                                     // gold-dusted
+    desc: 'Old gold leaf underfoot. The last sheet is the heaviest.',
+    mult: { hp: 9.5, sp: 1.22, budget: 3.8 },
+    roster: ['gildling', 'phoenix', 'golem', 'giltwing', 'midas', 'oni', 'gate', 'titan', 'kage', 'warden', 'spit', 'mirror', 'koban', 'cask', 'c_gild', 's_ledger'],
+    order: ['gildling', 'phoenix', 'golem', 'giltwing', 'midas', 'mirror', 'koban', 'oni', 'gate'],
+    names: ['金泥', '鳳來', '石像', '鬼門', '樓閣', '母金', '影金', '旌耀', '雨期', '落款'],
+    elite: 'oni', boss: 'b_origin', keeper: 'k_nib',
+    keepers: ['k5_1', 'k5_2', 'k5_3', 'k5_4', 'k5_5', 'k5_6', 'k5_7', 'k5_8', 'k5_9', 'k_nib'],
+  },
+  {
+    id: 'VI', name: 'THE BLANK SILK', kanji: '素', theme: 'silk',
+    ink: '素墨',                                     // cool ink on unstained silk
+    desc: 'The silk the first stroke landed on. Some things are still only drawn.',
+    mult: { hp: 13.0, sp: 1.26, budget: 4.6 },
+    roster: ['sketch', 'stitch', 'reseal', 'sizing', 'stencil', 'fray', 'binder', 'weft', 'kage', 'crane', 'gate', 'warden', 'titan', 'golem', 's_trace', 'c_hush'],
+    order: ['sketch', 'stitch', 'reseal', 'sizing', 'stencil', 'fray', 'binder', 'weft', 'golem'],
+    names: ['素紙', '下絵', '糸影', '糊染', '再印', '織端', '絹目', '古鏡', '無字', '落款'],
+    elite: 'sketch', boss: 'b_blank', keeper: 'k_edge',
+    keepers: ['k6_1', 'k6_2', 'k6_3', 'k6_4', 'k6_5', 'k6_6', 'k6_7', 'k6_8', 'k6_9', 'k_edge'],
+  },
+];
 
 /* ---- THE STANDING ARMY (v19.4) ----
    every sheet walks with everything the brush has already met:
@@ -409,6 +594,26 @@ const AREAS = [
       if (seen.indexOf(k) < 0) seen.push(k);
     }
   }
+
+/* the past scrolls lead with their own debuts and wade behind the
+   whole standing army the journey has mustered — same law, same ink */
+(function buildPastArmy() {
+  const seen = [];
+  for (const a of AREAS) for (const k of a.roster) {
+    if (/^c_/.test(k) || /^s_/.test(k)) continue;
+    if (seen.indexOf(k) < 0) seen.push(k);
+  }
+  for (const a of PAST_SCROLLS) {
+    const carry = seen.filter(k => a.roster.indexOf(k) < 0);
+    if (carry.length) a.roster = carry.concat(a.roster);
+    a.carry = carry;
+    for (const k of a.roster) {
+      if (/^c_/.test(k) || /^s_/.test(k)) continue;
+      if (seen.indexOf(k) < 0) seen.push(k);
+    }
+  }
+})();
+
 })();
 
 const UPGRADES = [
@@ -427,7 +632,7 @@ const UPGRADES = [
   { id: 'adren',  name: 'Red Seal',     desc: 'Every kill presses a seal: a short 1.2\u00d7 stride surge.',  max: 3, apply: s => { s.adren += 1; } },
   { id: 'shock',  name: 'Ink Burst',    desc: 'Taking a hit splashes everything nearby away. Once per hit.', max: 1, apply: s => { s.shock = true; } },
   { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored cast answers behind your back. +1 stroke.',        max: 2, proj: 1, apply: s => { s.echo += 1; } },
-  { id: 'orbit',  name: 'Ink Orbit',    desc: 'Droplets circle the brush in a wide ring, grinding all they graze.', max: 3, apply: s => { s.orb += 1; },
+  { id: 'orbit',  name: 'Ink Orbit',    desc: 'An ink ring pools around the brush — everything inside it is ground down, breath by breath.', max: 3, slot: 1, cls: 'melee', apply: s => { s.orb += 1; },
     maxSpec: 'THE GRAVE RING — an orbital hunts what it sees, every few breaths' },
   { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',   max: 2, apply: s => { s.slow += 1; } },
   { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',     max: 2, apply: s => { s.crit += 1; } },
@@ -438,22 +643,36 @@ const UPGRADES = [
   /* ---- the learned powers ----
      Any brush may learn them; the brush born to one wears its first
      rank from the first wave, and every further pick deepens it. */
-  { id: 'nova',   name: 'Black Tide',   desc: 'The ink surges outward every few breaths, shoving all back.', max: 3, ability: 1, apply: s => { s.nova += 1; },
+  { id: 'nova',   name: 'Black Tide',   desc: 'The ink surges outward every few breaths, shoving all back.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.nova += 1; },
     maxSpec: 'THE Risen SEA — the surge comes faster and reaches farther' },
-  { id: 'fan',    name: 'Folded Fan',   desc: 'A cone of paper blades with every swing — more blades, faster.', max: 4, ability: 1, apply: s => { s.fan += 1; },
+  { id: 'fan',    name: 'Folded Fan',   desc: 'A cone of paper blades with every swing — more blades, faster.', max: 4, ability: 1, slot: 1, cls: 'melee', apply: s => { s.fan += 1; },
     maxSpec: 'THE FULL BLOOM — the fan snaps open full-circle' },
-  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, ability: 1, apply: s => { s.spirit += 1; },
+  { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.spirit += 1; },
     maxSpec: 'THE LITANY — spirits run through up to three bodies and fly faster' },
-  { id: 'hanko',  name: 'Crimson Hanko',desc: 'The great seal falls on the thickest horde — faster, broader.', max: 3, ability: 1, apply: s => { s.hanko += 1; },
+  { id: 'hanko',  name: 'Crimson Hanko',desc: 'The great seal falls on the thickest horde — faster, broader.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.hanko += 1; },
     maxSpec: 'THE TWIN STAMP — a second, lighter seal follows the first' },
-  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, ability: 1, apply: s => { s.trailW += 1; },
+  { id: 'trail',  name: 'Ink Trail',    desc: 'Wherever you walk, the ink you leave still bites. Smears linger.', max: 3, ability: 1, slot: 1, cls: 'melee', apply: s => { s.trailW += 1; },
     maxSpec: 'THE LINGERING POOL — the ink bites twice as fast and pools deeper' },
-  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, ability: 1, apply: s => { s.arc += 1; },
+  { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, ability: 1, slot: 1, cls: 'magic', apply: s => { s.arc += 1; },
     maxSpec: 'THE LIVING LINE — the stroke leaps three links farther' },
-  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, ability: 1, apply: s => { s.boomer += 1; },
+  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.boomer += 1; },
     maxSpec: 'THE MIRROR RETURN — the homing stroke bursts into an ink ring' },
-  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, ability: 1, apply: s => { s.vortex += 1; },
+  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.vortex += 1; },
     maxSpec: 'THE WHORL TEETH — the closing whirlpool bites what remains' },
+  /* ---- v23.0 THE OCTOPUS: melee, ranged, magic — six arms ----
+     Every weapon wears a class and occupies one of the octopus's
+     six holds; the run's own brush counts as the first. Stats
+     (cadence, footwork, bite, gathering) never occupy a hold —
+     the arms carry WEAPONS only. Each class answers the horde its
+     own way: the melee sweep files, the ranged pierces ranks and
+     lobs on knots, the magic bends the sheet itself. */
+  { id: 'lash',    name: 'Tentacle Lash',  desc: 'The octopus lashes a wide arc of ink. Everything in the sweep is struck.', max: 4, ability: 1, slot: 1, cls: 'melee',  apply: s => { s.lash += 1; } },
+  { id: 'javelin', name: 'Ink Javelins',   desc: 'Heavy bolts thrown flat and fast, piercing a rank of beasts.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.javelin += 1; } },
+  { id: 'mortar',  name: 'Quill Mortar',   desc: 'Lobbed quills burst where beasts gather — the thicker the crowd, the wider the splash.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.mortar += 1; } },
+  { id: 'sdarts',  name: 'Silk Darts',     desc: 'A short, fast burst of silk darts from the mantle — shreds soft bodies at close range.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.sdarts += 1; } },
+  /* the commit: the arms remember their favourite — the most-trained
+     power bites deeper per rank of FOCUS. Stats never count. */
+  { id: 'focus',   name: 'Octopus Focus',  desc: 'Your most-trained power bites 30% deeper per rank of this. Commit to one.', max: 2, apply: s => { s.focus += 1; } },
   /* ---- the brush's own arts ----
      One track per brush, no other hand may learn it: the weapon's
      own techniques, unique to the tool the run began with. */

@@ -21,6 +21,7 @@ const UI = (() => {
       clear: $('screenClear'), pause: $('screenPause'), over: $('screenOver'),
       board: $('screenBoard'), settings: $('screenSettings'),
       brush: $('screenBrush'),
+      char: $('screenChar'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
@@ -307,9 +308,17 @@ const UI = (() => {
     el.waveFill.style.width = (v * 100).toFixed(1) + '%';
   }
 
+  /* v24.2 the integrity bar: one brush-stroke of held ink —
+     it drains right to left and reddens as the sheet tears */
   function setHp(cur, max) {
-    el.hudHp.innerHTML = Array.from({ length: max }, (_, i) =>
-      `<span class="hp-cell${i < cur ? ' on' : ''}">${HP_DROP}</span>`).join('');
+    const fill = document.getElementById('hpFill');
+    const num = document.getElementById('hpNum');
+    if (!fill || !num) { el.hudHp.innerHTML = Array.from({ length: max }, (_, i) =>
+      `<span class="hp-cell${i < cur ? ' on' : ''}">${HP_DROP}</span>`).join(''); return; }
+    const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
+    fill.style.width = (pct * 100).toFixed(1) + '%';
+    num.textContent = cur + '/' + max;
+    el.hudHp.classList.toggle('is-low', cur <= Math.max(1, Math.round(max * 0.34)));
   }
 
   let lastScore = -1;
@@ -998,6 +1007,7 @@ const UI = (() => {
     el.statKills.textContent = d.kills.toLocaleString('en-US');
     el.statTime.textContent = fmtTime(d.time);
     el.statScore.textContent = d.score.toLocaleString('en-US');
+    if (el.statInk) el.statInk.textContent = '+ ' + (d.ink || 0).toLocaleString('en-US');
     el.newBestBadge.classList.toggle('hidden', !d.newBest);
     if (el.continueBtn) {
       el.continueBtn.classList.toggle('hidden', !vict);
@@ -1041,10 +1051,14 @@ const UI = (() => {
     const arts = owned.filter(u => u.art).map(chip).join('');
     const powers = owned.filter(u => u.ability).map(chip).join('');
     const strokes = owned.filter(u => !u.art && !u.ability).map(chip).join('');
+    /* the octopus's holds: weapons fill six slots, stats ride free */
+    const held = 1 + owned.filter(u => u.slot).length;
+    const capChip = `<span class="load-item load-holds" title="Weapons fill the octopus's six holds — stats ride free">\u8f09 ${held}/${CFG.octopus.slots}</span>`;
     el.hudLoadout.innerHTML = brChip
       + (arts ? sep + arts : '')
       + (powers ? sep + powers : '')
-      + (strokes ? sep + strokes : '');
+      + (strokes ? sep + strokes : '')
+      + sep + capChip;
   }
 
   return {

@@ -57,8 +57,8 @@
       <span class="hud-hard hud-auto hidden" id="hudAuto" title="THE AUTOBRUSH walks — its runs pay half" aria-hidden="true">自</span>
     </div>
     <div class="hud-tr">
-      <div class="hp-row" id="hudHp"></div>
-      <div class="hud-score" id="hudScore">0000000</div>
+      <div class="hp-bar" id="hudHp" title="INTEGRITY — the ink held in the sheet"><div class="hp-fill" id="hpFill"></div><span class="hp-num" id="hpNum">3/3</span></div>
+<div class="hud-score" id="hudScore">0000000</div>
       <div class="combo-chip hidden" id="hudCombo"></div>
     </div>
     <div class="hud-bl">
@@ -170,6 +170,11 @@
       <span class="opening-kanji" aria-hidden="true">設</span>
       <span class="opening-label">SETTINGS</span>
     </button>
+    <button id="charBtn" class="opening-btn char-btn" type="button" title="THE STUDY — the ink every run gathers sharpens the hand itself">
+      <span class="opening-kanji" aria-hidden="true">師</span>
+      <span class="opening-label">CHARACTER</span>
+      <span class="char-ink-badge" id="charInkBadge"></span>
+    </button>
     <button id="openingBtn" class="opening-btn" type="button" title="Watch the opening again">
       <span class="opening-kanji" aria-hidden="true">序</span>
       <span class="opening-label">OPENING</span>
@@ -193,6 +198,19 @@
       <p class="scrolls-hint" id="scrollsHint" hidden></p>
       <button id="scrollsBackBtn" class="ghost-btn">RETURN</button>
     </div>
+  </section>
+
+  <!-- ============ THE STUDY — THE CHARACTER ============ -->
+  <section id="screenChar" class="screen screen-char hidden">
+    <div class="char-head">
+      <div class="char-kicker">THE STUDY — THE HAND SHARPENS ITSELF</div>
+      <h2 class="char-title">THE SCRIBE</h2>
+      <p class="char-sub">Every run gathers ink from the sheet it walks. Ink sharpens the hand — and the sharpened hand walks every sheet after it.</p>
+    </div>
+    <canvas id="charPreview" width="190" height="140" aria-hidden="true"></canvas>
+    <div class="char-ink-line">INK HELD&nbsp;&nbsp;<b id="charInk">0</b></div>
+    <div class="char-skills" id="charSkills"></div>
+    <button id="charBackBtn" class="ghost-btn" type="button">RETURN</button>
   </section>
 
   <!-- ============ UPGRADE SCREEN ============ -->
@@ -293,7 +311,7 @@
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">WAVES SURVIVED</span><span class="stat-dots"></span><span class="stat-value" id="statWaves">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">BLOTS CLEANED</span><span class="stat-dots"></span><span class="stat-value" id="statKills">0</span></div>
           <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">TIME IN ARENA</span><span class="stat-dots"></span><span class="stat-value" id="statTime">00:00</span></div>
-          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div>
+          <div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">FINAL SCORE</span><span class="stat-dots"></span><span class="stat-value" id="statScore">0</span></div><div class="stat-row"><span class="stat-check" aria-hidden="true"></span><span class="stat-name">INK GATHERED</span><span class="stat-dots"></span><span class="stat-value" id="statInk">+0</span></div>
         </div>
       </div>
       <div class="ghost-line hidden" id="ghostLine" aria-live="polite"></div>
