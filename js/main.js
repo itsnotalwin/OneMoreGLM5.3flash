@@ -616,12 +616,15 @@
     refreshChar();
     UI.show('char');
     UI.hud(false);
+    const sc = document.getElementById('screenChar');
+    if (sc) sc.scrollTop = 0;   /* the study always opens at its head */
+    if (!charRaf) charRaf = requestAnimationFrame(drawCharPreview);
   }
   function closeChar() {
+    if (charRaf) { cancelAnimationFrame(charRaf); charRaf = 0; }
     UI.show('title');
     refreshTitleInk();
-  }
-  function refreshChar() {
+  }  function refreshChar() {
     const ink = G.getInk();
     const inkEl = document.getElementById('charInk');
     if (inkEl) inkEl.textContent = String(ink);
@@ -679,10 +682,7 @@
     if (R.drawScribePreview) R.drawScribePreview(c2, cw / 2, ch * 0.62, Math.min(34, ch * 0.26), performance.now() / 1000, redK, G.getBrush());
     charRaf = requestAnimationFrame(drawCharPreview);
   }
-  const _openCharPrev = openChar;
-  openChar = function () { _openCharPrev(); if (!charRaf) charRaf = requestAnimationFrame(drawCharPreview); };
-  const _closeCharPrev = closeChar;
-  closeChar = function () { if (charRaf) { cancelAnimationFrame(charRaf); charRaf = 0; } _closeCharPrev(); };
+  /* v24.4b the wrapper is retired — the loop lives in openChar/closeChar */
   document.getElementById('charBackBtn').addEventListener('click', () => { SFX.pick(1); closeChar(); });
   refreshTitleInk();
   document.getElementById('openingBtn').addEventListener('click', playIntro);

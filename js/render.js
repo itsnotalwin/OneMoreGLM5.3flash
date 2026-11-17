@@ -3891,38 +3891,68 @@ function drawEnemy(c, e, t) {
      world space: a hairline circle that fills as motes gather and
      closes like an ensō the moment the ink rises. The wrist's 墨 chip
      (hud-foot) carries the rise count. */
+  /* the level ring: the ensō that gathers — the hand's next rise rides
+     this circle, filling clockwise from the top and leaning vermillion
+     as the ink crowds the brim; a rise blooms a flash band outward */
+  let ringFlash = 0, ringLastFrac = 0;
   function drawInkRing(c, t) {
     const S = G.S, p = S.player;
     const st = S.stats;
     const need = CFG.xp.req(st.xpLevel) || 1;
     const frac = Math.max(0, Math.min(1, st.xp / need));
+    /* a rise happened: the arc wrapped — flash the ensō */
+    if (frac < ringLastFrac - 0.5) ringFlash = 1;
+    ringLastFrac = frac;
+    ringFlash = Math.max(0, ringFlash - 0.026);
+    /* the eager climb: the ink leans vermillion as the brim crowds */
+    const eager = Math.max(0, Math.min(1, (frac - 0.68) / 0.3));
+    const ink = eager > 0 ? mixHex(INK, bossInk(), eager * 0.85) : INK;
     /* the ring breathes — a hand-pressed circle is never perfect */
-    const R = 30 + Math.sin(t * 1.7) * 0.8;
+    const R = p.r * 2.35 + Math.sin(t * 1.7) * 0.8 + (frac > 0.92 ? Math.sin(t * 9) * 1.2 : 0) + ringFlash * 6;
     c.save();
     c.translate(p.x, p.y);
-    /* the eager end: past 92% the ink leans toward the rise */
-    const eager = frac > 0.92;
-    /* the faint base track: the whole ensō, waiting */
-    c.globalAlpha = 0.13;
+    /* the flash: a bright band blooming outward on a rise */
+    if (ringFlash > 0) {
+      c.globalAlpha = ringFlash * 0.5;
+      c.strokeStyle = bossInk();
+      c.lineWidth = 3.2;
+      c.beginPath(); c.arc(0, 0, R + (1 - ringFlash) * 26, 0, TAU); c.stroke();
+    }
+    /* the faint base track: the whole ensō, waiting — a double press */
+    c.globalAlpha = 0.14;
     c.strokeStyle = INK;
-    c.lineWidth = 1.3;
+    c.lineWidth = 2.2;
     c.beginPath(); c.arc(0, 0, R, 0, TAU); c.stroke();
-    /* the pressed register: a second hairline rides just outside */
-    c.globalAlpha = 0.08;
-    c.beginPath(); c.arc(0, 0, R + 2.2, 0, TAU); c.stroke();
+    c.globalAlpha = 0.07;
+    c.beginPath(); c.arc(0, 0, R + 2.4, 0, TAU); c.stroke();
     /* the gathering ink: swept clockwise from the top */
     if (frac > 0.004) {
       const a0 = -Math.PI / 2, a1 = a0 + frac * TAU;
-      c.globalAlpha = eager ? 0.9 : 0.55;
-      c.lineWidth = 2.4;
+      c.globalAlpha = 0.55 + eager * 0.35 + ringFlash * 0.2;
+      c.strokeStyle = ink;
+      c.lineWidth = 3 + eager * 1.4;
       c.lineCap = 'round';
       c.beginPath(); c.arc(0, 0, R, a0, a1); c.stroke();
-      /* the nib at the arc's head */
-      c.fillStyle = INK;
-      c.globalAlpha = eager ? 0.95 : 0.6;
+      /* the inner echo: a hairline riding just inside the sweep */
+      c.globalAlpha = 0.3 + eager * 0.3;
+      c.lineWidth = 1.1;
+      c.beginPath(); c.arc(0, 0, R - 3, a0, a1); c.stroke();
+      /* the nib at the arc's head — a drop that fattens as it nears */
+      const nibR = 2 + eager * 1.6 + ringFlash * 1.5;
+      c.fillStyle = ink;
+      c.globalAlpha = 0.7 + eager * 0.25;
       c.beginPath();
-      c.arc(Math.cos(a1) * R, Math.sin(a1) * R, 2.2, 0, TAU);
+      c.arc(Math.cos(a1) * R, Math.sin(a1) * R, nibR, 0, TAU);
       c.fill();
+      /* the gather: two mote-dots trailing the head, pulled toward it */
+      c.globalAlpha = 0.3 + eager * 0.3;
+      c.fillStyle = ink;
+      for (let k = 1; k <= 2; k++) {
+        const back = frac * TAU + k * (0.16 + 0.05 * Math.sin(t * 6 + k));
+        c.beginPath();
+        c.arc(Math.cos(a0 + back) * R, Math.sin(a0 + back) * R, 1.3 - k * 0.35, 0, TAU);
+        c.fill();
+      }
     }
     c.restore();
   }

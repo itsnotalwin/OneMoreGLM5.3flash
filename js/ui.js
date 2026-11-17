@@ -481,6 +481,9 @@ const UI = (() => {
     lastXp.f = Math.max(0, Math.min(1, frac)); lastXp.lv = level;
     const n = String(level + 1);
     if (el.hudInkLv.textContent !== n) el.hudInkLv.textContent = n;
+    /* v24.4 the chip leans vermillion with the ring */
+    const chip = el.hudInkLv.closest('.hud-ink');
+    if (chip) chip.classList.toggle('is-eager', frac > 0.85);
   }
 
   /* the red beast's seal, worn at the top of the sheet */

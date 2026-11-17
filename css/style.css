@@ -2900,3 +2900,24 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .up-desc{ font-size: 12px; max-height: none; }
   .screen-upgrade .panel{ max-height: none; }
 }
+
+/* v24.4 the level ring's eager climb, mirrored on the HUD chip */
+.hud-ink.is-eager .hud-ink-k{ color: var(--red); }
+.hud-ink.is-eager .hud-ink-n{ color: var(--red); }
+
+/* v24.4b the study fits the viewport: the screen scrolls, the rows breathe less */
+.screen-char{ overflow-y: auto; }
+@media (max-height: 780px){
+  .screen-char{ padding: 12px 16px; }
+  .char-head{ margin: 0 auto 6px; }
+  .char-title{ font-size: clamp(26px, 4.6vw, 40px); margin: 4px 0 2px; }
+  .char-sub{ font-size: 11.5px; max-width: 520px; }
+  #charPreview{ width: min(150px, 46vw); aspect-ratio: 190 / 140; margin: 2px auto 0; }
+  .char-ink-line{ margin: 8px 0 10px; }
+  .char-skills{ gap: 5px; margin-bottom: 8px; }
+  .char-row{ padding: 7px 12px; }
+  .char-sub{ font-size: 11px; }
+  .cr-kanji{ font-size: 20px; width: 34px; }
+  .cr-desc{ font-size: 11px; }
+  .char-row.is-poor{ padding: 8px 12px; }
+}
