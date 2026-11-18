@@ -113,7 +113,7 @@ body[data-theme="silk"]{
 html, body{ height: 100%; }
 
 body{
-  background: var(--paper);
+  background: #1e1a14;   /* the desk under the sheet */
   color: var(--ink);
   font-family: var(--mono);
   overflow: hidden;
@@ -130,7 +130,20 @@ body{
 
 .hidden{ display: none !important; }
 
-#stage{ position: fixed; inset: 0; }
+/* v24.6b THE SHEET ON THE DESK: the paper is a framed, centered
+   sheet — smaller than the screen, with the desk showing around it */
+#stage{
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(100vw - 26px, 1140px);
+  height: min(100vh - 26px, 700px);
+  overflow: hidden;
+  background: var(--paper);
+  border: 2px solid rgba(26,23,20,.5);
+  border-radius: 4px;
+  box-shadow: 0 24px 80px rgba(12,10,7,.4), 0 4px 14px rgba(12,10,7,.26);
+}
 
 #game{
   display: block;
@@ -146,7 +159,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 /* ============ DAMAGE FLASH — ink wash over the eyes ============ */
 #flash{
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   pointer-events: none;
   z-index: 30;
   opacity: 0;
@@ -159,7 +172,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 /* ============================================================
    HUD
    ============================================================ */
-#hud{ position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#hud{ position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 #hud .hud-br{ pointer-events: auto; }
 
 .hud-tl{ position: absolute; top: 22px; left: 24px; display: flex; align-items: center; gap: 12px; }
@@ -214,7 +227,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    WAVE BANNER — a stamped kanji
    ============================================================ */
 .wave-banner{
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   display: grid; place-items: center;
   pointer-events: none;
   z-index: 15;
@@ -259,7 +272,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    SCREENS — shared
    ============================================================ */
 .screen{
-  position: fixed; inset: 0;
+  position: absolute; inset: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -2596,7 +2609,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 /* ---- the gate: one seal on dry paper; the tap is the door ---- */
 .intro-gate{
-  position: fixed; inset: 0; z-index: 200;
+  position: absolute; inset: 0; z-index: 200;
   display: grid; place-items: center;
   background:
     radial-gradient(ellipse at 22% 14%, rgba(255,252,242,.5), transparent 55%),
@@ -2644,7 +2657,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 /* ---- the first-run whisper: how the hand moves, said once ---- */
 .run-hint{
-  position: fixed; left: 0; right: 0;
+  position: absolute; left: 0; right: 0;
   bottom: calc(9vh + env(safe-area-inset-bottom));
   z-index: 14; pointer-events: none;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -2943,3 +2956,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 /* v24.6 the rare seal: the class’s signature body is offered rarer and rides its own weight */
 .up-rare{ background: var(--red); }
+
+/* v24.6b small screens keep the full sheet — the desk is a desktop luxury */
+@media (max-width: 700px), (max-height: 540px){
+  #stage{ width: 100vw; height: 100vh; border: none; border-radius: 0; box-shadow: none; }
+  body{ background: var(--paper); }
+}

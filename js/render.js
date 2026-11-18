@@ -167,7 +167,7 @@ const R = (() => {
 
     /* laid lines — grain that tiles cleanly (8 divides 480) */
     p.lineWidth = 1;
-    p.strokeStyle = key === 'dark' ? 'rgba(237,231,217,0.03)' : `rgba(${th.speck},0.035)`;
+    p.strokeStyle = key === 'dark' ? 'rgba(237,231,217,0.02)' : `rgba(${th.speck},0.022)`;
     for (let y = 4; y < TILE; y += 8) {
       p.beginPath(); p.moveTo(0, y + (rnd() - 0.5)); p.lineTo(TILE, y + (rnd() - 0.5)); p.stroke();
     }
@@ -178,7 +178,7 @@ const R = (() => {
       const a = (rnd() - 0.5) * 0.9 + (rnd() < 0.5 ? 0 : Math.PI / 2);
       const l = 1.5 + rnd() * 3.5;
       const base = th.fiber;
-      p.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},${0.03 + rnd() * 0.045})`;
+      p.strokeStyle = `rgba(${base[0]},${base[1]},${base[2]},${0.02 + rnd() * 0.028})`;
       p.lineWidth = 0.7;
       p.beginPath();
       p.moveTo(x, y);
@@ -569,18 +569,10 @@ const R = (() => {
         const x = cx * cell + rx * cell;
         const y = cy * cell + ry * cell;
         const v = Math.floor(r0 * 997) % 6;
-        if (v === 0) { /* a stray hair from the brush */
-          const a = hash2(cx + 13, cy + 17) * TAU;
-          const l = 14 + rx * 22;
-          inkStroke(c, [
-            { x, y },
-            { x: x + Math.cos(a) * l * 0.6, y: y + Math.sin(a) * l * 0.4 + 3 },
-            { x: x + Math.cos(a) * l, y: y + Math.sin(a) * l },
-          ], 1.5, { alpha: 0.09, jit: 0.3, seed: (cx * 31 + cy) | 0 });
-        } else if (v === 1) { /* flecks */
+        if (v === 1) { /* flecks */   /* v24.6b the stray hairs leave with them */
           c.fillStyle = INK;
-          c.globalAlpha = 0.1;
-          for (let k = 0; k < 3; k++) {
+          c.globalAlpha = 0.065;
+          for (let k = 0; k < 2; k++) {
             c.beginPath();
             c.arc(x + (hash2(cx + k, cy) - 0.5) * 26, y + (hash2(cx, cy + k) - 0.5) * 26, 0.7 + hash2(cx + k * 3, cy + k) * 1.4, 0, TAU);
             c.fill();
@@ -611,20 +603,7 @@ const R = (() => {
           c.fillRect(-7, -7, 14, 14);
           c.restore();
           c.globalAlpha = 1;
-        } else if (v === 5 && r0 > 0.9) { /* a huge, faint character */
-          const ch = KANJI_DECO[Math.floor(r0 * 1000) % KANJI_DECO.length];
-          c.save();
-          c.translate(x, y);
-          c.rotate((rx - 0.5) * 0.2);
-          c.globalAlpha = 0.045;
-          c.fillStyle = INK;
-          c.font = `${64 + Math.floor(ry * 56)}px "Zen Antique", serif`;
-          c.textAlign = 'center';
-          c.textBaseline = 'middle';
-          c.fillText(ch, 0, 0);
-          c.restore();
-          c.globalAlpha = 1;
-        }
+        }   /* v24.6b the ghost kanji leaves the paper */
       }
     }
   }

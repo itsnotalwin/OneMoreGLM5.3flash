@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.6';
+window.OM_VERSION = 'v24.6b';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
