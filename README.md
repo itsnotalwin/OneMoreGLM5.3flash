@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/01-title.png" width="800" alt="ONE MORE — the title screen: an ensō brushed behind the wordmark, a vermillion seal beside it">
+  <img src="screenshots/01-title.png" width="800" alt="ONE MORE — the title: the sheet framed on a dark desk, the ensō brushed behind the wordmark, the brush selector and the journey buttons beneath">
 </p>
 
 <p align="center">
@@ -16,22 +16,26 @@
 
 **ONE MORE** is a Vampire-Survivors-like painted as living sumi-e, written in
 vanilla HTML/CSS/JS. You are a brush spirit walking sheets of washi paper;
-your brush **is** your weapon — choose one of four and the run begins with
-that arm and nothing else: the needle's thread, the broom's sweep, the
-stone's lob, or the wisp's homing breath — and every brush carries its class: **melee, ranged or magic**. The level-up shelf pulls your own class five-deep, so a needle run meets ranged arms way more often without ever closing the door on the rest. Your only job is to *not be erased*. Every kill spills ink motes — gather them to fill the ink
-gauge and rise mid-battle. Every kill also splatters real ink that
+your brush **is** your weapon — choose one of four starters and the run begins
+with that arm and nothing else: the needle's thread (ranged), the broom's sweep
+(melee), the stone's lob (ranged), or the wisp's homing breath (magic). Every
+brush carries its class, and the level-up shelf **pulls your own class
+five-deep** — a needle run meets ranged arms way more often, without ever
+closing the door on the rest. Your only job is to *not be erased*.
+
+Every kill spills ink motes — gather them to fill the ensō ring around the
+brush and rise mid-battle. Every kill also splatters real ink that
 **permanently stains the paper**: by the second sheet the world is a painting
-of your whole fight.
+of your whole fight. And every run leaves more than stains — it gathers **墨**,
+the ink that feeds **THE STUDY**, where the hand itself is sharpened between
+runs.
 
 The journey is **two scrolls of ten scenes**, each scene ten waves — two
-hundred waves on the way to the last Guardian. Each sheet is a different
-paper washed in its own ink, with its own weather, its own Captain, its own
-Keeper on every tenth wave, and a named **Guardian** waiting on scene ten.
-Clear the second sheet and **THE JOURNEY'S END** plays — the ink stills, the
-keepers are remembered, your brush paints one last great ensō around the
-run and seals it — and the scroll offers itself forever: **THE ENDLESS
-SCROLL**, where the paper cycles all six papers and the difficulty never
-stops compounding.
+hundred waves on the way to the last Guardian. Clear the second sheet and
+**THE JOURNEY'S END** plays — the ink stills, the keepers are remembered, your
+brush paints one last great ensō around the run and seals it — and the scroll
+offers itself forever: **THE ENDLESS SCROLL**, where the paper cycles **all six
+papers** and the difficulty never stops compounding.
 
 Everything here is honest, hand-tuned and local: no engine, no framework,
 no telemetry. The one cloud in the room — the endless leaderboard — is
@@ -41,17 +45,17 @@ optional and can stay dark forever.
 
 ## The paper in pictures
 
-| A scene of the first sheet — chain ×1.64, the ink already staining | The Guardian of sheet V — THE FIRST BRUSH, a hanko already slammed |
+| The sheet lives on the desk — framed, centered, the title beneath the ensō | The journey — beasts circle, the dead stain the paper, the HUD wears the wave seal |
 |---|---|
-| ![A journey scene under surge](screenshots/04-journey.png) | ![The First Brush duel](screenshots/06-guardian.png) |
+| ![The title — the framed sheet on the desk](screenshots/01-title.png) | ![A journey scene under the horde](screenshots/04-journey.png) |
 
-| THE SCRIBE on the storm sheet — one living stroke, thirteen squalls circling | CHOOSE ONE MORE — the scribe's own ARTS beside the learned POWERS |
+| CHOOSE ONE MORE — the shelf: a 稀 RARE arm, the melee lunge, the red curse | THE MELEE LAW — the fan's swing, the whirl wheel and the orbit pool, no projectiles |
 |---|---|
-| ![The scribe on the storm sheet](screenshots/12-scribe.png) | ![The brush arts and powers](screenshots/13-arts.png) |
+| ![The level-up shelf — rare and new arms](screenshots/05-levelup.png) | ![The melee arms in the fight](screenshots/16-arms.png) |
 
-| The ink rises — CHOOSE ONE MORE, three cards, two of them weapons | CHARMS — retired in v21.9 (the room as it stood) |
+| THE STUDY — two scribes, six skills, the ink every run leaves behind | THE NIGHT MOTHER — a Guardian duel on the lamp-black sheet |
 |---|---|
-| ![The level-up cards](screenshots/05-levelup.png) | ![The charms room, retired](screenshots/07-charms.png) |
+| ![THE STUDY — the scribes and the skills](screenshots/13-study.png) | ![A Guardian duel on the night scroll](screenshots/06-guardian.png) |
 
 ---
 
@@ -71,21 +75,26 @@ one that counts. A practiced daily presses only a fifth of its ink —
 practice is for the hand, not the stone.
 
 **THE ENDLESS SCROLL** — the journey's second sheet cleared, the scroll
-unbound: no arena, no margins, an endless sheet of washi, and every lap the
-beasts stand taller (**hp ×1.24**), think faster (**speed ×1.016**) and
-arrive thicker (**budget ×1.32**). Only endless runs post to the ledger.
+unbound: an endless sheet of washi that cycles **all six papers**, and every
+lap the beasts stand taller (**hp ×1.24**), think faster (**speed ×1.016**)
+and arrive thicker (**budget ×1.32**). Only endless runs post to the ledger.
 
 **REALLY HARD** — the settings' red toggle (設 — remembered on this device): beasts
 stand ×1.4 taller, arrive ×1.15 faster, waves spend ×1.45 more — and the
 ledger pays **double** for every stroke that survives it.
 
-| The scrolls hang on their wall — seal a scene, wake the next | The starter brush room — three free brushes, one still sealed |
-|---|---|
-| ![The scrolls shelf](screenshots/02-scrolls.png) | ![The brush room](screenshots/03-brushes.png) |
+**自 THE AUTOBRUSH** — available from the first sheet (the settings' toggle, no
+unlock): the brush walks itself, dodging, chasing ink and feeding itself
+shots. Any real input outranks it instantly, and its runs press **half** the
+score and half the ink — an honest walker, not a cheat.
 
 <p align="center">
-  <img src="screenshots/11-night.png" width="800" alt="The night scroll — sheet II: lamp-lit umber washi, cream-ink beasts, embers drifting, a chain rising">
+  <img src="screenshots/10-mobile.png" width="300" alt="ONE MORE on a phone — a portrait scene, the sheet full-bleed, the wave seal and integrity bar above">
 </p>
+
+The sheet itself is a **framed paper on a dark desk** on desktop — centered,
+bordered, shadowed — and every screen lives inside it. Phones keep the
+full-bleed sheet.
 
 ---
 
@@ -106,11 +115,9 @@ fight:
 | 10 | **SEAL** — an honor guard of elites to break; on scene ten, the **Keeper** — and on scene ten of sheet ten, the **Guardian** itself |
 
 The pressure climbs twice: wave by wave inside a scene, and scene by scene
-inside the sheet (scene ten spends ~1.81× the budget of scene one, its
-beasts stand ~1.63× taller) — and the sheets themselves climb (**hp ×1 →
-×7.9**, **budget ×1 → ×4.1** by the blank silk). Chained kills multiply the
-score (decay 2.3 s, ceiling ×5); a hit costs a drop of integrity, and three
-drops dry the page.
+inside the sheet — and the sheets themselves climb. Chained kills multiply the
+score (ceiling ×5); a hit costs a drop of integrity, and the last drop dries
+the page.
 
 **Controls**
 
@@ -118,7 +125,7 @@ drops dry the page.
 |---|---|
 | `W A S D` / arrows | Move — walk anywhere the paper goes |
 | auto-fire | Engaged — the brush always flicks at the nearest blot |
-| 自 THE AUTOBRUSH | the settings' toggle — **available from the first sheet**: the brush walks itself, and any real input outranks it; its runs press half the score and half the ink |
+| 自 THE AUTOBRUSH | the settings' toggle — **available from the first sheet**: the brush walks itself; any real input outranks it |
 | ink motes | Walk over the drops your kills spill — the ensō ring around the brush fills, and closing it means **CHOOSE ONE MORE** |
 | `1` `2` `3` | Pick a card — press again, or `Enter`, to drink the ink |
 | any key / tap | Skip the opening or any cutscene |
@@ -130,29 +137,32 @@ drops dry the page.
 
 ## The two scrolls
 
-| # | Sheet | Ink | kanji | hp / budget | Captain | Keeper | Special | Guardian |
-|---|---|---|---|---|---|---|---|---|
-| I | FIRST WASH | 淡墨 pale wash | 一 | ×1.0 / ×1.0 | THE DRUM | THE BLIGHT | — | THE STAIN |
-| II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | ×2.0 / ×1.5 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
+| # | Sheet | Ink | kanji | Captain | Keeper | Special | Guardian |
+|---|---|---|---|---|---|---|---|
+| I | FIRST WASH | 淡墨 pale wash | 一 | THE DRUM | THE BLIGHT | — | THE STAIN |
+| II | NIGHT SCROLL | 濃墨 lamp-black | 夜 | THE CHOIR | THE HUSK | THE NEST | THE NIGHT MOTHER |
+
+<p align="center">
+  <img src="screenshots/02-scrolls.png" width="550" alt="TWO SCROLLS — the shelf: scroll I in progress, scroll II still sealed behind its red hanko">
+</p>
 
 Journey and daily runs live **inside a fixed arena** — a page with margins,
-2240 × 1600 on every screen, so a fight plays the same on a phone as on a
-desk. Only THE ENDLESS SCROLL keeps the unbroken sheet.
+so a fight plays the same on a phone as on a desk. The endless scroll keeps
+the unbroken sheet.
 
-Every tenth wave of every scene is a **Keeper** fight — and since v19.1, **every
-    scene owns its own**: twenty red-sealed bosses, ten to a sheet, each with its own
-body (one of fifteen brush forms), its own cry, and its own two abilities cut
-from a kit of eighteen primitives — radial slams, aimed needle fans, volleys,
-broods, mirrors, telegraphed charges, blinks, red seal-stamps, sky-rain,
-spirals, orbits, musters. Since v20 the whole boss class wears **one ink**: the
-paper's sacred vermillion (brightened on the night scroll so it burns there
-too) — Guardian, Keeper and Captain are one red family, and the horde stays
-the sheet's own black ink. THE POOL spreads and breeds gnats; THE FAR PEAK
-breaks its own road through the paper; THE PAPER LANTERN circles at a spear's
-length; THE GILD MOTHER counts her half-ink copies. A debut duel runs
-twenty-to-thirty honest seconds, and repeats grow with the scene. Kill it and
-its seal drops a flush of ink — the scene's true Keeper (scene ten) also drops
-a **chest** (a free stroke of your choice) and a pot of fresh water.
+Every tenth wave of every scene is a **Keeper** fight — and **every scene owns
+its own**: twenty red-sealed bosses, ten to a sheet, each with its own body,
+its own cry, and its own abilities cut from a kit of primitives — radial
+slams, aimed needle fans, volleys, broods, mirrors, telegraphed charges,
+blinks, red seal-stamps, sky-rain, spirals, orbits, musters. Since v20 the
+whole boss class wears **one ink**: the paper's sacred vermillion (brightened
+on the night scroll so it burns there too) — Guardian, Keeper and Captain are
+one red family, and the horde stays the sheet's own black ink. THE POOL
+spreads and breeds gnats; THE FAR PEAK breaks its own road through the paper;
+THE PAPER LANTERN circles at a spear's length; THE GILD MOTHER counts her
+half-ink copies. Kill a Keeper and its seal drops a flush of ink — the scene's
+true Keeper (scene ten) also drops a **chest** (a free stroke of your choice)
+and a pot of fresh water.
 
 **THE ASSEMBLY** — scene ten's tenth wave. The Guardian enters alone, and the
 sheet comes with it: at 72%, 45% and 20% of the Guardian's ink, the scene
@@ -162,24 +172,13 @@ Guardian at once**. The Guardian's fall no longer ends the sheet on the spot:
 the unroll waits until the last echo dries, and the paper seals only when the
 arena stands empty.
 
-| The Assembly — all ten seals and THE STAIN stand together |
-|---|
-| ![The Assembly — eleven named bosses on one paper](screenshots/14-assembly.png) |
-
-| THE FAR PEAK — scene three's own keeper, mid-windup |
-|---|
-| ![A scene keeper duel — THE FAR PEAK with its ring telegraph](screenshots/15-keeper.png) |
-
 **Captains** walk *inside* the pack — never alone, never a boss bar. One cut
-from each sheet's own ink, they quicken every beast near them (×1.32 within
-210 px), call fresh ink into the paper, and when one falls its whole fan
-stuns (1.15 s within 235 px). Since v20 the officer wears the bosses' red —
-flag and body one colour — unmistakable in any horde. Walk the wave, find the
-flag, break the rank.
+from each sheet's own ink, they quicken every beast near them, call fresh ink
+into the paper, and when one falls its whole fan stuns. Since v20 the officer
+wears the bosses' red — flag and body one colour — unmistakable in any horde.
 
-**Specials** are the paper's odd mechanics, one per sheet from the second
-scroll on — breed, mend, toll or tax. Each bends the fight around itself.
-Kill them first, or fight the horde they make.
+**Specials** are the paper's odd mechanics — breed, mend, toll or tax. Each
+bends the fight around itself. Kill them first, or fight the horde they make.
 
 ---
 
@@ -187,9 +186,13 @@ Kill them first, or fight the horde they make.
 
 Choose your brush before the run — the choice is remembered. The brush **is**
 the primary weapon: there is no universal volley hiding behind it, and no
-weapon ever arrives the hand did not pick. Three are free; the Wisp is
-sealed behind the journey's scenes, and a scene **seals** when its tenth
-wave's Keeper falls.
+weapon ever arrives the hand did not pick. Three are free; the Wisp is sealed
+behind the journey's scenes, and a scene **seals** when its tenth wave's
+Keeper falls.
+
+<p align="center">
+  <img src="screenshots/03-brushes.png" width="700" alt="The starter brush room — four brushes, each wearing its class seal: 遠 RANGED, 武 MELEE, 術 MAGIC">
+</p>
 
 | Brush | kanji | class | Sealed until | The weapon it is |
 |---|---|---|---|---|
@@ -200,31 +203,34 @@ wave's Keeper falls.
 
 Every brush carries its own **ART track** — techniques no other hand may
 learn. The Wisp is born at rank 1 of the Spirit Scribes; picking that power
-again deepens it. Everything else the run becomes comes off the shelf's
-**six holds** — see the arsenal below. (The charms room and the ink purse
-were retired in v21.9: a run is built from its own picks alone.)
+again deepens it.
+
+---
 
 ## The octopus's six holds — the arsenal
 
 Every weapon occupies one of the octopus's **six holds** (the brush itself
 counts as the first); stats — cadence, footwork, bite, gathering — never
 occupy a hold. Each class answers the horde its own way, and **the shelf
-pulls the run's own class five-deep** (off-class arms keep their ticket,
-never eliminated). The signature body of each class — **Ink Orbit,
-Returning Stroke, Ink Vortex** — wears the red 稀 RARE seal: offered
-rarer within its class, biting deeper. **Octopus Focus** commits the run:
-your most-trained arm bites 30% deeper per rank.
+pulls the run's own class five-deep** (off-class arms keep their ticket, never
+eliminated). The signature body of each class — **Ink Orbit, Returning Stroke,
+Ink Vortex** — wears the red 稀 RARE seal: offered rarer within its class,
+biting deeper. **Octopus Focus** commits the run: your most-trained arm bites
+30% deeper per rank.
 
-**THE MELEE LAW (v24.6d) — a melee arm never fires a projectile.** The
-ring grinds, the trail pools, the fan snaps open where the hand stands,
-the lash sweeps, the charge lunges, the wheel circles. Ranged arms throw;
-magic bends the sheet.
+**THE MELEE LAW — a melee arm never fires a projectile.** The ring grinds, the
+trail pools, the fan snaps open where the hand stands, the lash sweeps, the
+charge lunges, the wheel circles. Ranged arms throw; magic bends the sheet.
+
+<p align="center">
+  <img src="screenshots/16-arms.png" width="700" alt="The melee law in the fight — the fan's swing slashes, the whirl wheel circling, the orbit pool grinding">
+</p>
 
 | Arm | class | Max | At its peak it becomes |
 |---|---|---|---|
 | Ink Orbit 稀 | melee | 3 | **THE GRAVE RING** — every few breaths the ring breathes out, biting what stands near |
 | Folded Fan | melee | 4 | **THE FULL BLOOM** — every fifth swing opens all the way around |
-| Ink Trail | melee | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper |
+| Ink Trail | melee | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper | 
 | Tentacle Lash | melee | 4 | a wider, deeper arc with every rank |
 | Ink Charge | melee | 4 | **THE LONG LUNGE** — the dash reaches twice as far |
 | Whirl Wheel | melee | 3 | **THE TWIN WHEEL** — a second wheel circles the other way |
@@ -241,11 +247,17 @@ magic bends the sheet.
 | Ink Vortex 稀 | magic | 3 | **THE WHORL TEETH** — the closing whirlpool bites what remains |
 | Red Letter | magic | 3 | **THE OPEN LETTER** — every burst reads wider and leaps farther |
 
+---
+
 ## THE STUDY — the ink every run leaves behind
 
 Every run gathers 墨 — **ink** — from the beasts it breaks and the waves it
 seals. The ink stays on the device and feeds **THE STUDY** (the title's
 師 CHARACTER door): six permanent skills and two scribes to walk them.
+
+<p align="center">
+  <img src="screenshots/13-study.png" width="700" alt="THE STUDY — THE SCRIBE walking, THE NIGHT SCRIBE at 5000 ink, the six skill rows beneath">
+</p>
 
 | Skill | kanji | Max | What it does |
 |---|---|---|---|
@@ -266,6 +278,10 @@ seals. The ink stays on the device and feeds **THE STUDY** (the title's
 The mastery fill **rises**: the scribe's body draws in two passes — the base
 ink, then the fill soaked upward from the hem with every skill rank bought.
 
+Found on the paper: the **pot** (+1 integrity), the **墨 talisman** (vacuums
+every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
+**chest** — a free stroke of your choice.
+
 ---
 
 ## The ink-born — 135 of them
@@ -275,14 +291,13 @@ Every creature is a living blot of sumi ink with hand-drawn line boil. The
 wave where the beast debuts, and each scene of each sheet debuts at least
 one beast of its own.
 
-**THE STANDING ARMY (v19.4).** Nothing the brush has met ever leaves the
-world: every sheet's roster inherits the whole horde of the sheets before
-it — the NIGHT SCROLL walks with all twelve of the first wash, and THE
-BLANK SILK musters fifty-nine kin from every paper before it. The
-newcomers still lead their own sheet (their ink is the paper's voice; the
-army wades behind at seven-tenths weight), the officers and the paper's
-odd mechanics stay sheet-bound, and the horde paints in the SHEET's ink —
-so the army inherits each paper's contrast by design.
+**THE STANDING ARMY.** Nothing the brush has met ever leaves the world: every
+sheet's roster inherits the whole horde of the sheets before it — the NIGHT
+SCROLL walks with all twelve of the first wash, and THE BLANK SILK musters
+kin from every paper before it. The newcomers still lead their own sheet (their
+ink is the paper's voice; the army wades behind at seven-tenths weight), the
+officers and the paper's odd mechanics stay sheet-bound, and the horde paints
+in the SHEET's ink — so the army inherits each paper's contrast by design.
 
 **SHEET I · FIRST WASH** — pale ink on fresh washi
 
@@ -318,7 +333,7 @@ so the army inherits each paper's contrast by design.
 | **SPECTER** | PHASER | 171 — unhurried, but every few breaths it is suddenly nearer |
 | **TITAN** | MOTHER | 181 — sheds her brood as she bears down |
 
-**SHEET III · CINNABAR FIELD** — vermillion-stained ink
+**SHEET III · CINNABAR FIELD** — vermillion-stained ink (the endless papers)
 
 | Beast | Trait | Walks in |
 |---|---|---|
@@ -329,7 +344,7 @@ so the army inherits each paper's contrast by design.
 | **SEALBEARER** | SEALED | 216 |
 | **GATE** | SHIELDED | 221 — frontal strikes are turned; flank it or drown it |
 | **STAMPER** | SEALSMITH | 241 |
-| **WARHORN** | MUSTER | 281 — its pulse drives every beast near it 32% faster |
+| **WARHORN** | MUSTER | 281 — its pulse drives every beast near it faster |
 | **SHIKI** | SUMMONER | 246 |
 
 **SHEET IV · STORM SHEET** — rain-grey ink
@@ -372,16 +387,10 @@ so the army inherits each paper's contrast by design.
 | **WEFT** | LOOM | 551 |
 
 …plus **BLIP** (the shard shed by dividers and mothers), **STITCHLING**
-(the shard shed by THE FRAY), the five
-**specials** (THE NEST · THE MENDER · THE TOLLER · THE LEDGER · THE TRACE),
-the six **Captains**, the sixty **ten-seal Keepers** (ten to a sheet, one per
-scene) and the six **Guardians** — one hundred and thirty-five ink-born in all.
-
-**THE CAPTAINS SURGE (v19).** Every officer now draws a telegraphed road
-through the paper every few breaths and takes it — and under its flag the
-rank MUSTERS: a swarm of its kindred fans out and hunts the brush, mustering
-harder when the officer is wounded. Break the officer and the swarm stands
-still.
+(the shard shed by THE FRAY), the five **specials** (THE NEST · THE MENDER ·
+THE TOLLER · THE LEDGER · THE TRACE), the six **Captains**, the sixty
+**ten-seal Keepers** (ten to a sheet, one per scene) and the six
+**Guardians** — one hundred and thirty-five ink-born in all.
 
 ---
 
@@ -400,12 +409,16 @@ and the First Brush is the longest fight in the game.
 | V · wave 500 | **THE FIRST BRUSH** | *THE FIRST STROKE IS STILL WET.* |
 | VI · wave 600 | **THE UNWRITTEN** | *THE PAGE IS STILL BLANK. IT WANTS YOUR HAND.* |
 
+<p align="center">
+  <img src="screenshots/06-guardian.png" width="700" alt="THE NIGHT MOTHER's duel — the cream-ink horde on the lamp-black sheet, the red flag and the pagoda scenery">
+</p>
+
 Its Keeper walks ahead of it every hundred waves: **THE BLIGHT** (*THE STAIN
 SENDS ITS FIRST SERVANT* — 10), **THE HUSK** (110), **THE CINDER** (210),
 **THE RAINVEIL** (310), **THE NIB** (410), **THE MARGIN** (510) — scene ten's
-own seal, and since v19.1 only one of ten: every scene of every sheet walks
-its own Keeper (see THE TEN SEALS above), and at the Guardian's wave they all
-return as echoes beside it — **THE ASSEMBLY**.
+own seal, and only one of ten: every scene of every sheet walks its own
+Keeper, and at the Guardian's wave they all return as echoes beside it —
+**THE ASSEMBLY**.
 
 **The Guardian is the Keeper, upgraded.** Each sheet's finale keeps its
 Keeper's whole kit and adds abilities the lesser duel never shows: THE STAIN
@@ -418,21 +431,40 @@ stamps three seals and what it erases comes back RESTAMPED.
 
 ---
 
-## The brush arts — 46 picks: strokes, the six holds, and the brush's own arts
+## The shelf's own economy
 
 The level-up screen deals three cards from this pool — and the pool answers
 the hand: cast-stroke arts only deal to brushes that cast; each brush's own
 arts deal only to that brush; the arms of the six holds answer the run's
-class five-deep. **ARTS** (marked 墨-ink on their cards) are the weapon's
-own techniques; **POWERS** (marked 武 in vermilion) fight on their own
-clocks; the rare 稀 arms ride their own weight. Strokes reshape the hand
-itself — the full stroke and arsenal tables live under **the brushes** and
-**the octopus's six holds** above.
+class five-deep. **ARTS** (marked 墨-ink on their cards) are the weapon's own
+techniques; **POWERS** (marked 武 in vermilion) fight on their own clocks;
+the rare 稀 arms ride their own weight. Strokes reshape the hand itself.
+
+**The strokes — every hand**
+
+| Stroke | Max | What it does |
+|---|---|---|
+| Quick Hand | 5 | −15% time between casts |
+| Bitter Ink | 4 | every stroke the hand lays bites one deeper |
+| Twin Stroke | 3 | +1 stroke per cast (casting brushes only) |
+| Through Mist | 3 | cast strokes pass through +1 target (casting brushes only) |
+| Flick | 3 | +22% cast-stroke speed (casting brushes only) |
+| Fleeting Foot | 4 | +12% movement |
+| Thick Ink | 3 | +1 max integrity, restore 1 |
+| Red Seal | 3 | every kill presses a seal — a short 1.2× stride surge |
+| Ink Burst | 1 | taking a hit splashes everything nearby away |
+| Echo Stroke | 2 | a mirrored cast answers behind your back (casting brushes only) |
+| Wet Paper | 2 | struck beasts wade — slowed briefly |
+| Crimson Tip | 2 | one stroke in six bites twice as deep |
+| Paper Ward | 1 | a dry talisman swallows one hit whole, then reforms |
+| Ink Hunger | 3 | +42% gathering radius per rank |
+| Paper Mends | 2 | the sheet heals itself, +1 integrity every so often |
+| Deep Well | 2 | every mote is worth +25% more |
 
 **The brush's own arts — one track, one hand**
 
 | Brush | Art | Max | What it does |
-|---|---|---|
+|---|---|---|---|
 | NEEDLE | Needle Rain | 1 | every sixth cast opens into a six-thread fan |
 | NEEDLE | Deep Point | 2 | the thread bites one deeper |
 | NEEDLE | Silk Thread | 2 | the thread flies a fifth farther |
@@ -445,24 +477,9 @@ itself — the full stroke and arsenal tables live under **the brushes** and
 | WISP | Twin Wisps | 2 | a second, then a third wisp with every cast |
 | WISP | Swift Haunt | 2 | faster casts, tighter turns |
 
-Found on the paper: the **pot** (+1 integrity), the **墨 talisman** (vacuums
-every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
-**chest** — a free stroke of your choice.
-
----
-
-## The charms and the purse — retired (v21.9)
-
-The charm room (符), the ink purse and the between-run economy were removed
-in **v21.9**: nothing is bought, nothing presses back — a run is built from
-its own picks alone, and progress is the seals, the records and the chosen
-brush. Old saves carrying `om_charms_v1` simply stop syncing that key; the
-rest of the cloud bridge is untouched. (The screenshot below shows the room
-as it stood.)
-
-| The ledger, fed by the debug cloud — three eyes: ALL-TIME, DAILY, WEEKLY | The charm room — retired in v21.9 |
-|---|---|
-| ![The endless leaderboard](screenshots/08-board.png) | ![The charm room, retired](screenshots/07-charms.png) |
+The charms room and the ink purse were retired in v21.9: nothing is bought
+mid-run, nothing presses back — a run is built from its own picks alone, and
+the only between-run economy is **THE STUDY**'s ink.
 
 **The run's report** can be pressed into a share card — 1080 × 1350, stamped
 with the run's hanko (or your ledger rank, #N, when a post landed), ready to
@@ -483,6 +500,10 @@ tier: a Postgres ledger, row-level security as the lock, and
 second, and the name you stamp there is the name the board wears (the email
 stays home — it never reaches the ledger). Until it is connected the game
 plays exactly as before — the ledger sits quietly offline.
+
+<p align="center">
+  <img src="screenshots/08-board.png" width="550" alt="The leaderboard — three eyes: ALL-TIME, DAILY, WEEKLY; quiet and empty until the ledger is connected">
+</p>
 
 **How it behaves when connected**
 
@@ -720,10 +741,6 @@ Chrome, Edge or Safari and choose **Install app** / **Add to Home Screen**:
 the game opens standalone with no browser chrome, stamped with its own
 hanko icon, and plays entirely offline.
 
-<p align="center">
-  <img src="screenshots/10-mobile.png" width="300" alt="ONE MORE on a phone — a surge scene in portrait, chain ×1.76">
-</p>
-
 **Updates are automatic.** The service worker (`sw.js`) precaches the shell
 and every ink asset on first visit and sweeps images into a runtime cache as
 they are first painted; page navigations go network-first with the cached
@@ -745,10 +762,10 @@ one-more/
 ├── css/
 │   └── style.css               # the sumi-e design system
 ├── js/
-│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, brushes
+│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, brushes, scribes
 │   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
-│   ├── ui.js                   # DOM screens, HUD, wrist ink chip, boss seal, brush picker
-│   ├── game.js                 # run state, waves, arenas, guardians, weapons
+│   ├── ui.js                   # DOM screens, HUD, integrity bar, boss seal, brush picker
+│   ├── game.js                 # run state, waves, arenas, guardians, the six holds
 │   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains, the ensō ink ring
 │   ├── share.js                # the 1080×1350 share card
 │   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
@@ -769,21 +786,22 @@ one-more/
 
 Everything is a knob in `js/config.js` — edit and refresh, no build:
 
-- `AREAS` — the six sheets: ink, paper theme, multipliers, debut order,
-  scene names, roster, elite / Keeper / Guardian
+- `AREAS` + `PAST_SCROLLS` — the six papers: ink, theme, multipliers, roster
 - `ENEMIES` + `ENEMY_WEIGHTS` — hp, speed, size, cost, score, debut wave,
-  spawn weight for all seventy-two
+  spawn weight for all 135
 - `CFG.wave` — the ten-wave shape: budgets, surge cadence, elite scaling,
-  the concurrent cap (150) and group size
+  the concurrent cap and group size
 - `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
-- `CFG.brushes` — the four-shelf brushes and their weapon bodies (`atk`)
-- `UPGRADES` — the 46 picks — strokes, the six holds' arms and the brushes' own ART tracks
+- `CFG.brushes` — the four starters, their classes and their weapon bodies
+- `UPGRADES` — the 46 picks — strokes, the six holds' arms and the brushes'
+  own ART tracks
 - `CFG.lord` — the bosses' pour-in entrance
 - `CFG.endless` / `CFG.hard` — the two teeth: lap growth and REALLY HARD
-- `CFG.world` — the fixed arena (2240 × 1600), spawn padding, stain cap
+- `CFG.world` — the arena, spawn padding, stain cap, the ambient paper marks
 - `CFG.ranks` — the end-of-run seal thresholds
+- `SKILLS` / `CHARACTERS` — THE STUDY's six skills and the two scribes
 
-High score, run counter, brush choice and mute preference persist in
+The run's ink, skills, scribe, seals and preferences persist in
 `localStorage` — no accounts, no tracking. GitHub Pages serves static files
 only, and the game is 100% client-side by design.
 
@@ -795,7 +813,7 @@ armed.
 
 | Param | What it does |
 |---|---|
-| `?wave=N` | start the next run at global wave N (0–999) — `?wave=500` drops the run on the First Brush |
+| `?wave=N` | start the next run at wave N (0–999) |
 | `&power=N` | seed a deep-run build of N upgrades (0–30; 60% stats, 40% powers) |
 | `&god=1` | the scribe cannot bleed — for probes that must outlive a swarm |
 | `&hard=1` | force REALLY HARD for the run |
@@ -806,31 +824,27 @@ armed.
 | `?fps=1` | the frame-rate stamp |
 | `?nores` | disable the adaptive resolution scaler |
 
-Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
+Example: `index.html?wave=100&power=12&god=1`, then press THE JOURNEY.
 
 ## Tech
 
 - Vanilla JavaScript (ES6+), Canvas 2D, WebAudio API — zero dependencies,
   zero build step, zero telemetry
 - Procedural brush rendering: tapered strokes, wobbling blobs, splatter
-  stamps, dry-brush streaks, line-boil animation at 0.115 s per
-  hand-drawn frame — no image assets for the creatures
+  stamps, dry-brush streaks, line-boil animation — no image assets for the
+  creatures
 - A world that remembers: sprite-cached world-space stains dry into the
-  paper (430 kept, fading), hash-grid ambient marks, per-sheet weather —
-  motes, embers, petals, driving rain with lightning, drifting gold leaf
-- The fixed arena for journey/daily (2240 × 1600, camera-clamped, the
-  border on screen) and the truly unbounded endless sheet
-- An FX budget: 900 live flecks, thinned over the soft cap, oldest
-  recycled past the hard cap — a flood never buries the frame
-- The ink engine also paints the films: THE OPENING (v22.1 — six acts
-  over ~33 seconds with a moving camera: the void and the drop, the
-  cracking impact and the flood, three camera-swept strokes, the horde
-  waking in depth under its captain's standard, the six guardians
-  answering along the horizon, and the scribe's slam dissolving into
-  vermilion), the scroll-turn interludes, and the journey's-end finale
-  (credits, the closing ensō) — all skippable, reduced-motion aware
-- The meta paper: the share card, ghost echoes that walk beside you (the
-  charms and the ink purse retired in v21.9)
+  paper, per-sheet weather, master washes of public-domain paintings
+  luminance-extracted into pure ink alpha
+- The sheet on the desk: a framed, centered paper with the desktop around it;
+  phones keep the full bleed
+- An FX budget: rings, popups and particles keep their caps — a flood never
+  buries the frame
+- The ink engine also paints the films: THE OPENING, the scroll-turn
+  interludes, and the journey's-end finale — all skippable, reduced-motion
+  aware
+- The meta paper: THE STUDY, the share card, ghost echoes that walk beside
+  you, THE AUTOBRUSH from the first sheet
 - Full PWA: web manifest + service worker — installable, offline-capable,
   versioned caches, hanko icon set (32/180/192/512, any + maskable)
 - Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system
@@ -840,13 +854,12 @@ Example: `index.html?wave=500&power=30&god=1`, then press THE JOURNEY.
 
 MIT — see [LICENSE](./LICENSE).
 
-## Where the paper goes next
+## Where the paper stands
 
-The development roadmap lives one floor up: [../ROADMAP.md](../ROADMAP.md) —
-the six Guardian thrones (v20), the study's return and the two scribes (v24),
-the six holds, the affinity and the rare seals (v23–v24.6). Current build
-**v24.6d THE MELEE LAW** — live at
+Current build **v24.6d THE MELEE LAW** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
+The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
+[js/CONTEXT.md](./js/CONTEXT.md).
 
 ## Sound & Music Credits
 
