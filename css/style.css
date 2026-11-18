@@ -113,7 +113,7 @@ body[data-theme="silk"]{
 html, body{ height: 100%; }
 
 body{
-  background: #1e1a14;   /* the desk under the sheet */
+  background: var(--paper);   /* the sheet fills the screen; no desk */
   color: var(--ink);
   font-family: var(--mono);
   overflow: hidden;
@@ -130,19 +130,15 @@ body{
 
 .hidden{ display: none !important; }
 
-/* v24.6b THE SHEET ON THE DESK: the paper is a framed, centered
-   sheet — smaller than the screen, with the desk showing around it */
+/* v24.6e THE FULL SHEET: the paper fills the screen edge to edge at
+   every size — no desk, no frame; the sheet is the screen */
 #stage{
   position: fixed;
   inset: 0;
-  margin: auto;
-  width: min(100vw - 26px, 1140px);
-  height: min(100vh - 26px, 700px);
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: var(--paper);
-  border: 2px solid rgba(26,23,20,.5);
-  border-radius: 4px;
-  box-shadow: 0 24px 80px rgba(12,10,7,.4), 0 4px 14px rgba(12,10,7,.26);
 }
 
 #game{
@@ -2957,8 +2953,5 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 /* v24.6 the rare seal: the class’s signature body is offered rarer and rides its own weight */
 .up-rare{ background: var(--red); }
 
-/* v24.6b small screens keep the full sheet — the desk is a desktop luxury */
-@media (max-width: 700px), (max-height: 540px){
-  #stage{ width: 100vw; height: 100vh; border: none; border-radius: 0; box-shadow: none; }
-  body{ background: var(--paper); }
-}
+/* v24.6e the sheet is full-bleed at every size; the small-screen
+   override the desk era needed is retired with the desk itself */

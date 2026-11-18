@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.6d';
+window.OM_VERSION = 'v24.6e';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -542,11 +542,11 @@ const AREAS = [
     keepers: ['k2_1', 'k2_2', 'k2_3', 'k2_4', 'k2_5', 'k2_6', 'k2_7', 'k2_8', 'k2_9', 'k_husk'],
   },
 ];
-/* ---- v23.3 THE PAST SCROLLS — the four papers the v22.3 journey cut
-   retired, kept for the endless era cycle. Their beasts, officers,
-   specials, keepers and guardians are the v20 originals, verbatim:
-   the engine never stopped knowing how to run them. The journey
-   stays two scrolls; past its finale the endless walks all six. */
+/* ---- v23.3 THE PAST SCROLLS — the four papers the v22.3 journey cut
+   retired, kept for the endless era cycle. Their beasts, officers,
+   specials, keepers and guardians are the v20 originals, verbatim:
+   the engine never stopped knowing how to run them. The journey
+   stays two scrolls; past its finale the endless walks all six. */
 const PAST_SCROLLS = [
   {
     id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',

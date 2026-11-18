@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v24.6d';
+const VER = 'v24.6e';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -120,20 +120,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  /* every other same-origin GET: cache-first, refresh the hole behind you */
+  /* every other same-origin GET: stale-while-revalidate — the held copy
+     answers at once while a fresh fetch quietly re-inks the cache behind
+     the visit, so a deploy is current by the NEXT load, not a reload away */
   event.respondWith((async () => {
     const hit = await caches.match(req);
-    if (hit) return hit;
-    try {
-      const fresh = await fetch(req);
-      if (fresh && fresh.ok) {
-        const rung = url.pathname.includes('/img/') ? RUN_CACHE : CORE_CACHE;
-        const cache = await caches.open(rung);
-        cache.put(req, fresh.clone()).catch(() => {});
+    const rung = url.pathname.includes('/img/') ? RUN_CACHE : CORE_CACHE;
+    const revalidate = (async () => {
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.ok) {
+          const cache = await caches.open(rung);
+          await cache.put(req, fresh.clone()).catch(() => {});
+        }
+        return fresh;
+      } catch (_) {
+        return null; /* offline: the held copy stands */
       }
-      return fresh;
-    } catch (_) {
-      return Response.error();
-    }
+    })();
+    if (hit) { event.waitUntil(revalidate); return hit; }
+    const fresh = await revalidate;
+    return fresh || Response.error();
   })());
 });

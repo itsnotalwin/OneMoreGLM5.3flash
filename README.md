@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="screenshots/01-title.png" width="800" alt="ONE MORE — the title: the sheet framed on a dark desk, the ensō brushed behind the wordmark, the brush selector and the journey buttons beneath">
+  <img src="screenshots/01-title.png" width="800" alt="ONE MORE — the title: the sheet fills the screen, the ensō brushed behind the wordmark, the brush selector and the journey buttons beneath">
 </p>
 
 <p align="center">
@@ -45,9 +45,9 @@ optional and can stay dark forever.
 
 ## The paper in pictures
 
-| The sheet lives on the desk — framed, centered, the title beneath the ensō | The journey — beasts circle, the dead stain the paper, the HUD wears the wave seal |
+| The sheet fills the screen edge to edge — the title beneath the ensō | The journey — beasts circle, the dead stain the paper, the HUD wears the wave seal |
 |---|---|
-| ![The title — the framed sheet on the desk](screenshots/01-title.png) | ![A journey scene under the horde](screenshots/04-journey.png) |
+| ![The title — the full sheet](screenshots/01-title.png) | ![A journey scene under the horde](screenshots/04-journey.png) |
 
 | CHOOSE ONE MORE — the shelf: a 稀 RARE arm, the melee lunge, the red curse | THE MELEE LAW — the fan's swing, the whirl wheel and the orbit pool, no projectiles |
 |---|---|
@@ -92,9 +92,8 @@ score and half the ink — an honest walker, not a cheat.
   <img src="screenshots/10-mobile.png" width="300" alt="ONE MORE on a phone — a portrait scene, the sheet full-bleed, the wave seal and integrity bar above">
 </p>
 
-The sheet itself is a **framed paper on a dark desk** on desktop — centered,
-bordered, shadowed — and every screen lives inside it. Phones keep the
-full-bleed sheet.
+The sheet itself is **full-bleed at every size** — the paper is the screen,
+on desktop and phone alike (v24.6e retired the framed-desk look).
 
 ---
 
@@ -856,7 +855,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v24.6d THE MELEE LAW** — live at
+Current build **v24.6e THE FULL SHEET** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
 [js/CONTEXT.md](./js/CONTEXT.md).

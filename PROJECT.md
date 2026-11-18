@@ -5,6 +5,11 @@ An ink-brush survival browser game with journey, endless, and daily modes. This 
 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
+
+## v24.6e — THE FULL SHEET: the desk is gone (18 Nov 2026)
+
+Owner report: **the game sits in a box**. That box was v24.6b's "sheet on the desk" framing — `#stage` capped at `min(100vw − 26px, 1140px) × min(100vh − 26px, 700px)` with a 2px ink border, radius and deep shadow over a dark `#1e1a14` desk, full-bleed only below 700px width / 540px height. The owner wants the paper full screen, so the frame is retired: `#stage` is `100vw × 100vh` at every size, border/radius/shadow gone, `body` wears the paper ink, and the small-screen override (now dead code) is deleted. `resize()` reads `stage.clientWidth/Height` and every overlay rides the stage as `absolute`, so canvas, camera and HUD follow the full sheet with no other edits. Cache `v24.6e`.
+
 ## v24.5
 ## v24.6
 ## v24.6b
