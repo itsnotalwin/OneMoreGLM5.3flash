@@ -76,7 +76,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     playerSlowT: 0,               /* the smother's grip: the brush wades slow */
     arrived: false, washStamp: false,
     fanT: 1.2, spiritT: 1.6, hankoT: 1.6, trailT: 0, wakeT: 0, castN: 0, lashT: 0.5, javelinT: 0.8, mortarT: 1.0, sdartsT: 0.4,
-    arcT: 2.0, boomerT: 1.5, vortexT: 3.0,
+    arcT: 2.0, boomerT: 1.5, vortexT: 3.0, chargeT: 0, chargeCd: 1.0, chargeAng: 0, chargeRange: 200, wheelAng: 0, wheelX: null, wheelX2: null, drylineT: 1.6, skipperT: 1.3, letterT: 2.0, beams: null,
     combo: 0, comboT: 0, hitstop: 0, magnetT: 0, pendingSeal: false,
     pendingLevels: 0, pendingChests: 0, upKind: 'wave', vacuum: false,
     choices: [], selected: null,
@@ -174,7 +174,7 @@ const rand = (a, b) => a + RNG() * (b - a);
       bulletSpeedMult: 1,
       adren: 0, shock: false, levels: {},
       echo: 0, orb: 0, nova: 0, slow: 0, crit: 0, ward: false, wardCd: 0,
-      fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0, lash: 0, javelin: 0, mortar: 0, sdarts: 0, focus: 0,
+      fan: 0, trailW: 0, spirit: 0, hanko: 0, arc: 0, boomer: 0, vortex: 0, lash: 0, javelin: 0, mortar: 0, sdarts: 0, charge: 0, wheel: 0, dryline: 0, skipper: 0, letter: 0, focus: 0,
       magnet: 0, mends: 0, well: 0, mendsT: 0, critC: 0,
       /* the brush's own arts (v19) — one track, one hand */
       nrain: 0, ndeep: 0, nsilk: 0, bwide: 0, bbrist: 0, bwet: 0,
@@ -580,6 +580,8 @@ if (qaProbe()) return;
     e.dead = true;
     e._killed = true;
     S.kills = (S.kills || 0) + 1;   /* the harvest count — balance passes and ledgers read this */
+    /* v24.6 the red letter opens when its carrier falls */
+    if (e.cursed) curseBurst(e);
     const def = ENEMIES[e.type];
     const isBoss = !!def.boss;
     const mult = 1 + 0.15 * Math.max(0, S.stats.wave - 1);
@@ -1053,12 +1055,29 @@ if (qaProbe()) return;
        cast (u.proj) */
     const atk = CFG.brushes[S.brush] && CFG.brushes[S.brush].atk;
     const projBrush = !!atk && (atk.kind === 'bolts' || atk.kind === 'gust');
-    const avail = shuffle(UPGRADES.filter(u =>
+    /* v24.6 THE AFFINITY: the brush you start with pulls its own kind —
+       its class's weapons ride five-deep in the deck, so the shelf
+       offers them way more often; everything else keeps its chance */
+    const cls = (CFG.brushes[S.brush] || {}).cls || null;
+    const pool = UPGRADES.filter(u =>
       (st.levels[u.id] || 0) < u.max &&
       !(u.for && u.for !== S.brush) &&
       !(u.proj && !projBrush) &&
-      !(u.slot && (st.levels[u.id] || 0) === 0 && weaponCount() >= CFG.octopus.slots)));   /* v23.0 the six holds */
-    const out = avail.slice(0, n);
+      !(u.slot && (st.levels[u.id] || 0) === 0 && weaponCount() >= CFG.octopus.slots));   /* v23.0 the six holds */
+    const deck = [];
+    for (const u of pool) {
+      const w = (u.slot && u.cls && cls && u.cls === cls) ? (u.rare ? 3 : 5) : 1;
+      for (let k = 0; k < w; k++) deck.push(u);
+    }
+    shuffle(deck);
+    const seen = new Set();
+    const out = [];
+    for (const u of deck) {
+      if (seen.has(u.id)) continue;
+      seen.add(u.id);
+      out.push(u);
+      if (out.length >= n) break;
+    }
     let i = 0;
     while (out.length < n) {
       const k = i++;
@@ -1142,7 +1161,7 @@ if (qaProbe()) return;
      stats first, then the learned powers a run this deep would
      carry — so the sealed sheets and Guardians stay testable
      against the curve. Never used for a player's resume. */
-  const QA_KIT_POWERS = ['arc', 'orbit', 'vortex', 'boomer', 'nova', 'spirit', 'trail', 'hanko', 'fan'];
+  const QA_KIT_POWERS = ['arc', 'orbit', 'vortex', 'boomer', 'nova', 'spirit', 'trail', 'hanko', 'fan', 'charge', 'wheel', 'dryline', 'skipper', 'letter'];
   function applyQAPower(n) {
     /* the probe kit splits: the first 60% buys stats, the rest buys
        the learned powers — a run this deep would carry both */
@@ -1326,7 +1345,7 @@ if (qaProbe()) return;
     S.queue = []; S.waveInitial = 0; S.waveActive = false;
     S.invulnT = 0; S.adrenT = 0; S.shake = 0; S.dyingT = 0; S.novaT = 0;
     S.fanT = 1.2; S.spiritT = 1.6; S.hankoT = 1.6; S.trailT = 0; S.wakeT = 0; S.lashT = 0.5; S.javelinT = 0.8; S.mortarT = 1.0; S.sdartsT = 0.4;
-    S.arcT = 2.0; S.boomerT = 1.5; S.vortexT = 3.0;
+    S.arcT = 2.0; S.boomerT = 1.5; S.vortexT = 3.0; S.chargeT = 0; S.chargeCd = 1.0; S.chargeAng = 0; S.chargeRange = 200; S.wheelAng = 0; S.wheelX = null; S.wheelX2 = null; S.drylineT = 1.6; S.skipperT = 1.3; S.letterT = 2.0; S.beams = null;
     S.scribes = [];   /* the living strokes wake with the run */
     S.castN = 0; S.fanCasts = 0; S.hankoQueue = [];
     S.combo = 0; S.comboT = 0; S.hitstop = 0; S.magnetT = 0; S.playerSlowT = 0;
@@ -2059,6 +2078,119 @@ if (qaProbe()) return;
     }
     SFX.shoot();
   }
+  /* ------------- v24.6 THE SECOND BREATH: five arms more ------------- */
+  /* ink charge: the brush itself lunges \u2014 a dash that files what it passes */
+  function fireCharge() {
+    const p = S.player, st = S.stats;
+    const range = CFG.charge.range(st.charge);
+    const dmg = (CFG.charge.dmg(st.charge) + (st.dmg - 1)) * focusMult('charge');
+    const tgt = nearestEnemy(p.x, p.y, range * 1.6);
+    const a = tgt ? Math.atan2(tgt.y - p.y, tgt.x - p.x) : p.aim;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    let hits = 0;
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const e = S.enemies[k];
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const along = dx * ca + dy * sa;
+      if (along < -e.r || along > range + e.r) continue;
+      const across = Math.abs(-dx * sa + dy * ca);
+      if (across > 22 + e.r) continue;
+      e.hp -= dmg; e.hitFlash = 0.08;
+      e.kbx += ca * 240; e.kby += sa * 240;
+      if (e.hp <= 0) { S.enemies.splice(k, 1); killEnemy(e); }
+      hits++;
+    }
+    S.chargeAng = a; S.chargeRange = range; S.chargeT = CFG.charge.dash;
+    (S.slashes = S.slashes || []).push({ ang: a, len: range, arc: 0.3, life: 0.22, max: 0.22, x: p.x, y: p.y });
+    S.shake = Math.max(S.shake, Math.min(6, 2 + hits));
+    SFX.fan();
+  }
+  /* dry line: one straight stroke, cast and already dry \u2014 everything
+     along the line is struck at once, to the far edge of the sheet */
+  function fireDryline() {
+    const p = S.player, st = S.stats;
+    const range = CFG.dryline.range;
+    const half = CFG.dryline.width(st.dryline) / 2;
+    const dmg = (CFG.dryline.dmg(st.dryline) + (st.dmg - 1)) * focusMult('dryline');
+    const tgt = nearestEnemy(p.x, p.y, range);
+    const a = tgt ? Math.atan2(tgt.y - p.y, tgt.x - p.x) : p.aim;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    let hits = 0;
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const e = S.enemies[k];
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const along = dx * ca + dy * sa;
+      if (along < -e.r || along > range) continue;
+      const across = Math.abs(-dx * sa + dy * ca);
+      if (across > half + e.r) continue;
+      e.hp -= dmg; e.hitFlash = 0.1;
+      const d = Math.hypot(dx, dy) || 1;
+      e.kbx += (dx / d) * 170; e.kby += (dy / d) * 170;
+      if (e.hp <= 0) { S.enemies.splice(k, 1); killEnemy(e); }
+      hits++;
+    }
+    (S.beams = S.beams || []).push({ x: p.x, y: p.y, ang: a, len: range, life: 0.34, max: 0.34 });
+    if (hits) S.shake = Math.max(S.shake, 3);
+    SFX.fan();
+  }
+  /* paper skipper: a folded paper skips flat across the sheet,
+     biting what it ploughs and leaping off the bounds of the page */
+  function fireSkipper() {
+    const p = S.player, st = S.stats;
+    const tgt = nearestEnemy(p.x, p.y, 620);
+    const a = tgt ? Math.atan2(tgt.y - p.y, tgt.x - p.x) : p.aim;
+    const dmg = (CFG.skipper.dmg(st.skipper) + (st.dmg - 1)) * focusMult('skipper');
+    S.bullets.push({
+      x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
+      vx: Math.cos(a) * CFG.skipper.speed, vy: Math.sin(a) * CFG.skipper.speed,
+      ang: a, dmg, hits: CFG.skipper.contacts(st.skipper), age: 0, life: CFG.skipper.life,
+      kind: 'skipper', skipper: 1,
+      seed: 100000 + ((Math.random() * 899999) | 0),
+    });
+    SFX.shoot();
+  }
+  /* red letter: a curse rides the nearest beast; when it dies the letter
+     opens \u2014 the burst bites what stands near and the letter leaps on */
+  function fireLetter() {
+    const p = S.player, st = S.stats;
+    const tgt = nearestEnemy(p.x, p.y, 620);
+    if (!tgt) return;
+    tgt.cursed = { dmg: (CFG.letter.dmg(st.letter) + (st.dmg - 1)) * focusMult('letter') };
+    tgt.curseT = CFG.letter.dur;
+    tgt._lettered = false;
+    S.rings.push({ x: tgt.x, y: tgt.y, max: 26, life: 0.4, maxLife: 0.4, red: true });
+    SFX.hit();
+  }
+  /* the letter opens: the burst bites what stands near, then leaps to
+     the nearest body that has not carried it \u2014 the chain runs dry as
+     the letter wears */
+  function curseBurst(src) {
+    const st = S.stats;
+    const spec = src.cursed || { dmg: 2 };
+    const spread = CFG.letter.spread(st.letter || 1);
+    src.cursed = null;
+    S.rings.push({ x: src.x, y: src.y, max: spread, life: 0.42, maxLife: 0.42, red: true });
+    burst(src.x, src.y, 5, false);
+    let carrier = null, cd = 1e9;
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const o = S.enemies[k];
+      if (o.dead) continue;
+      const dx = o.x - src.x, dy = o.y - src.y;
+      const dd = Math.hypot(dx, dy) || 1;
+      if (dd <= spread) {
+        o.hp -= spec.dmg; o.hitFlash = 0.1;
+        o.kbx += (dx / dd) * 200; o.kby += (dy / dd) * 200;
+        if (o.hp <= 0 && !o._killed) { S.enemies.splice(k, 1); killEnemy(o); continue; }
+      }
+      if (!o.cursed && !o._lettered && dd < 440 && dd < cd) { cd = dd; carrier = o; }
+    }
+    if (carrier) {
+      carrier.cursed = { dmg: Math.max(1, spec.dmg * 0.7) };
+      carrier.curseT = CFG.letter.dur;
+      carrier._lettered = true;
+    }
+    SFX.nova();
+  }
   /* ---------------- the autobrush's own hand (自) ----------------
      A sampling steerer, not a bag of springs. Each frame the walker
      scores a ring of candidate steps — the danger each one lands in,
@@ -2392,6 +2524,80 @@ if (qaProbe()) return;
       if (S.sdartsT <= 0) { S.sdartsT = CFG.sdarts.period(st.sdarts); fireSilkDarts(); }
     }
 
+    /* v24.6 ink charge: the brush itself lunges through the horde */
+    if (st.charge > 0) {
+      if (S.chargeT > 0) {
+        S.chargeT -= dt;
+        const spd = S.chargeRange / CFG.charge.dash;
+        p.x += Math.cos(S.chargeAng) * spd * dt;
+        p.y += Math.sin(S.chargeAng) * spd * dt;
+        clampArena(p, 12);
+        S.stainQueue.push({ x: p.x, y: p.y, r: 5, alpha: 0.2 });
+      }
+      S.chargeCd -= dt;
+      if (S.chargeCd <= 0) {
+        S.chargeCd = CFG.charge.period(st.charge);
+        if (nearestEnemy(p.x, p.y, CFG.charge.range(st.charge) * 1.6)) fireCharge();
+      }
+    }
+    /* v24.6 whirl wheel: a wheel of ink spins out to mid reach and circles,
+       cutting what it crosses; THE TWIN WHEEL sends a second the other way */
+    if (st.wheel > 0) {
+      S.wheelAng = (S.wheelAng || 0) + CFG.wheel.speed * dt;
+      const wr = CFG.wheel.radius(st.wheel);
+      const wdmg = (CFG.wheel.dmg(st.wheel) + Math.ceil(st.dmg * 0.5)) * focusMult('wheel');
+      st.wheelTick = (st.wheelTick == null ? CFG.wheel.tick(st.wheel) : st.wheelTick) - dt;
+      const nW = st.wheel >= 3 ? 2 : 1;
+      S.wheelX2 = null;
+      for (let wi = 0; wi < nW; wi++) {
+        const wa = S.wheelAng + (wi ? Math.PI : 0);
+        const wx = p.x + Math.cos(wa) * wr, wy = p.y + Math.sin(wa) * wr;
+        if (wi === 0) { S.wheelX = wx; S.wheelY = wy; }
+        else { S.wheelX2 = wx; S.wheelY2 = wy; }
+        if (st.wheelTick <= 0) {
+          for (let kk = S.enemies.length - 1; kk >= 0; kk--) {
+            const e = S.enemies[kk];
+            const dx = e.x - wx, dy = e.y - wy;
+            const rr2 = e.r + CFG.wheel.r;
+            if (dx * dx + dy * dy <= rr2 * rr2) {
+              e.hp -= wdmg; e.hitFlash = 0.08;
+              const d = Math.hypot(dx, dy) || 1;
+              e.kbx += (dx / d) * 90; e.kby += (dy / d) * 90;
+              if (e.hp <= 0) { S.enemies.splice(kk, 1); killEnemy(e); }
+            }
+          }
+        }
+      }
+      if (st.wheelTick <= 0) { st.wheelTick = CFG.wheel.tick(st.wheel); SFX.hit(); }
+    }
+    /* v24.6 dry line: the straight stroke, cast and already dry */
+    if (st.dryline > 0) {
+      S.drylineT -= dt;
+      if (S.drylineT <= 0) { S.drylineT = CFG.dryline.period(st.dryline); fireDryline(); }
+      if (S.beams && S.beams.length) {
+        for (let bi = S.beams.length - 1; bi >= 0; bi--) {
+          S.beams[bi].life -= dt;
+          if (S.beams[bi].life <= 0) S.beams.splice(bi, 1);
+        }
+      }
+    }
+    /* v24.6 paper skipper: the folded stone skips */
+    if (st.skipper > 0) {
+      S.skipperT -= dt;
+      if (S.skipperT <= 0) { S.skipperT = CFG.skipper.period(st.skipper); fireSkipper(); }
+    }
+    /* v24.6 red letter: the curse rides; an unread letter still bursts */
+    if (st.letter > 0) {
+      S.letterT -= dt;
+      if (S.letterT <= 0) { S.letterT = CFG.letter.period(st.letter); fireLetter(); }
+      for (let kk = S.enemies.length - 1; kk >= 0; kk--) {
+        const e = S.enemies[kk];
+        if (!e.cursed) continue;
+        e.curseT -= dt;
+        if (e.curseT <= 0) curseBurst(e);
+      }
+    }
+
     /* paper mends: the sheet heals itself */
     if (st.mends > 0) {
       st.mendsT -= dt;
@@ -2714,6 +2920,19 @@ if (qaProbe()) return;
           b.ang += clamp(diff, -turn, turn);
           const spd = Math.hypot(b.vx, b.vy) || 1;
           b.vx = Math.cos(b.ang) * spd; b.vy = Math.sin(b.ang) * spd;
+        }
+      }
+      /* v24.6 the skipper leaps off the bounds of the sheet, still flying */
+      if (b.skipper) {
+        const A = CFG.world.arena, ix = A.w / 2 - 10, iy = A.h / 2 - 10;
+        let bounced = false;
+        if (b.x < -ix && b.vx < 0) { b.vx = -b.vx; bounced = true; }
+        else if (b.x > ix && b.vx > 0) { b.vx = -b.vx; bounced = true; }
+        if (b.y < -iy && b.vy < 0) { b.vy = -b.vy; bounced = true; }
+        else if (b.y > iy && b.vy > 0) { b.vy = -b.vy; bounced = true; }
+        if (bounced) {
+          b.ang = Math.atan2(b.vy, b.vx);
+          S.rings.push({ x: b.x, y: b.y, max: 22, life: 0.3, maxLife: 0.3 });
         }
       }
       b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt;

@@ -70,6 +70,12 @@ const UI = (() => {
 
   /* hand-brushed upgrade glyphs */
   const GLYPHS = {
+    /* v24.6 THE SECOND BREATH */
+    charge: '<path d="M4.5 17.5L15 7M15 7l-.6 4.6M15 7l-4.6.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5.5 20h5M4 20h1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>',
+    wheel: '<circle cx="12" cy="12" r="6.4" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 5.6v3M12 15.4v3M5.6 12h3M15.4 12h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="16.8" cy="7.2" r="1.5" fill="currentColor"/>',
+    dryline: '<path d="M3.5 12h15M18.5 12l-3-2.4M18.5 12l-3 2.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6.5 8.5v7M11 9.5v5" stroke="currentColor" stroke-width="1.2" opacity=".5"/>',
+    skipper: '<ellipse cx="10.5" cy="10" rx="5.2" ry="2.9" transform="rotate(-14 10.5 10)" fill="none" stroke="currentColor" stroke-width="1.8"/><ellipse cx="10.5" cy="10" rx="2.4" ry="1.2" transform="rotate(-14 10.5 10)" fill="currentColor"/><path d="M15.5 16.5c1.6-1.8 3.2-2.2 5-1.4M17 19.5c1.2-1.2 2.4-1.5 3.6-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none" opacity=".6"/>',
+    letter: '<rect x="6" y="7.5" width="12" height="9.5" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(-4 12 12)"/><path d="M9 11h6M9 13.5h4" stroke="currentColor" stroke-width="1.3" opacity=".65"/><circle cx="15.8" cy="15" r="2" fill="#b23a2b"/>',
     rapid: '<path d="M6 17L15 7M11 18.5L20 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
     heavy: '<path d="M12 4.5c1.4 3.4 2.2 5.4 2.2 7.6 0 2.8-1 4.9-2.2 4.9s-2.2-2.1-2.2-4.9c0-2.2.8-4.2 2.2-7.6z" fill="currentColor"/><circle cx="18" cy="16.8" r="1.6" fill="currentColor"/>',
     split: '<path d="M12 19V9M12 9c-2.6-1.4-3.4-3.4-3-5.6M12 9c2.6-1.4 3.4-3.4 3-5.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
@@ -162,6 +168,7 @@ const UI = (() => {
       row.innerHTML =
         `<span class="set-kanji" aria-hidden="true">${locked ? '封' : (b.kanji || '筆')}</span>` +
         `<span class="set-name">${b.name}</span>` +
+        `<span class="br-cls br-cls-${b.cls || 'none'}" aria-hidden="true">${({ melee: '武 MELEE', ranged: '遠 RANGED', magic: '術 MAGIC' })[b.cls] || ''}</span>` +
         `<span class="set-desc">${locked ? `SEALED — CLEAR ${need} SCENE${need === 1 ? '' : 'S'} IN THE JOURNEY TO WAKE THIS BRUSH` : b.desc}</span>` +
         (locked
           ? `<span class="set-state br-prog" aria-label="${Math.min(sealed, need)} of ${need} scenes sealed">${Math.min(sealed, need)} / ${need}</span>`
@@ -891,11 +898,12 @@ const UI = (() => {
       const isNew = !u.patch && lv === 0 ? '<span class="up-new">NEW</span>' : '';
       const isWpn = (u.weapon || u.ability) ? '<span class="up-wpn">POWER</span>' : '';
       const isArt = u.art ? '<span class="up-wpn up-art">ART</span>' : '';
+      const isRare = u.rare ? '<span class="up-wpn up-rare">稀 RARE</span>' : '';
       /* the final pick earns its name on the card: the special it wakes */
       const maxLine = (!u.patch && u.maxSpec && lv === u.max - 1)
         ? `<span class="up-maxspec">${u.maxSpec}</span>` : '';
       card.innerHTML =
-        `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isArt}${isWpn}${isNew}<span class="up-pips">${pips}</span></span></div>` +
+        `<div class="up-top"><span class="up-no">${['I', 'II', 'III'][i] || i + 1}</span><span class="up-top-right">${isArt}${isWpn}${isRare}${isNew}<span class="up-pips">${pips}</span></span></div>` +
         `<svg class="up-glyph" viewBox="0 0 24 24" aria-hidden="true">${GLYPHS[u.id] || GLYPHS.patch}</svg>` +
         `<h3 class="up-name">${u.name}</h3>` +
         `<p class="up-desc">${u.desc}</p>` +

@@ -4340,6 +4340,20 @@ function drawEnemy(c, e, t) {
       c.globalAlpha = 0.34;
       blobPath(c, -9 - b.age * 6, 0.5, 3.2, (b.seed ?? 7) ^ 9, 0.3, 7);
       c.fill();
+    } else if (b.kind === 'skipper') {
+      /* the paper skipper \u2014 a folded sheet that skips flat across the ink */
+      c.rotate(b.ang);
+      c.fillStyle = INK;
+      c.beginPath();
+      c.ellipse(0, 0, 7.5, 4.2, 0, 0, TAU);
+      c.fill();
+      c.globalAlpha = 0.5;
+      c.fillStyle = PAPER;
+      c.beginPath();
+      c.ellipse(1.5, 0, 4.4, 2.2, 0, 0, TAU);
+      c.fill();
+      c.globalAlpha = 0.4;
+      inkStroke(c, [{ x: -6, y: 0 }, { x: -15 - b.age * 9, y: 0.4 }], 1.6, { alpha: 1 });
     } else if (b.kind === 'pale') {
       /* the night scribe's exhale — a pale bead with a dark heart,
          reading on every paper the hand can walk */
@@ -6212,6 +6226,51 @@ function drawEnemy(c, e, t) {
     if (playing && !washHides) drawPlayer(ctx, t);
     for (const s of S.stamps) drawStamp(ctx, s);
     for (const sl of S.slashes) drawLashFx(ctx, sl);
+    /* v24.6 the second breath’s bodies: the wheel, the dry line, the letter */
+    if (S.stats && S.stats.wheel > 0 && S.wheelX != null) {
+      const drawW = (wx, wy) => {
+        ctx.save(); ctx.translate(wx, wy); ctx.rotate((S.wheelAng || 0) * 3.2);
+        ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.globalAlpha = 0.85;
+        ctx.beginPath(); ctx.arc(0, 0, CFG.wheel.r, 0, TAU); ctx.stroke();
+        ctx.globalAlpha = 0.45;
+        ctx.beginPath();
+        for (let si = 0; si < 4; si++) {
+          const aa = (si / 4) * TAU;
+          ctx.moveTo(Math.cos(aa) * (CFG.wheel.r - 5), Math.sin(aa) * (CFG.wheel.r - 5));
+          ctx.lineTo(Math.cos(aa) * CFG.wheel.r, Math.sin(aa) * CFG.wheel.r);
+        }
+        ctx.stroke();
+        ctx.fillStyle = INK; ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.arc(0, 0, 3, 0, TAU); ctx.fill();
+        ctx.restore();
+      };
+      drawW(S.wheelX, S.wheelY);
+      if (S.wheelX2 != null) drawW(S.wheelX2, S.wheelY2);
+    }
+    for (const bm of (S.beams || [])) {
+      const f = Math.max(0, bm.life / bm.max);
+      ctx.save();
+      ctx.translate(bm.x, bm.y); ctx.rotate(bm.ang);
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2.4 * f + 0.6;
+      ctx.globalAlpha = 0.85 * f;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(bm.len, 0); ctx.stroke();
+      ctx.globalAlpha = 0.28 * f; ctx.lineWidth = 6 * f;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(bm.len * (0.4 + 0.6 * f), 0); ctx.stroke();
+      ctx.restore();
+    }
+    for (const ce of S.enemies) {
+      if (!ce.cursed) continue;
+      ctx.save();
+      ctx.translate(ce.x, ce.y - ce.r - 9);
+      ctx.rotate(Math.sin(t * 4.2) * 0.12 - 0.08);
+      ctx.fillStyle = RED; ctx.globalAlpha = 0.92;
+      ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, TAU); ctx.fill();
+      ctx.fillStyle = PAPER; ctx.globalAlpha = 0.95;
+      ctx.font = '7px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('呪', 0, 0.5);
+      ctx.restore();
+    }
     for (const ar of S.arcs) drawArcFx(ctx, ar);
     for (const bo of S.bolts) drawBolt(ctx, bo);
     for (const p of S.particles) {

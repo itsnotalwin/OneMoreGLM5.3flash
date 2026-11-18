@@ -2936,3 +2936,10 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 .cc-skill{ font-size: 11px; line-height: 1.4; color: var(--red); opacity: .9; margin-top: 2px; }
 .cc-act{ flex: none; font-size: 10px; letter-spacing: .18em; white-space: nowrap; opacity: .85; }
 .char-card.is-current .cc-act{ color: var(--red); opacity: 1; }
+
+/* v24.6 the affinity seals: each brush names the kind it pulls */
+.br-cls{ display: inline-block; margin-left: 10px; padding: 3px 7px 2px; font-size: 8.5px; letter-spacing: .22em; text-indent: .22em; color: var(--paper); background: var(--ink-70); border-radius: 3px; transform: rotate(-1.5deg); vertical-align: 2px; }
+.br-cls-melee, .br-cls-magic, .br-cls-ranged{ background: var(--red); }
+
+/* v24.6 the rare seal: the class’s signature body is offered rarer and rides its own weight */
+.up-rare{ background: var(--red); }

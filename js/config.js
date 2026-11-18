@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.5';
+window.OM_VERSION = 'v24.6';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -74,14 +74,16 @@ const CFG = {
      seals when its tenth wave's Keeper falls). A sealed brush
      cannot be chosen; the shelf of seals is the key. */
   brushes: {
-    needle: { name: 'THE NEEDLE', kanji: '細', desc: 'A fine tip that barely lifts. A thread of ink, cast fast and true.',
+    needle: { name: 'THE NEEDLE', kanji: '細', cls: 'ranged', desc: 'A fine tip that barely lifts. A thread of ink, cast fast and true.',
       atk: { kind: 'bolts', cd: 0.28, shots: 1, dmg: 1, speed: 640, life: 0.85, spread: 0.10, bkind: 'needle' } },
-    broom:  { name: 'THE BROOM', kanji: '掃', desc: 'A wide brush that sweeps three droplets at once, clearing the lane.',
+    broom:  { name: 'THE BROOM', kanji: '掃', cls: 'melee', desc: 'A wide brush that sweeps three droplets at once, clearing the lane.',
       atk: { kind: 'bolts', cd: 0.62, shots: 3, dmg: 2, speed: 520, life: 0.66, spread: 0.15, bkind: 'drop' } },
-    stone:  { name: 'THE STONE', kanji: '岩', desc: 'A heavy hand. A slow lob that bites deep and splashes where it lands.',
+    stone:  { name: 'THE STONE', kanji: '岩', cls: 'ranged',   /* the affinity: the lob pulls the ranged arms */
+    desc: 'A heavy hand. A slow lob that bites deep and splashes where it lands.',
       atk: { kind: 'bolts', cd: 1.0, shots: 1, dmg: 3, speed: 400, life: 0.92, spread: 0.06, bkind: 'stone', splash: 54 },
       mods: { maxHp: 5, moveMult: 0.9 } },
     wisp:   { name: 'THE WISP', kanji: '幽', unlock: 3,
+      cls: 'magic',
       desc: 'The brush breathes homing wisps — and a lesser spirit wakes beside it, hunting on its own.',
       atk: { kind: 'bolts', cd: 0.85, shots: 1, dmg: 2, speed: 300, life: 2.4, spread: 0.05, bkind: 'wisp', homing: 6.5 },
       mods: { spirit: 1 } },
@@ -264,6 +266,12 @@ const CFG = {
   javelin:{ period: lv => 1.9 * Math.pow(0.88, lv - 1), shots: lv => 1 + lv, dmg: lv => 2 + lv, speed: 560, life: 1.1, spread: 0.16, pierce: 2 },
   mortar: { period: lv => 2.5 * Math.pow(0.9, lv - 1), shots: lv => 1 + Math.floor((lv - 1) / 2), dmg: lv => 2 + lv, speed: 300, life: 0.8, splash: lv => 42 + lv * 12 },
   sdarts: { period: lv => 1.5 * Math.pow(0.9, lv - 1), shots: lv => 3 + lv, dmg: 1, speed: 660, life: 0.38, spread: 0.22 },
+  /* v24.6 THE SECOND BREATH: five arms more \u2014 the classes answer even */
+  charge:  { period: lv => 2.6 * Math.pow(0.9, lv - 1), range: lv => lv >= 4 ? 560 : 150 + lv * 34, dmg: lv => 2 + lv, dash: 0.16 },
+  wheel:   { radius: lv => 88 + lv * 22, tick: lv => 0.5 - 0.06 * (lv - 1), dmg: lv => 1 + lv, speed: 2.6, r: 15 },
+  dryline: { period: lv => 3.4 * Math.pow(0.88, lv - 1), dmg: lv => 4 + 2 * lv, width: lv => 13 + lv * 3, range: 940 },
+  skipper: { period: lv => 2.1 * Math.pow(0.9, lv - 1), dmg: lv => 2 + lv, speed: 520, life: 2.6, contacts: lv => 2 + lv },
+  letter:  { period: lv => 3.2 * Math.pow(0.9, lv - 1), dmg: lv => 3 + 2 * lv, spread: lv => 96 + lv * 22, dur: 6 },
   /* the octopus itself: six holds for weapons; stats ride free */
   octopus:{ slots: 6 },
   focus:  { mult: 0.3 },
@@ -648,7 +656,7 @@ const UPGRADES = [
   { id: 'adren',  name: 'Red Seal',     desc: 'Every kill presses a seal: a short 1.2\u00d7 stride surge.',  max: 3, apply: s => { s.adren += 1; } },
   { id: 'shock',  name: 'Ink Burst',    desc: 'Taking a hit splashes everything nearby away. Once per hit.', max: 1, apply: s => { s.shock = true; } },
   { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored cast answers behind your back. +1 stroke.',        max: 2, proj: 1, apply: s => { s.echo += 1; } },
-  { id: 'orbit',  name: 'Ink Orbit',    desc: 'An ink ring pools around the brush — everything inside it is ground down, breath by breath.', max: 3, slot: 1, cls: 'melee', apply: s => { s.orb += 1; },
+  { id: 'orbit',  name: 'Ink Orbit',    desc: 'An ink ring pools around the brush — everything inside it is ground down, breath by breath.', max: 3, rare: 1, slot: 1, cls: 'melee', apply: s => { s.orb += 1; },
     maxSpec: 'THE GRAVE RING — an orbital hunts what it sees, every few breaths' },
   { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',   max: 2, apply: s => { s.slow += 1; } },
   { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',     max: 2, apply: s => { s.crit += 1; } },
@@ -671,9 +679,9 @@ const UPGRADES = [
     maxSpec: 'THE LINGERING POOL — the ink bites twice as fast and pools deeper' },
   { id: 'arc',    name: 'Sumi Arc',     desc: 'A live stroke leaps from beast to beast, chaining like spilled lightning.', max: 4, ability: 1, slot: 1, cls: 'magic', apply: s => { s.arc += 1; },
     maxSpec: 'THE LIVING LINE — the stroke leaps three links farther' },
-  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.boomer += 1; },
+  { id: 'boomer', name: 'Returning Stroke', desc: 'A wide brushstroke flies out, then recalls itself — biting twice.', max: 4, rare: 1, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.boomer += 1; },
     maxSpec: 'THE MIRROR RETURN — the homing stroke bursts into an ink ring' },
-  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.vortex += 1; },
+  { id: 'vortex', name: 'Ink Vortex',   desc: 'A whirlpool of living ink opens, dragging beasts in and drowning them.', max: 3, rare: 1, ability: 1, slot: 1, cls: 'magic', apply: s => { s.vortex += 1; },
     maxSpec: 'THE WHORL TEETH — the closing whirlpool bites what remains' },
   /* ---- v23.0 THE OCTOPUS: melee, ranged, magic — six arms ----
      Every weapon wears a class and occupies one of the octopus's
@@ -686,6 +694,20 @@ const UPGRADES = [
   { id: 'javelin', name: 'Ink Javelins',   desc: 'Heavy bolts thrown flat and fast, piercing a rank of beasts.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.javelin += 1; } },
   { id: 'mortar',  name: 'Quill Mortar',   desc: 'Lobbed quills burst where beasts gather — the thicker the crowd, the wider the splash.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.mortar += 1; } },
   { id: 'sdarts',  name: 'Silk Darts',     desc: 'A short, fast burst of silk darts from the mantle — shreds soft bodies at close range.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.sdarts += 1; } },
+  /* ---- v24.6 THE SECOND BREATH: five arms more, the classes even ----
+     The melee learns to LUNGE and to WHEEL, the ranged to draw the
+     LINE and to SKIP, the magic to send the LETTER. Each class now
+     carries six arms; the shelf pulls them by the brush's class. */
+  { id: 'charge',  name: 'Ink Charge',   desc: 'The brush itself lunges \u2014 a dash through the horde that files everything it passes.', max: 4, ability: 1, slot: 1, cls: 'melee',  apply: s => { s.charge += 1; },
+    maxSpec: 'THE LONG LUNGE \u2014 the dash reaches twice as far' },
+  { id: 'wheel',   name: 'Whirl Wheel',  desc: 'A wheel of ink spins out to mid reach and circles, cutting what it crosses.', max: 3, ability: 1, slot: 1, cls: 'melee',  apply: s => { s.wheel += 1; },
+    maxSpec: 'THE TWIN WHEEL \u2014 a second wheel circles the other way' },
+  { id: 'dryline', name: 'Dry Line',     desc: 'One straight stroke, cast and already dry \u2014 everything along the line is struck.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.dryline += 1; },
+    maxSpec: 'THE FOLDED WIDTH \u2014 the stroke cuts a wider swath' },
+  { id: 'skipper', name: 'Paper Skipper',desc: 'A folded paper skips flat across the sheet, biting every body it ploughs.', max: 4, ability: 1, slot: 1, cls: 'ranged', apply: s => { s.skipper += 1; },
+    maxSpec: 'THE STORM SKIP \u2014 the paper bites deeper with every body' },
+  { id: 'letter',  name: 'Red Letter',   desc: 'A red letter rides the nearest beast. Death opens it \u2014 the burst bites, and the letter leaps on.', max: 3, ability: 1, slot: 1, cls: 'magic',  apply: s => { s.letter += 1; },
+    maxSpec: 'THE OPEN LETTER \u2014 every burst reads wider and leaps farther' },
   /* the commit: the arms remember their favourite — the most-trained
      power bites deeper per rank of FOCUS. Stats never count. */
   { id: 'focus',   name: 'Octopus Focus',  desc: 'Your most-trained power bites 30% deeper per rank of this. Commit to one.', max: 2, apply: s => { s.focus += 1; } },
