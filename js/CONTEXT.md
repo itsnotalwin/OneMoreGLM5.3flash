@@ -4,7 +4,11 @@
 Owns ONE MORE's vanilla-JavaScript runtime, rendering, audio and online leaderboard.
 ## v24.5
 ## v24.6
-## v24.6b — THE QUIET SHEET: the hash marks leave, the paper lives on the desk (18 Nov 2026)
+## v24.6b
+## v24.6c — THE WALKER FROM THE FIRST SHEET (18 Nov 2026)
+
+The owner's request: **AUTO is everyone's from the start**. The settings row drops its scroll-II seal (`getUnlocked() < 2` → always visible) and its copy no longer calls the walker a gift — the autobrush (its runs pay half the score, as ever) toggles from the first save. Verified on a fresh wipe: row visible at unlocked 1, ON persists, and with the real loop's `vec()` plumbing (a still hand lets `autoVec` walk) the brush covered 224px on its own, killed 12 and reached wave 2 with its integrity whole. **The hash-mark question closed**: a full audit of every canvas layer (paper tiles, landscape stamps, decor, stains, puddles, motes, spirits, enemies, telegraphs, bullets of every kind, rings, popups, particles, weather, the in-run ring) found no mesh drawer in the current build — a frame-diff detector over 25 seconds of live combat logged nothing beyond combat itself. The marks the owner still sees are the **stale service-worker paper**: their PWA was serving the pre-fix build. This push bumps the cache (`v24.6c`) so every device's next worker update retires every old cache at once. Cache `v24.6c`.
+ — THE QUIET SHEET: the hash marks leave, the paper lives on the desk (18 Nov 2026)
 
 The owner's two complaints, whole. **The "# mesh" is gone**: the giant ghost kanji that drawDecor scattered per world cell (風月花山川紙雲 at 64–120px, 4.5% alpha — crossing strokes that read as a hash mesh, proportionally huge on a phone) and the stray hairs are lifted off the paper; the flecks drop to two at 6.5% alpha and the tile's laid lines and fibers soften (0.035→0.022, 0.03–0.075→0.02–0.048). **The sheet lives on the desk**: `#stage` becomes a framed, centered sheet — `min(100vw − 26px, 1140px) × min(100vh − 26px, 700px)`, 2px ink border, radius, deep shadow — over a dark desk (`body` #1e1a14), and every overlay (`#hud`, `.screen`, `.wave-banner`, `#flash`, `.intro-gate`, `.run-hint`) drops `position: fixed` for `absolute` so it rides the sheet. Phones (max-width 700px or max-height 540px) keep the full-bleed sheet. resize() reads `stage.clientWidth`, so the canvas, camera and HUD all follow the frame. Cache `v24.6b`.
  — THE SECOND BREATH: the affinity, five arms more, the rare seals (18 Nov 2026)

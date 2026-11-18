@@ -233,12 +233,12 @@
     const muted = document.getElementById('muteBtn').classList.contains('muted');
     on('setSound', !muted);
     on('setGhost', localStorage.getItem('om_ghost_off_v1') !== '1');
-    /* THE AUTOBRUSH — the second scroll's gift: the row itself stays
-       sealed until the brush has walked past the first sheet */
+    /* THE AUTOBRUSH — the walker walks from the first sheet: no seal,
+       AUTO is everyone's from the start (v24.6c) */
     const autoRow = document.getElementById('setAuto');
     if (autoRow) {
       const autoOn = G.getAutoBrush();
-      autoRow.classList.toggle('hidden', G.getUnlocked() < 2);
+      autoRow.classList.toggle('hidden', false);   /* v24.6c the walker walks from the first sheet */
       const ast = document.getElementById('setAutoState');
       if (ast) ast.textContent = autoOn ? 'ON' : 'OFF';
       autoRow.classList.toggle('is-on', autoOn);
