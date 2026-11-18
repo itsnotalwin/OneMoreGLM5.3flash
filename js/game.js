@@ -1809,39 +1809,52 @@ if (qaProbe()) return;
   }
 
   /* ---------------- weapons: the new strokes ---------------- */
-  /* the folded fan: a cone of paper blades with every swing — the
-     Fan brush's own weapon, or a power any hand may learn. Every
-     fifth cast snaps full-circle; THE FULL BLOOM makes it every
-     fourth. More blades ride the ranks, Edge Wind, and Twin Stroke. */
+  /* v24.6d THE MELEE LAW: the fan no longer throws its blades — it
+     snaps open where the hand stands. A cone of ink files everything
+     in its sweep, breath by breath; every fifth swing opens all the
+     way around the brush. */
   function fireFan() {
     const p = S.player, st = S.stats;
+    const tgt = nearestEnemy();
+    if (!tgt) return;
     S.fanCasts = (S.fanCasts || 0) + 1;
-    const fullEvery = st.fbloom ? 4 : 5;
-    const fullBloom = S.fanCasts % fullEvery === 0;
-    const n = CFG.fan.blades(st.fan) + (st.fedge || 0) + (st.shots - 1);
-    const spread = CFG.fan.spread;
+    const fullBloom = S.fanCasts % 5 === 0;
+    const a = Math.atan2(tgt.y - p.y, tgt.x - p.x);
+    const len = CFG.fan.len(st.fan);
+    const arc = CFG.fan.arc;
     const dmg = primaryDmg(1) * focusMult('fan');
-    const cast = (a, bloom) => {
-      S.bullets.push({
-        x: p.x + Math.cos(a) * 13, y: p.y + Math.sin(a) * 13,
-        vx: Math.cos(a) * CFG.fan.speed, vy: Math.sin(a) * CFG.fan.speed,
-        ang: a, dmg, hits: 2, age: 0, life: CFG.fan.life,
-        kind: 'blade', spin: (Math.random() < 0.5 ? 1 : -1) * rand(9, 14),
-        bloom, push: st.fgale ? 300 : 110,
-      });
-    };
+    (S.slashes = S.slashes || []).push({ ang: a, len, arc, life: 0.22, max: 0.22, x: p.x, y: p.y });
+    let hits = 0;
+    for (let k = S.enemies.length - 1; k >= 0; k--) {
+      const e = S.enemies[k];
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d > len + e.r) continue;
+      let da = Math.atan2(dy, dx) - a;
+      while (da > Math.PI) da -= TAU;
+      while (da < -Math.PI) da += TAU;
+      if (Math.abs(da) > arc / 2 + e.r / Math.max(70, d)) continue;
+      e.kbx += (dx / d) * 150; e.kby += (dy / d) * 150;
+      damageEnemy(e, k, dmg, false, a);
+      hits++;
+    }
     if (fullBloom) {
       /* THE FULL BLOOM: the fan snaps open all the way around */
-      for (let i = 0; i < n * 2; i++) {
-        cast((i / (n * 2)) * TAU + (S.fanCasts % 8 === 0 ? Math.PI / (n * 2) : 0), true);
+      for (let w = 1; w < 4; w++) {
+        (S.slashes = S.slashes || []).push({ ang: a + w * TAU / 4, len, arc: 1.7, life: 0.22, max: 0.22, x: p.x, y: p.y });
       }
-      S.rings.push({ x: p.x, y: p.y, max: 118, life: 0.4, maxLife: 0.4 });
+      S.rings.push({ x: p.x, y: p.y, max: len * 1.15, life: 0.4, maxLife: 0.4 });
+      for (let k = S.enemies.length - 1; k >= 0; k--) {
+        const e = S.enemies[k];
+        const dx = e.x - p.x, dy = e.y - p.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (d > len + e.r) continue;
+        e.kbx += (dx / d) * 150; e.kby += (dy / d) * 150;
+        damageEnemy(e, k, dmg, false, Math.atan2(dy, dx));
+      }
       S.shake = Math.max(S.shake, 3);
     } else {
-      for (let i = 0; i < n; i++) {
-        const off = n === 1 ? 0 : -spread / 2 + (spread * i) / (n - 1);
-        cast(p.aim + off, false);
-      }
+      S.shake = Math.max(S.shake, Math.min(4, 1 + hits));
     }
     SFX.fan();
   }
@@ -2640,21 +2653,28 @@ if (qaProbe()) return;
         }
         SFX.hit();
       }
-      /* THE GRAVE RING: a maxed ring sends an orbital hunting */
+      /* v24.6d THE GRAVE RING: the ring itself breathes out — a pulse
+         of grave-ink bites what stands near; nothing leaves the hand */
       if (st.orb >= 3) {
         S.orbFlingT = (S.orbFlingT == null ? CFG.orbit.flingEvery : S.orbFlingT) - dt;
         if (S.orbFlingT <= 0) {
-          const tgt = nearestEnemy(p.x, p.y, 720);
-          if (tgt) {
+          const pr = orbR * 1.65;
+          let bit = false;
+          for (let kk = S.enemies.length - 1; kk >= 0; kk--) {
+            const e = S.enemies[kk];
+            const dx = e.x - p.x, dy = e.y - p.y;
+            const dd = Math.hypot(dx, dy) || 1;
+            if (dd <= pr + e.r) {
+              e.hp -= odmg * 2; e.hitFlash = 0.08; bit = true;
+              e.kbx += (dx / dd) * 260; e.kby += (dy / dd) * 260;
+              if (e.hp <= 0) { S.enemies.splice(kk, 1); killEnemy(e); }
+            }
+          }
+          if (bit) {
             S.orbFlingT = CFG.orbit.flingEvery;
-            const fa = base * CFG.orbit.speed;
-            S.spirits.push({
-              x: p.x + Math.cos(fa) * orbR, y: p.y + Math.sin(fa) * orbR,
-              ang: Math.atan2(tgt.y - p.y, tgt.x - p.x),
-              speed: 460, age: 0, life: 2.4, seed: (Math.random() * 1e9) | 0,
-              dmg: odmg * 2, pierce: 0, grave: true,
-            });
-            SFX.spirit();
+            S.rings.push({ x: p.x, y: p.y, max: pr, life: 0.45, maxLife: 0.45 });
+            S.orbPulse = 1;
+            SFX.nova();
           } else S.orbFlingT = 0.8;
         }
       }

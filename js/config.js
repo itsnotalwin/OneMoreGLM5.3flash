@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.6c';
+window.OM_VERSION = 'v24.6d';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -254,7 +254,7 @@ const CFG = {
 
   /* weapons — every loop is a power any brush may learn; the brush
      that is BORN to one carries its first rank from the first wave */
-  fan:    { period: lv => 0.72 * Math.pow(0.9, lv - 1), blades: lv => 3 + lv, speed: 470, life: 0.52, spread: 0.95 },
+  fan:    { period: lv => 0.72 * Math.pow(0.9, lv - 1), len: lv => 118 + lv * 22, arc: 0.95 },   /* v24.6d the melee law: a swing, not a shot */
   trail:  { gap: lv => 0.5 - 0.08 * (lv - 1), radius: lv => 26 + lv * 7, life: 2.7, tick: 0.42, dmg: 1 },
   spirit: { period: lv => 2.3 * Math.pow(0.9, lv - 1), count: lv => lv, speed: 300, turn: 7.5, life: 3.2, dmg: 1 },
   hanko:  { period: lv => 2.3 * Math.pow(0.88, lv - 1), radius: lv => 88 + (lv - 1) * 12, dmg: lv => 3 + Math.floor((lv - 1) / 2), stun: 0.45 },
@@ -657,7 +657,7 @@ const UPGRADES = [
   { id: 'shock',  name: 'Ink Burst',    desc: 'Taking a hit splashes everything nearby away. Once per hit.', max: 1, apply: s => { s.shock = true; } },
   { id: 'echo',   name: 'Echo Stroke',  desc: 'A mirrored cast answers behind your back. +1 stroke.',        max: 2, proj: 1, apply: s => { s.echo += 1; } },
   { id: 'orbit',  name: 'Ink Orbit',    desc: 'An ink ring pools around the brush — everything inside it is ground down, breath by breath.', max: 3, rare: 1, slot: 1, cls: 'melee', apply: s => { s.orb += 1; },
-    maxSpec: 'THE GRAVE RING — an orbital hunts what it sees, every few breaths' },
+    maxSpec: 'THE GRAVE RING — every few breaths the ring breathes out, biting what stands near' },
   { id: 'slow',   name: 'Wet Paper',    desc: 'Struck beasts wade through soaked paper — slowed briefly.',   max: 2, apply: s => { s.slow += 1; } },
   { id: 'crit',   name: 'Crimson Tip',  desc: 'One stroke in six bites twice as deep. Deeper per rank.',     max: 2, apply: s => { s.crit += 1; } },
   { id: 'ward',   name: 'Paper Ward',   desc: 'A dry talisman swallows one hit whole, then reforms.',        max: 1, apply: s => { s.ward = true; } },
@@ -669,8 +669,8 @@ const UPGRADES = [
      rank from the first wave, and every further pick deepens it. */
   { id: 'nova',   name: 'Black Tide',   desc: 'The ink surges outward every few breaths, shoving all back.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.nova += 1; },
     maxSpec: 'THE Risen SEA — the surge comes faster and reaches farther' },
-  { id: 'fan',    name: 'Folded Fan',   desc: 'A cone of paper blades with every swing — more blades, faster.', max: 4, ability: 1, slot: 1, cls: 'melee', apply: s => { s.fan += 1; },
-    maxSpec: 'THE FULL BLOOM — the fan snaps open full-circle' },
+  { id: 'fan',    name: 'Folded Fan',   desc: 'The folded fan snaps open where the hand stands — a cone of ink that files everything in its sweep.', max: 4, ability: 1, slot: 1, cls: 'melee', apply: s => { s.fan += 1; },
+    maxSpec: 'THE FULL BLOOM — every fifth swing opens all the way around' },
   { id: 'spirit', name: 'Spirit Scribes',desc: 'Lesser brushes wake and hunt on their own, seeking the nearest blot.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.spirit += 1; },
     maxSpec: 'THE LITANY — spirits run through up to three bodies and fly faster' },
   { id: 'hanko',  name: 'Crimson Hanko',desc: 'The great seal falls on the thickest horde — faster, broader.', max: 3, ability: 1, slot: 1, cls: 'magic', apply: s => { s.hanko += 1; },
