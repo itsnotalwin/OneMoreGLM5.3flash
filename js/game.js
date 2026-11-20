@@ -2248,23 +2248,51 @@ if (qaProbe()) return;
     SFX.nova();
   }
   /* ---------------- the autobrush's own hand (自) ----------------
-     A sampling steerer, not a bag of springs. Each frame the walker
-     scores a ring of candidate steps — the danger each one lands in,
-     the margin it leaves, the ink it promises — and takes the best.
-     Nothing cancels, so nothing cancels into a corner: the walker
-     simply never chooses a step that leads there. The margin is priced
-     behind a long, steep shoulder and its weight is blind to heading,
-     so a border is never a road to run along — and the beasts are
-     judged where they are marching, not where they stand. The hand
-     outranks it all: one key, one finger, and it yields. Its runs
-     press half the ink and half the score. */
-  const BOT = { nx: 0, ny: 0, spin: 1 };   /* heading, and which way it circles */
+     A sampling steerer wearing an artist's intent. The frame's danger
+     is judged exactly as ever — the march of the bodies, the spite in
+     the air, the keepers' circles, the page's rim — and the walker
+     simply never chooses a step that leads into any of it. What
+     changed is who owns the direction: no more per-frame auction,
+     which read as a fuzz of reversals. The hand now holds an INTENT
+     for a breath at a time — raid a pledged mote, flank a pledged
+     beast on a slow orbit, cross to fresh paper, or on a quiet sheet
+     stand a beat to dip the brush — and steers for that pledge on the
+     bend, never the beeline. Spikes of danger suspend the intent
+     whole (the yield), and the sweep reverses on the world's own
+     events — a new wave, banked ink, a rim at the back — so no two
+     minutes walk alike. The hand still outranks it all: one key, one
+     finger, and it yields. Its runs press half the ink and half the
+     score. */
+  const BOT = {
+    nx: 0, ny: 0,          /* the committed heading */
+    spin: 1,               /* which way the brush circles — it flips */
+    mode: 'flank',         /* raid · flank · cross · beat · yield */
+    modeT: 0,              /* breath left in this intent, game seconds */
+    gKey: null,            /* the mote or beast this intent is pledged to */
+    gx: 0, gy: 0,          /* the intent's place on the sheet */
+    oa: 0,                 /* the flank orbit's angle around its beast */
+    lastTick: -1,          /* the clock the intent last breathed on */
+    calmT: 0,              /* how long the air has stayed quiet in a yield */
+    boxedT: 0,             /* how long the rim has pressed the brush */
+    lastWave: 0, lastLevel: 0,
+  };
 
   function autoSteer(p) {
     const A = arenaOn() ? arena() : null;
     const STEP = 108;                  /* how far one judged step reaches */
     const N = 24;                      /* candidate steps around the ring */
     const lead = 0.42;                 /* seconds of a beast's march, judged */
+    const tick = (S.stats && S.stats.time) || 0;
+
+    /* a fresh sheet rewinds the clock — the intents wake with the run */
+    if (tick < BOT.lastTick - 0.5) {
+      BOT.lastTick = tick; BOT.mode = 'flank'; BOT.modeT = 0; BOT.gKey = null;
+      BOT.nx = 0; BOT.ny = 0; BOT.calmT = 0; BOT.boxedT = 0;
+    }
+    /* vec() re-asks within a frame on a keydown — the intent breathes
+       on game time, once per frame at most */
+    const ddt = tick > BOT.lastTick ? Math.min(0.1, tick - BOT.lastTick) : 0;
+    BOT.lastTick = tick;
 
     /* ---- the frame's terrain, read once: the bodies and the spite
        near enough to matter to any candidate step ---- */
@@ -2286,16 +2314,40 @@ if (qaProbe()) return;
     for (const tg of S.telgs) {
       if (tg.kind === 'ring' && tg.e && !tg.e.dead) rings.push(tg);
     }
-    /* the nearest ink worth a detour */
-    let mote = null, moteD2 = 1e9;
-    for (const mt of S.motes) {
-      const dx = mt.x - p.x, dy = mt.y - p.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < moteD2) { moteD2 = d2; mote = mt; }
-    }
     const calm = Math.max(0, Math.min(1, 1 - press / 2.6));
     const hurt = (S.stats && S.stats.maxHp) ? 1 - S.stats.hp / S.stats.maxHp : 0;
     const want = 150 + 120 * hurt;     /* the standoff the walker keeps */
+    /* the danger at the brush's own feet, judged the way a step is */
+    let foot = 1e9;
+    for (const e of bodies) {
+      const sp = e.speed || 0, an = e.ang || 0;
+      const d = Math.hypot(p.x - (e.x + Math.cos(an) * sp * lead * 0.9),
+        p.y - (e.y + Math.sin(an) * sp * lead * 0.9)) - (e.r || 12);
+      if (d < foot) foot = d;
+    }
+    const ringHit = rings.some(tg => Math.hypot(p.x - tg.e.x, p.y - tg.e.y) < (tg.r || 200) * 0.98);
+    const spike = press > 1.6 || foot < want * 0.55 || ringHit;
+
+    /* the pledges: ink held while it lives — a nearer mote never tears
+       a stroke mid-line; flesh held while it breathes */
+    let mote = null, moteD2 = 1e9;
+    if (BOT.mode === 'raid' && BOT.gKey && S.motes.includes(BOT.gKey)) {
+      mote = BOT.gKey;                    /* the pledge holds */
+    } else {
+      for (const mt of S.motes) {
+        const dx = mt.x - p.x, dy = mt.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < moteD2) { moteD2 = d2; mote = mt; }
+      }
+    }
+    let target = null, targetScore = 1e9;
+    for (const e of S.enemies) {
+      if (e.dead) continue;
+      const def = ENEMIES[e.type] || {};
+      const d = Math.hypot(e.x - p.x, e.y - p.y) - (e.r || 12);
+      const sc = d / (def.boss ? 3.4 : def.captain ? 2.2 : 1);
+      if (sc < targetScore) { targetScore = sc; target = e; }
+    }
 
     function cost(x, y) {
       let c = 0;
@@ -2343,65 +2395,154 @@ if (qaProbe()) return;
         const d = Math.hypot(x - tg.e.x, y - tg.e.y);
         if (d < rr * 0.95) c += 1e5 + (rr - d) * 120;
       }
-      /* the ink: ink is worth a step across the whole sheet — a mote
-         nine hundred paces off still outbids wandering — and worth
-         more while the air is calm */
-      if (mote) {
-        const d = Math.hypot(x - mote.x, y - mote.y);
-        const reach = d < 1150 ? 1 - d / 1150 : 0;
-        c -= reach * reach * 2600 * (0.45 + 0.55 * calm);
-      }
-      /* the hunt: at ease the walker closes to its standoff and holds
-         there — near enough to kill, never near enough to be buried */
-      if (dmin > want) c -= 520 * calm * Math.max(0, 1 - (dmin - want) / 460);
-      else if (dmin < 70) c += (70 - dmin) * 240;
-      /* and when the horde is far off the page, a weak scent of it */
-      if (nearE && dmin > want) {
-        const dh = Math.hypot(x - nearE.x, y - nearE.y);
-        c -= 80 * calm * Math.max(0, 1 - dh / 900);
+      /* the intent: one pledged bearing, bent, worth crossing the whole
+         sheet for — the per-frame auction of nearest-mote and
+         nearest-flesh is what made the walk read as a fuzz */
+      const cdx = x - p.x, cdy = y - p.y;
+      const cd = Math.hypot(cdx, cdy) || 1;
+      c -= ((cdx / cd) * bx0 + (cdy / cd) * by0) * arcK;
+      /* the hunt, as a band: close only when the standoff has visibly
+         opened, yield only when it has visibly closed — between the
+         two the brush holds its line and orbits, no in-out chatter */
+      if (BOT.mode === 'flank') {
+        if (dmin > want + 70) c -= 520 * calm * Math.max(0, 1 - (dmin - want - 70) / 460);
+        else if (dmin < want - 50) c += (want - 50 - dmin) * 240;
       }
       /* the sweep: with the air calm the walker circles the pack — a
          moving brush is harder to lead than a standing one, and the
-         horde is always entered from its flank, never its face */
-      if (nearE && calm > 0.35) {
-        const ox = x - nearE.x, oy = y - nearE.y;
-        if (ox * ox + oy * oy > 70 * 70) {
-          const here = Math.atan2(p.y - nearE.y, p.x - nearE.x);
-          let da = Math.atan2(oy, ox) - here;
-          while (da > Math.PI) da -= TAU;
-          while (da < -Math.PI) da += TAU;
-          c -= Math.max(0, da * BOT.spin) * 110 * calm;
-        }
-      }
+         horde is always entered from its flank, never its face. The
+         circling itself now lives in the flank goal (a point on the
+         standoff circle that walks), so no per-frame term here. */
       return c;
     }
 
-    /* ---- the ring of candidate steps, and the honest option to hold ---- */
+    /* ---- the intents: one at a time, each held for its breath ---- */
+    if (ddt > 0) {
+      /* the sweep reverses on the world's own events — a new wave,
+         banked ink — so no two minutes circle alike */
+      const wave = S.stats ? S.stats.wave : 0;
+      const level = S.stats ? S.stats.xpLevel : 0;
+      if (BOT.lastWave && wave !== BOT.lastWave) BOT.spin = -BOT.spin;
+      if (BOT.lastLevel && level !== BOT.lastLevel) BOT.spin = -BOT.spin;
+      BOT.lastWave = wave; BOT.lastLevel = level;
+      /* a rim at the brush's back flips the sweep before it can grind
+         against the shoulder */
+      const boxed = !!A && (Math.abs(p.x) > A.w / 2 - 110 || Math.abs(p.y) > A.h / 2 - 110);
+      BOT.boxedT = boxed ? BOT.boxedT + ddt : 0;
+      if (BOT.boxedT > 0.5) { BOT.spin = -BOT.spin; BOT.boxedT = 0; BOT.modeT = 0; }
+
+      if (spike) {
+        /* the yield: intent suspended whole — the danger field speaks
+           alone until the air has stayed quiet for a breath */
+        if (BOT.mode !== 'yield') { BOT.mode = 'yield'; BOT.calmT = 0; }
+        BOT.calmT += ddt;
+        if (BOT.calmT > 0.4) BOT.modeT = 0;
+      } else if (BOT.mode === 'yield') {
+        BOT.mode = 'flank'; BOT.modeT = 0; BOT.gKey = null;
+      } else {
+        BOT.modeT -= ddt;
+        /* keep the pledge honest: a dead beast or an expired breath
+           sends the hand back to market */
+        if (BOT.mode === 'flank' && BOT.gKey && !BOT.gKey.dead && S.enemies.includes(BOT.gKey)) {
+          BOT.oa += ddt * 0.9 * BOT.spin;   /* the orbit's own walking pace —
+            slow enough that the brush can ride the tangent instead of
+            chasing a point that outruns it */
+        } else if (BOT.mode === 'flank') BOT.modeT = 0;
+        if (BOT.mode === 'raid' && !(BOT.gKey && S.motes.includes(BOT.gKey))) BOT.modeT = 0;
+        if (BOT.mode === 'cross' && Math.hypot(BOT.gx - p.x, BOT.gy - p.y) < 130) BOT.modeT = 0;
+        if (BOT.modeT <= 0) {
+          /* the market: ink first, flesh in reach, else fresh paper */
+          if (mote) {
+            BOT.mode = 'raid'; BOT.gKey = mote;
+            BOT.modeT = 4.5 + Math.random() * 2;
+          } else if (target && targetScore < 760) {
+            BOT.mode = 'flank'; BOT.gKey = target;
+            BOT.oa = Math.atan2(p.y - target.y, p.x - target.x);
+            BOT.modeT = 2.5 + Math.random() * 1.5;
+          } else {
+            BOT.mode = 'cross'; BOT.gKey = null;
+            const a2 = Math.random() * TAU, rr = 420 + Math.random() * 380;
+            BOT.gx = A ? clamp(p.x + Math.cos(a2) * rr, -(A.w / 2 - 150), A.w / 2 - 150) : p.x + Math.cos(a2) * rr;
+            BOT.gy = A ? clamp(p.y + Math.sin(a2) * rr, -(A.h / 2 - 150), A.h / 2 - 150) : p.y + Math.sin(a2) * rr;
+            BOT.modeT = 3 + Math.random() * 2;
+          }
+          /* a fresh intent may sweep the other way */
+          if (Math.random() < 0.15) BOT.spin = -BOT.spin;
+          /* the dip: only on a quiet page — the walker settles, then
+             flicks its wrist and takes the sheet again */
+          if ((BOT.mode === 'cross' || BOT.mode === 'flank') && calm > 0.85 && press < 0.3
+            && !ringHit && foot > want && Math.random() < 0.22) {
+            BOT.mode = 'beat'; BOT.modeT = 0.3 + Math.random() * 0.18;
+          }
+        }
+      }
+      /* the beat: hold still — the glide settles the figure — then the
+         wrist flicks (the droplet is the render's own) and the hand
+         returns to market */
+      if (BOT.mode === 'beat') {
+        BOT.modeT -= ddt;
+        if (BOT.modeT > 0) return { x: 0, y: 0 };
+        p.recoil = Math.max(p.recoil || 0, 1);
+        if (Math.random() < 0.15) BOT.spin = -BOT.spin;
+        BOT.mode = 'cross'; BOT.modeT = 0; BOT.gKey = null;
+      }
+    }
+
+    /* ---- the pledge's bearing, bent: everything is approached on a
+       curve — a beeline is a dead stroke. The bend straightens near
+       the goal and yields to danger. ---- */
+    let bx0 = 0, by0 = 0, arcK = 0;
+    {
+      if (BOT.mode === 'raid' && BOT.gKey) { BOT.gx = BOT.gKey.x; BOT.gy = BOT.gKey.y; }
+      else if (BOT.mode === 'flank' && BOT.gKey) {
+        /* the orbit IS the goal: a point on the standoff circle that
+           walks around the beast — pursue it and the sweep happens */
+        BOT.gx = BOT.gKey.x + Math.cos(BOT.oa) * want;
+        BOT.gy = BOT.gKey.y + Math.sin(BOT.oa) * want;
+        if (A) {
+          BOT.gx = clamp(BOT.gx, -(A.w / 2 - 150), A.w / 2 - 150);
+          BOT.gy = clamp(BOT.gy, -(A.h / 2 - 150), A.h / 2 - 150);
+        }
+      }
+      const gdx = BOT.gx - p.x, gdy = BOT.gy - p.y;
+      const gd = Math.hypot(gdx, gdy) || 1;
+      const bend = (BOT.mode === 'yield' ? 0 : 0.42 * Math.min(1, gd / 420) * (0.3 + 0.7 * calm)) * BOT.spin;
+      const cb = Math.cos(bend), sb = Math.sin(bend);
+      bx0 = (gdx / gd) * cb - (gdy / gd) * sb;
+      by0 = (gdx / gd) * sb + (gdy / gd) * cb;
+      arcK = 1500 * (0.35 + 0.65 * Math.min(1, gd / 900)) * (0.5 + 0.5 * calm)
+        * (BOT.mode === 'yield' ? 0.25 : 1);
+    }
+
+    /* ---- the ring of candidate steps ---- */
     let bx = 0, by = 0, best = Infinity, found = false;
-    const tick = (S.stats && S.stats.time) || 0;
     for (let i = 0; i < N; i++) {
       const a = (i / N) * TAU;
       const cx = Math.cos(a), cy = Math.sin(a);
       let c = cost(p.x + cx * STEP, p.y + cy * STEP);
-      /* a steady hand: turning every frame is its own kind of noise */
-      if (BOT.nx || BOT.ny) c += (1 - (cx * BOT.nx + cy * BOT.ny)) * 26;
+      /* a steady hand: turning every frame is its own kind of noise —
+         pricier in cruise, cheap in the yield */
+      if (BOT.nx || BOT.ny) c += (1 - (cx * BOT.nx + cy * BOT.ny)) * (BOT.mode === 'yield' ? 12 : 40);
       /* a symmetric noose has no cheapest side — a slow breath of noise
          keeps the walker from freezing on the precise middle */
       c += Math.sin(tick * 2.1 + i * 1.7) * 3;
       if (!found || c < best) { found = true; best = c; bx = cx; by = cy; }
     }
-    /* standing still is a choice only on a page with nothing to do:
-       a brush that never stops moving is harder to lead, and the horde
-       is always entered from its flank */
-    if (!mote && near > 700 && press < 0.25) { BOT.nx = 0; BOT.ny = 0; return { x: 0, y: 0 }; }
-    /* a committed heading: the walker leans into its choice instead of
-       chattering between two equally cheap ones */
+    /* the committed heading: in cruise the hand leans hard on the line
+       it already draws — a fifth of the fresh say-so is enough to bend
+       it. In the yield the danger field speaks with half the say-so. */
+    const hold = BOT.mode === 'yield' ? 0.5 : 0.78;
     let ox = bx, oy = by;
     if (BOT.nx || BOT.ny) {
-      ox = bx * 0.62 + BOT.nx * 0.38;
-      oy = by * 0.62 + BOT.ny * 0.38;
+      ox = bx * (1 - hold) + BOT.nx * hold;
+      oy = by * (1 - hold) + BOT.ny * hold;
       const om = Math.hypot(ox, oy) || 1;
       ox /= om; oy /= om;
+      /* a whip turn: the wrist flicks, and the render answers it */
+      const da = Math.abs(Math.atan2(oy, ox) - Math.atan2(BOT.ny, BOT.nx));
+      if (Math.min(da, TAU - da) > 1.9 && Math.hypot(p.vx, p.vy) > 120) {
+        p.recoil = Math.max(p.recoil || 0, 0.9);
+      }
     }
     BOT.nx = ox; BOT.ny = oy;
     return { x: ox, y: oy };
@@ -2412,6 +2553,13 @@ if (qaProbe()) return;
     if (!S || S.mode !== 'playing' || !S.autoRun) return { x: mx, y: my };
     if (mx !== 0 || my !== 0) return { x: mx, y: my };
     return autoSteer(S.player);
+  }
+
+  /* QA probe: what the hand intends right now — prints nothing, moves
+     nothing, only reads the intent the sheet is already showing */
+  function botRead() {
+    return { mode: BOT.mode, spin: BOT.spin, modeT: Math.round(BOT.modeT * 100) / 100,
+      gx: Math.round(BOT.gx), gy: Math.round(BOT.gy) };
   }
 
   /* ---------------- updates ---------------- */
@@ -5950,7 +6098,7 @@ if (qaProbe()) return;
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
-    getAutoBrush, setAutoBrush, autoVec, xpReqFor, getEndlessBest,
+    getAutoBrush, setAutoBrush, autoVec, botRead, xpReqFor, getEndlessBest,
     /* the paper themes read these (v21.9: the purse is retired) */
     getThemeSetting, setThemeSetting,
     /* v24.1 THE STUDY: ink in, skills up — the menu reads these */

@@ -1,14 +1,22 @@
 # ONE MORE — GLM 5.3 Flash
 
-## v24.8 — THE PORTRAIT HAND: bottom controls stay in reach (20 Nov 2026)
-
-Owner ask: the updated game became difficult to use in portrait mode because bottom buttons were hidden. A CSS-only pass now gives the stage the dynamic visible viewport, makes the title sheet vertically scrollable when its menu exceeds the phone height, and reserves the bottom safe-area lane for the existing Settings, Character and Opening controls. The in-run bottom controls clear the navigation gesture area and use 44px touch targets. Extra-short portrait screens trim spacing rather than removing actions. No gameplay mechanics, event handlers, saves, cloud logic, or backend wiring changed. Service-worker cache advances to v24.8. Source commits are verified; physical-device/browser screenshot verification remains outstanding.
-
 ## Purpose
 An ink-brush survival browser game with journey, endless, and daily modes. This is a distinct repository from `itsnotalwin/ONE_MORE`.
 
 ## Architecture
 Zero-build static HTML/CSS/vanilla JS PWA. Entry: `index.html`; gameplay, renderer, leaderboard, and bootstrap in `js/` (see `js/CONTEXT.md`), visuals in `css/`, images in `img/`, offline cache in `sw.js`.
+
+## v24.9b — THE PROBE'S NAME: the over sheet explains its +0 ink (20 Nov 2026)
+
+Owner ask: **runs are not earning ink for the character upgrades — check all the mechanics**. Audit verdict: the economy is whole; the run was walked from a deep-linked QA tab, and probe runs (`?wave=N`/`?god=1`) gather no ink by design — the ledger hygiene of v23.8. Proven live: probe death at wave 25+ paid 0; a clean no-query run paid +209. `UI.showOver` now says so: probed over sheets read "A probe sheet — URL-probed runs gather no ink and press no ledgers." instead of a silent `+ 0`. Chain audited: earn formula (score/10 + cleared×2, fortune tithe, +100 finale), practice dailies and abandons gather nothing, autobrush halves through score, study purchase wiring intact, ink deliberately device-local. Cache `v24.9b`.
+
+## v24.9 — THE PAINTER'S HAND: the autobrush learns intent (20 Nov 2026)
+
+Owner ask: **the AI brush is shit — it keeps going back and forth, nothing interesting**. Measured first: 107–201 heading reversals a minute, 13–14.6 km of path for ~640 px of net travel, 7–9% of frames standing still — a per-frame auction with a 38% memory blend. `autoSteer` now holds an intent for a breath at a time: **THE RAID** (a pledged mote, kept until it dies), **THE FLANK** (the worthiest flesh, orbited by pursuing a point that walks the standoff circle), **THE CROSS** (fresh paper when nothing is pledged), **THE DIP** (a deliberate stillness and a wrist flick on a quiet page) and **THE YIELD** (danger suspends the intent whole). Approaches ride **THE BENT STROKE** (up to 0.42 rad off the beeline), the hunt is a hysteresis **BAND** (+70/−50 px) instead of a tug-of-war, the heading commits 0.78/0.22 in cruise, and the sweep **REVERSES** on waves, banked ink, walls at the back, and a fresh intent's coin. `G.botRead()` joins the QA probes. Verified: zero heading reversals (from 107–201/min), kills parity (159 vs 153), integrity floor 3, zero wall ticks, kinks 164→85 and mean turn 45.7°→30.8° per 0.1 s trace sample, intents raid×14 flank×13 cross×5 yield×11 beat×2; a wave-25 stress soak survived 25→29 whole; keys still outrank the hand; live render with zero console errors. Cache `v24.9`.
+
+## v24.8 — THE PORTRAIT HAND: bottom controls stay in reach (20 Nov 2026)
+
+Owner ask: the updated game became difficult to use in portrait mode because bottom buttons were hidden. A CSS-only pass now gives the stage the dynamic visible viewport, makes the title sheet vertically scrollable when its menu exceeds the phone height, and reserves the bottom safe-area lane for the existing Settings, Character and Opening controls. The in-run bottom controls clear the navigation gesture area and use 44px touch targets. Extra-short portrait screens trim spacing rather than removing actions. No gameplay mechanics, event handlers, saves, cloud logic, or backend wiring changed. Service-worker cache advances to v24.8. Source commits are verified; physical-device/browser screenshot verification remains outstanding.
 
 ## v24.7 — THE DEEP STROKE: the feature & mechanic polish pass (19 Nov 2026)
 

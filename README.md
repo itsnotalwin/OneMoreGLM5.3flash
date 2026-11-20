@@ -84,9 +84,13 @@ stand ×1.4 taller, arrive ×1.15 faster, waves spend ×1.45 more — and the
 ledger pays **double** for every stroke that survives it.
 
 **自 THE AUTOBRUSH** — available from the first sheet (the settings' toggle, no
-unlock): the brush walks itself, dodging, chasing ink and feeding itself
-shots. Any real input outranks it instantly, and its runs press **half** the
-score and half the ink — an honest walker, not a cheat.
+unlock): the brush walks itself, and it walks like a painter, not a bug — it
+pledges to an intent and holds it: raids a promised mote, flanks the
+worthiest beast on a slow orbit that reverses with the waves, sweeps across
+to fresh paper, and on a quiet sheet stops a beat to dip the brush before it
+flicks away. Danger suspends the intent whole; everything is approached on
+the bend, never the beeline. Any real input outranks it instantly, and its
+runs press **half** the score and half the ink — an honest walker, not a cheat.
 
 <p align="center">
   <img src="screenshots/10-mobile.png" width="300" alt="ONE MORE on a phone — a portrait scene, the sheet full-bleed, the wave seal and integrity bar above">
@@ -855,7 +859,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v24.6i THE NARROW SHEET** — live at
+Current build **v24.9b THE PAINTER'S HAND** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
 [js/CONTEXT.md](./js/CONTEXT.md).

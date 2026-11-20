@@ -1010,11 +1010,15 @@ const UI = (() => {
     setGhostVerdict(d);
     const vict = !!d.victory;
     el.overTitle.textContent = vict ? 'THE SCROLL ENDS.' : 'THE INK DRIES.';
-    el.overSub.textContent = vict
-      ? 'Two sheets painted, every guardian felled. The paper asks for more.'
-      : d.mode === 'daily' && d.practice
-        ? 'Practice sheet — today\u2019s ink is already on the ledger.'
-        : 'The paper keeps every stroke. Even this one.';
+    /* the probe speaks: a deep-linked run gathers no ink and presses no
+       ledgers — the +0 on the sheet has a name now */
+    el.overSub.textContent = d.probe
+      ? 'A probe sheet — URL-probed runs gather no ink and press no ledgers.'
+      : vict
+        ? 'Two sheets painted, every guardian felled. The paper asks for more.'
+        : d.mode === 'daily' && d.practice
+          ? 'Practice sheet — today\u2019s ink is already on the ledger.'
+          : 'The paper keeps every stroke. Even this one.';
     el.overKicker.textContent =
       `RUN ${pad3(d.run)} — ${d.mode === 'daily' ? 'DAILY INK' + (d.day ? ' · ' + d.day : '') : d.mode === 'endless' ? 'THE ENDLESS SCROLL' : vict ? 'THE JOURNEY, COMPLETE' : 'THE INK CLAIMS ANOTHER'}${d.hard ? ' · REALLY HARD' : ''}`;
     el.overRank.textContent = d.rank;
