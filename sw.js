@@ -15,7 +15,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v25.0';
+const VER = 'v25.1';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 

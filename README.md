@@ -69,15 +69,15 @@ optional and can stay dark forever.
 |---|---|
 | ![The level-up shelf — rare and new arms](screenshots/05-levelup.png) | ![The melee arms in the fight](screenshots/16-arms.png) |
 
-| THE STUDY — two scribes, six skills, the ink every run leaves behind | THE NIGHT MOTHER — a Guardian duel on the lamp-black sheet |
+| THE CHARMS ROOM 符 — fourteen charms, the ink every run leaves behind | THE COMPENDIUM — every union woken, every blot met, every seal broken |
 |---|---|
-| ![THE STUDY — the scribes and the skills](screenshots/13-study.png) | ![A Guardian duel on the night scroll](screenshots/06-guardian.png) |
+| ![The charm room — the 符 ladder, rank rings and prices](screenshots/v250-charms.png) | ![The compendium — the 合 Confluences tab](screenshots/v250-codex.png) |
 
 ---
 
 ## The modes
 
-**THE JOURNEY** — the two scrolls, straight onto the wet frontier. The run
+**THE JOURNEY** — the six scrolls, straight onto the wet frontier. The run
 resumes where the brush last sealed a scene. Every visit opens with
 **THE OPENING** (a short ink cinematic — any key or tap skips it; replay it
 from the title's 序 button). When a sheet is cleared **the scroll literally
@@ -201,70 +201,65 @@ bends the fight around itself. Kill them first, or fight the horde they make.
 
 ---
 
-## The brushes — ONE BRUSH, ONE BLADE
+## The brushes — the Armory's eight
 
 Choose your brush before the run — the choice is remembered. The brush **is**
-the primary weapon: there is no universal volley hiding behind it, and no
-weapon ever arrives the hand did not pick. Three are free; the Wisp is sealed
-behind the journey's scenes, and a scene **seals** when its tenth wave's
-Keeper falls.
+the primary weapon: there is no universal volley hiding behind it. Three are
+free; the rest **unseal as the scrolls open** — a scene seals when its tenth
+wave's Keeper falls. Each brush wears a `profile` — **pace** (the wrist's
+speed), **bite** (the depth of every stroke), **reach** — and its own
+hand-shaped body: bolts, a gust of blades, or no cast at all, the ink itself
+answering.
+
+| Brush | kanji | Unseals | The weapon it is |
+|---|---|---|---|
+| THE NEEDLE | 細 | free | a thread of ink cast fast and true |
+| THE BROOM | 掃 | free | a wide sweep of two droplets, broad and slow |
+| THE STONE | 岩 | free | a heavy lob — bites deep, splashes where it lands |
+| THE WISP | 幽 | scene 3 | homing wisps — and a lesser spirit hunts beside it |
+| THE FAN | 扇 | scene 6 | a cone of paper blades; every fifth snaps full-circle |
+| THE TIDE | 潮 | scene 10 | no arrows — the ink surges outward and the wake bites |
+| THE RED SEAL | 印 | scene 14 | the great hanko falls on the thickest horde |
+| THE SCRIBE | 書 | scene 18 | one living stroke weaves through the horde, unbroken |
 
 <p align="center">
-  <img src="screenshots/03-brushes.png" width="700" alt="The starter brush room — four brushes, each wearing its class seal: 遠 RANGED, 武 MELEE, 術 MAGIC">
+  <img src="screenshots/03-brushes.png" width="700" alt="The brush room (pre-adoption paper)">
 </p>
 
-| Brush | kanji | class | Sealed until | The weapon it is |
-|---|---|---|---|---|
-| THE NEEDLE | 細 | ranged | free | casts a thread of ink every 0.28s — fast, light, true |
-| THE BROOM | 掃 | melee | free | sweeps three droplets at once, deep enough to kill what it touches — the close-range sweep |
-| THE STONE | 岩 | ranged | free | lobs a heavy stone — bites 3 deep, splashes wider where it lands; 5-integrity body |
-| THE WISP | 幽 | magic | 3 scenes | breathes homing wisps that lean into the horde — and a spirit wakes beside it |
-
 Every brush carries its own **ART track** — techniques no other hand may
-learn. The Wisp is born at rank 1 of the Spirit Scribes; picking that power
-again deepens it.
+learn — plus the learned powers any brush may take, and the hand's universal
+arts. Fifty-four picks in the pool.
 
 ---
 
-## The octopus's six holds — the arsenal
+## The shelf — arts, powers, and the brush's own techniques
 
-Every weapon occupies one of the octopus's **six holds** (the brush itself
-counts as the first); stats — cadence, footwork, bite, gathering — never
-occupy a hold. Each class answers the horde its own way, and **the shelf
-pulls the run's own class five-deep** (off-class arms keep their ticket, never
-eliminated). The signature body of each class — **Ink Orbit, Returning Stroke,
-Ink Vortex** — wears the red 稀 RARE seal: offered rarer within its class,
-biting deeper. **Octopus Focus** commits the run: your most-trained arm bites
-30% deeper per rank.
+**19 universal arts** sharpen the hand itself: Quick Hand lifts the cadence,
+Bitter Ink deepens every stroke, Twin Stroke fans the cast, Through Mist
+pierces, Fleeting Foot moves the body, Thick Ink holds, Ink Burst answers a
+hit with a splash, Paper Ward swallows one whole, Ink Hunger pulls, Paper
+Mends heals, Deep Well feeds — and two new verbs ride the shelf: **Ink Step**
+recovers the dash sooner and carries it farther, and **Scribe's Tithe** makes
+elites, captains and keepers spill a third more ink.
 
-**THE MELEE LAW — a melee arm never fires a projectile.** The ring grinds, the
-trail pools, the fan snaps open where the hand stands, the lash sweeps, the
-charge lunges, the wheel circles. Ranged arms throw; magic bends the sheet.
+**8 learned powers** any brush may wake, each with a signature peak: the
+**Black Tide** surges (**THE RISEN SEA**), the **Folded Fan** blooms full
+circle (**THE FULL BLOOM**), **Spirit Scribes** run through three bodies
+(**THE LITANY**), the **Crimson Hanko** twins its stamp, the **Ink Trail**
+pools (**THE LINGERING POOL**), the **Sumi Arc** chains (**THE LIVING
+LINE**), the **Returning Stroke** recalls (**THE MIRROR RETURN**), the **Ink
+Vortex** drowns (**THE WHORL TEETH**).
 
-<p align="center">
-  <img src="screenshots/16-arms.png" width="700" alt="The melee law in the fight — the fan's swing slashes, the whirl wheel circling, the orbit pool grinding">
-</p>
+**27 brush arts** — one track per brush, no other hand may learn it: the
+needle's **Needle Rain**, the broom's **Wide Sweep**, the stone's
+**Quake**, the wisp's **Twin Wisps**, the fan's **Gale Push**, the tide's
+**Undertow**, the seal's **Red Rain**, the scribe's **Second Scribe** — and
+twenty more beside.
 
-| Arm | class | Max | At its peak it becomes |
-|---|---|---|---|
-| Ink Orbit 稀 | melee | 3 | **THE GRAVE RING** — every few breaths the ring breathes out, biting what stands near |
-| Folded Fan | melee | 4 | **THE FULL BLOOM** — every fifth swing opens all the way around |
-| Ink Trail | melee | 3 | **THE LINGERING POOL** — the ink bites twice as fast, pools deeper | 
-| Tentacle Lash | melee | 4 | a wider, deeper arc with every rank |
-| Ink Charge | melee | 4 | **THE LONG LUNGE** — the dash reaches twice as far |
-| Whirl Wheel | melee | 3 | **THE TWIN WHEEL** — a second wheel circles the other way |
-| Returning Stroke 稀 | ranged | 4 | **THE MIRROR RETURN** — the homing stroke bursts into an ink ring |
-| Ink Javelins | ranged | 4 | more bolts, thrown wider with every rank |
-| Quill Mortar | ranged | 4 | lobs burst wider where the crowd is thickest |
-| Silk Darts | ranged | 4 | a longer burst of close-range needles |
-| Dry Line | ranged | 4 | **THE FOLDED WIDTH** — the stroke cuts a wider swath |
-| Paper Skipper | ranged | 4 | **THE STORM SKIP** — the paper bites deeper with every body |
-| Black Tide | magic | 3 | the surge comes faster and reaches farther |
-| Spirit Scribes | magic | 3 | **THE LITANY** — spirits run through up to three bodies |
-| Crimson Hanko | magic | 3 | **THE TWIN STAMP** — a second, lighter seal follows the first |
-| Sumi Arc | magic | 4 | **THE LIVING LINE** — the stroke leaps three links farther |
-| Ink Vortex 稀 | magic | 3 | **THE WHORL TEETH** — the closing whirlpool bites what remains |
-| Red Letter | magic | 3 | **THE OPEN LETTER** — every burst reads wider and leaps farther |
+And on the shelf: **GRIND (研)** rerolls the offered picks, **BLOT (消)**
+banishes one from the run. Meet a kindred pair and a **Confluence** wakes —
+*Folded Fan II + Crimson Tip* becomes the **CRIMSON MONSOON**; the codex's
+合 tab keeps the ledger of every union.
 
 ---
 
@@ -438,10 +433,12 @@ stamps three seals and what it erases comes back RESTAMPED.
 
 The level-up screen deals three cards from this pool — and the pool answers
 the hand: cast-stroke arts only deal to brushes that cast; each brush's own
-arts deal only to that brush; the arms of the six holds answer the run's
-class five-deep. **ARTS** (marked 墨-ink on their cards) are the weapon's own
-techniques; **POWERS** (marked 武 in vermilion) fight on their own clocks;
-the rare 稀 arms ride their own weight. Strokes reshape the hand itself.
+arts deal only to that brush. **ARTS** (marked 墨-ink on their cards) are the
+weapon's own techniques; **POWERS** (marked 武 in vermilion) fight on their
+own clocks; the signature peaks — **THE GRAVE RING, THE RISEN SEA, THE
+MIRROR RETURN, THE WHORL TEETH** — ride their own weight. Strokes reshape
+the hand itself, and two of them are verbs: **Ink Step** carries the dash,
+**Scribe's Tithe** fattens the purse.
 
 **The strokes — every hand**
 
@@ -463,6 +460,8 @@ the rare 稀 arms ride their own weight. Strokes reshape the hand itself.
 | Ink Hunger | 3 | +42% gathering radius per rank |
 | Paper Mends | 2 | the sheet heals itself, +1 integrity every so often |
 | Deep Well | 2 | every mote is worth +25% more |
+| Ink Step | 3 | Ink Step recovers 16% faster and carries farther per rank |
+| Scribe's Tithe | 2 | elites, captains and keepers spill a third more ink; chains linger |
 
 **The brush's own arts — one track, one hand**
 
@@ -479,6 +478,22 @@ the rare 稀 arms ride their own weight. Strokes reshape the hand itself.
 | STONE | Boulder | 2 | the lob bites deeper and flies faster |
 | WISP | Twin Wisps | 2 | a second, then a third wisp with every cast |
 | WISP | Swift Haunt | 2 | faster casts, tighter turns |
+| FAN | Full Bloom | 1 | every fourth swing snaps open full-circle |
+| FAN | Gale Push | 1 | the gust shoves the horde back as it cuts |
+| FAN | Edge Wind | 2 | one more blade rides every swing |
+| TIDE | Riptide | 2 | the surge shoves harder and stuns longer |
+| TIDE | Deep Swell | 2 | the surge's bite deepens by one |
+| TIDE | Undertow | 1 | the wake bites twice as fast |
+| TIDE | Spring Tide | 2 | the surge reaches a fifth farther |
+| SEAL | Twin Stamp | 1 | a second, lighter seal follows the first |
+| SEAL | Broad Seal | 2 | the stamp presses a quarter broader |
+| SEAL | Deep Press | 2 | the stamp's bite deepens by one |
+| SEAL | Red Rain | 1 | every fifth stamp falls twice |
+| SCRIBE | Second Scribe | 2 | another living stroke wakes beside the first |
+| SCRIBE | Swift Line | 2 | the stroke weaves a quarter faster |
+| SCRIBE | Long Stroke | 2 | the stroke grows — all it passes feels its width |
+| SCRIBE | Ink Wake | 1 | where the stroke passed, its ink lingers and bites |
+| SCRIBE | Deep Ink | 2 | the stroke's bite deepens by one |
 
 Nothing is bought mid-run — a run is built from its own picks alone (and the
 rare **GRIND** reroll or **BLOT** banish). The between-run economy is the
@@ -859,7 +874,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v25.0 THE FABLE ADOPTED** — live at
+Current build **v25.1 THE HATCH TAMED** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
 [src/engine/CONTEXT.md](./src/engine/CONTEXT.md).

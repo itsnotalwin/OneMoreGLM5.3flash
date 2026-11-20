@@ -6,7 +6,7 @@
     <title>ONE MORE — An Ink-Born Survival</title>
     <meta name="description" content="An ink-born survival painted as living sumi-e. Eight brushes, eight sacred Confluences, six scrolls of sixty scenes, sixty Keepers, six Guardians, and the endless sheet." />
     <meta name="theme-color" content="#ede7d9" />
-    <link rel="manifest" href="./manifest-Dy4eqkTv.json" />
+    <link rel="manifest" href="./manifest.json"  />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23b23a2b'/%3E%3Crect x='4' y='4' width='24' height='24' fill='none' stroke='%23ede7d9' stroke-width='1.6'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='15' fill='%23ede7d9' text-anchor='middle'%3E%E5%A2%A8%3C/text%3E%3C/svg%3E" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -35,7 +35,7 @@ Error generating stack: `+a.message+`
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v25.0';
+window.OM_VERSION = 'v25.1';
 
 const CFG = {
   player: {
@@ -10738,6 +10738,7 @@ const R = (() => {
   let patHatchDark = null;   // dark-ink hatch (pale & red sheets)
   let patHatchPale = null;   // pale-ink hatch (night sheet)
   let patHatch = null;       // active hatch, follows theme
+  let patHatchDpr = 0;       // the hatch rebuilds when the DPR changes
   let lw = 0, lh = 0, ldpr = 1;
   let lastT = 0, lastTrailT = -1;
   /* cached screen-space gradients: key -> gradient object */
@@ -10747,22 +10748,34 @@ const R = (() => {
   let stains = [];
 
   function ensurePatterns(ctx) {
-    if (patHatchDark) return;
+    const dpr = Math.max(1, (G.S && G.S.dpr) || window.devicePixelRatio || 1);
+    if (patHatchDark && patHatchDpr === dpr) return;
+    /* v22.5 the hatch rebuilds at device-crisp resolution: the old
+       10px css-pixel tile upscaled at DPR 2 turned 1.4px lines into
+       soft 2.8-device-pixel bands at ~28% coverage — a black weave
+       that shimmered into hexagonal moiré as the camera moved. Now:
+       device-crisp lines, wider spacing, softer ink, and the pattern
+       transform locks the phase to the device grid. */
     const mk = rgba => {
+      const s = 14;
       const hc = document.createElement('canvas');
-      hc.width = hc.height = 10;
+      hc.width = hc.height = Math.round(s * dpr);
       const h = hc.getContext('2d');
+      h.scale(dpr, dpr);
       h.strokeStyle = rgba;
-      h.lineWidth = 1.4; h.lineCap = 'round';
+      h.lineWidth = 1.05; h.lineCap = 'round';
       h.beginPath();
-      h.moveTo(-2, 9.5); h.lineTo(9.5, -2);
-      h.moveTo(3, 13); h.lineTo(13, 3);
+      h.moveTo(-2, s + 2); h.lineTo(s + 2, -2);
+      h.moveTo(5, s + 2); h.lineTo(s + 2, 5);
       h.stroke();
-      return ctx.createPattern(hc, 'repeat');
+      const pat = ctx.createPattern(hc, 'repeat');
+      try { if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / dpr)); } catch (e) {}
+      return pat;
     };
-    patHatchDark = mk('rgba(26,23,20,0.6)');
-    patHatchPale = mk('rgba(233,226,210,0.5)');
+    patHatchDark = mk('rgba(26,23,20,0.38)');
+    patHatchPale = mk('rgba(233,226,210,0.42)');
     patHatch = patHatchDark;
+    patHatchDpr = dpr;
   }
 
   function setTheme(key) {

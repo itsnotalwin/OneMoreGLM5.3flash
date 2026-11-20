@@ -70,6 +70,7 @@ const R = (() => {
   let patHatchDark = null;   // dark-ink hatch (pale & red sheets)
   let patHatchPale = null;   // pale-ink hatch (night sheet)
   let patHatch = null;       // active hatch, follows theme
+  let patHatchDpr = 0;       // the hatch rebuilds when the DPR changes
   let lw = 0, lh = 0, ldpr = 1;
   let lastT = 0, lastTrailT = -1;
   /* cached screen-space gradients: key -> gradient object */
@@ -79,22 +80,34 @@ const R = (() => {
   let stains = [];
 
   function ensurePatterns(ctx) {
-    if (patHatchDark) return;
+    const dpr = Math.max(1, (G.S && G.S.dpr) || window.devicePixelRatio || 1);
+    if (patHatchDark && patHatchDpr === dpr) return;
+    /* v22.5 the hatch rebuilds at device-crisp resolution: the old
+       10px css-pixel tile upscaled at DPR 2 turned 1.4px lines into
+       soft 2.8-device-pixel bands at ~28% coverage — a black weave
+       that shimmered into hexagonal moiré as the camera moved. Now:
+       device-crisp lines, wider spacing, softer ink, and the pattern
+       transform locks the phase to the device grid. */
     const mk = rgba => {
+      const s = 14;
       const hc = document.createElement('canvas');
-      hc.width = hc.height = 10;
+      hc.width = hc.height = Math.round(s * dpr);
       const h = hc.getContext('2d');
+      h.scale(dpr, dpr);
       h.strokeStyle = rgba;
-      h.lineWidth = 1.4; h.lineCap = 'round';
+      h.lineWidth = 1.05; h.lineCap = 'round';
       h.beginPath();
-      h.moveTo(-2, 9.5); h.lineTo(9.5, -2);
-      h.moveTo(3, 13); h.lineTo(13, 3);
+      h.moveTo(-2, s + 2); h.lineTo(s + 2, -2);
+      h.moveTo(5, s + 2); h.lineTo(s + 2, 5);
       h.stroke();
-      return ctx.createPattern(hc, 'repeat');
+      const pat = ctx.createPattern(hc, 'repeat');
+      try { if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(1 / dpr)); } catch (e) {}
+      return pat;
     };
-    patHatchDark = mk('rgba(26,23,20,0.6)');
-    patHatchPale = mk('rgba(233,226,210,0.5)');
+    patHatchDark = mk('rgba(26,23,20,0.38)');
+    patHatchPale = mk('rgba(233,226,210,0.42)');
     patHatch = patHatchDark;
+    patHatchDpr = dpr;
   }
 
   function setTheme(key) {

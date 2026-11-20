@@ -1,6 +1,5 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
@@ -13,7 +12,7 @@ const __dirname = path.dirname(__filename);
 // BUILT artifact (scripts/build.cjs copies dist/ over the root) so GitHub
 // Pages keeps serving the branch with zero Actions setup.
 export default defineConfig({
-  plugins: [react(), tailwindcss(), viteSingleFile()],
+  plugins: [react(), viteSingleFile()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
