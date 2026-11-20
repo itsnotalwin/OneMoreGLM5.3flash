@@ -8,7 +8,19 @@ const SFX = (() => {
   let ctx = null;
   let master = null;
   let muted = false;
-  try { muted = localStorage.getItem('om_muted_v1') === '1'; } catch (e) {}
+  /* v24.10 VOICE WEIGHT (ported from the One_more_fable build): the
+     whole kit bends to one master scale — 100/70/40/20% steps live in
+     the settings, the value rides in om_vol_v1 */
+  let volScale = 1;
+  try {
+    muted = localStorage.getItem('om_muted_v1') === '1';
+    const sv = parseFloat(localStorage.getItem('om_vol_v1'));
+    if (!Number.isNaN(sv) && sv > 0 && sv <= 1) volScale = sv;
+  } catch (e) {}
+
+  function applyMaster() {
+    if (master && ctx) master.gain.setTargetAtTime(0.55 * volScale, ctx.currentTime, 0.04);
+  }
 
   function ensure() {
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -16,7 +28,7 @@ const SFX = (() => {
     if (!ctx) {
       ctx = new AC();
       master = ctx.createGain();
-      master.gain.value = 0.55;
+      master.gain.value = 0.55 * volScale;
       /* a gentle ceiling: a guardian entrance over a surge drum over a
          bomb must swell, not clip — the kit's loud moments stay whole */
       const comp = ctx.createDynamicsCompressor();
@@ -235,6 +247,13 @@ const SFX = (() => {
 
   return {
     get muted() { return muted; },
+    get volume() { return volScale; },
+    setVolume(v) {
+      volScale = Math.max(0.15, Math.min(1, Number(v) || 1));
+      try { localStorage.setItem('om_vol_v1', String(volScale)); } catch (e) {}
+      applyMaster();
+      return volScale;
+    },
     ensure,
     music: MUSIC,
     toggle() {

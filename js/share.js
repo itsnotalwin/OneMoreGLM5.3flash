@@ -135,7 +135,7 @@
     c.fillText(modeLine(d, day), W / 2, 876);
     let line2 = '';
     if (d.hard) line2 = 'REALLY HARD · 難';
-    else if (d.victory) line2 = 'THE TWO SCROLLS ARE SIGNED';
+    else if (d.victory) line2 = 'THE SIX SCROLLS ARE SIGNED';
     else if (d.practice) line2 = 'A PRACTICE SHEET';
     if (d.ghost && d.ghost.wave) {
       const gv = d.ghost.name

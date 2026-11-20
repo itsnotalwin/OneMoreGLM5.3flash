@@ -11,7 +11,7 @@
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v24.9b';
+const VER = 'v24.11';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -33,6 +33,7 @@ const CORE = [
   'snd/sfx/deploy.ogg',
   'js/audio.js',
   'js/cloud-save.js',
+  'js/codex.js',
   'js/config.js',
   'js/cutscene.js',
   'js/supabase-config.js',

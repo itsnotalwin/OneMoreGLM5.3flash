@@ -1,0 +1,42 @@
+[
+  {
+    "name": "shoot",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "hit",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "kill",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "hurt",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "wave",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "pickup",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "gong",
+    "ok": false,
+    "why": "no previews in search"
+  },
+  {
+    "name": "deploy",
+    "ok": false,
+    "why": "no previews in search"
+  }
+]

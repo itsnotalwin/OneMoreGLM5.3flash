@@ -3080,3 +3080,384 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .title-rail .rail-second{ padding-top: 10px; padding-bottom: 10px; }
   .rail-utility{ gap: 6px; }
 }
+
+/* ============================================================
+   v24.10 — THE PAINTED DOOR & THE COMPENDIUM
+   Ported from the One_more_fable sibling build: the gate wears a
+   live-painted ink wash (INTRO.paintGate) under an ensō ring that
+   draws itself, and the 図 room lists every beast as an engine-
+   painted plate. Blocks live at the file's end on purpose —
+   the v9.1 cascade lesson: a fold that arrives early loses.
+   ============================================================ */
+
+/* ---- the painted door ---- */
+.intro-gate{
+  overflow: hidden;
+}
+.gate-wash{
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  width: 112%;
+  height: 112%;
+  opacity: .82;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,.74), #000 66%);
+  mask-image: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,.74), #000 66%);
+  animation: gateWashDrift 30s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes gateWashDrift{
+  from{ transform: scale(1.02) translate3d(-.6%, .4%, 0); }
+  to{ transform: scale(1.075) translate3d(.8%, -.7%, 0); }
+}
+.gate-grid{
+  position: absolute;
+  z-index: 0;
+  left: 73%;
+  top: 28.5%;
+  width: min(40vh, 40vw, 360px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%, rgba(190,84,58,.22), rgba(178,58,43,.08) 55%, rgba(178,58,43,0) 72%);
+  pointer-events: none;
+  animation: gateSun 9s ease-in-out infinite alternate;
+}
+@keyframes gateSun{
+  from{ opacity: .6; transform: translate(-50%, -50%) scale(.98); }
+  to{ opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+.gate-ring{
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 49%;
+  width: min(76vh, 84vw, 720px);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  pointer-events: none;
+  animation: gateRingSpin 180s linear infinite;
+}
+.gate-ring path{
+  fill: none;
+  stroke: #1a1714;
+  stroke-linecap: round;
+}
+.gate-ring-halo{
+  stroke-width: 19;
+  opacity: .12;
+  filter: blur(3.4px);
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+}
+.gate-ring-ink{
+  stroke: url(#gateInk);
+  stroke-width: 12.5;
+  opacity: .8;
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+  filter: url(#inkrough-soft);
+}
+.gate-ring-edge{
+  stroke-width: 1.6;
+  opacity: .2;
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+  filter: url(#inkrough-soft);
+}
+@keyframes gateRingDraw{ to{ stroke-dashoffset: 0; } }
+@keyframes gateRingSpin{ from{ transform: translate(-50%, -50%) rotate(-4deg); } to{ transform: translate(-50%, -50%) rotate(356deg); } }
+.gate-core{
+  position: relative;
+  z-index: 2;
+}
+.intro-gate::before,
+.intro-gate::after{
+  position: absolute;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: .42em;
+  color: var(--ink-25);
+  writing-mode: vertical-rl;
+  pointer-events: none;
+}
+.intro-gate::before{
+  content: '一筆入魂';
+  right: max(3.2vw, 18px);
+  top: 17vh;
+}
+.intro-gate::after{
+  content: '六巻六十景';
+  left: max(3.2vw, 18px);
+  bottom: 17vh;
+}
+.gate-foot{
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: max(3.4vh, 16px);
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  color: var(--ink-45);
+  white-space: nowrap;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce){
+  .gate-wash, .gate-grid, .gate-ring{ animation: none; }
+}
+
+/* ---- the compendium — 図 ---- */
+.wm-codex{ color: var(--ink); }
+.codex-summary{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--ink-70);
+}
+.codex-summary b{
+  color: var(--red);
+  font-weight: 600;
+}
+.codex-summary .cx-dot{
+  color: var(--ink-45);
+}
+.codex-tabs{
+  margin-top: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.codex-tabs .board-tab{
+  padding: 7px 11px 6px;
+  letter-spacing: .13em;
+  white-space: nowrap;
+  font-size: 8.4px;
+}
+.codex-body{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.codex-conf-list{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cx-boss-row{
+  cursor: default;
+  text-align: left;
+}
+.cx-boss-row.is-woken{
+  border-color: var(--red);
+}
+.cx-boss-row.is-sealed{
+  opacity: .72;
+}
+.cx-conf-title{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.cx-conf-pair{
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  color: var(--ink-62);
+  white-space: normal;
+}
+.set-state.is-red{
+  color: var(--red);
+  border-color: var(--red);
+}
+.cx-group-ct{
+  font-style: normal;
+  margin-left: auto;
+  color: var(--ink-62);
+}
+.cx-plate-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.cx-plate{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 9px 7px 8px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  gap: 3px;
+}
+.cx-plate.is-seen.is-officer{
+  border-color: var(--red);
+}
+.cx-plate.is-unseen{
+  border-style: dashed;
+  opacity: 0.76;
+}
+.cx-canvas{
+  width: 48px;
+  height: 48px;
+  display: block;
+}
+.cx-boss-cv{
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.cx-pname{
+  font-size: 8.8px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.cx-ptrait{
+  font-size: 7.5px;
+  letter-spacing: .13em;
+  color: var(--ink-62);
+  line-height: 1.25;
+}
+.cx-pcount{
+  margin-top: 2px;
+  font-size: 7.8px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink-70);
+}
+.cx-plate.is-seen.is-officer .cx-pcount{
+  color: var(--red);
+}
+.cx-stat-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.cx-stat{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+}
+.cx-sk{
+  font-size: 8px;
+  letter-spacing: .16em;
+  color: var(--ink-62);
+}
+.cx-sv{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink);
+}
+.cx-empty{
+  padding: 16px 10px;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--ink-62);
+  border: 1px dashed var(--ink-25);
+}
+.cx-runs{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cx-run-row{
+  display: grid;
+  grid-template-columns: 24px 26px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  font-size: 9px;
+  letter-spacing: .15em;
+}
+.cx-run-row.is-top{
+  border-color: var(--ink-55);
+}
+.cx-rno{
+  font-weight: 600;
+  color: var(--ink-62);
+}
+.cx-run-row.is-top .cx-rno{
+  color: var(--red);
+}
+.cx-rbrush{
+  font-family: var(--display);
+  font-size: 14px;
+  text-align: center;
+  color: var(--ink);
+}
+.cx-rmode{
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-70);
+}
+.cx-rhard{
+  color: var(--red);
+  font-weight: 600;
+}
+.cx-rwave{
+  font-weight: 600;
+  color: var(--ink);
+}
+.cx-rscore{
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 68px;
+  text-align: right;
+}
+
+/* v24.10 the compendium's room: centred, wider than the settings wrap —
+   the plate grid needs the breadth (from the sibling build's room rules) */
+.screen-codex{
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 20% 12%, rgba(255,252,242,.45), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(120,104,76,.09), transparent 60%);
+}
+.screen-codex .set-wrap{
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 36px);
+  margin: auto;
+}
+.screen-codex .wm-codex{
+  right: 5vw;
+  bottom: 3vh;
+}
+
+/* v24.10 narrow screens: the door's foot line wraps instead of overflowing */
+@media (max-width: 480px){
+  .gate-foot{
+    white-space: normal;
+    width: 88%;
+    line-height: 1.7;
+    letter-spacing: .2em;
+  }
+}

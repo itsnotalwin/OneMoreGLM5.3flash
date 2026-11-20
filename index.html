@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>ONE MORE — An Ink-Born Survival</title>
-<meta name="description" content="An endless sheet of washi. Two scrolls of ten waves, two named Guardians, then the paper never ends. A monochrome survival painted in living ink." />
+<meta name="description" content="An endless sheet of washi. Six scrolls of ten waves, six named Guardians, then the paper never ends. A monochrome survival painted in living ink." />
 <meta name="theme-color" content="#ede7d9" />
 <link rel="manifest" href="./manifest.json" />
 <link rel="icon" type="image/png" sizes="32x32" href="./img/icons/icon-32.png" />
@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="ONE MORE" />
 <meta property="og:title" content="ONE MORE — An Ink-Born Survival" />
-<meta property="og:description" content="No walls. No arena. Two scrolls of ten waves on an endless sheet of washi, two named Guardians, and the ink you gather makes you stronger. How long can the brush last?" />
+<meta property="og:description" content="No walls. No arena. Six scrolls of ten waves on an endless sheet of washi, six named Guardians, and the ink you gather makes you stronger. How long can the brush last?" />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -131,7 +131,7 @@
         <h1 class="title-word">ONE&nbsp;MORE</h1>
         <span class="word-seal" aria-hidden="true">一</span>
       </div>
-      <p class="title-sub">One brush. Two scrolls. The paper never ends.</p>
+      <p class="title-sub">One brush. Six scrolls. The paper never ends.</p>
       <!-- v22.0 THE RAIL: one inked column — the tool above the road,
            the hero road, the second road, the quiet doors -->
       <div class="title-rail">
@@ -147,7 +147,7 @@
           <span class="play-seal" aria-hidden="true">一</span>
           <span class="hero-copy">
             <span class="play-label">THE JOURNEY<span class="run-seg">&nbsp;—&nbsp;<span id="runNo">RUN 001</span></span></span>
-            <span class="journey-sub" id="journeyProg">TWO SCROLLS · TWENTY SCENES</span>
+            <span class="journey-sub" id="journeyProg">SIX SCROLLS · SIXTY SCENES</span>
           </span>
         </button>
         <button id="endlessBtn" class="endless-btn rail-second" title="Endless waves across turning sheets">
@@ -163,6 +163,10 @@
           <button id="dailyBtn" class="daily-btn" type="button" title="DAILY INK — one seeded sheet a day. The same paper, the same beasts, the same luck for every scribe on Earth. The first sheet you walk today is the one that counts.">
             <span class="daily-kanji" aria-hidden="true">日</span>
             <span class="play-label">DAILY<span id="dailyLabel">&nbsp;·&nbsp;TODAY</span></span>
+          </button>
+          <button id="codexBtn" class="board-btn codex-btn" type="button" title="THE COMPENDIUM (C) — every beast met, every seal broken, the scribe's lifetime chronicle">
+            <span class="board-kanji" aria-hidden="true">図</span>
+            <span class="play-label">CODEX</span>
           </button>
           <button id="sheetBtn" class="sheet-btn hidden" type="button" title="SCENES — open the shelf of scrolls and walk any sheet by hand"></button>
         </div>
@@ -195,8 +199,8 @@
     <div id="shelfWash" aria-hidden="true"></div>
     <span class="wm wm-scrolls" aria-hidden="true">巻</span>
     <div class="scrolls-head">
-      <div class="scrolls-kicker">THE JOURNEY — TWO SCROLLS · TWENTY SCENES</div>
-      <h2 class="scrolls-title">TWO SCROLLS</h2>
+      <div class="scrolls-kicker">THE JOURNEY — SIX SCROLLS · SIXTY SCENES</div>
+      <h2 class="scrolls-title">SIX SCROLLS</h2>
       <p class="scrolls-sub">Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.</p>
     </div>
     <div class="scroll-beam" aria-hidden="true"></div>
@@ -299,6 +303,7 @@
       <p class="pause-note">The ink waits. For now.</p>
       <div class="pause-actions">
         <button id="resumeBtn" class="block-btn">RESUME</button>
+        <button id="pauseCodexBtn" class="ghost-btn" type="button">VIEW IN THE CODEX</button>
         <button id="pauseMenuBtn" class="ghost-btn">ABANDON</button>
       </div>
     </div>
@@ -329,6 +334,7 @@
         <button id="continueBtn" class="block-btn big continue hidden">INTO THE ENDLESS — 無</button>
         <button id="againBtn" class="block-btn big">ONE MORE</button>
         <button id="shareBtn" class="ghost-btn" type="button" title="Press this run's report into a paper card">SHARE THE INK</button>
+        <button id="overCodexBtn" class="ghost-btn" type="button">THE COMPENDIUM — 図</button>
         <button id="menuBtn" class="ghost-btn">MENU</button>
       </div>
       <div class="over-board hidden" id="overBoard"></div>
@@ -369,6 +375,12 @@
           <span class="set-desc">THE BRUSH'S VOICE, THE SEALS, THE TIDE</span>
           <span class="set-state" id="setSoundState">ON</span>
         </button>
+        <button id="setVol" class="set-row" type="button">
+          <span class="set-kanji" aria-hidden="true">響</span>
+          <span class="set-name">VOICE WEIGHT</span>
+          <span class="set-desc">STEP THE MASTER VOLUME — 100% · 70% · 40% · 20%</span>
+          <span class="set-state" id="setVolState">100%</span>
+        </button>
         <button id="setGhost" class="set-row" type="button">
           <span class="set-kanji" aria-hidden="true">影</span>
           <span class="set-name">THE GHOST RIVAL</span>
@@ -404,6 +416,29 @@
     </div>
   </section>
 
+  <!-- ============ THE COMPENDIUM — 図 (v24.10) ============
+       the illustrated study: every ink-born beast painted by the
+       engine's own hand, the Guardians and Keepers, the lifetime
+       chronicle and the local hall of runs -->
+  <section id="screenCodex" class="screen screen-codex hidden">
+    <span class="wm wm-codex" aria-hidden="true">図</span>
+    <div class="set-wrap codex-wrap">
+      <div class="set-head">
+        <div class="set-kicker">THE ILLUSTRATED STUDY — <span class="kanji-inline">図</span></div>
+        <h2 class="set-title">COMPENDIUM</h2>
+        <p class="set-sub">EVERY BLOT MET, EVERY SEAL BROKEN</p>
+        <div class="codex-summary" id="codexSummary"></div>
+        <div class="board-tabs codex-tabs" role="tablist">
+          <button id="codexTab_beasts" class="board-tab is-on" type="button" role="tab" aria-selected="true">獣 INK-BORN</button>
+          <button id="codexTab_bosses" class="board-tab" type="button" role="tab" aria-selected="false">守 SEALS</button>
+          <button id="codexTab_chronicle" class="board-tab" type="button" role="tab" aria-selected="false">録 CHRONICLE</button>
+        </div>
+      </div>
+      <div class="codex-body" id="codexBody"></div>
+      <button id="codexBackBtn" class="set-back" type="button">戻 — BACK</button>
+    </div>
+  </section>
+
   <div id="flash" aria-hidden="true"></div>
 
   <!-- ============ THE FIRST TAP — the door that wakes the sound ============
@@ -411,6 +446,27 @@
        a cold boot screens the opening mute. One quiet tap here unlocks
        the audio, then the film plays with its whole voice. -->
   <div id="introGate" class="intro-gate hidden" role="button" tabindex="0" aria-label="Tap to begin — the opening screens with sound">
+    <!-- v24.10 THE PAINTED DOOR — the wash is painted live by INTRO.paintGate:
+         a vermillion sun, four ranges in deepening ink, pines, mist, birds -->
+    <canvas class="gate-wash" id="gateWash" aria-hidden="true"></canvas>
+    <div class="gate-grid" aria-hidden="true"></div>
+    <svg class="gate-ring" viewBox="0 0 260 260" aria-hidden="true">
+      <defs>
+        <linearGradient id="gateInk" x1="0.1" y1="0" x2="0.9" y2="1">
+          <stop offset="0" stop-color="#1a1714" stop-opacity="0.95"/>
+          <stop offset="0.38" stop-color="#1a1714" stop-opacity="0.68"/>
+          <stop offset="0.72" stop-color="#241f18" stop-opacity="0.82"/>
+          <stop offset="1" stop-color="#1a1714" stop-opacity="0.5"/>
+        </linearGradient>
+        <filter id="inkrough-soft" x="-8%" y="-8%" width="116%" height="116%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="12" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/>
+        </filter>
+      </defs>
+      <path class="gate-ring-halo" d="M130 26 C 70 24, 25 69, 24 129 C 23 192, 73 236, 135 235 C 194 234, 236 188, 235 127 C 234 77, 200 41, 155 30"/>
+      <path class="gate-ring-ink" d="M130 26 C 70 24, 25 69, 24 129 C 23 192, 73 236, 135 235 C 194 234, 236 188, 235 127 C 234 77, 200 41, 155 30"/>
+      <path class="gate-ring-edge" d="M130 31 C 76 29, 30 72, 29 129 C 28 188, 75 231, 134 230 C 191 229, 231 186, 230 128 C 229 80, 197 45, 156 35"/>
+    </svg>
     <div class="gate-core">
       <span class="gate-seal" aria-hidden="true">墨</span>
       <span class="gate-kicker">A MONOCHROME SURVIVAL</span>
@@ -418,6 +474,7 @@
       <span class="gate-sub hint-key">ANY KEY WORKS — THE OPENING PLAYS WITH SOUND</span>
       <span class="gate-sub hint-touch">THE OPENING PLAYS WITH SOUND</span>
     </div>
+    <span class="gate-foot" aria-hidden="true">一筆入魂 · NO ACCOUNTS REQUIRED · YOUR PAPER STAYS YOURS</span>
   </div>
 
   <!-- ============ FIRST-RUN WHISPER — how the hand moves ============
@@ -446,6 +503,7 @@
 <script src="./js/lb.js"></script>
 <script src="./js/cloud-save.js"></script>
 <script src="./js/share.js"></script>
+<script src="./js/codex.js"></script>
 <script src="./js/main.js"></script>
 </body>
 </html>

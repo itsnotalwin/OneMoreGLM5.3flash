@@ -35,7 +35,7 @@ const rand = (a, b) => a + RNG() * (b - a);
     qaDay = (q.get('day') || '').slice(0, 10);
     qaGod = q.get('god') === '1';   /* ?god=1 — the scribe cannot bleed: for probes that
                                        must outlive a wave-300 instant swarm */
-    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(20, parseInt(q.get('scenes'), 10) || 0));
+    if (q.get('scenes') != null) qaScenes = Math.max(0, Math.min(60, parseInt(q.get('scenes'), 10) || 0));
   } catch (e) {}
 
   /* v23.8 PROBE HYGIENE: a deep-link run walks deep waves for the probes
@@ -163,6 +163,55 @@ const rand = (a, b) => a + RNG() * (b - a);
      endless paper — the checkpoint door reads it, the title wears it */
   const getEndlessBest = () => store.get('om_endless_best_v1', 0);
   function setEndlessBest(w) { if (qaProbe()) return; if (w > getEndlessBest()) store.set('om_endless_best_v1', w); }
+
+  /* ---- v24.10 THE SCRIBE'S CODEX (図) & LOCAL HALL (ported from the
+     One_more_fable build) — every blot cleaned, every Keeper sealed
+     and every hour walked leaves a quiet mark in om_codex_v1; the
+     COMPENDIUM reads it. Probe runs (QA deep links) gather nothing,
+     as with every ledger. Device-local — the cloud save carries the
+     ranked ledgers; the codex stays the paper's own memory. ---- */
+  const CODEX_KEY = 'om_codex_v1';
+  const LOCAL_RUNS_KEY = 'om_local_runs_v1';
+  let codexCache = null, codexDirty = false;
+  function getCodex() {
+    if (!codexCache) {
+      const raw = store.get(CODEX_KEY, null);
+      codexCache = raw && typeof raw === 'object' ? {
+        kills: raw.kills || {},
+        brushes: raw.brushes || {},
+        totals: Object.assign({ kills: 0, time: 0 }, raw.totals || {}),
+      } : {
+        kills: {}, brushes: {},
+        totals: { kills: 0, time: 0 },
+      };
+    }
+    return codexCache;
+  }
+  function flushCodex() {
+    if (!codexDirty && !codexCache) return;
+    codexDirty = false;
+    store.set(CODEX_KEY, getCodex());
+  }
+  function noteCodexKill(type) {
+    if (qaProbe()) return;   /* a deep-link probe never presses the codex (v23.8 doctrine) */
+    const cx = getCodex();
+    cx.kills[type] = (cx.kills[type] || 0) + 1;
+    cx.totals.kills = (cx.totals.kills || 0) + 1;
+    codexDirty = true;
+  }
+  function getLocalRuns() {
+    const arr = store.get(LOCAL_RUNS_KEY, []);
+    return Array.isArray(arr) ? arr : [];
+  }
+  function recordLocalRun(entry) {
+    if (!entry || (entry.score | 0) <= 0) return;
+    if (qaProbe()) return;   /* a probe sheet never presses the hall */
+    const list = getLocalRuns();
+    list.push(entry);
+    list.sort((a, b) => (b.wave - a.wave) || (b.score - a.score));
+    if (list.length > 18) list.length = 18;
+    store.set(LOCAL_RUNS_KEY, list);
+  }
 
   function freshStats() {
     const bdef = CFG.brushes[S.brush] || {};
@@ -585,6 +634,7 @@ if (qaProbe()) return;
     e.dead = true;
     e._killed = true;
     S.kills = (S.kills || 0) + 1;   /* the harvest count — balance passes and ledgers read this */
+    noteCodexKill(e.type);          /* v24.10 the codex remembers every blot met */
     /* v24.6 the red letter opens when its carrier falls */
     if (e.cursed) curseBurst(e);
     const def = ENEMIES[e.type];
@@ -1782,6 +1832,23 @@ if (qaProbe()) return;
           hard: !!S.hardMode, date: dayKey(), dt: GHOST_DT,
           n: S.rec.frames.length, data: S.rec.frames.join(';') }
       : null;
+    /* v24.10 flush the lifetime chronicle & press the run into the local
+       hall — the brush count, the hours walked, the honest sheet (a
+       probe run pays nothing, as with every ledger) */
+    if (!qaProbe()) {
+      const cx = getCodex();
+      cx.totals.time = Math.round((cx.totals.time || 0) + (st.time || 0));
+      cx.brushes[S.brush] = (cx.brushes[S.brush] || 0) + 1;
+      codexDirty = true;
+      flushCodex();
+      recordLocalRun({
+        run: getRuns(), mode: S.runMode, brush: S.brush,
+        wave: Math.max(1, st.wave | 0), cleared: cleared | 0, score: st.score | 0,
+        kills: st.kills | 0, time: Math.round(st.time || 0),
+        hard: !!S.hardMode, auto: !!S.autoRun, rank,
+        day: dailyDay || dayKey(),
+      });
+    }
     UI.showOver({
       run: getRuns(), waves: cleared, kills: st.kills,
       time: st.time, score: st.score, rank, newBest: nb,
@@ -6099,6 +6166,8 @@ if (qaProbe()) return;
     scenesSealed, brushUnlocked,
     getHard, setHard, setRival, rivalArmed, dailyState,
     getAutoBrush, setAutoBrush, autoVec, botRead, xpReqFor, getEndlessBest,
+    /* v24.10 THE COMPENDIUM: the lifetime codex and the local hall */
+    getCodex, getLocalRuns,
     /* the paper themes read these (v21.9: the purse is retired) */
     getThemeSetting, setThemeSetting,
     /* v24.1 THE STUDY: ink in, skills up — the menu reads these */

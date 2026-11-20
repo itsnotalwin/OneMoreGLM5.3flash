@@ -6142,8 +6142,13 @@ function drawEnemy(c, e, t) {
     /* the painting itself — grown wave by wave across the sheet */
     drawLandscape(ctx, vx0, vy0, vx1, vy1, t);
 
-    /* the bounded page's margins (journey and daily) */
-    drawArenaEdge(ctx);
+    /* the bounded page's margins — only while a run lives on the sheet.
+       v24.11 fix: the pressed border showed on the title too (the
+       attract scene walks the same paper), reading as stray lines
+       across the start menu; the menu's panorama carries no walls. */
+    if (S.mode === 'playing' || S.mode === 'paused' || S.mode === 'upgrade' || S.mode === 'clear' || S.mode === 'dying' || S.mode === 'over') {
+      drawArenaEdge(ctx);
+    }
 
     /* on the title the sheet rests: a living handscroll panorama */
     if (S.mode === 'title') drawTitlePanorama(ctx, t, dt);
@@ -6348,5 +6353,57 @@ function drawEnemy(c, e, t) {
     c.restore();
   }
 
-  return { draw, drawScribePreview, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash, titleInkBloom };
+  /* v24.10 THE CODEX's illustrated plates (ported from the
+     One_more_fable build) — every beast painted by the engine's own
+     brush: a mock body walks the real drawEnemy so each plate is the
+     exact sprite the sheet shows; an unmet beast is pressed back to
+     a thin silhouette — a shape to recognise, not sixty identical blots */
+  function drawBeastPortrait(cv, type, seen) {
+    if (!cv || !cv.getContext || !ENEMIES[type]) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = cv.clientWidth || 52;
+    const h = cv.clientHeight || 52;
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    const c = cv.getContext('2d');
+    ensurePatterns(c);
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    const def = ENEMIES[type];
+    const isRed = !!(def.boss || def.captain);
+    const maxR = Math.min(w, h) * 0.34;
+    const sc = Math.min(1.25, maxR / Math.max(8, def.r));
+    const mock = {
+      type, x: 0, y: 0, r: def.r, hp: def.hp, maxHp: def.hp,
+      ang: -0.25, t: 1.4, seed: 1.7, state: 'cruise', hitFlash: 0,
+      vx: 12, vy: 0, form: def.form,
+    };
+    const S = G.S;
+    const px = S.player.x, py = S.player.y;
+    S.player.x = 40; S.player.y = -10;
+    c.save();
+    c.translate(w / 2, h / 2);
+    c.scale(sc, sc);
+    try { drawEnemy(c, mock, 1.4); } catch (err) {
+      c.fillStyle = isRed ? bossInk() : INK;
+      blobPath(c, 0, 0, def.r * 0.8, 77, 0.2, 10);
+      c.fill();
+    }
+    c.restore();
+    S.player.x = px; S.player.y = py;
+    if (!seen) {
+      c.save();
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.globalAlpha = 1;
+      c.globalCompositeOperation = 'source-in';
+      c.fillStyle = isRed ? bossInk() : INK;
+      c.fillRect(0, 0, cv.width, cv.height);
+      c.globalCompositeOperation = 'destination-in';
+      c.fillStyle = isRed ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.24)';
+      c.fillRect(0, 0, cv.width, cv.height);
+      c.restore();
+    }
+  }
+
+  return { draw, drawScribePreview, resetStains, startTitleRitual: rtStart, drawBrushPreview, titleInkMove, titleInkSplash, titleInkBloom, drawBeastPortrait };
 })();

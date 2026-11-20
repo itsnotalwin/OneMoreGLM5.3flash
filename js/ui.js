@@ -22,6 +22,7 @@ const UI = (() => {
       board: $('screenBoard'), settings: $('screenSettings'),
       brush: $('screenBrush'),
       char: $('screenChar'),
+      codex: $('screenCodex'),
     },
     clearKicker: $('clearKicker'), clearTitle: $('clearTitle'), clearSub: $('clearSub'),
     clearNextValue: $('clearNextValue'), clearNextBtn: $('clearNextBtn'), clearHomeBtn: $('clearHomeBtn'),
@@ -609,7 +610,7 @@ const UI = (() => {
     if (!line) return;
     line.textContent = scene > 0
       ? `SCROLL ${sheet} · SCENE ${scene} REACHED`
-      : 'TWO SCROLLS · TWENTY SCENES';
+      : 'SIX SCROLLS · SIXTY SCENES';
   }
 
   /* ---------------- the shelf of scrolls ----------------
@@ -621,8 +622,8 @@ const UI = (() => {
   let onScrollsBack = null;     /* main.js answers with the title */
   let ladderSheet = 0;          /* 0 = the shelf; n = the ten scenes of scroll n */
   const SCROLLS_HEAD = {
-    kick: 'THE JOURNEY — TWO SCROLLS · TWENTY SCENES',
-    title: 'TWO SCROLLS',
+    kick: 'THE JOURNEY - SIX SCROLLS · SIXTY SCENES',
+    title: 'SIX SCROLLS',
     sub: "Ten levels of ten waves each. Fell a scroll's Guardian and the next unrolls.",
   };
   function setScrollsHead(kick, title, sub) {
@@ -1015,7 +1016,7 @@ const UI = (() => {
     el.overSub.textContent = d.probe
       ? 'A probe sheet — URL-probed runs gather no ink and press no ledgers.'
       : vict
-        ? 'Two sheets painted, every guardian felled. The paper asks for more.'
+        ? 'Six sheets painted, every guardian felled. The paper asks for more.'
         : d.mode === 'daily' && d.practice
           ? 'Practice sheet — today\u2019s ink is already on the ledger.'
           : 'The paper keeps every stroke. Even this one.';

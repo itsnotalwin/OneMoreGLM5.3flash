@@ -173,6 +173,28 @@
     LB.close();
   }
 
+  /* ---------------- the compendium — 図 (v24.10) ----------------
+     the illustrated study: every beast met, every seal broken,
+     the scribe's lifetime chronicle and the local hall of runs */
+  const codexOpen = () => typeof CODEX !== 'undefined' && CODEX.isOpen();
+  function openCodex(initialTab, from) {
+    if (typeof CODEX === 'undefined') return;
+    CODEX.open(initialTab || null, from || 'title');
+  }
+  const codexBtnEl = document.getElementById('codexBtn');
+  if (codexBtnEl) codexBtnEl.addEventListener('click', () => openCodex());
+  const codexBackBtn = document.getElementById('codexBackBtn');
+  if (codexBackBtn) codexBackBtn.addEventListener('click', () => { SFX.pick(1); if (typeof CODEX !== 'undefined') CODEX.close(); });
+  ['beasts', 'bosses', 'chronicle'].forEach(tk => {
+    const tb = document.getElementById('codexTab_' + tk);
+    if (tb) tb.addEventListener('click', () => CODEX.setTab(tk));
+  });
+  /* the codex is reachable from the pause and the over sheet too */
+  const pauseCodexBtn = document.getElementById('pauseCodexBtn');
+  if (pauseCodexBtn) pauseCodexBtn.addEventListener('click', () => { SFX.ensure(); openCodex('chronicle', 'pause'); });
+  const overCodexBtn = document.getElementById('overCodexBtn');
+  if (overCodexBtn) overCodexBtn.addEventListener('click', () => { SFX.ensure(); openCodex('chronicle', 'over'); });
+
   /* ---------------- the starter brush — 筆 ----------------
      one entry on the title; behind it, the shelf of tools:
      every brush at full length, its whole word on the page. */
@@ -232,6 +254,14 @@
     /* the mute button's own class is the one truth for sound */
     const muted = document.getElementById('muteBtn').classList.contains('muted');
     on('setSound', !muted);
+    /* v24.10 VOICE WEIGHT — the master volume's step, read back as a percentage */
+    const vst = document.getElementById('setVolState');
+    const vrow = document.getElementById('setVol');
+    if (vst && typeof SFX.volume === 'number') {
+      const pct = Math.round(SFX.volume * 100);
+      vst.textContent = muted ? 'MUTED' : pct + '%';
+      if (vrow) vrow.classList.toggle('is-on', !muted && pct === 100);
+    }
     on('setGhost', localStorage.getItem('om_ghost_off_v1') !== '1');
     /* THE AUTOBRUSH — the walker walks from the first sheet: no seal,
        AUTO is everyone's from the start (v24.6c) */
@@ -273,6 +303,19 @@
   document.getElementById('setBackBtn').addEventListener('click', () => { SFX.pick(1); closeSettings(); });
   document.getElementById('setSound').addEventListener('click', () => {
     toggleMute();
+    refreshSettings();
+  });
+  /* v24.10 VOICE WEIGHT — step the master volume: 100% · 70% · 40% · 20% */
+  const VOL_STEPS = [1, 0.7, 0.4, 0.2];
+  const setVolBtn = document.getElementById('setVol');
+  if (setVolBtn) setVolBtn.addEventListener('click', () => {
+    SFX.ensure();
+    if (SFX.muted) toggleMute();
+    const cur = SFX.volume || 1;
+    let idx = VOL_STEPS.findIndex(v => Math.abs(v - cur) < 0.08);
+    if (idx < 0) idx = 0;
+    SFX.setVolume(VOL_STEPS[(idx + 1) % VOL_STEPS.length]);
+    SFX.pick(2);
     refreshSettings();
   });
   document.getElementById('setGhost').addEventListener('click', () => {
@@ -391,6 +434,12 @@
       if (k === 'Enter' || k === 'Escape') closeSettings();
       return;
     }
+    /* the compendium answers only its own return keys —
+       ENTER must never start a run behind the open codex */
+    if (codexOpen()) {
+      if (k === 'Enter' || k === 'Escape' || k === 'KeyP') { SFX.pick(1); CODEX.close(); }
+      return;
+    }
     /* the ledger overlay answers only its own return keys —
        ENTER must never start a run behind the open board */
     if (boardOpen()) {
@@ -426,6 +475,11 @@
       else if (m === 'over') start(null, { retry: true });
       else if (m === 'upgrade') G.deploy();
       else if (m === 'paused') resume();
+      return;
+    }
+    /* v24.10 — C opens the compendium from the title */
+    if (m === 'title' && k === 'KeyC' && typeof CODEX !== 'undefined') {
+      openCodex();
       return;
     }
     if (m === 'upgrade' && /^Digit[123]$/.test(k)) {
@@ -556,9 +610,25 @@
      its sound design intact. QA URLs (?anything) and repeat visits and
      reduced motion walk straight through. */
   const introGate = document.getElementById('introGate');
+  /* v24.10 THE PAINTED DOOR: the gate's wash is painted by the film's
+     own hand (INTRO.paintGate) — a retry loop waits for the canvas to
+     have its layout size, exactly like the sibling build's boot does */
+  function paintGateWash() {
+    const cv = document.getElementById('gateWash');
+    if (!cv || typeof INTRO === 'undefined' || !INTRO.paintGate) return;
+    let n = 0;
+    const paint = () => {
+      const c2 = document.getElementById('gateWash');
+      if (!c2) return;
+      if (c2.clientWidth > 4 && c2.clientHeight > 4) { INTRO.paintGate(c2); return; }
+      if (n++ < 24) requestAnimationFrame(paint);
+    };
+    requestAnimationFrame(paint);
+  }
   function showIntroGate() {
     G.mode = 'gate';            /* the loop just paints dry paper behind the door */
     if (introGate) introGate.classList.remove('hidden');
+    paintGateWash();
     const lift = e => {
       if (e && e.stopPropagation) e.stopPropagation();   /* the tap is spent on the door alone */
       window.removeEventListener('pointerdown', lift, true);

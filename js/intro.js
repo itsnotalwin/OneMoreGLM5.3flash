@@ -1606,8 +1606,252 @@ const INTRO = (() => {
     }
   }
 
+  /* ============================================================
+     v24.10 THE PAINTED DOOR (ported from the One_more_fable build)
+     The gate's backdrop is a hand-set ink-wash painted live: a
+     vermillion sun, four ranges of mountains in deepening ink,
+     pines riding the near crests, mist bands eating their feet,
+     birds in the open sky, paper fibers under everything.
+     Self-contained — no asset can fail, the ink always arrives.
+     ============================================================ */
+  const PAPER_RGB = '237,231,217';
+
+  function gateRidge(c, w, h, baseY, amp, peaks, seed, ink, layers) {
+    const rnd = mulberry(seed);
+    const steps = 110;
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      let y = 0;
+      for (const pk of peaks) {
+        const d = t - pk.x;
+        y += pk.h * Math.exp(-(d * d) / (2 * pk.w * pk.w));
+      }
+      y += 0.045 * Math.sin(t * 34 + seed * 0.01) * (0.4 + rnd() * 0.5);
+      pts.push({ x: t * w, y: baseY - amp * y });
+    }
+    const bodyPath = () => {
+      c.beginPath();
+      c.moveTo(-4, h);
+      c.lineTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], q = pts[i];
+        c.quadraticCurveTo(a.x, a.y, (a.x + q.x) / 2, (a.y + q.y) / 2);
+      }
+      c.lineTo(w + 4, h);
+      c.closePath();
+    };
+    const crestPath = () => {
+      c.beginPath();
+      c.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], q = pts[i];
+        c.quadraticCurveTo(a.x, a.y, (a.x + q.x) / 2, (a.y + q.y) / 2);
+      }
+    };
+    /* body */
+    bodyPath();
+    const g = c.createLinearGradient(0, baseY - amp, 0, baseY + amp * 1.3);
+    g.addColorStop(0, `rgba(30,26,20,${ink})`);
+    g.addColorStop(0.5, `rgba(38,33,26,${ink * 0.62})`);
+    g.addColorStop(1, `rgba(52,45,35,${ink * 0.12})`);
+    c.fillStyle = g;
+    c.fill();
+    /* layered inner ridges — the slopes of the mountain, lighter ink */
+    if (layers) {
+      c.save();
+      bodyPath();
+      c.clip();
+      for (let L = 1; L <= layers; L++) {
+        const off = (amp * 0.34) * L;
+        c.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          let y = 0;
+          for (const pk of peaks) {
+            const d = t - pk.x;
+            y += pk.h * Math.exp(-(d * d) / (2 * (pk.w * 1.15) * (pk.w * 1.15)));
+          }
+          y += 0.05 * Math.sin(t * 26 + seed + L * 2);
+          const x = t * w, yy = baseY - amp * y + off;
+          i ? c.lineTo(x, yy) : c.moveTo(x, yy);
+        }
+        c.strokeStyle = `rgba(24,20,15,${ink * (0.4 - L * 0.07)})`;
+        c.lineWidth = 0.9 + (layers - L) * 0.3;
+        c.stroke();
+      }
+      c.restore();
+    }
+    /* crest — a wet darker line, then dry-brush teeth */
+    crestPath();
+    c.strokeStyle = `rgba(24,20,15,${Math.min(0.9, ink * 1.3)})`;
+    c.lineWidth = 1 + ink * 3.4;
+    c.stroke();
+    for (let i = 2; i < pts.length - 2; i += 2) {
+      if (rnd() > 0.42) continue;
+      const p = pts[i];
+      c.strokeStyle = `rgba(24,20,15,${ink * 0.75})`;
+      c.lineWidth = 0.8;
+      c.beginPath();
+      c.moveTo(p.x, p.y + 1);
+      c.lineTo(p.x + (rnd() - 0.5) * 6, p.y + 3 + rnd() * 7);
+      c.stroke();
+    }
+    return pts;
+  }
+
+  function gatePine(c, x, y, s, alpha) {
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    c.fillStyle = `rgba(22,18,14,${alpha})`;
+    c.strokeStyle = `rgba(22,18,14,${alpha})`;
+    c.lineCap = 'round';
+    /* trunk */
+    c.lineWidth = 1.4;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -13); c.stroke();
+    /* three layered branch fans, darkening downward */
+    const fans = [
+      { y: -12, w: 9, h: 3.1 },
+      { y: -9, w: 12, h: 3.5 },
+      { y: -5.5, w: 15, h: 3.9 },
+    ];
+    for (const f of fans) {
+      c.beginPath();
+      c.moveTo(0, f.y);
+      c.lineTo(-f.w, f.y + f.h);
+      c.lineTo(0, f.y + f.h * 0.4);
+      c.lineTo(f.w, f.y + f.h);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
+  function gateBird(c, x, y, s, alpha) {
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    c.strokeStyle = `rgba(30,25,19,${alpha})`;
+    c.lineWidth = 1.3;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(-6, 0);
+    c.quadraticCurveTo(-3, -4, 0, -1);
+    c.quadraticCurveTo(3, -4, 6, 0);
+    c.stroke();
+    c.restore();
+  }
+
+  function paintGate(cv) {
+    if (!cv || !cv.getContext) return;
+    const w = cv.clientWidth || 900, h = cv.clientHeight || 600;
+    if (w < 4 || h < 4) { requestAnimationFrame(() => paintGate(cv)); return; }
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, w, h);
+    c.fillStyle = PAPER;
+    c.fillRect(0, 0, w, h);
+
+    /* paper fibers — a few hundred faint strands */
+    const fr = mulberry(991);
+    c.lineCap = 'round';
+    for (let i = 0; i < 260; i++) {
+      const x = fr() * w, y = fr() * h;
+      const a = fr() * TAU, l = 3 + fr() * 7;
+      c.strokeStyle = `rgba(120,104,80,${0.02 + fr() * 0.035})`;
+      c.lineWidth = 0.6;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l * 0.4);
+      c.stroke();
+    }
+
+    /* the vermillion sun, upper-right, halo + rough disc */
+    const sx = w * 0.73, sy = h * 0.285, sr = Math.min(w, h) * 0.155;
+    const halo = c.createRadialGradient(sx, sy, sr * 0.4, sx, sy, sr * 2.7);
+    halo.addColorStop(0, 'rgba(190,84,58,0.34)');
+    halo.addColorStop(0.5, 'rgba(184,72,48,0.13)');
+    halo.addColorStop(1, 'rgba(184,72,48,0)');
+    c.fillStyle = halo;
+    c.fillRect(0, 0, w, h);
+    c.save();
+    c.globalAlpha = 0.94;
+    c.fillStyle = RED;
+    blobPath(c, sx, sy, sr, 777, 0.035, 26);
+    c.fill();
+    const sg = c.createRadialGradient(sx - sr * 0.28, sy - sr * 0.32, sr * 0.1, sx, sy, sr * 1.02);
+    sg.addColorStop(0, 'rgba(255,128,96,0.55)');
+    sg.addColorStop(0.6, 'rgba(214,92,66,0.12)');
+    sg.addColorStop(1, 'rgba(150,44,30,0)');
+    c.globalAlpha = 1;
+    c.fillStyle = sg;
+    blobPath(c, sx, sy, sr, 778, 0.035, 26);
+    c.fill();
+    c.restore();
+
+    /* four ranges, back (pale) to front (deep). The upper-center is kept
+       clean for the wordmark, so ranges carry weight to the sides + base. */
+    const R = mulberry(20260116);
+    const mk = (n) => {
+      const arr = [];
+      for (let i = 0; i < n; i++) {
+        arr.push({ x: 0.06 + (i / (n - 1)) * 0.88 + (R() - 0.5) * 0.06, h: 0.5 + R() * 0.5, w: 0.05 + R() * 0.075 });
+      }
+      return arr;
+    };
+    /* far */
+    gateRidge(c, w, h, h * 0.565, h * 0.075, mk(5), 11, 0.14, 1);
+    /* mist over the far range's feet */
+    let m1 = c.createLinearGradient(0, h * 0.55, 0, h * 0.66);
+    m1.addColorStop(0, `rgba(${PAPER_RGB},0)`);
+    m1.addColorStop(0.5, `rgba(${PAPER_RGB},0.5)`);
+    m1.addColorStop(1, `rgba(${PAPER_RGB},0)`);
+    c.fillStyle = m1; c.fillRect(0, h * 0.55, w, h * 0.11);
+    /* mid */
+    gateRidge(c, w, h, h * 0.665, h * 0.105, mk(6), 27, 0.26, 2);
+    let m2 = c.createLinearGradient(0, h * 0.66, 0, h * 0.78);
+    m2.addColorStop(0, `rgba(${PAPER_RGB},0)`);
+    m2.addColorStop(0.5, `rgba(${PAPER_RGB},0.52)`);
+    m2.addColorStop(1, `rgba(${PAPER_RGB},0)`);
+    c.fillStyle = m2; c.fillRect(0, h * 0.66, w, h * 0.12);
+    /* near */
+    const nearPts = gateRidge(c, w, h, h * 0.8, h * 0.15, mk(7), 41, 0.44, 3);
+    /* pines ride the near ridge */
+    for (let i = 0; i < 9; i++) {
+      const idx = 6 + Math.floor(R() * (nearPts.length - 12));
+      const p = nearPts[idx];
+      if (!p) continue;
+      gatePine(c, p.x, p.y + 1, (0.7 + R() * 0.7) * (Math.min(w, h) / 700), 0.62);
+    }
+    /* foreground — the darkest, at the very base */
+    gateRidge(c, w, h, h * 0.96, h * 0.11, mk(6), 53, 0.6, 3);
+    let m3 = c.createLinearGradient(0, h * 0.86, 0, h * 1.0);
+    m3.addColorStop(0, `rgba(${PAPER_RGB},0)`);
+    m3.addColorStop(1, `rgba(${PAPER_RGB},0.4)`);
+    c.fillStyle = m3; c.fillRect(0, h * 0.86, w, h * 0.14);
+
+    /* a few birds in the open sky, toward the sun */
+    const brd = mulberry(321);
+    for (let i = 0; i < 4; i++) {
+      gateBird(c, w * (0.56 + brd() * 0.2), h * (0.2 + brd() * 0.14), (0.5 + brd() * 0.6) * (Math.min(w, h) / 700), 0.5);
+    }
+
+    /* age + soft focus toward the wordmark centre */
+    const vg = c.createRadialGradient(w * 0.5, h * 0.46, Math.min(w, h) * 0.05, w * 0.5, h * 0.52, Math.max(w, h) * 0.72);
+    vg.addColorStop(0, `rgba(${PAPER_RGB},0.34)`);
+    vg.addColorStop(0.5, `rgba(${PAPER_RGB},0)`);
+    vg.addColorStop(1, 'rgba(96,84,62,0.1)');
+    c.fillStyle = vg;
+    c.fillRect(0, 0, w, h);
+  }
+
   return {
     start, skip, update, draw,
+    /* v24.10 the painted door — the gate's wash, drawn by the film's own hand */
+    paintGate,
     /* QA hook: jump the timeline (also handy for replay testing) */
     seek(t) {
       if (!live) return;

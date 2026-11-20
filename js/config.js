@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.9b';
+window.OM_VERSION = 'v24.11';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -99,8 +99,8 @@ const CFG = {
     stainCap: 430,     // max dried stains kept on the paper
     stainFade: 0.075,  // alpha lost per second (dried ink fades)
     decoCell: 260,     // world-cell size for ambient paper marks
-    arena: { w: 1680, h: 1200, inset: 26 },         // the bounded page (journey/daily)
-    arenaEndless: { w: 1080, h: 780, inset: 26 },   // the endless page — a lot smaller, on purpose
+    arena: { w: 1320, h: 940, inset: 26 },          // the bounded page (journey/daily) — v24.11: a smaller sheet, a harder sheet
+    arenaEndless: { w: 860, h: 620, inset: 26 },    // the endless page — tightest paper in the house
     arenaSpawnGap: 420, // beasts never walk in closer than this to the brush
   },
 
@@ -283,7 +283,7 @@ const CFG = {
   needle: { speed: 470, life: 1.7, r: 3 },
 
   // total waves cleared → rank, else 'D' (the journey is six hundred waves)
-  ranks: [[165, 'S+'], [130, 'S'], [100, 'A'], [60, 'B'], [25, 'C']],
+  ranks: [[500, 'S+'], [400, 'S'], [300, 'A'], [190, 'B'], [70, 'C']],
 
   /* ---- ink engine knobs (consumed by render.js) ---- */
   ink: {
@@ -513,7 +513,7 @@ const ENEMY_WEIGHTS = {
 };
 
 /* ------------------------------------------------------------
-   THE TWO SCROLLS — each sheet is a different paper washed in
+   THE SIX SCROLLS — each sheet is a different paper washed in
    its own ink: 淡 pale wash, 濃 lamp-black, 朱 vermillion,
    雨 rain-grey, 金 gold-dust, 素 the blank silk. Ten levels a
    sheet; the tenth level bears the Guardian. Each level debuts
@@ -543,13 +543,15 @@ const AREAS = [
     elite: 'shade', boss: 'b_mother', keeper: 'k_husk',
     keepers: ['k2_1', 'k2_2', 'k2_3', 'k2_4', 'k2_5', 'k2_6', 'k2_7', 'k2_8', 'k2_9', 'k_husk'],
   },
-];
-/* ---- v23.3 THE PAST SCROLLS — the four papers the v22.3 journey cut
-   retired, kept for the endless era cycle. Their beasts, officers,
-   specials, keepers and guardians are the v20 originals, verbatim:
-   the engine never stopped knowing how to run them. The journey
-   stays two scrolls; past its finale the endless walks all six. */
-const PAST_SCROLLS = [
+
+  /* ---- v24.11 THE FABLE'S FOUR DEEP SCROLLS — the papers the v22.3
+     cut from the journey return to it whole, laid exactly as the
+     One_more_fable build walks them: Cinnabar Field, the Storm Sheet,
+     the Gilt Scroll and the Blank Silk as scrolls III–VI, ten scenes
+     each with their own keepers, captains, specials and Guardian —
+     the whole sixty-scene walk, THE SIX SCROLLS. Their beasts,
+     officers, specials, keepers and guardians are the v20 originals,
+     verbatim: the engine never stopped knowing how to run them. */
   {
     id: 'III', name: 'CINNABAR FIELD', kanji: '紅', theme: 'red',
     ink: '朱墨',                                     // vermillion-stained
@@ -595,6 +597,10 @@ const PAST_SCROLLS = [
     keepers: ['k6_1', 'k6_2', 'k6_3', 'k6_4', 'k6_5', 'k6_6', 'k6_7', 'k6_8', 'k6_9', 'k_edge'],
   },
 ];
+
+/* the past scrolls ARE the journey now — every paper walker that
+   reads AREAS.concat(PAST_SCROLLS) cycles the six directly */
+const PAST_SCROLLS = [];
 
 /* ---- THE STANDING ARMY (v19.4) ----
    every sheet walks with everything the brush has already met:
@@ -810,6 +816,14 @@ const BOSS_TAUNTS = {
   k_blight:  'THE STAIN SENDS ITS FIRST SERVANT.',
   b_mother:  'THE DARK HAS A HEART. LISTEN TO IT BEAT.',
   k_husk:    'A PIECE OF THE NIGHT, STILL HUNGRY.',
+  b_warlord: 'FOUR HORNS, ONE ROAD — AND THE ROAD IS BEHIND YOU.',
+  k_cinder:  'THE ONI\u2019S SHADOW, STILL BURNING.',
+  b_tempest: 'STAND IN THE RAIN. THEN STAND SOMEWHERE ELSE.',
+  k_veil:    'THE STORM LEAVES ITS VEIL BEHIND.',
+  b_origin:  'THE FIRST STROKE IS STILL WET.',
+  k_nib:     'THE OLD BRUSH\u2019S TIP — IT REMEMBERS YOUR HAND.',
+  b_blank:   'THE PAGE IS STILL BLANK. IT WANTS YOUR HAND.',
+  k_edge:    'THE MARGIN HOLDS WHAT THE BRUSH FORGOT.',
   /* the ten seals speak — one line per scene-keeper, the duel set before the first stroke */
   k1_1: 'A SPILL THAT LEARNED TO HUNGER.',
   k1_2: 'IT GREW OVERNIGHT. IT BITES BY DAWN.',
@@ -829,4 +843,40 @@ const BOSS_TAUNTS = {
   k2_7: 'IT WORE A FACE ONCE. IT KEPT IT.',
   k2_8: 'TALL ENOUGH TO WATCH. FAR ENOUGH TO WAIT.',
   k2_9: 'IT SLEEPS IN INK. YOUR STEP IS THE ALARM.',
+  k3_1: 'THE GATE STANDS. YOU WALK THROUGH IT.',
+  k3_2: 'THE FIELD REMEMBERS EVERY FIRE.',
+  k3_3: 'IT OPENS. THE FIELD KNEELS.',
+  k3_4: 'NOBODY PASSES UNSTAMPED.',
+  k3_5: 'IT CARRIES THE KILN IN ITS CHEST.',
+  k3_6: 'IT DELIVERS. IT DOES NOT KNOCK.',
+  k3_7: 'THE HAMMER FELL. THE SPARKS WALK.',
+  k3_8: 'EVERY STROKE IT SEES, IT SIGNS.',
+  k3_9: 'THE PATH IS BEHIND YOU. IT IS THE ONLY ONE.',
+  k4_1: 'THE SKY LEANED DOWN TO LOOK.',
+  k4_2: 'IT POINTS. THE WIND OBEYS.',
+  k4_3: 'THE RIVER REMEMBERS EVERY LEAP.',
+  k4_4: 'THE RAIN HAS A CENTER. YOU ARE IN IT.',
+  k4_5: 'THE RIVER TOOK A TURN. IT TOOK YOU.',
+  k4_6: 'EVERY DROP ASKS YOUR NAME.',
+  k4_7: 'THE WAVE STOOD UP. IT SAW YOU.',
+  k4_8: 'LIGHTNING KEEPS ITS OWN TIME.',
+  k4_9: 'THE MARCH IS WET. THE MARCH GOES ON.',
+  k5_1: 'EVERYTHING SHE TOUCHES OWES HER.',
+  k5_2: 'THE MOLD IS BROKEN. THE COINS ARE NOT.',
+  k5_3: 'IT BURNED ONCE. GOLD CAME OUT.',
+  k5_4: 'THE LEDGER ALWAYS BALANCES. IT IS THE LEDGER.',
+  k5_5: 'IT SMILES IN GOLD. IT MEANS NOTHING BY IT.',
+  k5_6: 'RICHES ROLL DOWNHILL. SO DOES IT.',
+  k5_7: 'KNEELING IS OPTIONAL. FALLING IS NOT.',
+  k5_8: 'FLESH IN. GOLD OUT.',
+  k5_9: 'THE LAST LIGHT IS THE MOST EXPENSIVE.',
+  k6_1: 'DRAWN FIRST. ERASED NEVER.',
+  k6_2: 'HOLDING IT TOGETHER IS ITS WHOLE JOB.',
+  k6_3: 'REJECTED ONCE. IT CAME BACK SIGNED.',
+  k6_4: 'IT HOLDS. EVERYTHING HOLDS. FOREVER.',
+  k6_5: 'THE SILK STRETCHES. THE SILK REMEMBERS.',
+  k6_6: 'RUN YOUR HAND ALONG IT. IT RUNS BACK.',
+  k6_7: 'IT SHOWS YOU FINISHED.',
+  k6_8: 'WRITTEN IN THE MARGIN. IN RED.',
+  k6_9: 'THE PAGE ENDS HERE. IT DECIDED.',
 };
