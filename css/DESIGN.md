@@ -26,3 +26,8 @@ The pinned return button (`.set-back`, sticky) rides a ±1000px paper band (`::b
 
 ## Change & verify
 Bump `sw.js` `VER` whenever a cached asset changes (this folder's files are precached). Capture a real `SCREENSHOT.png` from the running app for substantive edits — never invent evidence. Verify at desktop (≥740px) and phone (<740px) widths; the room panels stack their rows below 740px.
+
+
+## v24.8 — Portrait control recovery (20 Nov 2026)
+
+The portrait phone menu now follows the visible dynamic viewport (100dvh with 100vh fallback). The title sheet becomes vertically scrollable when its rail is taller than the available screen, with a reserved safe-area lane for its three existing pinned corner actions. The Settings and Character controls stay separated from Opening, and the in-run bottom controls clear the device gesture area with 44px touch targets. A short-portrait trim reduces spacing only; it does not hide or disable menu actions. No gameplay, save, input-handler, balance, or backend code changes. The sw.js cache version advances to v24.8 so installed PWAs fetch the CSS repair.
