@@ -2986,3 +2986,97 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 
 /* v24.6e the sheet is full-bleed at every size; the small-screen
    override the desk era needed is retired with the desk itself */
+
+
+/* ============================================================
+   v24.8 — PORTRAIT CONTROL RECOVERY
+   Presentation-only: keep every existing action and handler.
+   ============================================================ */
+@media (max-width: 720px) and (orientation: portrait){
+  /* Follow the actually visible phone viewport, including browser
+     chrome changes. The canvas and every absolute screen share it. */
+  #stage{
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* The title menu can exceed a short phone's height. Let the menu
+     scroll behind its pinned corner controls instead of clipping its
+     lower rows inside the old overflow:hidden screen. */
+  .screen-title{
+    box-sizing: border-box;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-right: 0;
+    padding-bottom: calc(126px + env(safe-area-inset-bottom));
+    padding-left: 0;
+    scroll-padding-top: max(14px, env(safe-area-inset-top));
+    scroll-padding-bottom: calc(126px + env(safe-area-inset-bottom));
+  }
+  .title-main{
+    flex: 0 0 auto;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  .title-rail{
+    flex: 0 0 auto;
+    margin-bottom: 4px;
+  }
+
+  /* Keep all three existing corner actions above the home gesture
+     strip. The lower pair remain on opposite corners; CHARACTER
+     keeps its own row above OPENING on the right. */
+  .opening-btn{
+    min-height: 44px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    right: 12px;
+  }
+  .settings-btn{
+    right: auto;
+    left: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  .char-btn{
+    right: 12px;
+    bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+
+  /* In-run bottom controls clear the phone's gesture/navigation area
+     and retain comfortable touch targets. */
+  .hud-br{
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .hud-br .icon-btn{
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .hud-bl{
+    left: max(12px, env(safe-area-inset-left));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 150px);
+  }
+}
+
+/* Extra-short portrait devices: preserve the full menu as scrollable
+   content and keep the pinned actions in their safe-area lane. */
+@media (max-width: 720px) and (orientation: portrait) and (max-height: 680px){
+  .screen-title{
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+  .title-word{ font-size: clamp(46px, 13vw, 76px); }
+  .title-rail{ margin-top: 10px; gap: 7px; }
+  .title-rail .rail-hero{ padding-top: 10px; padding-bottom: 10px; }
+  .title-rail .rail-second{ padding-top: 10px; padding-bottom: 10px; }
+  .rail-utility{ gap: 6px; }
+}
