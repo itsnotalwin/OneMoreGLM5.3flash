@@ -855,7 +855,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v24.6e THE FULL SHEET** — live at
+Current build **v24.6i THE NARROW SHEET** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
 [js/CONTEXT.md](./js/CONTEXT.md).

@@ -526,6 +526,20 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   border-style: solid;
 }
 .auto-btn .ab-kanji{ font-family: var(--display); font-size: 13px; line-height: 1; transform: rotate(-3deg); }
+/* v24.7 the passing hand: a quiet refusal under DEPLOY — the pick
+   is forfeit, the run walks on. Quieter than the AUTO chip: hairline,
+   centered, small — it must never pull the eye from the cards. */
+.pass-btn{
+  display: block; margin: 0 auto;
+  font-family: inherit; font-size: 9px; font-weight: 600;
+  letter-spacing: .2em; text-indent: .1em;
+  color: var(--ink-62);
+  background: none; border: none; border-bottom: 1px solid var(--ink-25);
+  padding: 4px 6px 3px; cursor: pointer;
+  transition: color .14s ease, border-color .14s ease;
+}
+.pass-btn:hover{ color: var(--ink); border-color: var(--ink-70); }
+.pass-btn:active{ color: var(--red); border-color: var(--red); }
 .screen-upgrade{ align-items: center; justify-content: center; padding: clamp(10px, 1.8vh, 18px) clamp(10px, 1.6vw, 18px); }
 .panel{
   width: min(880px, 100%);
@@ -1473,6 +1487,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
    low-slung — the sheet is the star, the menu a single breath */
 @media (max-height: 500px) and (orientation: landscape){
   .title-word{ font-size: clamp(30px, 7.5vh, 46px); }
+  /* the hanko shrinks with the wordmark and hangs clear of the final
+     glyph — at the base size it stamped over the last E's face */
+  .word-seal{ right: -18px; top: -6px; width: 20px; height: 20px; font-size: 11px; }
   .title-chip{ margin-top: 6px; }
   .title-sub{ display: none; }
   .brush-entry{ margin-top: 8px; padding: 5px 12px 5px 10px; gap: 9px; box-shadow: 2px 3px 0 rgba(26,23,20,.14); }
@@ -2829,6 +2846,9 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   .set-desc{ display: none; }   /* no spare line sideways — the brush-room precedent */
   .acct-google-wrap .g-btn{ padding: 8px 14px; }
   .acct-hint{ line-height: 1.5; }
+  /* the band under the pinned way out spills ±1000px — clip it to the
+     sheet so it paints edge to edge without opening a sideways scroll */
+  .set-wrap{ overflow-x: hidden; }
   .set-back{
     position: sticky; bottom: 0; margin-top: 10px;
     background: var(--paper);
@@ -2890,24 +2910,35 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
 @media (max-width: 640px){ .char-btn{ right: 18px; bottom: 62px; } .cr-desc{ display: none; } }
 
 /* ============================================================
-   v24.2 — the integrity bar, the study's portrait, mobile cards
+   v24.6h — THE INK JAR: integrity is the ink held in the jar —
+   the level sinks as the sheet spends itself, the pot wears a
+   percentage beside it, and it is far too small to touch the
+   wave chip on a phone (the old 148px bar overlapped 13-43px)
    ============================================================ */
-.hp-bar{ position: relative; width: 148px; height: 15px; background: var(--paper-80); border: 1.6px solid var(--ink-70); border-radius: 3px; overflow: hidden; }
-.hp-bar::before{ content: ''; position: absolute; inset: 0; border: 1px solid var(--ink-25); filter: var(--rough-soft); pointer-events: none; }
-.hp-fill{ position: absolute; inset: 2px auto 2px 2px; width: 100%; background: var(--ink); border-radius: 2px; transition: width .28s ease, background .28s ease; }
-.hp-num{ position: absolute; inset: 0; display: grid; place-items: center; font-size: 9.5px; font-weight: 600; letter-spacing: .18em; color: var(--paper); text-shadow: 0 0 2px rgba(26,23,20,.65); }
-.hp-bar.is-low .hp-fill{ background: var(--red); animation: hpPulse .8s ease-in-out infinite; }
-.hp-bar.is-low .hp-num{ color: var(--paper); }
+.hp-bar{ position: relative; display: flex; align-items: center; gap: 7px; }
+.hp-jar{ width: 22px; height: 26px; overflow: visible; }
+.hp-jar-ink{ fill: var(--ink); transition: transform .28s ease, fill .28s ease; }
+.hp-jar-outline{ fill: none; stroke: var(--ink-70); stroke-width: 1.6; stroke-linecap: round; }
+.hp-jar-rim{ stroke: var(--ink-70); stroke-width: 1.8; stroke-linecap: round; }
+.hp-pct{ font-size: 10px; font-weight: 600; letter-spacing: .14em; color: var(--ink); min-width: 32px; text-align: left; }
+.hp-bar.is-low .hp-jar-ink{ fill: var(--red); animation: hpPulse .8s ease-in-out infinite; }
+.hp-bar.is-low .hp-pct{ color: var(--red); }
 @keyframes hpPulse{ 0%,100%{ opacity: 1; } 50%{ opacity: .72; } }
-[data-theme="dark"] .hp-num{ color: #3e372b; text-shadow: none; }
 #charPreview{ display: block; width: min(190px, 62vw); height: auto; aspect-ratio: 190 / 140; margin: 6px auto 2px; }
 .char-head + #charPreview{ margin-top: 4px; }
 @media (max-width: 640px){
-  /* the shelf stacks: descriptions read at phone width */
-  .upgrade-grid{ grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .up-card{ overflow: visible; }
-  .up-desc{ font-size: 12px; max-height: none; }
-  .screen-upgrade .panel{ max-height: none; }
+  /* the shelf stacks: all three cards read at phone width WITHOUT
+     scrolling — rows take their content's height, the card trims its
+     padding/glyph to fit the panel, and the title folds to one line.
+     The shelf still scrolls as a last-resort safety net only */
+  .upgrade-grid{ grid-template-columns: 1fr; grid-auto-rows: max-content; align-content: start; gap: 8px; overflow-y: auto; overflow-x: hidden; }
+  .up-card{ overflow: visible; flex: none; padding: 10px 12px 9px; gap: 5px; }
+  .up-glyph{ width: 20px; height: 20px; }
+  .up-name{ font-size: 15px; }
+  .up-desc{ font-size: 12px; line-height: 1.45; }
+  .pb-title{ font-size: clamp(19px, 5vw, 26px); }
+  .panel-hint{ display: none; }
+  .screen-upgrade .panel{ max-height: 100%; }
 }
 
 /* v24.4 the level ring's eager climb, mirrored on the HUD chip */

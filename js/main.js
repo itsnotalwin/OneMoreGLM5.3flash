@@ -397,6 +397,8 @@
       if (k === 'Enter' || k === 'Escape' || k === 'KeyP') closeBoard();
       return;
     }
+    /* v24.7 the passing hand: Escape refuses the shelf whole */
+    if (m === 'upgrade' && k === 'Escape') { G.passPick(); return; }
     if (k === 'KeyP' || k === 'Escape') {
       if (scrollsOpen()) {
         /* the scene ladder folds back to the shelf before the title */
@@ -724,6 +726,8 @@
   document.getElementById('resumeBtn').addEventListener('click', resume);
   document.getElementById('pauseMenuBtn').addEventListener('click', goMenu);
   document.getElementById('deployBtn').addEventListener('click', () => G.deploy());
+  /* v24.7 the passing hand: the shelf may be refused whole */
+  document.getElementById('passBtn').addEventListener('click', () => { SFX.ensure(); G.passPick(); });
   document.getElementById('autoBtn').addEventListener('click', () => {
     SFX.ensure();
     const on = !G.S.autoUpgrade;

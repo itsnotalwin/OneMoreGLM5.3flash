@@ -7,7 +7,7 @@
 
 /* the build's own mark: one source of truth — the title wears it,
    the service worker bumps beside it */
-window.OM_VERSION = 'v24.6e';
+window.OM_VERSION = 'v24.7';
 
 /* ------------------------------------------------------------
    v24.1 THE STUDY — the character's earned skills
@@ -89,16 +89,18 @@ const CFG = {
       mods: { spirit: 1 } },
   },
 
-  /* the world is unbounded — the brush walks an endless sheet.
-     THE JOURNEY and the daily sheet are different papers: they live
-     INSIDE a fixed arena (a page with margins), the same size on
-     every screen; only THE ENDLESS SCROLL keeps the unbroken sheet. */
+  /* every paper is a bounded page now (v24.6i): the brush walks inside
+     a fixed arena with pressed margins — a smaller sheet is a harder
+     sheet. THE JOURNEY and the daily sheet share the journey page;
+     THE ENDLESS SCROLL walks a much tighter one — less room to run,
+     beasts at the margin sooner. */
   world: {
-    spawnPad: 90,      // how far beyond the screen edge beasts are born
+    spawnPad: 90,      // how far beyond the screen edge beasts are born (unbounded sheets only)
     stainCap: 430,     // max dried stains kept on the paper
     stainFade: 0.075,  // alpha lost per second (dried ink fades)
     decoCell: 260,     // world-cell size for ambient paper marks
-    arena: { w: 2240, h: 1600, inset: 26 },  // the bounded page (journey/daily)
+    arena: { w: 1680, h: 1200, inset: 26 },         // the bounded page (journey/daily)
+    arenaEndless: { w: 1080, h: 780, inset: 26 },   // the endless page — a lot smaller, on purpose
     arenaSpawnGap: 420, // beasts never walk in closer than this to the brush
   },
 

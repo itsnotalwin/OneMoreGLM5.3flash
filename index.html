@@ -57,7 +57,15 @@
       <span class="hud-hard hud-auto hidden" id="hudAuto" title="THE AUTOBRUSH walks — its runs pay half" aria-hidden="true">自</span>
     </div>
     <div class="hud-tr">
-      <div class="hp-bar" id="hudHp" title="INTEGRITY — the ink held in the sheet"><div class="hp-fill" id="hpFill"></div><span class="hp-num" id="hpNum">3/3</span></div>
+      <div class="hp-bar" id="hudHp" title="INTEGRITY — the ink held in the jar" role="img" aria-label="Integrity 100 percent">
+        <svg class="hp-jar" viewBox="0 0 22 26" aria-hidden="true">
+          <defs>
+            <clipPath id="jarClip"><path d="M7.1 5 C7.1 7 6 8.1 5 10 C3.8 12.4 3.8 15.8 5.4 18.4 C7 21 9 22.2 11 22.2 C13 22.2 15 21 16.6 18.4 C18.2 15.8 18.2 12.4 17 10 C16 8.1 14.9 7 14.9 5 Z"/></clipPath>
+          </defs>
+          <rect class="hp-jar-ink" id="hpFill" x="3" y="5" width="16" height="17.4"/>
+          <path class="hp-jar-outline" d="M6 4 C6 6.4 4.8 7.6 3.8 9.6 C2.4 12.2 2.4 16 4.2 18.8 C6 21.6 8.2 23 11 23 C13.8 23 16 21.6 17.8 18.8 C19.6 16 19.6 12.2 18.2 9.6 C17.2 7.6 16 6.4 16 4"/>
+          <path class="hp-jar-rim" d="M5.6 4 L16.4 4"/>
+        </svg><span class="hp-pct" id="hpNum">100%</span></div>
 <div class="hud-score" id="hudScore">0000000</div>
       <div class="combo-chip hidden" id="hudCombo"></div>
     </div>
@@ -234,7 +242,8 @@
         <span class="ab-label">AUTO — LET THE HAND CHOOSE</span>
       </button>
       <button id="deployBtn" class="deploy-btn is-disabled" disabled>DEPLOY</button>
-      <div class="panel-hint"><span class="hint-key">PRESS 1 · 2 · 3 TO SELECT — AGAIN OR ENTER TO DEPLOY</span><span class="hint-touch">TAP A CARD TO CHOOSE — TAP IT AGAIN TO CONTINUE</span></div>
+      <button id="passBtn" class="pass-btn" type="button" title="KEEP NOTHING — the pick is forfeit and the run walks on">KEEP NOTHING — PASS</button>
+      <div class="panel-hint"><span class="hint-key">PRESS 1 · 2 · 3 TO SELECT — ENTER DEPLOYS · ESC KEEPS NOTHING</span><span class="hint-touch">TAP A CARD TO CHOOSE — TAP IT AGAIN TO CONTINUE</span></div>
     </div>
   </section>
 

@@ -213,7 +213,11 @@ const rand = (a, b) => a + RNG() * (b - a);
     ret.charId = cur.id;
     ret.charBase = cur.base;
     ret.charFill = cur.fill;
-    ret.charFillFrac = totalR ? Math.min(1, owned / totalR) : 0;    return ret;
+    ret.charFillFrac = totalR ? Math.min(1, owned / totalR) : 0;
+    /* the gift's breath is seeded at the door — the first frame no
+       longer meets a null clock (updatePlayer falls back to this) */
+    ret.charSkillT = cur.skill.every;
+    return ret;
   }
 
   /* ---------------- ink motes & level-ups ---------------- */
@@ -437,12 +441,13 @@ if (qaProbe()) return;
              isLevelEnd, isGuardianWave, isSurge, isElite: isLevelEnd };
   }
 
-  /* the bounded page: THE JOURNEY and the daily sheet live inside a
-     fixed arena — the same paper on every screen. THE ENDLESS SCROLL
-     alone keeps the unbroken sheet. */
-  function arenaOn() { return S.runMode === 'journey' || S.runMode === 'daily'; }
+  /* the bounded page: every mode walks inside a fixed arena now
+     (v24.6i) — journey and daily share the journey page, THE ENDLESS
+     SCROLL a much tighter one. A smaller sheet is a harder sheet. */
+  function arenaOn() { return S.runMode === 'journey' || S.runMode === 'daily' || S.runMode === 'endless'; }
+  function arena() { return S.runMode === 'endless' ? CFG.world.arenaEndless : CFG.world.arena; }
   function clampArena(o, pad) {
-    const A = CFG.world.arena;
+    const A = arena();
     const ix = A.w / 2 - pad, iy = A.h / 2 - pad;
     if (o.x < -ix) o.x = -ix; else if (o.x > ix) o.x = ix;
     if (o.y < -iy) o.y = -iy; else if (o.y > iy) o.y = iy;
@@ -454,7 +459,7 @@ if (qaProbe()) return;
      never closer to the brush than the margin's honest distance. */
   function edgePoint(sideHint) {
     if (arenaOn()) {
-      const A = CFG.world.arena, gap = CFG.world.arenaSpawnGap;
+      const A = arena(), gap = CFG.world.arenaSpawnGap;
       const ix = A.w / 2 - 64, iy = A.h / 2 - 64;
       let best = null, bestD = -1;
       for (let tries = 0; tries < 12; tries++) {
@@ -968,7 +973,6 @@ if (qaProbe()) return;
          (the ASSEMBLY, run from updateAssembly below). */
       const pt = edgePoint();
       S.markers.push({ type: as.area.boss, x: pt.x, y: pt.y, t: 2.2, elite: true, boss: true });
-      elites = 1;
       S.assembly = { area: as.area, fired: 0,
         beats: [{ hp: 0.72, n: 3 }, { hp: 0.45, n: 3 }, { hp: 0.2, n: 4 }] };
     } else if (as.isLevelEnd) {
@@ -1361,6 +1365,7 @@ if (qaProbe()) return;
 
     const runs = getRuns() + 1;
     if (!qaProbe()) store.set('om_runs_v1', runs);
+    S.kills = 0;   /* v24.7: the harvest count belongs to the run — it counts from the first stroke again */
 
     const p = S.player;
     p.x = 0; p.y = 0;
@@ -1655,6 +1660,44 @@ if (qaProbe()) return;
     const nxt = areaStateFor(S.stats.wave + 1);
     UI.setDeploy(true, S.upKind === 'wave' && nxt.level === 1 ? nxt.area : null, nxt.level, nxt.cycle, S.upKind);
     SFX.pick();
+  }
+
+  /* v24.7 THE PASSING HAND: the shelf may be refused whole. No card is
+     taken, no ink spent, and the run walks on — the hand owes what it
+     owes, so further pending choices still ask themselves; a wave-end
+     hand that is passed ends the breath like a pick would. */
+  function passPick() {
+    if (S.mode !== 'upgrade') return;
+    S.selected = null;
+    UI.markSelected(null);
+    SFX.thud();
+    const kind = S.upKind;
+    /* the chain: more ink rose while this choice hung in the air —
+       the next hand is dealt (a pass is one refusal, not all of them) */
+    if (S.pendingLevels > 0) { S.mode = 'playing'; openUpgrade('level'); return; }
+    if (S.pendingChests > 0) { S.mode = 'playing'; openUpgrade('chest'); return; }
+    S.mode = 'playing';
+    if (S.pendingSeal && kind !== 'wave' && S.runMode !== 'journey') { S.pendingSeal = false; openUpgrade('wave'); return; }
+    if (kind === 'wave') S.pendingSeal = false;
+    UI.show(null);
+    const nxt = areaStateFor(S.stats.wave + 1);
+    if (kind === 'wave' && nxt.level === 1 && !S.reduced && S.runMode === 'journey') {
+      /* the sheet turns on film — the same ceremony a pick would earn */
+      startWave(S.stats.wave + 1, { quiet: true });
+      S.mode = 'cutscene';
+      UI.hud(false);
+      CUT.start('scroll', {
+        area: nxt.area, cycle: nxt.cycle,
+        deep: S.runMode !== 'journey' && nxt.cycle >= AREAS.length,
+      });
+      return;
+    }
+    if (kind !== 'wave' && S.waveActive) return;
+    if (S.runMode === 'journey' && !S.waveActive && areaStateFor(S.stats.wave).isLevelEnd) {
+      showLevelClear();
+      return;
+    }
+    startWave(S.stats.wave + 1);
   }
 
   function die() {
@@ -2218,7 +2261,7 @@ if (qaProbe()) return;
   const BOT = { nx: 0, ny: 0, spin: 1 };   /* heading, and which way it circles */
 
   function autoSteer(p) {
-    const A = arenaOn() ? CFG.world.arena : null;
+    const A = arenaOn() ? arena() : null;
     const STEP = 108;                  /* how far one judged step reaches */
     const N = 24;                      /* candidate steps around the ring */
     const lead = 0.42;                 /* seconds of a beast's march, judged */
@@ -2409,11 +2452,11 @@ if (qaProbe()) return;
     p.vy += (iy * sp - p.vy) * k;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
-    /* the endless sheet is boundless — but a bounded page has margins,
-       and the brush stops at them (journey and daily only) */
+    /* the sheet is a bounded page on every mode now — the brush stops
+       at its pressed margins */
     if (arenaOn()) {
       clampArena(p, p.r + 12);
-      const A = CFG.world.arena, ix = A.w / 2 - (p.r + 12), iy = A.h / 2 - (p.r + 12);
+      const A = arena(), ix = A.w / 2 - (p.r + 12), iy = A.h / 2 - (p.r + 12);
       if (p.x <= -ix || p.x >= ix) p.vx = 0;
       if (p.y <= -iy || p.y >= iy) p.vy = 0;
     }
@@ -2421,7 +2464,7 @@ if (qaProbe()) return;
     /* the storm eye drags everything toward its center;
        the maelstrom's undertow is smaller, and only near */
     for (const e of S.enemies) {
-      if (e.type === 'b_tempest') {
+      if (e.type === 'b_tempest' && !(e.enterT > 0)) {   /* v24.7: the eye pulls only once it stands */
         const dx = e.x - p.x, dy = e.y - p.y;
         const d = Math.hypot(dx, dy) || 1;
         p.x += (dx / d) * 52 * dt;
@@ -2447,7 +2490,7 @@ if (qaProbe()) return;
     S.cam.y += (p.y + S.look.y - S.cam.y) * ck;
     /* the bounded page: the eye never looks past the margins */
     if (arenaOn()) {
-      const A = CFG.world.arena;
+      const A = arena();
       const mx = Math.max(0, A.w / 2 - S.W / 2), my = Math.max(0, A.h / 2 - S.H / 2);
       S.cam.x = clamp(S.cam.x, -mx, mx);
       S.cam.y = clamp(S.cam.y, -my, my);
@@ -2456,7 +2499,16 @@ if (qaProbe()) return;
     if (S.adrenT > 0) S.adrenT -= dt;
     if (S.invulnT > 0) S.invulnT -= dt;
     if (S.playerSlowT > 0) S.playerSlowT -= dt;
-    if (st.wardCd > 0) st.wardCd -= dt;
+    if (st.wardCd > 0) {
+      st.wardCd -= dt;
+      /* v24.7 THE WARD'S BREATH: the talisman's return is spoken once —
+         the paper could not tell a waiting ward from a live one */
+      if (st.wardCd <= 0 && st.ward) {
+        S.rings.push({ x: p.x, y: p.y, max: 56, life: 0.5, maxLife: 0.5 });
+        S.popups.push({ x: p.x, y: p.y - 26, txt: 'THE WARD REFORMS', life: 1.0, max: 1.0 });
+        SFX.ward();
+      }
+    }
     if (p.recoil > 0) p.recoil -= dt * 14;
 
     /* black tide: the ink breathes outward on its own rhythm */
@@ -2681,9 +2733,11 @@ if (qaProbe()) return;
     }
 
     /* v24.5 THE CHARACTER'S GIFT: each scribe carries one power of its
-       own, spent on its own breath — the Redip remakes, the Exhale bites */
-    const chrs2 = store.get('om_char_v1', {}) || {};
-    const cur2 = CHARACTERS.find(c7 => c7.id === (chrs2.current || 'scribe')) || CHARACTERS[0];
+       own, spent on its own breath — the Redip remakes, the Exhale bites.
+       v24.7: the scribe is resolved from the run's own stats — freshStats
+       read the store once at the door; the hot path no longer parses
+       localStorage every frame to learn whose hand this is */
+    const cur2 = CHARACTERS.find(c7 => c7.id === st.charId) || CHARACTERS[0];
     st.charSkillT = (st.charSkillT == null ? cur2.skill.every : st.charSkillT) - dt;
     if (st.charSkillT <= 0) {
       st.charSkillT = cur2.skill.every;
@@ -2805,7 +2859,10 @@ if (qaProbe()) return;
         ang: a,
         dmg: primaryDmg(atk.dmg +
           (atk.bkind === 'needle' ? st.ndeep : 0) +
-          (atk.bkind === 'broom' ? st.bbrist : 0) +
+          /* v24.7: Heavy Bristles finally bites — the broom's own ink
+             is kind 'drop' (v22.4), so the old 'broom' test never ran;
+             the art rides the brush that owns it, not the bullet's name */
+          (S.brush === 'broom' ? st.bbrist : 0) +
           (atk.bkind === 'stone' ? st.sbould : 0)),
         hits: 1 + st.pierce, age: 0, life: lf,
         kind: atk.bkind, brush: S.brush, seed: 100000 + ((Math.random() * 899999) | 0),
@@ -2944,7 +3001,7 @@ if (qaProbe()) return;
       }
       /* v24.6 the skipper leaps off the bounds of the sheet, still flying */
       if (b.skipper) {
-        const A = CFG.world.arena, ix = A.w / 2 - 10, iy = A.h / 2 - 10;
+        const A = arena(), ix = A.w / 2 - 10, iy = A.h / 2 - 10;
         let bounced = false;
         if (b.x < -ix && b.vx < 0) { b.vx = -b.vx; bounced = true; }
         else if (b.x > ix && b.vx > 0) { b.vx = -b.vx; bounced = true; }
@@ -3221,17 +3278,22 @@ if (qaProbe()) return;
           S.shake = Math.max(S.shake, 11);
           const RAD = Math.max(S.W, S.H) * 0.55;   /* the blast hurts only what the ring reaches */
           S.rings.push({ x: p.x, y: p.y, max: RAD, life: 0.6, maxLife: 0.6, red: true });
+          /* v24.7 THE HONEST BURST: the talisman's bite follows the sheet's
+             depth — flat 7 was confetti past wave 60, where the horde's ink
+             runs to tens and hundreds; it still never clears a page alone */
+          const bdmg = Math.min(120, 7 + Math.round(st.wave * 0.5));
           for (let j = S.enemies.length - 1; j >= 0; j--) {
             const e = S.enemies[j];
             const bdx = e.x - p.x, bdy = e.y - p.y;
             if (bdx * bdx + bdy * bdy > RAD * RAD) continue;
-            e.hp -= 7;
+            e.hp -= bdmg;
             e.hitFlash = 0.1;
             e.stun = Math.max(e.stun, 0.5);
             const a = Math.atan2(e.y - p.y, e.x - p.x);
             e.kbx += Math.cos(a) * 320; e.kby += Math.sin(a) * 320;
             if (e.hp <= 0) { S.enemies.splice(j, 1); killEnemy(e); }
           }
+          S.popups.push({ x: p.x, y: p.y - 24, txt: 'THE INK BURSTS', life: 1.0, max: 1.0, red: true });
           SFX.bomb();
         } else if (pk.kind === 'chest') {
           S.pendingChests++;
@@ -3416,6 +3478,9 @@ if (qaProbe()) return;
       }
       sc.x += Math.cos(sc.ang) * speed * dt;
       sc.y += Math.sin(sc.ang) * speed * dt;
+      /* v24.7 THE STROKE STAYS HOME: the living line is a mover like
+         any other — the bounded page holds it at the pressed margins */
+      if (arenaOn()) clampArena(sc, 6);
       /* THE INK WAKE: where the stroke has passed, its ink lingers */
       if (st.swake) {
         sc.trailT = (sc.trailT || 0) - dt;
@@ -3783,6 +3848,12 @@ if (qaProbe()) return;
         /* the warhorn's muster: beasts it has breathed on run hotter */
         if (e.hornT > 0) { e.hornT -= dt; sm *= 1.32; }
         let vx = 0, vy = 0;
+        /* v24.7 THE POUR, made fair: a rising lord neither walks nor
+           bites — the pool spreads and the beast rises out of it before
+           it hunts, casts, or takes its bite of contact. It is still a
+           visible target: every cast stroke may strike it as it stands. */
+        if (e.enterT > 0) { /* the pour holds its breath */ }
+        else
         switch (e.type) {
           case 'pulse':
           case 'pulseling':
@@ -5480,6 +5551,7 @@ if (qaProbe()) return;
     if (S.invulnT <= 0) {
       for (const e of S.enemies) {
         if (e.faint) continue;   /* the underdrawing has no body to touch */
+        if (e.enterT > 0) continue;   /* v24.7: a rising lord does not yet bite */
         const dx = e.x - p.x, dy = e.y - p.y;
         const rr = e.r + p.r - 2;
         if (dx * dx + dy * dy < rr * rr) {
@@ -5584,17 +5656,34 @@ if (qaProbe()) return;
       const group = Math.min(CFG.wave.groupSize(as.waveInLevel, as.depth), S.queue.length, cap - alive);
       if (S.spawnPattern === 'ring') {
         /* a ring closes around the brush — the surge encircles.
-           On a bounded page the ring flattens against the margins. */
+           v24.7 THE TRUE RING: on a bounded page the spokes are
+           measured against the PAGE's own geometry — each one runs
+           from the brush to the pressed margin in its own direction,
+           so the encirclement closes around the whole perimeter of
+           the sheet (the old viewport math collapsed into two wall
+           lines on the tight endless page, where the sheet is smaller
+           than the eye). The margin walk-in keeps its honest distance
+           where the page still has room for it. */
         const off = Math.random() * Math.PI * 2;
         for (let i = 0; i < group; i++) {
           const type = S.queue.pop();
           const a = off + (i / group) * Math.PI * 2;
-          const pad = CFG.world.spawnPad;
-          const ax = Math.abs(Math.cos(a)) > 1e-4 ? (S.W / 2 + pad) / Math.abs(Math.cos(a)) : Infinity;
-          const ay = Math.abs(Math.sin(a)) > 1e-4 ? (S.H / 2 + pad) / Math.abs(Math.sin(a)) : Infinity;
-          const t2 = Math.min(ax, ay) + rand(20, 110);
-          const mk = { type, x: S.player.x + Math.cos(a) * t2, y: S.player.y + Math.sin(a) * t2, t: 0.62 };
-          if (arenaOn()) clampArena(mk, 70);
+          let mk;
+          if (arenaOn()) {
+            const A = arena(), inset = A.inset || 26;
+            const cx = Math.cos(a), cy = Math.sin(a);
+            const hx = Math.abs(cx) > 1e-4 ? (A.w / 2 - inset - 24) / Math.abs(cx) : Infinity;
+            const hy = Math.abs(cy) > 1e-4 ? (A.h / 2 - inset - 24) / Math.abs(cy) : Infinity;
+            const t2 = Math.min(hx, hy) + rand(0, 26);
+            mk = { type, x: S.player.x + cx * t2, y: S.player.y + cy * t2, t: 0.62 };
+          } else {
+            const pad = CFG.world.spawnPad;
+            const ax = Math.abs(Math.cos(a)) > 1e-4 ? (S.W / 2 + pad) / Math.abs(Math.cos(a)) : Infinity;
+            const ay = Math.abs(Math.sin(a)) > 1e-4 ? (S.H / 2 + pad) / Math.abs(Math.sin(a)) : Infinity;
+            const t2 = Math.min(ax, ay) + rand(20, 110);
+            mk = { type, x: S.player.x + Math.cos(a) * t2, y: S.player.y + Math.sin(a) * t2, t: 0.62 };
+          }
+          if (arenaOn()) clampArena(mk, 44);
           S.markers.push(mk);
         }
       } else if (S.spawnPattern === 'flood') {
@@ -5864,7 +5953,7 @@ if (qaProbe()) return;
     S,
     get mode() { return S.mode; },
     set mode(m) { S.mode = m; },
-    startRun, continueEndless, abandon, deploy, pickAt, clearNext, clearHome,
+    startRun, continueEndless, abandon, deploy, passPick, pickAt, clearNext, clearHome,
     update, updateDying, updateIdle, initAttract,
     getBest, getRuns, getFurthest, getUnlocked, getCleared, getProg, getSeals, frontierLevel, checkpointPower, getBrush, setBrush,
     scenesSealed, brushUnlocked,

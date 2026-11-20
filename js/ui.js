@@ -315,16 +315,20 @@ const UI = (() => {
     el.waveFill.style.width = (v * 100).toFixed(1) + '%';
   }
 
-  /* v24.2 the integrity bar: one brush-stroke of held ink —
-     it drains right to left and reddens as the sheet tears */
+  /* v24.6h the ink jar: integrity is the ink held in the jar —
+     the level sinks as the sheet spends itself, a percentage beside.
+     JAR_TRAVEL is the pot's inner well in viewBox units (y 5 → 22.4),
+     in step with the svg in index.html */
+  const JAR_TRAVEL = 17.4;
   function setHp(cur, max) {
-    const fill = document.getElementById('hpFill');
+    const ink = document.getElementById('hpFill');
     const num = document.getElementById('hpNum');
-    if (!fill || !num) { el.hudHp.innerHTML = Array.from({ length: max }, (_, i) =>
+    if (!ink || !num) { el.hudHp.innerHTML = Array.from({ length: max }, (_, i) =>
       `<span class="hp-cell${i < cur ? ' on' : ''}">${HP_DROP}</span>`).join(''); return; }
     const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
-    fill.style.width = (pct * 100).toFixed(1) + '%';
-    num.textContent = cur + '/' + max;
+    ink.style.transform = 'translateY(' + ((1 - pct) * JAR_TRAVEL).toFixed(1) + 'px)';
+    num.textContent = Math.round(pct * 100) + '%';
+    el.hudHp.setAttribute('aria-label', 'Integrity ' + Math.round(pct * 100) + ' percent');
     el.hudHp.classList.toggle('is-low', cur <= Math.max(1, Math.round(max * 0.34)));
   }
 

@@ -4365,11 +4365,12 @@ function drawEnemy(c, e, t) {
   }
 
   /* the bounded page's margins: a hand-pressed border so the eye
-     reads where the paper ends (journey and daily only) */
+     reads where the paper ends — every mode walks a bounded page now
+     (v24.6i); the endless sheet wears the tighter one */
   function drawArenaEdge(c) {
     const S = G.S;
-    if (S.runMode !== 'journey' && S.runMode !== 'daily') return;
-    const A = CFG.world.arena, ins = A.inset;
+    if (S.runMode !== 'journey' && S.runMode !== 'daily' && S.runMode !== 'endless') return;
+    const A = S.runMode === 'endless' ? CFG.world.arenaEndless : CFG.world.arena, ins = A.inset;
     const x0 = -A.w / 2 + ins, y0 = -A.h / 2 + ins;
     const w = A.w - ins * 2, h = A.h - ins * 2;
     c.save();
@@ -5074,7 +5075,10 @@ function drawEnemy(c, e, t) {
       const f = PI.fx[i];
       const age = t - f.t0;
       if (age > 2.4) { PI.fx.splice(i, 1); continue; }
-      const k = Math.min(1, age / 0.42);
+      /* age can go negative for one frame — a splash stamped between
+         frames meets a slow frame's older t — and a negative age once
+         drove the ring's radius below zero and killed the draw */
+      const k = Math.min(1, Math.max(0, age / 0.42));
       c.strokeStyle = INK;
       c.globalAlpha = (1 - k) * 0.38;
       c.lineWidth = 1.6;
