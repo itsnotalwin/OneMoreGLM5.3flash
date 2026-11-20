@@ -1,5 +1,9 @@
 # ONE MORE — GLM 5.3 Flash
 
+## v24.8 — THE PORTRAIT HAND: bottom controls stay in reach (20 Nov 2026)
+
+Owner ask: the updated game became difficult to use in portrait mode because bottom buttons were hidden. A CSS-only pass now gives the stage the dynamic visible viewport, makes the title sheet vertically scrollable when its menu exceeds the phone height, and reserves the bottom safe-area lane for the existing Settings, Character and Opening controls. The in-run bottom controls clear the navigation gesture area and use 44px touch targets. Extra-short portrait screens trim spacing rather than removing actions. No gameplay mechanics, event handlers, saves, cloud logic, or backend wiring changed. Service-worker cache advances to v24.8. Source commits are verified; physical-device/browser screenshot verification remains outstanding.
+
 ## Purpose
 An ink-brush survival browser game with journey, endless, and daily modes. This is a distinct repository from `itsnotalwin/ONE_MORE`.
 
