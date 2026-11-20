@@ -1,0 +1,136 @@
+/* ONE MORE — service worker: the paper travels with the scribe.
+   ------------------------------------------------------------------
+   Ported into the Vite build (v25.0 THE FABLE ADOPTED). The shell is
+   one self-contained index.html — the engine, styles and React bridge
+   all ride inside it — so the core cache is the shell + the washes the
+   intro composites, the ensō icons, and the recorded sounds the synth
+   kit augments. Images cache at runtime as they are first painted.
+   Page navigations go network-first with the cached shell as the
+   offline fall. Same-origin only — Supabase and the Google-Fonts CDN
+   pass straight through.
+
+   Everything is SCOPE-RELATIVE (`./`, `img/…`, `snd/…`) so the worker
+   is honest wherever the game is hosted: a user site root or a project
+   subpath on GitHub Pages. Bump VER on every build — the activate step
+   retires every cache that does not carry the current version. */
+'use strict';
+
+const VER = 'v25.0';
+const CORE_CACHE = `om-core-${VER}`;
+const RUN_CACHE = `om-run-${VER}`;
+
+const CORE = [
+  './',
+  'index.html',
+  'manifest.json',
+  'snd/om_title.mp3',
+  'snd/om_scroll.mp3',
+  'snd/sfx/shoot.mp3',
+  'snd/sfx/hit.mp3',
+  'snd/sfx/kill.mp3',
+  'snd/sfx/hurt.ogg',
+  'snd/sfx/wave.ogg',
+  'snd/sfx/pickup.ogg',
+  'snd/sfx/thud.ogg',
+  'snd/sfx/gong.ogg',
+  'snd/sfx/deploy.ogg',
+  'img/icons/icon-32.png',
+  'img/icons/icon-180.png',
+  'img/icons/icon-192.png',
+  'img/icons/icon-192-maskable.png',
+  'img/icons/icon-512.png',
+  'img/icons/icon-512-maskable.png',
+  'img/wash_cliff.webp',
+  'img/wash_cliff_p.webp',
+  'img/wash_guo.webp',
+  'img/wash_guo2.webp',
+  'img/wash_guo2_p.webp',
+  'img/wash_guo_p.webp',
+  'img/wash_hab1.webp',
+  'img/wash_hab1_p.webp',
+  'img/wash_hab2.webp',
+  'img/wash_hab2_p.webp',
+  'img/wash_kuan.webp',
+  'img/wash_kuan_p.webp',
+  'img/wash_shore.webp',
+  'img/wash_shore_p.webp',
+  'img/wash_shu.webp',
+  'img/wash_shu2.webp',
+  'img/wash_shu2_p.webp',
+  'img/wash_shu_p.webp',
+  'img/wash_trees.webp',
+  'img/wash_trees_p.webp',
+  'img/wash_waves.webp',
+  'img/wash_waves2.webp',
+  'img/wash_waves2_p.webp',
+  'img/wash_waves_p.webp'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CORE_CACHE);
+    /* resilient: one missing asset must never block the install —
+       the runtime handler sweeps stragglers in as they are fetched */
+    await Promise.all(CORE.map((u) => cache.add(u).catch(() => null)));
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((k) => k !== CORE_CACHE && k !== RUN_CACHE)
+        .map((k) => caches.delete(k))
+    );
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return; // Supabase / fonts CDN: untouched
+
+  /* page navigations: network-first, cached shell as the offline fall */
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CORE_CACHE);
+        cache.put('./', fresh.clone()).catch(() => {});
+        return fresh;
+      } catch (_) {
+        const shell = (await caches.match('./')) || (await caches.match('index.html'));
+        return shell || Response.error();
+      }
+    })());
+    return;
+  }
+
+  /* every other same-origin GET: stale-while-revalidate — the held copy
+     answers at once while a fresh fetch quietly re-inks the cache behind
+     the visit, so a deploy is current by the NEXT load, not a reload away */
+  event.respondWith((async () => {
+    const hit = await caches.match(req);
+    const rung = url.pathname.includes('/img/') ? RUN_CACHE : CORE_CACHE;
+    const revalidate = (async () => {
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.ok) {
+          const cache = await caches.open(rung);
+          await cache.put(req, fresh.clone()).catch(() => {});
+        }
+        return fresh;
+      } catch (_) {
+        return null; /* offline: the held copy stands */
+      }
+    })();
+    if (hit) { event.waitUntil(revalidate); return hit; }
+    const fresh = await revalidate;
+    return fresh || Response.error();
+  })());
+});

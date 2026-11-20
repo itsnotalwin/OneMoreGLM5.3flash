@@ -1,7 +1,7 @@
 <h1 align="center">ONE MORE</h1>
 
 <p align="center">
-  <i>An ink-born survival. One brush. Two scrolls. The paper never ends.</i>
+  <i>An ink-born survival. One brush. Six scrolls. The paper never ends.</i>
 </p>
 
 <p align="center">
@@ -9,33 +9,49 @@
 </p>
 
 <p align="center">
-  vanilla JS · Canvas 2D · zero dependencies · zero build · full PWA · MIT
+  vanilla engine · Canvas 2D · Vite + React shell · full PWA · MIT
 </p>
+
+> **v25.0 — THE FABLE ADOPTED (20 Nov 2026).** This repository now carries the
+> *One_more_fable* build wholesale: **eight brushes** and the Armory, **eight
+> Confluences** (合 — two kindred strokes become one), the **charms purse**
+> (符 — the between-run shop), **Ink Step (瞬) and Mikiri (切)**, field
+> **inkstones (硯)**, boss-and-keeper **entrance films**, a rebuilt opening,
+> and the v25 fx pass. The pre-adoption game (v24.11 — THE STUDY skills, the
+> two scribes, the octopus holds, the painter's-hand autobrush, the ink jar,
+> the bounded sheets) lives on in this repo's git history; the ledger in
+> [PROJECT.md](./PROJECT.md) records the whole exchange. Some screenshots
+> below show the pre-adoption paper.
 
 ---
 
-**ONE MORE** is a Vampire-Survivors-like painted as living sumi-e, written in
-vanilla HTML/CSS/JS. You are a brush spirit walking sheets of washi paper;
-your brush **is** your weapon — choose one of four starters and the run begins
-with that arm and nothing else: the needle's thread (ranged), the broom's sweep
-(melee), the stone's lob (ranged), or the wisp's homing breath (magic). Every
-brush carries its class, and the level-up shelf **pulls your own class
-five-deep** — a needle run meets ranged arms way more often, without ever
-closing the door on the rest. Your only job is to *not be erased*.
+**ONE MORE** is a Vampire-Survivors-like painted as living sumi-e. You are a
+brush spirit walking sheets of washi paper; your brush **is** your weapon —
+**eight brushes** now walk the shelf: the needle's thread, the broom's sweep,
+the stone's lob, the wisp's homing breath — and, as the scrolls open, the
+fan (scene 6), the tide brush (10), the seal brush (14) and the scribe brush
+(18). Each carries its own `profile` — pace, bite, reach — and its own ART
+tracks on the level-up shelf. Your only job is to *not be erased*.
 
 Every kill spills ink motes — gather them to fill the ensō ring around the
 brush and rise mid-battle. Every kill also splatters real ink that
 **permanently stains the paper**: by the second sheet the world is a painting
-of your whole fight. And every run leaves more than stains — it gathers **墨**,
-the ink that feeds **THE STUDY**, where the hand itself is sharpened between
-runs.
+of your whole fight. And every run leaves more than stains — it gathers the
+**ink purse** that feeds the **符 CHARMS ROOM**, where the hand is sharpened
+between runs.
 
-The journey is **two scrolls of ten scenes**, each scene ten waves — two
-hundred waves on the way to the last Guardian. Clear the second sheet and
-**THE JOURNEY'S END** plays — the ink stills, the keepers are remembered, your
-brush paints one last great ensō around the run and seals it — and the scroll
-offers itself forever: **THE ENDLESS SCROLL**, where the paper cycles **all six
-papers** and the difficulty never stops compounding.
+The journey is **six scrolls of ten scenes**, each scene ten waves — six
+hundred waves and sixty Keepers on the way to the six Guardians. Clear the
+last sheet and **THE JOURNEY'S END** plays — the ink stills, the keepers are
+remembered, your brush paints one last great ensō around the run and seals it
+— and the scroll offers itself forever: **THE ENDLESS SCROLL**, where the
+paper cycles and the difficulty never stops compounding.
+
+Mid-run, **two strokes can become one**: meet a kindred pair of upgrades and
+a **Confluence** cries itself onto the sheet — eight transformative unions
+that turn a build into a thesis. And the hand has verbs now: **Ink Step**
+dashes through the horde, **Mikiri** answers a bite with a cut, **GRIND**
+rerolls the shelf, **BLOT** banishes a pick.
 
 Everything here is honest, hand-tuned and local: no engine, no framework,
 no telemetry. The one cloud in the room — the endless leaderboard — is
@@ -252,38 +268,22 @@ charge lunges, the wheel circles. Ranged arms throw; magic bends the sheet.
 
 ---
 
-## THE STUDY — the ink every run leaves behind
+## THE CHARMS ROOM 符 — the ink every run leaves behind
 
 Every run gathers 墨 — **ink** — from the beasts it breaks and the waves it
-seals. The ink stays on the device and feeds **THE STUDY** (the title's
-師 CHARACTER door): six permanent skills and two scribes to walk them.
+seals. The ink stays on the device and feeds the **符 CHARMS ROOM** (the
+title's charm door): fourteen charms on an eight-rank ladder, from cheap
+comforts to the sealed depths. Ranks past a scroll's cap stay **封 sealed**
+until that scroll unrolls — the deeper the paper, the deeper the shop.
 
-<p align="center">
-  <img src="screenshots/13-study.png" width="700" alt="THE STUDY — THE SCRIBE walking, THE NIGHT SCRIBE at 5000 ink, the six skill rows beneath">
-</p>
-
-| Skill | kanji | Max | What it does |
-|---|---|---|---|
-| THICK VELLUM | 厚 | 5 | +1 max integrity per rank |
-| LIGHT HANDS | 軽 | 5 | +6% stride per rank |
-| KEEN WRIST | 敏 | 5 | the brush lifts 6% sooner per rank |
-| BITTER RESERVE | 苦 | 3 | +1 bite per rank — every stroke digs deeper |
-| INK SENSE | 集 | 4 | the pull reaches a rank deeper per rank |
-| RICH PAPER | 富 | 4 | +10% ink gathered at the run's end, per rank |
-
-**Two scribes** walk the sheet, and the choice is who you are for the run:
-
-| Scribe | kanji | Cost | The body | The gift |
-|---|---|---|---|---|
-| THE SCRIBE | 師 | free | white vellum that **fills black** with every rank | **THE REDIP** — every 30s: fresh ink shoves and bites all nearby, and the hand holds steady |
-| THE NIGHT SCRIBE | 夜 | 5000 墨 | lamp-black that **fills white** | **THE PALE EXHALE** — every 26s: a slow ring of pale needles that bites all it touches |
-
-The mastery fill **rises**: the scribe's body draws in two passes — the base
-ink, then the fill soaked upward from the hem with every skill rank bought.
+The charms are the between-run economy of the adopted build: a rank bought
+here walks into every run after it. (The pre-adoption build's THE STUDY —
+six skills and two scribes — was retired with v25.0; it lives in git
+history.)
 
 Found on the paper: the **pot** (+1 integrity), the **墨 talisman** (vacuums
-every mote), the **ink bomb** (splashes the whole sheet), and the Keepers'
-**chest** — a free stroke of your choice.
+every mote), the **ink bomb** (splashes the whole sheet), the Keepers'
+**chest** — a free stroke of your choice — and the **硯 field inkstones**.
 
 ---
 
@@ -480,9 +480,9 @@ the rare 稀 arms ride their own weight. Strokes reshape the hand itself.
 | WISP | Twin Wisps | 2 | a second, then a third wisp with every cast |
 | WISP | Swift Haunt | 2 | faster casts, tighter turns |
 
-The charms room and the ink purse were retired in v21.9: nothing is bought
-mid-run, nothing presses back — a run is built from its own picks alone, and
-the only between-run economy is **THE STUDY**'s ink.
+Nothing is bought mid-run — a run is built from its own picks alone (and the
+rare **GRIND** reroll or **BLOT** banish). The between-run economy is the
+**符 CHARMS ROOM**'s ink purse.
 
 **The run's report** can be pressed into a share card — 1080 × 1350, stamped
 with the run's hanko (or your ledger rank, #N, when a post landed), ready to
@@ -698,44 +698,33 @@ create policy "a scribe raises only their week" on om_weekly
 
 ## Deploy to GitHub Pages
 
-The repo ships with a ready-made workflow at
-`.github/workflows/deploy.yml` that publishes the site on every push to
-`main` using the official GitHub Pages Actions pipeline.
+Zero Actions setup: Pages builds from the branch, and the **built artifact is
+committed at the repo root** — the root `index.html` is the deploy. After
+changing source:
 
-1. Create a new repository on GitHub (e.g. `one-more`).
-2. Push this folder's contents to the `main` branch:
+```bash
+npm run build:site     # vite build, then scripts/build.cjs lands dist/ on the root
+git add -A && git commit -m "..." && git push origin main
+```
 
-   ```bash
-   git init
-   git add -A
-   git commit -m "ONE MORE — the scroll turns"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/one-more.git
-   git push -u origin main
-   ```
-
-3. In the repository, go to **Settings → Pages** and set
-   **Build and deployment → Source** to **GitHub Actions**.
-4. That's it. The workflow runs on every push and publishes the game to:
-
-   `https://<your-username>.github.io/one-more/`
-
-You can also trigger a redeploy manually from the **Actions** tab via
-**Run workflow** (the workflow has `workflow_dispatch` enabled).
-
-> Note: the first deploy requires step 3. If the workflow fails with a
-> "Pages not enabled" error, this is the setting you missed.
+Push to `main` → GitHub's automatic `pages-build-deployment` publishes the
+root → `https://<your-username>.github.io/OneMoreGLM5.3flash/`.
 
 ## Run locally
 
-No build step. Any static server works:
+Two shapes, two doors:
 
 ```bash
-python3 -m http.server 8000
-# then open http://localhost:8000
+npm run dev            # the vite dev server — open /index.src.html
 ```
 
-(Opening `index.html` directly from disk also works.)
+Or serve the **built root** exactly as Pages will see it (any static
+server):
+
+```bash
+npx serve .            # or: node scripts/serve.cjs
+# then open http://localhost:3000
+```
 
 ## Install as an app (PWA) · 端
 
@@ -760,51 +749,59 @@ subpath on GitHub Pages.
 ## Project structure
 
 ```
-one-more/
-├── index.html                  # shell: canvas + all screens + ink wobble filters
-├── css/
-│   └── style.css               # the sumi-e design system
-├── js/
-│   ├── config.js               # tuning: sheets, beasts, waves, xp, upgrades, brushes, scribes
-│   ├── audio.js                # synthesized ink sound kit (splats, taiko, gong, thunder)
-│   ├── ui.js                   # DOM screens, HUD, integrity bar, boss seal, brush picker
-│   ├── game.js                 # run state, waves, arenas, guardians, the six holds
-│   ├── render.js               # sumi-e renderer: six papers, weather, line boil, stains, the ensō ink ring
-│   ├── share.js                # the 1080×1350 share card
-│   ├── cutscene.js             # scroll-turn interludes & the journey's-end finale
-│   ├── intro.js                # THE OPENING — the skippable ink cinematic
-│   ├── lb.js                   # the endless ledger: sign-the-page + Postgres board
-│   ├── supabase-config.js      # the ink cloud's address (paste your URL + anon key)
-│   └── main.js                 # bootstrap, input, hit-stop game loop, wiring
-├── screenshots/                # the paper in pictures (used by this README)
-├── .github/workflows/deploy.yml # GitHub Pages deployment
+OneMoreGLM5.3flash/
+├── index.html                  # BUILT artifact — committed; what Pages serves
+├── index.src.html              # the vite entry (shell: canvas + all screens + filters)
+├── manifest.json, img/, sw.js  # landed by the build (public/ copies)
+├── src/
+│   ├── main.tsx                # React root + the PWA worker registration
+│   ├── App.tsx                 # the DOM (canvas + screens) as JSX, same element ids
+│   ├── engine/
+│   │   ├── boot.ts             # the ?raw bridge: one shared scope, singletons on window
+│   │   ├── config.js           # tuning: six scrolls, 135 beasts, 8 brushes, charms, confluences
+│   │   ├── audio.js            # the ink sound kit: synth first, recorded swells beneath
+│   │   ├── ui.js               # DOM screens, HUD, banners, the Armory, the codex doors
+│   │   ├── game.js             # run state, waves, keepers, guardians, ink step, mikiri
+│   │   ├── render.js           # sumi-e renderer + the scribe figure + beast portraits
+│   │   ├── charms.js           # the 符 charm room
+│   │   ├── codex.js            # the compendium: beasts, confluences, chronicle
+│   │   ├── cutscene.js         # scroll-turn, boss/keeper entrances, the finale
+│   │   ├── intro.js            # THE OPENING — the rebuilt wash-composited film
+│   │   ├── lb.js               # the endless ledger: sign-the-page + Postgres board
+│   │   ├── cloud-save.js       # the private cross-device save (Supabase)
+│   │   ├── supabase-config.js  # the ink cloud's address (URL + publishable key)
+│   │   ├── share.js            # the share card
+│   │   └── main.js             # bootstrap, input, the game loop, the v25 pixel budget
+│   └── styles/                 # onemore.css (core), upgrades.css, armory.css, title.css
+├── scripts/build.cjs           # lands dist/ on the root (index.html + assets)
+├── screenshots/                # the paper in pictures (pre-adoption shots)
 ├── .nojekyll                   # serve files as-is, skip Jekyll
-├── manifest.json               # the PWA manifest
-├── sw.js                       # the service worker — versioned caches, offline
 ├── LICENSE
 └── README.md
 ```
 
 ## Tuning the scrolls
 
-Everything is a knob in `js/config.js` — edit and refresh, no build:
+Everything is a knob in `src/engine/config.js` — edit, `npm run build:site`,
+push:
 
-- `AREAS` + `PAST_SCROLLS` — the six papers: ink, theme, multipliers, roster
+- `AREAS` — the six papers: ink, theme, multipliers, rosters, their 60 keepers
 - `ENEMIES` + `ENEMY_WEIGHTS` — hp, speed, size, cost, score, debut wave,
-  spawn weight for all 135
+  spawn weight, and `buildArmy()`'s standing horde
 - `CFG.wave` — the ten-wave shape: budgets, surge cadence, elite scaling,
   the concurrent cap and group size
 - `CFG.xp` / `CFG.combo` — the mote economy and the chain multiplier
-- `CFG.brushes` — the four starters, their classes and their weapon bodies
-- `UPGRADES` — the 46 picks — strokes, the six holds' arms and the brushes'
-  own ART tracks
-- `CFG.lord` — the bosses' pour-in entrance
+- `CFG.brushes` — the eight brushes, their profiles and their weapon bodies
+- `UPGRADES` — the 54 picks — arts, abilities, the brushes' own tracks
+- `CONFLUENCES` — the eight unions and their kindred thresholds
+- `CHARMS` + `CFG.charmEarn` — the 符 ladder and the purse's income
+- `CFG.dash` / `CFG.shrine` / `CFG.reroll` — Ink Step & Mikiri, inkstones,
+  the shelf tools
 - `CFG.endless` / `CFG.hard` — the two teeth: lap growth and REALLY HARD
 - `CFG.world` — the arena, spawn padding, stain cap, the ambient paper marks
 - `CFG.ranks` — the end-of-run seal thresholds
-- `SKILLS` / `CHARACTERS` — THE STUDY's six skills and the two scribes
 
-The run's ink, skills, scribe, seals and preferences persist in
+The run's ink, charms, seals and preferences persist in
 `localStorage` — no accounts, no tracking. GitHub Pages serves static files
 only, and the game is 100% client-side by design.
 
@@ -817,41 +814,44 @@ armed.
 | Param | What it does |
 |---|---|
 | `?wave=N` | start the next run at wave N (0–999) |
-| `&power=N` | seed a deep-run build of N upgrades (0–30; 60% stats, 40% powers) |
+| `&power=N` | seed a deep-run build of N upgrades (0–30) |
 | `&god=1` | the scribe cannot bleed — for probes that must outlive a swarm |
 | `&hard=1` | force REALLY HARD for the run |
 | `?daily=1` | walk today's seeded sheet |
 | `&day=YYYY-MM-DD` | a specific day's sheet |
+| `&charms=N` | probe the charm room with N ink on the purse |
 | `?scenes=N` | probe the sealed-brush gate (0–60 scenes sealed) |
-| `?lbdebug=1` | the ledger's paper cloud — twelve fake scribes to E2E the board |
-| `?fps=1` | the frame-rate stamp |
-| `?nores` | disable the adaptive resolution scaler |
+
+> Note: the adopted build's deep-link runs **write the ledgers they touch** —
+> the pre-adoption build had a probe-hygiene layer that kept QA runs off the
+> save; it did not survive the fork. Probe on a throwaway browser profile.
 
 Example: `index.html?wave=100&power=12&god=1`, then press THE JOURNEY.
 
 ## Tech
 
-- Vanilla JavaScript (ES6+), Canvas 2D, WebAudio API — zero dependencies,
-  zero build step, zero telemetry
+- Vanilla-JavaScript engine (ES6+) behind a Vite + React shell: the shell
+  renders the DOM and the `boot.ts` bridge runs the engine in one shared
+  classic scope — the game code stays plain and untouched
+- Canvas 2D, WebAudio API — the sound is a synth kit first, with recorded
+  swells and music beneath
 - Procedural brush rendering: tapered strokes, wobbling blobs, splatter
   stamps, dry-brush streaks, line-boil animation — no image assets for the
-  creatures
+  creatures; the v25 pass adds zero-GC trail/impact buffers and a pixel
+  budget that guards the frame on big sheets
 - A world that remembers: sprite-cached world-space stains dry into the
   paper, per-sheet weather, master washes of public-domain paintings
   luminance-extracted into pure ink alpha
-- The sheet on the desk: a framed, centered paper with the desktop around it;
-  phones keep the full bleed
-- An FX budget: rings, popups and particles keep their caps — a flood never
-  buries the frame
-- The ink engine also paints the films: THE OPENING, the scroll-turn
-  interludes, and the journey's-end finale — all skippable, reduced-motion
-  aware
-- The meta paper: THE STUDY, the share card, ghost echoes that walk beside
-  you, THE AUTOBRUSH from the first sheet
+- The ink engine also paints the films: THE OPENING, the boss and keeper
+  entrances, the scroll-turn interludes, and the journey's-end finale — all
+  skippable, reduced-motion aware
+- The meta paper: the 符 charm room, the codex (beasts, confluences,
+  chronicle), the share card, ghost echoes that walk beside you, THE
+  AUTOBRUSH
 - Full PWA: web manifest + service worker — installable, offline-capable,
   versioned caches, hanko icon set (32/180/192/512, any + maskable)
-- Fonts: Zen Antique, IBM Plex Mono (Google Fonts CDN, with system
-  fallbacks if offline)
+- Fonts: Zen Antique, Shippori Mincho, IBM Plex Mono (Google Fonts CDN, with
+  system fallbacks if offline)
 
 ## License
 
@@ -859,10 +859,10 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v24.9b THE PAINTER'S HAND** — live at
+Current build **v25.0 THE FABLE ADOPTED** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
-[js/CONTEXT.md](./js/CONTEXT.md).
+[src/engine/CONTEXT.md](./src/engine/CONTEXT.md).
 
 ## Sound & Music Credits
 

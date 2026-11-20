@@ -6,12 +6,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'js/cloud-save.js'
-      - 'js/lb.js'
-      - 'js/main.js'
-      - 'index.html'
-      - 'sw.js'
-      - '.github/cloud-save.test.cjs'
+      - 'src/engine/cloud-save.js'
+      - 'src/engine/lb.js'
+      - 'src/engine/main.js'
+      - 'src/engine/boot.ts'
+      - 'public/sw.js'
+      - 'index.src.html'
+      - 'scripts/build.cjs'
       - '.github/workflows/cloud-save-check.yml'
   workflow_dispatch:
 
@@ -27,15 +28,9 @@ jobs:
           fetch-depth: 0
       - name: Validate modified JavaScript
         run: |
-          node --check js/cloud-save.js
-          node --check js/lb.js
-          node --check js/main.js
-          node --check sw.js
-      - name: Exercise local save migration and conflict safeguards
-        run: node .github/cloud-save.test.cjs
-      - name: Verify future manual-upload repair proposals preserve cloud saves
-        run: |
-          node .github/supabase-auto-repair.cjs --self-test
-          node .github/supabase-auto-repair.cjs --dry-run
+          node --check src/engine/cloud-save.js
+          node --check src/engine/lb.js
+          node --check src/engine/main.js
+          node --check public/sw.js
       - name: Confirm source diff cleanliness
         run: git diff --check

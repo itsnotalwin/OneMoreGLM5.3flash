@@ -1,17 +1,21 @@
 /* ONE MORE — service worker: the paper travels with the scribe.
    ------------------------------------------------------------------
-   Core shell + every brush asset are precached on install; images get
-   cached at runtime as they are first painted. Page navigations go
-   network-first with the cached shell as the offline fall. Same-origin
-   only — Supabase and the Google-Fonts CDN pass straight through.
+   Ported into the Vite build (v25.0 THE FABLE ADOPTED). The shell is
+   one self-contained index.html — the engine, styles and React bridge
+   all ride inside it — so the core cache is the shell + the washes the
+   intro composites, the ensō icons, and the recorded sounds the synth
+   kit augments. Images cache at runtime as they are first painted.
+   Page navigations go network-first with the cached shell as the
+   offline fall. Same-origin only — Supabase and the Google-Fonts CDN
+   pass straight through.
 
-   Everything is SCOPE-RELATIVE (`./`, `css/…`, `js/…`) so the worker is
-   honest wherever the game is hosted: a user site root or a project
+   Everything is SCOPE-RELATIVE (`./`, `img/…`, `snd/…`) so the worker
+   is honest wherever the game is hosted: a user site root or a project
    subpath on GitHub Pages. Bump VER on every build — the activate step
    retires every cache that does not carry the current version. */
 'use strict';
 
-const VER = 'v24.11';
+const VER = 'v25.0';
 const CORE_CACHE = `om-core-${VER}`;
 const RUN_CACHE = `om-run-${VER}`;
 
@@ -19,7 +23,6 @@ const CORE = [
   './',
   'index.html',
   'manifest.json',
-  'css/style.css',
   'snd/om_title.mp3',
   'snd/om_scroll.mp3',
   'snd/sfx/shoot.mp3',
@@ -31,19 +34,6 @@ const CORE = [
   'snd/sfx/thud.ogg',
   'snd/sfx/gong.ogg',
   'snd/sfx/deploy.ogg',
-  'js/audio.js',
-  'js/cloud-save.js',
-  'js/codex.js',
-  'js/config.js',
-  'js/cutscene.js',
-  'js/supabase-config.js',
-  'js/game.js',
-  'js/intro.js',
-  'js/lb.js',
-  'js/main.js',
-  'js/render.js',
-  'js/share.js',
-  'js/ui.js',
   'img/icons/icon-32.png',
   'img/icons/icon-180.png',
   'img/icons/icon-192.png',

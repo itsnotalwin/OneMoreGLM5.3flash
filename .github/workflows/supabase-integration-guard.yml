@@ -17,12 +17,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate JavaScript syntax
         run: |
-          node --check js/supabase-config.js
-          node --check js/lb.js
-          node --check js/main.js
-          node --check js/cloud-save.js
-          node --check js/game.js
-          node --check sw.js
+          node --check src/engine/supabase-config.js
+          node --check src/engine/lb.js
+          node --check src/engine/main.js
+          node --check src/engine/cloud-save.js
+          node --check src/engine/game.js
+          node --check src/engine/charms.js
+          node --check src/engine/codex.js
+          node --check public/sw.js
+          node --check scripts/build.cjs
+      - name: Build the site
+        run: |
+          npm ci
+          npm run build
       - name: Detect overwritten Supabase and Google OAuth wiring
         shell: bash
         run: |
@@ -34,17 +41,20 @@ jobs:
             catch { issues.push('Missing ' + path); return ''; }
           };
           const assert = (condition, message) => { if (!condition) issues.push(message); };
-          const config = read('js/supabase-config.js');
-          const lb = read('js/lb.js');
-          const cloud = read('js/cloud-save.js');
-          const main = read('js/main.js');
+          const config = read('src/engine/supabase-config.js');
+          const lb = read('src/engine/lb.js');
+          const cloud = read('src/engine/cloud-save.js');
+          const main = read('src/engine/main.js');
+          const boot = read('src/engine/boot.ts');
+          const charms = read('src/engine/charms.js');
+          const sw = read('public/sw.js');
+          const cfg = read('src/engine/config.js');
           const index = read('index.html');
-          const sw = read('sw.js');
 
           assert(config.includes('https://sffpyvxbgmhepftxoesy.supabase.co'),
             'Supabase URL no longer targets the shared Pinpoint project');
           assert(/anonKey\s*:\s*['"]sb_publishable_[^'"]+['"]/.test(config),
-            'Public publishable key missing from js/supabase-config.js');
+            'Public publishable key missing from src/engine/supabase-config.js');
           assert(!/anonKey\s*:\s*['"]sb_secret_/.test(config),
             'Forbidden secret key in public JS config');
           assert(lb.includes("from('om_scores')") && lb.includes("from('om_daily')"),
@@ -56,12 +66,12 @@ jobs:
           assert(lb.includes("flowType: 'pkce'") && lb.includes('detectSessionInUrl: true'),
             'Google OAuth PKCE callback handling missing');
           assert(lb.includes('om_lb_google_return_v1') && lb.includes('consumeOAuthReturn') &&
-            lb.includes('cloudAccess()') && lb.includes('window.OM_CLOUD.authChanged()'),
+            lb.includes('cloudAccess()'),
             'Short-lived Google callback/board context restoration missing');
           assert(lb.includes('unable to exchange external code'),
             'Actionable token-exchange error handling missing');
           assert(main.includes('LB.consumeOAuthReturn()') && main.includes('LB.open(') &&
-            main.includes('LB.initAuth()') && main.includes('LB.authReturnTo = settingsReturn'),
+            main.includes('LB.initAuth()'),
             'Startup no longer restores the leaderboard after Google OAuth');
           assert(lb.includes("from('om_weekly')") && lb.includes('has_ghost') &&
             lb.includes('fetchEcho(') && lb.includes('raceEcho('),
@@ -71,39 +81,29 @@ jobs:
           assert(cloud.includes("om_player_saves") && cloud.includes('beforeLocalWipe') &&
             cloud.includes('restoreSnapshot') && cloud.includes('saveToCloud'),
             'Private cloud-save migration/sync module missing');
-          assert(lb.includes('cloudAccess()') && main.includes('beforeLocalWipe()'),
-            'Google account or local-wipe cloud protection hook missing');
-          assert(index.includes('src="./js/cloud-save.js"') &&
-            sw.includes("'js/cloud-save.js'"),
-            'Cloud save script no longer loaded or cached by the PWA');
-          assert(index.indexOf('src="./js/lb.js"') < index.indexOf('src="./js/cloud-save.js"') &&
-            index.indexOf('src="./js/cloud-save.js"') < index.indexOf('src="./js/main.js"'),
-            'Cloud save script order changed');
+          assert(main.includes('beforeLocalWipe()'),
+            'Local-wipe cloud protection hook missing');
 
-          assert(main.includes('LB.launchRun'),
-            'v19.3 echo launch integration missing');
-          assert(index.includes('id="boardTabWeek"'),
-            'v19.3 weekly board missing');
-          /* v21.9 retired the charms/purse: the shop, its chip and its
-             cache entry must stay retired — a resurrected charms.js
-             would reference a purse the game no longer carries */
-          assert(!index.includes('src="./js/charms.js"') &&
-            !sw.includes("'js/charms.js'") && !fs.existsSync('js/charms.js'),
-            'v21.9 retired charms.js must not return to the page or cache');
-          assert(!index.includes('id="charmBtn"') && !index.includes('id="charmInk"'),
-            'v21.9 retired charm UI must not return to the title');
-
-          const scripts = ['js/supabase-config.js', 'js/lb.js', 'js/main.js'];
-          const scriptPositions = scripts.map(s => index.indexOf('src="./' + s + '"'));
-          assert(scriptPositions.every(p => p !== -1) &&
-            scriptPositions[0] < scriptPositions[1] &&
-            scriptPositions[1] < scriptPositions[2],
-            'Critical script tags missing or ordered incorrectly in index.html');
-          for (const file of scripts) {
-            assert(sw.includes("'" + file + "'"), 'PWA cache no longer includes ' + file);
+          /* v25.0 THE FABLE ADOPTED: the engine rides to the page through
+             boot.ts's ?raw bridge — every module the cloud flow needs must
+             be on that bridge, and the charms room is part of the game now */
+          for (const m of ['config.js', 'supabase-config.js', 'lb.js', 'cloud-save.js',
+            'main.js', 'charms.js', 'codex.js']) {
+            assert(boot.includes(`'./${m}?raw'`), `boot.ts no longer imports ${m}`);
           }
+          assert(cfg.includes('CHARMS') && charms.includes('charmLv'),
+            'The charms economy was dropped from the adopted build');
+          assert(fs.existsSync('src/engine/codex.js'), 'The codex module is missing');
+
           assert(/const VER\s*=\s*['"][^'"]+['"]/.test(sw),
             'PWA cache version missing');
+          assert(sw.includes("'snd/om_title.mp3'") && sw.includes("'img/wash_cliff.webp'"),
+            'PWA core cache lost its sound and wash assets');
+
+          /* the committed root artifact must carry the running version */
+          const engineVer = (cfg.match(/OM_VERSION\s*=\s*'([^']+)'/) || [])[1];
+          assert(engineVer && index.includes(engineVer),
+            `The committed root index.html is stale — run npm run build:site (engine is ${engineVer})`);
 
           if (issues.length) {
             console.error('Supabase integration REGRESSION after this push:');

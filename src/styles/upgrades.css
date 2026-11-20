@@ -1,0 +1,1272 @@
+/* ============================================================
+   ONE MORE v23.0 — THE MASTER'S HAND
+   Sumi-e additions: strict --paper / --ink / --red hierarchy,
+   honoring every sheet's theme (pale, dark, red, storm, gilt, silk).
+   ============================================================ */
+
+/* ---- v23.1 — first-run coaching line, said once, in the sheet's own hand ---- */
+.run-coach{
+  position: fixed;
+  z-index: 16;
+  left: 50%;
+  top: clamp(78px, 13vh, 128px);
+  transform: translate(-50%, 10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 15px 8px 9px;
+  border: 1.3px solid var(--ink);
+  background: rgba(237,231,217,.9);
+  box-shadow: 3px 4px 0 rgba(26,23,20,.18);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .45s ease, transform .45s cubic-bezier(.22,.7,.25,1);
+}
+.run-coach.hidden{ display: none; }
+.run-coach.is-live{ opacity: 1; transform: translate(-50%, 0); }
+.run-coach.out{ opacity: 0; transform: translate(-50%, -8px); }
+.run-coach .rc-k{
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  background: var(--red);
+  color: #ede7d9;
+  font-family: var(--display);
+  font-size: 14px;
+  line-height: 1;
+  transform: rotate(-3deg);
+}
+.run-coach .rc-t{
+  font-size: 8.6px;
+  letter-spacing: .19em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+@media (max-width: 739px){
+  .run-coach{ top: 74px; padding: 6px 11px 6px 7px; gap: 7px; }
+  .run-coach .rc-t{ font-size: 7.2px; letter-spacing: .12em; white-space: normal; max-width: 58vw; text-align: left; }
+  .run-coach .rc-k{ width: 20px; height: 20px; font-size: 12px; }
+}
+
+/* ---- v23.1 — a Confluence is cried like a Guardian ---- */
+.wave-banner.confluence .banner-kicker,
+.wave-banner.confluence .ban-lat{ color: var(--red); }
+.wave-banner.confluence .banner-core::before{
+  border-color: var(--red);
+  background: rgba(237,231,217,.94);
+}
+.wave-banner.confluence .banner-sub{
+  display: block;
+  max-width: min(560px, 82vw);
+  margin: 12px auto 0;
+  font-size: 8.6px;
+  letter-spacing: .14em;
+  color: var(--ink-70);
+}
+@media (max-width: 739px){ .wave-banner.confluence .banner-sub{ font-size: 7.4px; } }
+
+/* ---- HUD bottom-right cluster: Ink Step seal, Pause, Mute ---- */
+.hud-br{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-seal-btn{
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1.4px solid var(--ink-70);
+  background: var(--paper-92);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 18px;
+  line-height: 1;
+  transform: rotate(-2deg);
+  box-shadow: 2.5px 2.5px 0 rgba(26,23,20,.18);
+  transition: transform .12s ease, border-color .15s ease, color .15s ease, opacity .15s ease, box-shadow .15s ease;
+  margin-right: 4px;
+}
+.ds-k{ position: relative; z-index: 1; }
+.ds-label{
+  position: absolute;
+  bottom: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: .18em;
+  color: var(--ink-62);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ds-ring{
+  position: absolute;
+  inset: -5px;
+  border: 1.4px solid var(--red);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: dashReady 2.4s cubic-bezier(.2,.7,.3,1) infinite;
+}
+.dash-seal-btn.is-cooling .ds-ring{ animation: none; opacity: 0; }
+.dash-seal-btn:not(.is-cooling){ border-color: var(--red); color: var(--red); }
+.dash-seal-btn:not(.is-cooling):hover{
+  transform: rotate(0deg) translateY(-2px) scale(1.05);
+  box-shadow: 3px 4px 0 rgba(178,58,43,.35);
+}
+@keyframes dashReady{
+  0%{ opacity: .0; transform: scale(.82); }
+  38%{ opacity: .8; transform: scale(1); }
+  76%,100%{ opacity: 0; transform: scale(1.22); }
+}
+.dash-seal-btn:hover{
+  border-color: var(--red);
+  color: var(--red);
+  transform: rotate(0deg) translateY(-1px);
+}
+.dash-seal-btn:active{
+  transform: scale(0.93);
+}
+.dash-seal-btn::after{
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 2px;
+  height: 2px;
+  background: var(--red);
+  transform-origin: left center;
+  transform: scaleX(1);
+  transition: transform .08s linear;
+}
+.dash-seal-btn.is-cooling{
+  opacity: 0.52;
+  border-color: var(--ink-25);
+  color: var(--ink-55);
+}
+.dash-seal-btn.is-cooling::after{
+  transform: scaleX(var(--cool, 0));
+  background: var(--ink-55);
+}
+
+@media (hover: none) and (pointer: coarse){
+  .dash-seal-btn{
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    border-width: 1.5px;
+    border-color: var(--red);
+    box-shadow: 2.5px 2.5px 0 var(--ink-25);
+    margin-right: 6px;
+  }
+}
+
+/* ---- Boss health delayed damage-lag hairline ---- */
+.boss-track{
+  position: relative;
+  overflow: hidden;
+}
+.boss-lag{
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: var(--ink-45);
+  opacity: 0.55;
+  transition: width .58s cubic-bezier(.22,.8,.28,1);
+  pointer-events: none;
+}
+.boss-fill{
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Combo chain decay hairline & peak intensity ---- */
+.combo-chip{
+  position: relative;
+  overflow: hidden;
+}
+.combo-chip.peak{
+  border-color: var(--red);
+  box-shadow: 2.5px 2.5px 0 var(--red);
+}
+.combo-bar{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink-12);
+  pointer-events: none;
+}
+.combo-bar em{
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--ink-70);
+  transform-origin: left center;
+}
+.combo-chip.hot .combo-bar em,
+.combo-chip.peak .combo-bar em{
+  background: var(--red);
+}
+
+/* ---- Wrist & build-strip Confluence seal ---- */
+.load-item.load-conf{
+  color: var(--red);
+}
+.load-item.load-conf b{
+  font-family: var(--display);
+  font-size: 11px;
+  color: var(--red);
+}
+
+/* ---- CHOOSE ONE MORE: Confluence cards, Kin hints, Reroll & Blot ---- */
+.up-card.is-confluence{
+  border-color: var(--red);
+  box-shadow: 3px 3px 0 rgba(178, 58, 43, 0.24);
+}
+.up-card.is-confluence:hover,
+.up-card.is-confluence.selected{
+  border-color: var(--red);
+  box-shadow: 4px 4px 0 var(--red);
+}
+.up-card.is-confluence .up-name{
+  color: var(--red);
+}
+.up-conf{
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: var(--red);
+  color: var(--paper);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  line-height: 1.2;
+}
+.up-syn{
+  display: block;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--ink-25);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  color: var(--red);
+}
+
+.upgrade-tools{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+.upgrade-tools .auto-btn{
+  margin: 0;
+  width: auto;
+  flex: 1 1 220px;
+}
+.tool-ink-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--ink-45);
+  background: var(--paper-80);
+  color: var(--ink);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  transition: border-color .15s ease, color .15s ease, opacity .15s ease, transform .12s ease;
+}
+.tool-ink-btn:hover:not(:disabled){
+  border-color: var(--red);
+  color: var(--red);
+}
+.tool-ink-btn.is-armed:not(:disabled){
+  border-color: var(--red);
+}
+.tool-ink-btn .tk-kanji{
+  font-family: var(--display);
+  font-size: 13px;
+  color: var(--red);
+  line-height: 1;
+}
+.tool-ink-btn .tk-count{
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--ink-12);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 8.5px;
+  letter-spacing: 0;
+}
+.tool-ink-btn:disabled,
+.tool-ink-btn.is-empty{
+  opacity: 0.42;
+  cursor: default;
+}
+.tool-ink-btn.deny{
+  animation: toolDeny .28s ease;
+}
+@keyframes toolDeny{
+  0%, 100%{ transform: translateX(0); }
+  25%{ transform: translateX(-4px); }
+  75%{ transform: translateX(4px); }
+}
+
+/* ---- Starter Brush shelf: painted brush canvas, stat pips & arts ---- */
+.br-namecol{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.br-preview{
+  display: block;
+  width: 78px;
+  height: 24px;
+  opacity: 0.88;
+  pointer-events: none;
+}
+.br-meta{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 6px;
+  font-size: 8px;
+  letter-spacing: .16em;
+  color: var(--ink-70);
+}
+.br-stat{
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.bpip{
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--ink-45);
+}
+.bpip.on{
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.br-row.is-chosen .bpip.on{
+  background: var(--red);
+  border-color: var(--red);
+}
+.br-arts{
+  display: block;
+  margin-top: 4px;
+  font-size: 8px;
+  letter-spacing: .13em;
+  color: var(--red);
+}
+
+/* ---- Pause sheet (休): live scroll inspection & controls whisper ---- */
+.pause-meta{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 9px 14px;
+  width: 100%;
+  border-top: 1px solid var(--ink-25);
+  border-bottom: 1px solid var(--ink-25);
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--ink-70);
+  text-align: center;
+}
+.pause-meta .pm-brush{
+  color: var(--red);
+  font-weight: 600;
+}
+.pause-build{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  max-width: 340px;
+  margin: 0 auto;
+  min-height: 18px;
+}
+.pause-build:empty{
+  display: none;
+}
+.pause-keys{
+  margin: 2px 0 0;
+  font-size: 8px;
+  letter-spacing: .2em;
+  color: var(--ink-62);
+  text-align: center;
+}
+
+/* ---- Game Over sheet: inked build ribbon ---- */
+.over-build{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  padding: 8px 12px;
+  border-top: 1px dashed var(--ink-25);
+  border-bottom: 1px dashed var(--ink-25);
+}
+
+/* ---- THE COMPENDIUM (図 CODEX) ---- */
+.screen-codex{
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 20% 12%, rgba(255,252,242,.45), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(120,104,76,.09), transparent 60%);
+}
+.screen-codex .set-wrap{
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 36px);
+  margin: auto;
+}
+.wm-codex{
+  right: 5vw;
+  bottom: 3vh;
+}
+.codex-summary{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--ink-70);
+}
+.codex-summary b{
+  color: var(--red);
+  font-weight: 600;
+}
+.codex-summary .cx-dot{
+  color: var(--ink-45);
+}
+.codex-tabs{
+  margin-top: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.codex-tabs .board-tab{
+  padding: 7px 11px 6px;
+  letter-spacing: .13em;
+  white-space: nowrap;
+  font-size: 8.4px;
+}
+.codex-body{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.codex-conf-list{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cx-conf-row{
+  cursor: default;
+  text-align: left;
+}
+.cx-conf-row.is-woken{
+  border-color: var(--red);
+}
+.cx-conf-kanji{
+  color: var(--red) !important;
+}
+.cx-conf-title{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.cx-conf-head{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cx-conf-head svg{
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+.cx-conf-pair{
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  color: var(--ink-62);
+  white-space: normal;
+}
+.set-state.is-red{
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.cx-group-ct{
+  font-style: normal;
+  margin-left: auto;
+  color: var(--ink-62);
+}
+
+.cx-plate-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.cx-plate{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 9px 7px 8px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  gap: 3px;
+}
+.cx-plate.is-seen.is-officer{
+  border-color: var(--red);
+}
+.cx-plate.is-unseen{
+  border-style: dashed;
+  opacity: 0.76;
+}
+.cx-canvas{
+  width: 48px;
+  height: 48px;
+  display: block;
+}
+.cx-boss-cv{
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.cx-pname{
+  font-size: 8.8px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.cx-ptrait{
+  font-size: 7.5px;
+  letter-spacing: .13em;
+  color: var(--ink-62);
+  line-height: 1.25;
+}
+.cx-pcount{
+  margin-top: 2px;
+  font-size: 7.8px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink-70);
+}
+.cx-plate.is-seen.is-officer .cx-pcount{
+  color: var(--red);
+}
+
+.cx-stat-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.cx-stat{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+}
+.cx-sk{
+  font-size: 8px;
+  letter-spacing: .16em;
+  color: var(--ink-62);
+}
+.cx-sv{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: var(--ink);
+}
+
+.cx-empty{
+  padding: 16px 10px;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--ink-62);
+  border: 1px dashed var(--ink-25);
+}
+.cx-runs{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cx-run-row{
+  display: grid;
+  grid-template-columns: 24px 26px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--ink-25);
+  background: var(--paper-80);
+  font-size: 9px;
+  letter-spacing: .15em;
+}
+.cx-run-row.is-top{
+  border-color: var(--ink-55);
+}
+.cx-rno{
+  font-weight: 600;
+  color: var(--ink-62);
+}
+.cx-run-row.is-top .cx-rno{
+  color: var(--red);
+}
+.cx-rbrush{
+  font-family: var(--display);
+  font-size: 14px;
+  text-align: center;
+  color: var(--ink);
+}
+.cx-rmode{
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-70);
+}
+.cx-rhard,
+.cx-rconf{
+  color: var(--red);
+  font-weight: 600;
+}
+.cx-rwave{
+  font-weight: 600;
+  color: var(--ink);
+}
+.cx-rscore{
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 68px;
+  text-align: right;
+}
+
+/* ============================================================
+   v23.1 — THE PAINTED DOOR (intro gate)
+   ============================================================ */
+.intro-gate{
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 26% 12%, rgba(255,253,246,.72), transparent 58%),
+    radial-gradient(ellipse at 76% 88%, rgba(112,96,70,.10), transparent 62%),
+    #ede7d9;
+}
+.intro-gate::before,
+.intro-gate::after{
+  position: absolute;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: .42em;
+  color: var(--ink-25);
+  writing-mode: vertical-rl;
+  pointer-events: none;
+}
+.intro-gate::before{
+  content: '一筆入魂';
+  right: max(3.2vw, 18px);
+  top: 17vh;
+}
+.intro-gate::after{
+  content: '六巻六十景';
+  left: max(3.2vw, 18px);
+  bottom: 17vh;
+}
+.gate-wash{
+  position: absolute;
+  inset: -6%;
+  z-index: 0;
+  width: 112%;
+  height: 112%;
+  opacity: .82;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,.74), #000 66%);
+  mask-image: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,.74), #000 66%);
+  animation: gateWashDrift 30s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes gateWashDrift{
+  from{ transform: scale(1.02) translate3d(-.6%, .4%, 0); }
+  to{ transform: scale(1.075) translate3d(.8%, -.7%, 0); }
+}
+.gate-grid{
+  position: absolute;
+  z-index: 0;
+  left: 73%;
+  top: 28.5%;
+  width: min(40vh, 40vw, 360px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%, rgba(190,84,58,.22), rgba(178,58,43,.08) 55%, rgba(178,58,43,0) 72%);
+  pointer-events: none;
+  animation: gateSun 9s ease-in-out infinite alternate;
+}
+@keyframes gateSun{
+  from{ opacity: .6; transform: translate(-50%, -50%) scale(.98); }
+  to{ opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+.gate-ring{
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 49%;
+  width: min(76vh, 84vw, 720px);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  pointer-events: none;
+  animation: gateRingSpin 180s linear infinite;
+}
+.gate-ring path{
+  fill: none;
+  stroke: #1a1714;
+  stroke-linecap: round;
+}
+/* the ink bleed the brush leaves under the main stroke */
+.gate-ring-halo{
+  stroke-width: 19;
+  opacity: .12;
+  filter: blur(3.4px);
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+}
+/* the main stroke: a thick, wobbled, pressure-graded brush ring */
+.gate-ring-ink{
+  stroke: url(#gateInk);
+  stroke-width: 12.5;
+  opacity: .8;
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+  filter: url(#inkrough-soft);
+}
+/* a faint dry edge a hair outside, as the brush lifts */
+.gate-ring-edge{
+  stroke-width: 1.6;
+  opacity: .2;
+  stroke-dasharray: 1180;
+  stroke-dashoffset: 1180;
+  animation: gateRingDraw 2.8s cubic-bezier(.3,.6,.2,1) .3s forwards;
+  filter: url(#inkrough-soft);
+}
+@keyframes gateRingDraw{ to{ stroke-dashoffset: 0; } }
+@keyframes gateRingSpin{ from{ transform: translate(-50%,-50%) rotate(-4deg); } to{ transform: translate(-50%,-50%) rotate(356deg); } }
+
+.gate-core{
+  position: relative;
+  z-index: 3;
+  max-width: min(92vw, 860px);
+  gap: 0;
+  pointer-events: none;
+}
+.gate-kicker{
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 9px;
+  letter-spacing: .46em;
+  text-indent: .2em;
+  color: var(--ink-62);
+  padding-bottom: 14px;
+  animation: gateRise .8s cubic-bezier(.22,.7,.25,1) .15s backwards;
+}
+.gate-kicker .kanji-inline{
+  color: var(--red);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.gate-brand{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 22px);
+  margin: 0;
+}
+.gate-word{
+  font-family: var(--display);
+  font-size: clamp(58px, 14.5vw, 172px);
+  line-height: .88;
+  letter-spacing: .035em;
+  text-indent: .035em;
+  color: var(--ink);
+  transform: rotate(-1.1deg);
+  text-shadow:
+    1px 1px 0 rgba(237,231,217,.8),
+    5px 6px 0 rgba(26,23,20,.07),
+    10px 12px 22px rgba(26,23,20,.10);
+  animation: gateTitlePress 1.05s cubic-bezier(.22,.7,.25,1) .35s backwards;
+}
+@keyframes gateTitlePress{
+  from{ opacity: 0; transform: rotate(-1.1deg) translateY(.1em) scale(1.06); filter: blur(10px); }
+}
+.gate-seal{
+  width: clamp(34px, 4.4vw, 54px);
+  height: clamp(34px, 4.4vw, 54px);
+  font-size: clamp(18px, 2.3vw, 28px);
+  border-radius: 0;
+  box-shadow:
+    2.5px 2.5px 0 rgba(26,23,20,.22),
+    inset 0 0 0 1px rgba(237,231,217,.28);
+  animation: gateStamp .55s cubic-bezier(.22,.7,.25,1) 1.15s backwards;
+  flex: none;
+}
+.gate-sub{
+  margin-top: clamp(14px, 2.3vh, 22px);
+  font-size: clamp(8.5px, 1.05vw, 10.5px);
+  letter-spacing: .36em;
+  text-indent: .36em;
+  color: var(--ink-70);
+  animation: gateRise .8s ease 1.3s backwards;
+}
+.gate-cue{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: clamp(20px, 3.4vh, 34px);
+  padding: 10px 18px 10px 11px;
+  border: 1.4px solid var(--ink);
+  background: rgba(237,231,217,.86);
+  box-shadow: 3px 4px 0 rgba(26,23,20,.16);
+  color: var(--ink);
+  pointer-events: auto;
+  animation: gateRise .8s cubic-bezier(.22,.7,.25,1) 1.5s backwards;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.gate-cue:hover{
+  transform: translateY(-2px);
+  box-shadow: 4px 6px 0 rgba(26,23,20,.2);
+}
+.gate-cue::after{
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 1px solid rgba(178,58,43,.32);
+  opacity: 0;
+  animation: gateCuePulse 2.8s ease-in-out 2.4s infinite;
+  pointer-events: none;
+}
+@keyframes gateCuePulse{
+  0%, 100%{ opacity: 0; transform: scale(1); }
+  45%{ opacity: .8; transform: scale(1.015); }
+}
+.gate-cue-ink{
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex: none;
+  background: var(--red);
+  color: #ede7d9;
+  font-family: var(--display);
+  font-size: 14px;
+  font-style: normal;
+  transform: rotate(-4deg);
+}
+.gate-tap{
+  font-size: clamp(9px, 1.1vw, 10.5px);
+  font-weight: 600;
+  letter-spacing: .3em;
+  text-indent: .3em;
+}
+.gate-key{
+  font-size: 8px;
+  letter-spacing: .2em;
+  color: var(--ink-55);
+}
+.gate-arrow{
+  color: var(--red);
+  font-size: 10px;
+  margin-left: 2px;
+}
+.gate-note{
+  margin-top: 11px;
+  font-size: 8px;
+  letter-spacing: .24em;
+  color: var(--ink-62);
+  animation: fadeIn .9s ease 1.8s backwards;
+}
+.gate-feats{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  margin-top: clamp(20px, 3.6vh, 38px);
+  animation: gateRise .8s ease 1.9s backwards;
+}
+.gate-feats span{
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 7.8px;
+  letter-spacing: .22em;
+  color: var(--ink-62);
+}
+.gate-feats b{
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  color: var(--red);
+}
+.gate-feats i{
+  width: 1px;
+  height: 13px;
+  background: var(--ink-25);
+}
+.gate-foot{
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 7.6px;
+  letter-spacing: .3em;
+  color: var(--ink-45);
+  pointer-events: none;
+  animation: fadeIn 1s ease 2.1s backwards;
+}
+@keyframes gateRise{
+  from{ opacity: 0; transform: translateY(12px); }
+}
+
+/* ============================================================
+   v23.1 — the title's living records & wet frontier
+   ============================================================ */
+.endless-btn{ position: relative; }
+.endless-best{
+  display: none;
+  position: absolute;
+  right: 7px;
+  bottom: 4px;
+  margin-left: 0;
+  padding: 1px 4px 0;
+  padding: 2px 5px 1px;
+  border: 1px solid rgba(178,58,43,.45);
+  font-family: var(--mono);
+  font-size: 6.2px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--red);
+  line-height: 1.2;
+  background: var(--paper-80);
+}
+.endless-best.is-on{ display: inline-block; }
+
+.journey-line{
+  margin-top: 11px;
+  font-size: 8.2px;
+  letter-spacing: .19em;
+  color: var(--ink-62);
+  text-align: center;
+  line-height: 1.6;
+  animation: riseIn .6s ease 2.9s backwards;
+}
+.journey-line b{
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--red);
+  letter-spacing: .04em;
+}
+.journey-line .jl-k{
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 5px 0;
+  border: 1px solid var(--ink-25);
+  color: var(--ink-70);
+  font-weight: 600;
+  letter-spacing: .16em;
+}
+.journey-line.is-wet .jl-k{
+  border-color: rgba(178,58,43,.4);
+  color: var(--red);
+}
+.title-meta{
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--ink-12);
+  border-bottom: 1px solid var(--ink-12);
+  padding: 7px 4px;
+  max-width: min(94vw, 560px);
+  animation: riseIn .7s ease 3.2s backwards;
+}
+.tm-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 clamp(9px, 1.8vw, 18px);
+}
+.tm-item b{
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--ink);
+  line-height: 1;
+}
+.tm-item i{
+  font-style: normal;
+  font-size: 7px;
+  letter-spacing: .17em;
+  color: var(--ink-62);
+  white-space: nowrap;
+}
+.tm-sep{
+  width: 1px;
+  align-self: stretch;
+  min-height: 20px;
+  background: var(--ink-12);
+}
+.title-help{
+  margin-top: 9px;
+  font-size: 7.6px;
+  letter-spacing: .18em;
+  color: var(--ink-45);
+  text-align: center;
+  animation: fadeIn .8s ease 3.5s backwards;
+}
+.title-help .hint-touch{ display: none; }
+
+/* ============================================================
+   v23.1 — the sheet turns between rooms
+   ============================================================ */
+.page-wipe{
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(178,58,43,.16), transparent 34%),
+    radial-gradient(circle at 50% 48%, rgba(26,23,20,.10), transparent 46%),
+    var(--paper);
+}
+.page-wipe.go{
+  animation: pageWipe .5s cubic-bezier(.3,.7,.2,1) both;
+}
+@keyframes pageWipe{
+  0%{ opacity: .92; clip-path: circle(150% at 50% 52%); }
+  55%{ opacity: .62; clip-path: circle(74% at 50% 52%); }
+  100%{ opacity: 0; clip-path: circle(0% at 50% 52%); }
+}
+body.calm .page-wipe{ display: none; }
+
+/* ============================================================
+   v23.1 — the upgrade desk's confluence call, over goal, charm meters
+   ============================================================ */
+.panel-notice{
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 7px 12px;
+  border-left: 3px solid var(--red);
+  background: rgba(178,58,43,.055);
+  font-size: 8.4px;
+  letter-spacing: .14em;
+  color: var(--ink-70);
+  line-height: 1.6;
+}
+.panel-notice b{
+  color: var(--red);
+  font-weight: 600;
+}
+.panel-notice .pn-k{
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  background: var(--red);
+  color: var(--paper);
+  font-family: var(--display);
+  font-size: 11px;
+  flex: none;
+}
+.over-goal{
+  margin: 9px 0 0;
+  font-size: 8px;
+  letter-spacing: .2em;
+  color: var(--ink-62);
+  text-align: center;
+  line-height: 1.6;
+}
+.over-goal.is-best{
+  color: var(--red);
+}
+.charm-meter{
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin-top: 5px;
+  background: var(--ink-12);
+  overflow: hidden;
+}
+.charm-meter i{
+  display: block;
+  height: 100%;
+  background: var(--ink-55);
+  transition: width .25s ease;
+}
+.charm-row.is-buyable .charm-meter i,
+.charm-meter.is-full i{
+  background: var(--red);
+}
+.strip-guardian{
+  display: block;
+  margin-top: 4px;
+  font-size: 7px;
+  letter-spacing: .14em;
+  color: var(--red);
+  text-align: center;
+}
+.strip-keeper{
+  display: block;
+  margin-top: 3px;
+  font-size: 6.8px;
+  letter-spacing: .12em;
+  color: var(--ink-62);
+  text-align: center;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* the skip chip, quieter and more deliberate */
+.intro-skip{
+  z-index: 210;
+  padding: 8px 13px;
+  background: rgba(237,231,217,.82);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border-color: var(--ink-70);
+  box-shadow: 2px 3px 0 rgba(26,23,20,.25);
+  letter-spacing: .24em;
+}
+.intro-skip::before{
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--red);
+  transform: rotate(45deg);
+  margin-right: 2px;
+}
+
+/* ============================================================
+   CALM THE PAPER — still the small weather, keep the ink
+   ============================================================ */
+body.calm *,
+body.calm *::before,
+body.calm *::after{
+  animation-duration: .001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .06s !important;
+}
+body.calm .gate-ring,
+body.calm .gate-wash,
+body.calm .gate-grid{ animation: none !important; }
+body.calm .gate-ring-ink,
+body.calm .gate-ring-halo,
+body.calm .gate-ring-edge{ stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: reduce){
+  .gate-wash, .gate-ring, .gate-grid, .gate-cue::after{ animation: none !important; }
+  .gate-ring-ink, .gate-ring-halo, .gate-ring-edge{ stroke-dashoffset: 0; }
+  .page-wipe{ display: none; }
+}
+
+@media (max-width: 739px){
+  .upgrade-tools{ gap: 6px; }
+  .tool-ink-btn{ padding: 5px 8px; font-size: 8.2px; letter-spacing: .13em; }
+  .tool-ink-btn .tk-key{ display: none; }
+  .cx-plate-grid{ grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); }
+  .screen-codex{ padding: 10px; }
+  .screen-codex .set-wrap{ width: calc(100vw - 20px); max-height: calc(100vh - 20px); padding: 16px 12px 12px; }
+  .codex-tabs{ gap: 4px; margin-top: 9px; }
+  .codex-tabs .board-tab{ padding: 6px 7px 5px; font-size: 7.2px; letter-spacing: .07em; }
+  .codex-summary{ font-size: 7.4px; letter-spacing: .1em; gap: 4px 6px; }
+  .cx-run-row{ grid-template-columns: 20px 22px 1fr auto auto; gap: 5px; font-size: 8.2px; }
+  .pause-keys{ display: none; }
+  .journey-line{ font-size: 7.4px; letter-spacing: .13em; margin-top: 9px; }
+  .journey-line b{ font-size: 10px; }
+  .title-meta{ margin-top: 10px; padding: 6px 0; gap: 0; }
+  .tm-item{ padding: 0 7px; }
+  .tm-item b{ font-size: 10.5px; }
+  .tm-item i{ font-size: 6.2px; letter-spacing: .1em; }
+  .title-help{ font-size: 6.9px; letter-spacing: .12em; }
+  .title-help .hint-key{ display: none; }
+  .title-help .hint-touch{ display: inline; }
+  .over-goal{ font-size: 7.4px; letter-spacing: .14em; }
+  .gate-core{ max-width: 94vw; }
+  .gate-word{ font-size: clamp(46px, 16vw, 96px); }
+  .gate-brand{ gap: 10px; }
+  .gate-sub{ font-size: 7.4px; letter-spacing: .24em; text-indent: .24em; }
+  .gate-cue{ margin-top: 18px; padding: 8px 12px 8px 9px; gap: 8px; }
+  .gate-tap{ font-size: 9px; letter-spacing: .22em; text-indent: .22em; }
+  .gate-key{ font-size: 7px; }
+  .gate-note{ font-size: 6.8px; letter-spacing: .15em; padding: 0 14px; line-height: 1.7; }
+  .gate-feats{ gap: 7px 9px; margin-top: 20px; }
+  .gate-feats span{ font-size: 6.4px; letter-spacing: .14em; gap: 4px; }
+  .gate-feats b{ font-size: 10.5px; }
+  .gate-feats i{ height: 9px; }
+  .gate-foot{ font-size: 6.2px; letter-spacing: .17em; padding: 0 12px; line-height: 1.7; }
+  .gate-ring{ width: min(88vw, 62vh); }
+  .intro-gate::before, .intro-gate::after{ font-size: 10px; letter-spacing: .3em; opacity: .65; }
+}
+@media (max-height: 540px) and (orientation: landscape){
+  .gate-sub, .gate-note, .gate-feats, .gate-foot{ display: none; }
+  .gate-word{ font-size: clamp(34px, 8vh, 58px); }
+  .gate-cue{ margin-top: 12px; }
+  .title-meta, .title-help{ display: none; }
+}

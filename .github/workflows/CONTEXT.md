@@ -1,17 +1,15 @@
 # GitHub Actions workflow context
 
 ## Purpose
-Retain the ONE MORE/Supabase integration across frequent manual game-source updates.
+Retain the ONE MORE/Supabase integration across source updates — now over the adopted Vite build (v25.0 THE FABLE ADOPTED).
 
 ## Key files
-`supabase-integration-guard.yml`: read-only checks on pushes and PRs against `main`; failure signals source regressions.
-`supabase-auto-repair.yml`: self-tests every main push; after an integration guard failure on main, builds a validated **review-only .patch artifact**. It never creates branches, PRs or merges. Config repair accepts only the exact blank public-config object; lobby repair uses exact known-bad bytes or unique-anchor OAuth/cloud-access insertion; main repair inserts only the known Settings-return and safe-WIPE hooks. The v19.3 purse/charms fixture tests these paths. Unknown/partial layouts abort. Retired Inkstone assets are not required by current v19.3 validation.
+`supabase-integration-guard.yml`: read-only checks on pushes and PRs against `main`. It parse-checks the engine (`src/engine/*.js`), the worker (`public/sw.js`) and the build script, runs `npm ci` + `vite build`, and asserts the Supabase/OAuth/cloud-save wiring survived inside the engine fork (the publishable-only config, om_scores/om_daily/om_weekly tables, anonymous + Google PKCE auth, the OAuth return key, weekly-board and ghost-racing flows, `om_player_saves` sync with local-wipe protection). It also asserts the `boot.ts` ?raw bridge still imports every module the cloud flow needs — including `charms.js` and `codex.js`, which are part of the adopted game — that the PWA core cache still carries the sounds and washes, and that the committed root `index.html` artifact carries the engine's own `OM_VERSION` (a stale root artifact fails the guard).
 
-## Connections
-The integration guard reads checked-out sources only. The auto-repair planner simulates known broken snapshots without contacting Supabase. The proposal job uploads a scoped patch artifact using read-only repository permissions; it never pushes a branch, uses database secrets or edits a player save. An operator must review and commit any repair separately.
+`cloud-save-check.yml`: parse-checks the cloud-save triad and the worker on touches to `src/engine/cloud-save.js`, `lb.js`, `main.js`, `boot.ts`, `public/sw.js`, `index.src.html` or the build script.
 
-## Account save protection (4 Nov 2026)
-`cloud-save-check.yml` runs local-first mock tests for PC/phone migration, CAS revisions, JSONB order, divergent edits, WIPE and failed-restore rollback. The Supabase integration guard now requires `cloud-save.js`, correct script/cache order, Google account bridge and the current weekly-board/purse UI. It does not require the retired Inkstone page. The repair workflow **creates patch artifacts only; no branches, PRs or merges**. It can restore a known blank config, missing lobby auth/cloud bridge, additive Settings/WIPE hooks, and the cloud script/cache tag while preserving new gameplay. Unknown source/layout changes abort.
+## Retired with the vanilla tree (20 Nov 2026)
+`supabase-auto-repair.yml` and its helpers (`.github/supabase-auto-repair.cjs`, `.github/cloud-save.test.cjs`) planned review-only patches against the vanilla five-file `<script src="./js/…">` integration, whose anchors no longer exist in the adopted build. Their protection lives on in the rewritten guard plus git history (the pre-adoption tree is intact up to the v24.11 commits). Recovery sources: git history and root `SUPABASE-RECOVERY.md`.
 
 ## Change & verify
-When intentionally refactoring auth, update the guard to recognize equivalent safe wiring. Confirm its own GitHub Actions run completes successfully. The archival snapshot tags and root `SUPABASE-RECOVERY.md` are the recovery sources if the guard fails.
+When intentionally refactoring auth or the boot bridge, update the guard to recognize equivalent safe wiring. Confirm its own GitHub Actions run completes successfully. The root `SUPABASE-RECOVERY.md` and git history are the recovery sources if the guard fails.
