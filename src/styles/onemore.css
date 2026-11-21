@@ -2222,6 +2222,7 @@ button{ font-family: inherit; color: inherit; background: none; border: none; cu
   position: relative;
   width: min(600px, calc(100vw - 36px));
   max-height: calc(100vh - 60px);
+  max-height: calc(100dvh - 60px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--ink-25) transparent;

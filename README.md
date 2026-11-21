@@ -874,7 +874,7 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Where the paper stands
 
-Current build **v25.1 THE HATCH TAMED** — live at
+Current build **v25.2 THE ISLAND BOWS** — live at
 [itsnotalwin.github.io/OneMoreGLM5.3flash](https://itsnotalwin.github.io/OneMoreGLM5.3flash/).
 The ledger of every version lives in [PROJECT.md](./PROJECT.md) and
 [src/engine/CONTEXT.md](./src/engine/CONTEXT.md).

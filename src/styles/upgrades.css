@@ -445,6 +445,7 @@
 .screen-codex .set-wrap{
   width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
   margin: auto;
 }
 .wm-codex{
@@ -1232,7 +1233,7 @@ body.calm .gate-ring-edge{ stroke-dashoffset: 0; }
   .tool-ink-btn .tk-key{ display: none; }
   .cx-plate-grid{ grid-template-columns: repeat(auto-fill, minmax(102px, 1fr)); }
   .screen-codex{ padding: 10px; }
-  .screen-codex .set-wrap{ width: calc(100vw - 20px); max-height: calc(100vh - 20px); padding: 16px 12px 12px; }
+  .screen-codex .set-wrap{ width: calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)); max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); padding: 16px 12px 12px; }
   .codex-tabs{ gap: 4px; margin-top: 9px; }
   .codex-tabs .board-tab{ padding: 6px 7px 5px; font-size: 7.2px; letter-spacing: .07em; }
   .codex-summary{ font-size: 7.4px; letter-spacing: .1em; gap: 4px 6px; }

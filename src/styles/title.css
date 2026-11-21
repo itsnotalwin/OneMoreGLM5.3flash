@@ -972,7 +972,7 @@
     flex-direction: row;
     align-items: center;
     gap: 16px;
-    padding: 8px 18px;
+    padding: 8px calc(18px + env(safe-area-inset-right)) 8px calc(18px + env(safe-area-inset-left));
     width: 100%;
   }
   .title-hero{ align-items: flex-start; text-align: left; flex: 1 1 56%; min-width: 0; }
